@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -1321,6 +1322,157 @@ body.dark .dm-ball{left:21px;}
 
 <script>
 // ══════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Supabase helper: haal listings op uit de database
+async function sbFetchListings() {
+  try {
+    const { data, error } = await sb.from('listings').select('*').eq('status', 'active').order('date_start', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) return null; // fallback naar demo-data
+    // Map Supabase data naar app-formaat
+    return data.map(function(row) {
+      var typeMap = { garagesale:'particulier', rommelmarkt:'buurt', kofferbakverkoop:'buurt', vlooienmarkt:'evenement', overig:'particulier' };
+      var emojiMap = { particulier:'🏠', buurt:'🏘️', evenement:'🎪' };
+      var appType = typeMap[row.category] || 'particulier';
+      return {
+        id: row.id,
+        type: appType,
+        title: row.title,
+        emoji: emojiMap[appType],
+        address: row.address + (row.city ? ', ' + row.city : ''),
+        lat: row.latitude,
+        lng: row.longitude,
+        date: row.date_start,
+        from: row.time_start ? row.time_start.substring(0,5) : '10:00',
+        till: row.time_end ? row.time_end.substring(0,5) : '16:00',
+        tags: (row.tags || []).map(function(t) { return t; }),
+        interested: row.view_count || 0,
+        photos: row.images || [],
+        supabase_id: row.id
+      };
+    });
+  } catch(e) {
+    console.warn('Supabase fetch mislukt, gebruik demo-data:', e.message);
+    return null;
+  }
+}
+
+// Supabase helper: nieuwe listing opslaan
+async function sbCreateListing(saleData) {
+  try {
+    var catMap = { particulier:'garagesale', buurt:'rommelmarkt', evenement:'vlooienmarkt' };
+    var parts = saleData.address.split(',');
+    var address = parts[0] ? parts[0].trim() : saleData.address;
+    var city = parts[1] ? parts[1].trim() : '';
+    var { data: { user } } = await sb.auth.getUser();
+    var insertData = {
+      title: saleData.title,
+      description: saleData.description || '',
+      category: catMap[saleData.type] || 'garagesale',
+      address: address,
+      city: city,
+      latitude: saleData.lat,
+      longitude: saleData.lng,
+      location: 'POINT(' + saleData.lng + ' ' + saleData.lat + ')',
+      date_start: saleData.date,
+      time_start: saleData.from || '10:00',
+      time_end: saleData.till || '16:00',
+      tags: saleData.tags || [],
+      images: saleData.photos || [],
+      status: 'active'
+    };
+    if (user) insertData.user_id = user.id;
+    var { data, error } = await sb.from('listings').insert([insertData]).select();
+    if (error) throw error;
+    console.log('Listing opgeslagen in Supabase:', data);
+    return data ? data[0] : null;
+  } catch(e) {
+    console.warn('Supabase insert mislukt:', e.message);
+    return null;
+  }
+}
+
+// Supabase Auth helpers
+async function sbSignUp(email, password, name) {
+  try {
+    var { data, error } = await sb.auth.signUp({ email: email, password: password, options: { data: { display_name: name } } });
+    if (error) throw error;
+    if (data.user) {
+      await sb.from('profiles').upsert({ id: data.user.id, display_name: name, username: email.split('@')[0] });
+    }
+    return { success: true, user: data.user };
+  } catch(e) {
+    console.warn('Sign up mislukt:', e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+async function sbSignIn(email, password) {
+  try {
+    var { data, error } = await sb.auth.signInWithPassword({ email: email, password: password });
+    if (error) throw error;
+    return { success: true, user: data.user };
+  } catch(e) {
+    console.warn('Sign in mislukt:', e.message);
+    return { success: false, error: e.message };
+  }
+}
+
+async function sbSignOut() {
+  await sb.auth.signOut();
+}
+
+// Supabase: favorieten
+async function sbToggleFavorite(listingId) {
+  try {
+    var { data: { user } } = await sb.auth.getUser();
+    if (!user) return false;
+    var { data: existing } = await sb.from('favorites').select('id').eq('user_id', user.id).eq('listing_id', listingId).single();
+    if (existing) {
+      await sb.from('favorites').delete().eq('id', existing.id);
+      return false; // verwijderd
+    } else {
+      await sb.from('favorites').insert([{ user_id: user.id, listing_id: listingId }]);
+      return true; // toegevoegd
+    }
+  } catch(e) {
+    console.warn('Favoriet toggle mislukt:', e.message);
+    return null;
+  }
+}
+
+async function sbGetFavorites() {
+  try {
+    var { data: { user } } = await sb.auth.getUser();
+    if (!user) return [];
+    var { data, error } = await sb.from('favorites').select('listing_id').eq('user_id', user.id);
+    if (error) throw error;
+    return (data || []).map(function(f) { return f.listing_id; });
+  } catch(e) {
+    return [];
+  }
+}
+
+// Initialiseer: probeer Supabase data te laden
+async function initSupabaseData() {
+  var sbSales = await sbFetchListings();
+  if (sbSales && sbSales.length > 0) {
+    sales = sbSales;
+    console.log('✅ ' + sales.length + ' listings geladen uit Supabase');
+  } else {
+    console.log('📦 Gebruik demo-data (' + sales.length + ' listings)');
+  }
+  // Herlaad de UI
+  if (typeof renderCards === 'function') renderCards();
+  if (typeof renderMap === 'function' && map) renderMap();
+}
+
+// ══════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════
 const TYPES = {
@@ -1423,19 +1575,30 @@ function obToggleCat(el) {
   }
   document.getElementById('ob-cat-count').textContent = obSelectedCats.length + ' categorie' + (obSelectedCats.length === 1 ? '' : 'ën') + ' geselecteerd';
 }
-function obRegister() {
+async function obRegister() {
   var name = document.getElementById('ob-name').value.trim();
   var email = document.getElementById('ob-email').value.trim();
   var pass = document.getElementById('ob-pass').value;
   if (!name) { toast('Vul je naam in'); return; }
   if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
   if (pass.length < 6) { toast('Wachtwoord minimaal 6 tekens'); return; }
+  // Supabase registratie
+  var result = await sbSignUp(email, pass, name);
+  if (!result.success) { toast('Registratie mislukt: ' + result.error); return; }
   isGuest = false;
   obFinish(name);
 }
 function obShowLogin()  { document.getElementById('ob-login-modal').style.display = 'flex'; }
 function obHideLogin()  { document.getElementById('ob-login-modal').style.display = 'none'; }
-function obLogin()      { isGuest = false; obHideLogin(); obFinish('Welkom terug!'); }
+async function obLogin() {
+  var email = document.getElementById('ob-login-email') ? document.getElementById('ob-login-email').value.trim() : '';
+  var pass = document.getElementById('ob-login-pass') ? document.getElementById('ob-login-pass').value : '';
+  if (email && pass) {
+    var result = await sbSignIn(email, pass);
+    if (!result.success) { toast('Login mislukt: ' + result.error); return; }
+  }
+  isGuest = false; obHideLogin(); obFinish('Welkom terug!');
+}
 function obGuest()      { isGuest = true; obFinish('Gast'); }
 function obFinish(name) {
   var ob = document.getElementById('onboarding');
@@ -1715,6 +1878,9 @@ function renderList() {
 function toggleFav(id) {
   if (isGuest) { guestGate('favoriet'); return; }
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  // Sync met Supabase (async, geen blocker)
+  var sale = sales.find(function(s) { return s.id === id; });
+  if (sale && sale.supabase_id) sbToggleFavorite(sale.supabase_id);
   renderMarkers(); renderList(); updateFavProfile();
 }
 function updateFavProfile() {
@@ -2035,7 +2201,10 @@ async function publishSale() {
     var data = await res.json();
     var lat = data.length ? +data[0].lat : 52.3, lng = data.length ? +data[0].lon : 5.0;
     var tags = Array.from(addTagsSelected);
-    sales.unshift({ id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: uploadedPhotos.slice() });
+    var newSale = { id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: uploadedPhotos.slice() };
+    sales.unshift(newSale);
+    // Sla ook op in Supabase (async, geen blocker)
+    sbCreateListing(newSale).then(function(sbRow) { if (sbRow) console.log('✅ Ook opgeslagen in Supabase'); });
     renderMarkers(); renderList(); closeAdd(); hideL(); toast('🎉 Verkoop geplaatst!');
     uploadedPhotos = []; addTagsSelected.clear(); addStep = 0;
   } catch(e) { hideL(); toast('❌ Publiceren mislukt'); }
@@ -2537,6 +2706,8 @@ document.addEventListener('DOMContentLoaded', function() {
   renderList();
   updateAttendanceUI();
   initMap();
+  // Probeer Supabase data te laden (async, demo-data als fallback)
+  initSupabaseData();
 });
 </script>
 </body>
