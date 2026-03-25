@@ -1719,7 +1719,8 @@ function renderMarkers() {
       + '<button class="pop-btn ' + sale.type + '" onclick="openDetail(' + sale.id + ')">Meer info &#8594;</button>'
       + '<button class="pop-fav" onclick="toggleFav(' + sale.id + ')">' + (fav ? '&#11088;' : '&#9734;') + '</button>'
       + '</div></div></div>';
-m.bindPopup(popupHtml, { maxWidth: 260 });
+    var m = L.marker([sale.lat, sale.lng], { icon: makeIcon(sale.type, fav) });
+    m.bindPopup(popupHtml, { maxWidth: 260 });
     m.addTo(map);
     markers.push(m);
   });
