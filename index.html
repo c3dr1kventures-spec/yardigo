@@ -1468,8 +1468,8 @@ async function initSupabaseData() {
     console.log('📦 Gebruik demo-data (' + sales.length + ' listings)');
   }
   // Herlaad de UI
-  if (typeof renderCards === 'function') renderCards();
-  if (typeof renderMap === 'function' && map) renderMap();
+  if (typeof renderMarkers === 'function' && map) renderMarkers();
+  if (typeof renderList === 'function') renderList();
 }
 
 // ══════════════════════════════════════════════════
@@ -1519,7 +1519,7 @@ let advTagFilters = new Set();
 let isGuest = false;
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
-let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
+let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], uploadedFiles = [], addTagsSelected = new Set(), nextId = 10;
 let obStep = 0, obSelectedCats = ['Kleding'];
 let searchSuggestTimer = null;
 let attendanceData = { visited:4, total:5 };
@@ -2168,16 +2168,36 @@ function addNav(dir) {
 function handleAddPhotos(input) {
   Array.from(input.files).forEach(function(file) {
     if (uploadedPhotos.length >= 10) return;
+    uploadedFiles.push(file); // bewaar origineel File-object voor Supabase upload
     var reader = new FileReader();
     reader.onload = function(e) {
       uploadedPhotos.push(e.target.result);
       document.getElementById('photoGrid').innerHTML = uploadedPhotos.map(function(src, i) {
-        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
+        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);uploadedFiles.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
       }).join('');
       document.getElementById('photoCount').textContent = uploadedPhotos.length + '/10 foto\'s';
     };
     reader.readAsDataURL(file);
   });
+}
+
+// Upload foto's naar Supabase Storage, geeft array van publieke URLs terug
+async function sbUploadPhotos(files, listingTitle) {
+  var urls = [];
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var ext = file.name.split('.').pop() || 'jpg';
+    var path = 'listings/' + Date.now() + '_' + i + '.' + ext;
+    try {
+      var { data, error } = await sb.storage.from('listing-photos').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (error) throw error;
+      var { data: urlData } = sb.storage.from('listing-photos').getPublicUrl(path);
+      urls.push(urlData.publicUrl);
+    } catch(e) {
+      console.warn('Foto upload mislukt:', e.message);
+    }
+  }
+  return urls;
 }
 function toggleAddTag(el) { el.classList.toggle('sel'); if (el.classList.contains('sel')) addTagsSelected.add(el.dataset.tag); else addTagsSelected.delete(el.dataset.tag); }
 function validateDesc(v) {
@@ -2202,12 +2222,20 @@ async function publishSale() {
     var data = await res.json();
     var lat = data.length ? +data[0].lat : 52.3, lng = data.length ? +data[0].lon : 5.0;
     var tags = Array.from(addTagsSelected);
-    var newSale = { id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: uploadedPhotos.slice() };
+    // Upload foto's naar Supabase Storage als er zijn
+    var photoUrls = uploadedPhotos.slice(); // fallback: base64 previews
+    if (uploadedFiles.length > 0) {
+      try {
+        var sbUrls = await sbUploadPhotos(uploadedFiles, title.value);
+        if (sbUrls.length > 0) photoUrls = sbUrls;
+      } catch(e) { console.warn('Foto upload overgeslagen:', e.message); }
+    }
+    var newSale = { id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: photoUrls };
     sales.unshift(newSale);
     // Sla ook op in Supabase (async, geen blocker)
     sbCreateListing(newSale).then(function(sbRow) { if (sbRow) console.log('✅ Ook opgeslagen in Supabase'); });
     renderMarkers(); renderList(); closeAdd(); hideL(); toast('🎉 Verkoop geplaatst!');
-    uploadedPhotos = []; addTagsSelected.clear(); addStep = 0;
+    uploadedPhotos = []; uploadedFiles = []; addTagsSelected.clear(); addStep = 0;
   } catch(e) { hideL(); toast('❌ Publiceren mislukt'); }
 }
 
