@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -149,6 +148,7 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 /* Slider */
 .ob-slider{display:flex;width:400%;height:100%;transition:transform .48s cubic-bezier(.4,0,.2,1);}
 .ob-screen{width:25%;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#gst-slider .ob-screen{width:33.333%;}
 
 /* Buttons */
 .ob-btn{width:100%;padding:15px;border-radius:14px;border:none;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
@@ -257,12 +257,6 @@ body.dark .dm-ball{left:21px;}
 /* ── LIST ── */
 .list-wrap{padding:12px;}
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted);}
-.sort-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px;}
-.sort-bar::-webkit-scrollbar{display:none;}
-.sort-pill{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;}
-.sort-pill.active{background:var(--forest);border-color:var(--forest);color:white;}
-body.dark .sort-pill{background:var(--bg2);border-color:var(--border);color:var(--muted);}
-body.dark .sort-pill.active{background:var(--forest);border-color:var(--forest);color:white;}
 .card{background:white;border-radius:14px;border:1.5px solid var(--border);margin-bottom:10px;overflow:hidden;display:flex;box-shadow:var(--shadow);}
 .card-thumb{width:80px;min-height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;position:relative;cursor:pointer;}
 .card-thumb.particulier{background:var(--amber-light);}
@@ -384,17 +378,6 @@ body.dark .sort-pill.active{background:var(--forest);border-color:var(--forest);
 /* ── LOADING BAR ── */
 .lbar{position:fixed;top:0;left:0;height:3px;background:var(--terra);width:0;transition:width .4s;z-index:9999;}
 
-/* ── PUBLISH OVERLAY ── */
-.pub-overlay{position:fixed;inset:0;background:rgba(44,36,22,.72);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);}
-.pub-overlay-box{background:white;border-radius:20px;padding:32px 28px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(44,36,22,.2);}
-.pub-spinner{width:52px;height:52px;border:4px solid var(--border);border-top-color:var(--terra);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.pub-step-title{font-size:16px;font-weight:800;color:var(--bark);margin-bottom:6px;}
-.pub-step-sub{font-size:12px;color:var(--muted);line-height:1.5;}
-.pub-progress{height:4px;background:var(--border);border-radius:4px;margin-top:18px;overflow:hidden;}
-.pub-progress-bar{height:100%;background:var(--terra);border-radius:4px;transition:width .5s ease;width:0%;}
-body.dark .pub-overlay-box{background:var(--bg2);}
-
 /* ── SETTINGS ── */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
 .settings-row:last-child{border-bottom:none;}
@@ -432,138 +415,110 @@ body.dark .pub-overlay-box{background:var(--bg2);}
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- ════════════════════════════════════ ONBOARDING ════════════════════════════════════ -->
-<div id="onboarding" class="ob-dark" style="position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden">
+<!-- ════════════════════════════════════ WELKOMST POPUP ════════════════════════════════════ -->
+<!-- Verschijnt na 1.5s over de kaart, backdrop blur -->
+<div id="ob-popup-backdrop" style="position:fixed;inset:0;z-index:9998;background:rgba(44,36,22,.45);backdrop-filter:blur(3px);display:flex;align-items:flex-end;opacity:0;transition:opacity .4s;">
+  <div id="ob-popup" style="width:100%;background:#F9F5EF;border-radius:24px 24px 0 0;padding:28px 24px max(28px,env(safe-area-inset-bottom,28px));box-shadow:0 -8px 40px rgba(44,36,22,.18);transform:translateY(40px);transition:transform .4s cubic-bezier(.4,0,.2,1);position:relative;">
 
-  <!-- Floating blobs (screen 1 atmosphere) -->
+    <!-- Handle -->
+    <div style="width:36px;height:4px;border-radius:2px;background:#D4CCBF;margin:0 auto 20px;"></div>
+
+    <!-- Logo + titel -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <svg width="40" height="44" viewBox="0 0 118 128" fill="none">
+        <path d="M66 11C46 11 30 27 30 47C30 67 66 109 66 109C66 109 102 67 102 47C102 27 86 11 66 11Z" fill="#3A6B4A" opacity="0.55"/>
+        <path d="M54 7C34 7 18 23 18 43C18 63 54 105 54 105C54 105 90 63 90 43C90 23 74 7 54 7Z" fill="#E07B39"/>
+        <circle cx="54" cy="39" r="15" fill="#F0EBE3"/>
+        <g transform="translate(63,46) rotate(-14)">
+          <rect x="-10" y="-8" width="20" height="16" rx="3" fill="#F2A830"/>
+          <circle cx="-5" cy="0" r="2.5" fill="white"/>
+          <line x1="0" y1="-5" x2="8" y2="-5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="0" y1="0" x2="8" y2="0" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="0" y1="5" x2="6" y2="5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <div>
+        <div style="font-size:22px;font-weight:800;color:#2C2416;letter-spacing:-.3px;line-height:1.1">YardiGo</div>
+        <div style="font-size:11px;color:#7A6E62;font-weight:500">Rommelmarkten & verkopen in jouw buurt</div>
+      </div>
+    </div>
+
+    <div style="font-size:13px;color:#7A6E62;margin-bottom:20px;line-height:1.6;">
+      Je ziet de kaart al — maak een gratis account voor het volledige adres, navigeren en meldingen.
+    </div>
+
+    <!-- Knoppen -->
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="ob-btn ob-btn-primary" onclick="obShowAccountPanel()" style="font-size:15px;">
+        ✨ Gratis account aanmaken
+      </button>
+      <button class="ob-btn" onclick="obShowLoginPanel()" style="background:white;border:1.5px solid #EDE8DF;color:#2C2416;padding:13px;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;">
+        Inloggen
+      </button>
+      <button class="ob-btn ob-btn-ghost" onclick="obStartGuest()" style="font-size:13px;">
+        Verdergaan als gast →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ GAST ONBOARDING (3 stappen) ════════════════════════════════════ -->
+<div id="ob-guest-flow" style="position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;overflow:hidden;">
+
+  <!-- Blobs achtergrond -->
   <div class="ob-blob ob-blob-1"></div>
   <div class="ob-blob ob-blob-2"></div>
 
-  <!-- Progress dots -->
+  <!-- Progress dots (3) -->
   <div class="ob-dots">
-    <div class="ob-dot active" id="odd-0"></div>
-    <div class="ob-dot" id="odd-1"></div>
-    <div class="ob-dot" id="odd-2"></div>
-    <div class="ob-dot" id="odd-3"></div>
+    <div class="ob-dot active" id="gst-dot-0"></div>
+    <div class="ob-dot" id="gst-dot-1"></div>
+    <div class="ob-dot" id="gst-dot-2"></div>
   </div>
-  <button id="ob-skip" onclick="obSkip()">Overslaan</button>
+  <button id="gst-skip" onclick="obGuestFinish()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);cursor:pointer;padding:6px 10px;">Overslaan</button>
 
-  <div class="ob-slider" id="ob-slider">
+  <div class="ob-slider" id="gst-slider" style="height:100%;width:300%;">
 
-    <!-- ── Screen 1: Welcome ── -->
-    <div class="ob-screen" style="justify-content:space-between;">
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 0;">
-
-        <!-- Animated logo -->
-        <div class="ob-logo-anim ob-anim-1" style="margin-bottom:22px">
-          <svg width="72" height="78" viewBox="0 0 118 128" fill="none">
-            <path d="M66 11C46 11 30 27 30 47C30 67 66 109 66 109C66 109 102 67 102 47C102 27 86 11 66 11Z" fill="#3A6B4A" opacity="0.55"/>
-            <path d="M54 7C34 7 18 23 18 43C18 63 54 105 54 105C54 105 90 63 90 43C90 23 74 7 54 7Z" fill="#E07B39"/>
-            <circle cx="54" cy="39" r="15" fill="#F9F5EF"/>
-            <g transform="translate(63,46) rotate(-14)">
-              <rect x="-10" y="-8" width="20" height="16" rx="3" fill="#F2A830"/>
-              <circle cx="-5" cy="0" r="2.5" fill="white"/>
-              <line x1="0" y1="-5" x2="8" y2="-5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="0" y1="0" x2="8" y2="0" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="0" y1="5" x2="6" y2="5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-            </g>
-          </svg>
+    <!-- ── Stap 1: Locatie ── -->
+    <div class="ob-screen ob-dark" style="background:var(--forest);justify-content:space-between;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 24px 0;">
+        <div class="ob-logo-anim ob-anim-1" style="font-size:56px;margin-bottom:18px;">📍</div>
+        <div class="ob-anim-2" style="font-size:26px;font-weight:800;color:white;text-align:center;margin-bottom:10px;line-height:1.2;letter-spacing:-.3px;">Waar ben jij?</div>
+        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:28px;max-width:280px;">
+          Deel je locatie zodat we verkopen in jouw buurt kunnen tonen.
         </div>
-
-        <div class="ob-anim-2" style="font-size:30px;font-weight:800;color:white;text-align:center;margin-bottom:10px;line-height:1.2;letter-spacing:-.5px">
-          Ontdek verkopen<br>bij jou in de buurt
-        </div>
-        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:32px;max-width:280px">
-          Garageverkopen, buurtverkopen en vlooienmarkten — allemaal op de kaart.
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-          <div class="ob-feature-card ob-anim-3">
-            <div class="ob-feature-icon">🗺️</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Op de kaart</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Zie alle verkopen in jouw buurt</div></div>
-          </div>
-          <div class="ob-feature-card ob-anim-4">
-            <div class="ob-feature-icon">🧭</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Route plannen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Bezoek meerdere verkopen op één dag</div></div>
-          </div>
-          <div class="ob-feature-card ob-anim-5">
-            <div class="ob-feature-icon">🔔</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Meldingen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Nooit meer een verkoop missen</div></div>
-          </div>
-        </div>
-
-      </div>
-      <div style="padding:24px 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <button class="ob-btn ob-btn-primary" onclick="obNext()">Aan de slag →</button>
-      </div>
-    </div>
-
-    <!-- ── Screen 2: Permissions ── -->
-    <div class="ob-screen" style="background:#F9F5EF;">
-
-      <!-- Visual accent header -->
-      <div class="ob-screen-accent">
-        <svg class="ob-screen-accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none">
-          <path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/>
-        </svg>
-        <div style="text-align:center;padding-bottom:16px">
-          <div style="font-size:40px;margin-bottom:4px">🔐</div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Toestemmingen</div>
-        </div>
-      </div>
-
-      <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:6px">Jouw ervaring instellen</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:24px;line-height:1.6">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
-
-        <div class="ob-perm-card ob-anim-3" id="ob-loc-card" onclick="obRequestLocation()">
+        <div class="ob-perm-card ob-anim-4" id="ob-loc-card" onclick="obRequestLocation()" style="width:100%;max-width:340px;">
           <div class="ob-perm-icon">📍</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#2C2416">Locatie</div>
-            <div class="ob-perm-status">Tik om toestemming te geven</div>
+            <div style="font-size:13px;font-weight:700;color:#2C2416;">Locatie</div>
+            <div class="ob-perm-status" id="ob-loc-status">Tik om toestemming te geven</div>
           </div>
           <div class="ob-perm-arrow">›</div>
           <div class="ob-perm-check">✓</div>
         </div>
-
-        <div class="ob-perm-card ob-anim-4" id="ob-notif-card" onclick="obRequestNotif()">
-          <div class="ob-perm-icon">🔔</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#2C2416">Meldingen</div>
-            <div class="ob-perm-status">Tik om toestemming te geven</div>
-          </div>
-          <div class="ob-perm-arrow">›</div>
-          <div class="ob-perm-check">✓</div>
-        </div>
-
-        <div style="flex:1;min-height:20px"></div>
-        <div class="ob-anim-5" style="margin-top:24px;display:flex;flex-direction:column;gap:10px">
-          <button class="ob-btn ob-btn-primary" onclick="obNext()">Verder →</button>
-          <button class="ob-btn ob-btn-ghost" onclick="obNext()">Overslaan</button>
-        </div>
+      </div>
+      <div style="padding:24px 24px max(24px,env(safe-area-inset-bottom,24px));display:flex;flex-direction:column;gap:10px;">
+        <button class="ob-btn ob-btn-primary" onclick="gstNext()">Verder →</button>
+        <button class="ob-btn ob-btn-ghost" onclick="gstNext()">Overslaan</button>
       </div>
     </div>
 
-    <!-- ── Screen 3: Categories ── -->
+    <!-- ── Stap 2: Categorieën ── -->
     <div class="ob-screen" style="background:#F9F5EF;">
-
-      <!-- Visual accent header -->
       <div class="ob-screen-accent" style="background:linear-gradient(135deg,#E07B39,#C5612A)">
         <svg class="ob-screen-accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none">
           <path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/>
         </svg>
         <div style="text-align:center;padding-bottom:16px">
-          <div style="font-size:40px;margin-bottom:4px">🏷️</div>
+          <div style="font-size:38px;margin-bottom:4px">🏷️</div>
           <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Categorieën</div>
         </div>
       </div>
-
-      <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px">Wat zoek jij?</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px">Kies je favoriete categorieën voor betere aanbevelingen.</div>
-        <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#3A6B4A;margin-bottom:18px" id="ob-cat-count">1 categorie geselecteerd</div>
-
-        <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
+      <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px));overflow-y:auto;">
+        <div class="ob-anim-1" style="font-size:21px;font-weight:800;color:#2C2416;margin-bottom:4px;margin-top:16px;">Wat zoek jij?</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px;">Kies je favoriete categorieën voor betere aanbevelingen.</div>
+        <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#3A6B4A;margin-bottom:16px;" id="ob-cat-count">1 categorie geselecteerd</div>
+        <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;">
           <div class="ob-cat-tile active" data-cat="Kleding" onclick="obToggleCat(this)"><span class="cat-icon">👗</span><div class="cat-name">Kleding</div></div>
           <div class="ob-cat-tile" data-cat="Meubels" onclick="obToggleCat(this)"><span class="cat-icon">🛋️</span><div class="cat-name">Meubels</div></div>
           <div class="ob-cat-tile" data-cat="Speelgoed" onclick="obToggleCat(this)"><span class="cat-icon">🧸</span><div class="cat-name">Speelgoed</div></div>
@@ -574,51 +529,35 @@ body.dark .pub-overlay-box{background:var(--bg2);}
           <div class="ob-cat-tile" data-cat="Kunst" onclick="obToggleCat(this)"><span class="cat-icon">🎨</span><div class="cat-name">Kunst & Deco</div></div>
           <div class="ob-cat-tile" data-cat="Overig" onclick="obToggleCat(this)"><span class="cat-icon">📦</span><div class="cat-name">Overig</div></div>
         </div>
-
-        <div class="ob-anim-4">
-          <button class="ob-btn ob-btn-primary" onclick="obNext()">Volgende →</button>
-        </div>
+        <button class="ob-btn ob-btn-primary" onclick="gstNext()">Verder →</button>
       </div>
     </div>
 
-    <!-- ── Screen 4: Account ── -->
+    <!-- ── Stap 3: Klaar! ── -->
     <div class="ob-screen" style="background:#F9F5EF;">
-
-      <!-- Visual accent header -->
       <div class="ob-screen-accent" style="background:linear-gradient(135deg,#2A5038,#3A6B4A)">
         <svg class="ob-screen-accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none">
           <path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/>
         </svg>
         <div style="text-align:center;padding-bottom:16px">
-          <div style="font-size:40px;margin-bottom:4px">👋</div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Bijna klaar!</div>
+          <div style="font-size:38px;margin-bottom:4px">🎉</div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Klaar om te ontdekken!</div>
         </div>
       </div>
-
-      <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px));overflow-y:auto">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px">Welkom bij YardiGo</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:16px;line-height:1.6">Maak een gratis account aan voor de volledige ervaring.</div>
-
-        <div class="ob-anim-3" style="background:white;border-radius:16px;border:1.5px solid #EDE8DF;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(44,36,22,.06)">
-          <div style="font-size:13px;font-weight:700;color:#2C2416;margin-bottom:12px">Account aanmaken</div>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-            <input class="form-input" id="ob-name" type="text" placeholder="Naam" autocomplete="name">
-            <input class="form-input" id="ob-email" type="email" placeholder="E-mailadres" autocomplete="email">
-            <input class="form-input" id="ob-pass" type="password" placeholder="Wachtwoord" autocomplete="new-password">
-          </div>
-          <button class="ob-btn ob-btn-primary" onclick="obRegister()">Account aanmaken</button>
+      <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px));overflow-y:auto;">
+        <div class="ob-anim-1" style="font-size:21px;font-weight:800;color:#2C2416;margin-bottom:8px;margin-top:16px;">Je bent er bijna!</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:20px;line-height:1.6;">
+          Als gast zie je alle verkopen op de kaart. Maak later een gratis account aan voor adressen, navigeren en meldingen.
         </div>
 
-        <div class="ob-anim-3" style="text-align:center;font-size:12px;color:#7A6E62;margin-bottom:12px">Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span></div>
-
-        <div class="ob-anim-4 ob-compare-table">
+        <!-- Vergelijktabel compact -->
+        <div class="ob-anim-3 ob-compare-table" style="margin-bottom:20px;">
           <div class="ob-compare-head">
-            <div>👁️ Gast</div>
+            <div>👁️ Gast (jij nu)</div>
             <div>✨ Account <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">GRATIS</span></div>
           </div>
-          <div class="ob-compare-row has-both"><div>✓ Verkopen bekijken</div><div>✓ Verkopen bekijken</div></div>
+          <div class="ob-compare-row has-both"><div>✓ Kaart & lijst</div><div>✓ Kaart & lijst</div></div>
           <div class="ob-compare-row has-both"><div>✓ Foto's zien</div><div>✓ Foto's zien</div></div>
-          <div class="ob-compare-row has-both"><div>✓ Filteren</div><div>✓ Filteren</div></div>
           <div class="ob-compare-row"><div>✗ Exact adres</div><div>✓ Exact adres</div></div>
           <div class="ob-compare-row"><div>✗ Navigeren</div><div>✓ Navigeren</div></div>
           <div class="ob-compare-row"><div>✗ Favorieten</div><div>✓ Favorieten</div></div>
@@ -626,39 +565,61 @@ body.dark .pub-overlay-box{background:var(--bg2);}
           <div class="ob-compare-row"><div>✗ Plaatsen</div><div>✓ Plaatsen</div></div>
         </div>
 
-        <div class="ob-anim-5" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-          <button class="ob-btn ob-btn-ghost" onclick="obGuest()">Beperkt verder als gast →</button>
-          <div style="text-align:center;font-size:10px;color:#B0A899">Je kunt later alsnog een gratis account aanmaken</div>
+        <div class="ob-anim-4" style="display:flex;flex-direction:column;gap:10px;">
+          <button class="ob-btn ob-btn-primary" onclick="obShowAccountPanel()">Toch gratis account aanmaken</button>
+          <button class="ob-btn ob-btn-ghost" onclick="obGuestFinish()">Bekijk de kaart als gast →</button>
         </div>
       </div>
     </div>
 
-  </div><!-- /slider -->
+  </div><!-- /gst-slider -->
+</div><!-- /ob-guest-flow -->
 
-  <!-- Login modal -->
-  <div id="ob-login-modal" style="display:none;position:absolute;inset:0;background:rgba(44,36,22,.5);z-index:20;align-items:flex-end">
-    <div style="background:#F9F5EF;border-radius:20px 20px 0 0;padding:24px;width:100%;box-sizing:border-box">
-      <div style="width:36px;height:4px;background:#D8D0C5;border-radius:2px;margin:0 auto 20px"></div>
-      <div style="font-size:20px;font-weight:800;color:#2C2416;margin-bottom:16px">Inloggen</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <input class="form-input" type="email" placeholder="E-mailadres" autocomplete="email">
-        <input class="form-input" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+<!-- ════════════════════════════════════ ACCOUNT / LOGIN PANEL ════════════════════════════════════ -->
+<div id="ob-account-backdrop" style="position:fixed;inset:0;z-index:10000;display:none;align-items:flex-end;background:rgba(44,36,22,.5);">
+  <div style="width:100%;background:#F9F5EF;border-radius:24px 24px 0 0;padding:24px 24px max(24px,env(safe-area-inset-bottom,24px));box-shadow:0 -8px 40px rgba(44,36,22,.2);">
+    <div style="width:36px;height:4px;border-radius:2px;background:#D4CCBF;margin:0 auto 20px;"></div>
+    <div id="ob-account-panel">
+      <div style="font-size:20px;font-weight:800;color:#2C2416;margin-bottom:4px;">Gratis account aanmaken</div>
+      <div style="font-size:12px;color:#7A6E62;margin-bottom:18px;">Zie adressen · Navigeer · Sla op</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+        <input class="form-input" id="ob-name" type="text" placeholder="Naam" autocomplete="name">
+        <input class="form-input" id="ob-email" type="email" placeholder="E-mailadres" autocomplete="email">
+        <input class="form-input" id="ob-pass" type="password" placeholder="Wachtwoord (min. 6 tekens)" autocomplete="new-password">
       </div>
-      <button class="ob-btn ob-btn-primary" style="margin-bottom:8px" onclick="obLogin()">Inloggen</button>
-      <button class="ob-btn ob-btn-ghost" onclick="obHideLogin()">Annuleren</button>
+      <button class="ob-btn ob-btn-primary" onclick="obRegister()">Account aanmaken</button>
+      <div style="text-align:center;font-size:12px;color:#7A6E62;margin-top:14px;">
+        Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer;" onclick="obShowLoginPanel()">Inloggen</span>
+      </div>
+      <button onclick="obHideAccountPanel()" style="display:block;width:100%;margin-top:10px;background:none;border:none;font-family:'Poppins',sans-serif;font-size:12px;color:#9A8E82;cursor:pointer;padding:6px;">Annuleren</button>
+    </div>
+    <div id="ob-login-panel" style="display:none;">
+      <div style="font-size:20px;font-weight:800;color:#2C2416;margin-bottom:4px;">Inloggen</div>
+      <div style="font-size:12px;color:#7A6E62;margin-bottom:18px;">Welkom terug bij YardiGo</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+        <input class="form-input" id="ob-login-email" type="email" placeholder="E-mailadres" autocomplete="email">
+        <input class="form-input" id="ob-login-pass" type="password" placeholder="Wachtwoord" autocomplete="current-password">
+      </div>
+      <button class="ob-btn ob-btn-primary" onclick="obLogin()">Inloggen</button>
+      <div style="text-align:center;font-size:12px;color:#7A6E62;margin-top:14px;">
+        Nog geen account? <span style="color:#E07B39;font-weight:700;cursor:pointer;" onclick="obShowAccountPanel()">Aanmaken</span>
+      </div>
+      <button onclick="obHideAccountPanel()" style="display:block;width:100%;margin-top:10px;background:none;border:none;font-family:'Poppins',sans-serif;font-size:12px;color:#9A8E82;cursor:pointer;padding:6px;">Annuleren</button>
     </div>
   </div>
-</div><!-- /onboarding -->
+</div>
+
+
 
 <!-- ════════════════════════════════════ APP ════════════════════════════════════ -->
 
 <!-- Header -->
 <header class="header">
-  <div class="logo-wrap" onclick="sv('kaart', document.querySelector('.tab'))" style="cursor:pointer">
+  <div class="logo-wrap">
     <svg width="34" height="38" viewBox="0 0 118 128" fill="none">
       <path d="M66 11C46 11 30 27 30 47C30 67 66 109 66 109C66 109 102 67 102 47C102 27 86 11 66 11Z" fill="#3A6B4A" opacity="0.55"/>
       <path d="M54 7C34 7 18 23 18 43C18 63 54 105 54 105C54 105 90 63 90 43C90 23 74 7 54 7Z" fill="#E07B39"/>
-      <circle cx="54" cy="39" r="15" fill="#F9F5EF"/>
+      <circle cx="54" cy="39" r="15" fill="#F0EBE3"/>
       <g transform="translate(63,46) rotate(-14)">
         <rect x="-10" y="-8" width="20" height="16" rx="3" fill="#F2A830"/>
         <circle cx="-5" cy="0" r="2.5" fill="white"/>
@@ -667,7 +628,7 @@ body.dark .pub-overlay-box{background:var(--bg2);}
       </g>
     </svg>
     <div class="logo-wrap" style="flex-direction:column;gap:0">
-      <span class="logo-text">Yard<span style="color:var(--birch)">i</span><span>Go</span></span>
+      <span class="logo-text">Yardi<span>Go</span></span>
       <span class="logo-sub">FIND · SELL · GO</span>
     </div>
   </div>
@@ -764,12 +725,6 @@ body.dark .pub-overlay-box{background:var(--bg2);}
 <div class="view" id="view-lijst">
   <div class="list-wrap">
     <div class="list-header"><span id="lcount">0 gevonden</span></div>
-    <div class="sort-bar">
-      <button class="sort-pill active" id="sort-dichtsbij" onclick="setSort('dichtsbij')">📍 Dichtsbij</button>
-      <button class="sort-pill" id="sort-datum" onclick="setSort('datum')">📅 Eerstvolgende</button>
-      <button class="sort-pill" id="sort-nieuwst" onclick="setSort('nieuwst')">🆕 Nieuwste</button>
-      <button class="sort-pill" id="sort-interesse" onclick="setSort('interesse')">🔥 Populair</button>
-    </div>
     <div id="cardList"></div>
   </div>
 </div>
@@ -807,8 +762,8 @@ body.dark .pub-overlay-box{background:var(--bg2);}
       <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--terra);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px">📷</div>
     </div>
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhoto(this)">
-    <div id="profile-name" style="font-size:20px;font-weight:800;color:white;margin-bottom:2px">Jan de Vries</div>
-    <div id="profile-location" style="font-size:12px;color:rgba(255,255,255,.7)">Groningen</div>
+    <div style="font-size:20px;font-weight:800;color:white;margin-bottom:2px">Jan de Vries</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.7)">Groningen</div>
   </div>
   <div style="padding:0 14px 100px;margin-top:-36px">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -1215,7 +1170,7 @@ body.dark .pub-overlay-box{background:var(--bg2);}
         <span style="flex:1;font-size:12px;color:var(--muted)" id="share-link-text">yardigo.nl/v/1</span>
         <button id="share-copy-btn" onclick="copyShareLink()" style="background:var(--terra);color:white;border:none;border-radius:7px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Kopieer</button>
       </div>
-      <button class="share-action-btn" onclick="shareGoogleMaps()">🗺️ Openen in Google Maps</button>
+      <button class="share-action-btn" id="share-maps-btn" onclick="shareGoogleMaps()">🗺️ Openen in Google Maps</button>
       <button class="share-action-btn" onclick="shareCalendar()">📅 Toevoegen aan kalender</button>
     </div>
   </div>
@@ -1345,157 +1300,6 @@ body.dark .pub-overlay-box{background:var(--bg2);}
 
 <script>
 // ══════════════════════════════════════════════════
-// SUPABASE
-// ══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Supabase helper: haal listings op uit de database
-async function sbFetchListings() {
-  try {
-    const { data, error } = await sb.from('listings').select('*').eq('status', 'active').order('date_start', { ascending: true });
-    if (error) throw error;
-    if (!data || data.length === 0) return null; // fallback naar demo-data
-    // Map Supabase data naar app-formaat
-    return data.map(function(row) {
-      var typeMap = { garagesale:'particulier', rommelmarkt:'buurt', kofferbakverkoop:'buurt', vlooienmarkt:'evenement', overig:'particulier' };
-      var emojiMap = { particulier:'🏠', buurt:'🏘️', evenement:'🎪' };
-      var appType = typeMap[row.category] || 'particulier';
-      return {
-        id: row.id,
-        type: appType,
-        title: row.title,
-        emoji: emojiMap[appType],
-        address: row.address + (row.city ? ', ' + row.city : ''),
-        lat: row.latitude,
-        lng: row.longitude,
-        date: row.date_start,
-        from: row.time_start ? row.time_start.substring(0,5) : '10:00',
-        till: row.time_end ? row.time_end.substring(0,5) : '16:00',
-        tags: (row.tags || []).map(function(t) { return t; }),
-        interested: row.view_count || 0,
-        photos: row.images || [],
-        supabase_id: row.id
-      };
-    });
-  } catch(e) {
-    console.warn('Supabase fetch mislukt, gebruik demo-data:', e.message);
-    return null;
-  }
-}
-
-// Supabase helper: nieuwe listing opslaan
-async function sbCreateListing(saleData) {
-  try {
-    var catMap = { particulier:'garagesale', buurt:'rommelmarkt', evenement:'vlooienmarkt' };
-    var parts = saleData.address.split(',');
-    var address = parts[0] ? parts[0].trim() : saleData.address;
-    var city = parts[1] ? parts[1].trim() : '';
-    var { data: { user } } = await sb.auth.getUser();
-    var insertData = {
-      title: saleData.title,
-      description: saleData.description || '',
-      category: catMap[saleData.type] || 'garagesale',
-      address: address,
-      city: city,
-      latitude: saleData.lat,
-      longitude: saleData.lng,
-      location: 'POINT(' + saleData.lng + ' ' + saleData.lat + ')',
-      date_start: saleData.date,
-      time_start: saleData.from || '10:00',
-      time_end: saleData.till || '16:00',
-      tags: saleData.tags || [],
-      images: saleData.photos || [],
-      status: 'active'
-    };
-    if (user) insertData.user_id = user.id;
-    var { data, error } = await sb.from('listings').insert([insertData]).select();
-    if (error) throw error;
-    console.log('Listing opgeslagen in Supabase:', data);
-    return data ? data[0] : null;
-  } catch(e) {
-    console.warn('Supabase insert mislukt:', e.message);
-    return null;
-  }
-}
-
-// Supabase Auth helpers
-async function sbSignUp(email, password, name) {
-  try {
-    var { data, error } = await sb.auth.signUp({ email: email, password: password, options: { data: { display_name: name } } });
-    if (error) throw error;
-    if (data.user) {
-      await sb.from('profiles').upsert({ id: data.user.id, display_name: name, username: email.split('@')[0] });
-    }
-    return { success: true, user: data.user };
-  } catch(e) {
-    console.warn('Sign up mislukt:', e.message);
-    return { success: false, error: e.message };
-  }
-}
-
-async function sbSignIn(email, password) {
-  try {
-    var { data, error } = await sb.auth.signInWithPassword({ email: email, password: password });
-    if (error) throw error;
-    return { success: true, user: data.user };
-  } catch(e) {
-    console.warn('Sign in mislukt:', e.message);
-    return { success: false, error: e.message };
-  }
-}
-
-async function sbSignOut() {
-  await sb.auth.signOut();
-}
-
-// Supabase: favorieten
-async function sbToggleFavorite(listingId) {
-  try {
-    var { data: { user } } = await sb.auth.getUser();
-    if (!user) return false;
-    var { data: existing } = await sb.from('favorites').select('id').eq('user_id', user.id).eq('listing_id', listingId).single();
-    if (existing) {
-      await sb.from('favorites').delete().eq('id', existing.id);
-      return false; // verwijderd
-    } else {
-      await sb.from('favorites').insert([{ user_id: user.id, listing_id: listingId }]);
-      return true; // toegevoegd
-    }
-  } catch(e) {
-    console.warn('Favoriet toggle mislukt:', e.message);
-    return null;
-  }
-}
-
-async function sbGetFavorites() {
-  try {
-    var { data: { user } } = await sb.auth.getUser();
-    if (!user) return [];
-    var { data, error } = await sb.from('favorites').select('listing_id').eq('user_id', user.id);
-    if (error) throw error;
-    return (data || []).map(function(f) { return f.listing_id; });
-  } catch(e) {
-    return [];
-  }
-}
-
-// Initialiseer: probeer Supabase data te laden
-async function initSupabaseData() {
-  var sbSales = await sbFetchListings();
-  if (sbSales && sbSales.length > 0) {
-    sales = sbSales;
-    console.log('✅ ' + sales.length + ' listings geladen uit Supabase');
-  } else {
-    console.log('📦 Gebruik demo-data (' + sales.length + ' listings)');
-  }
-  // Herlaad de UI
-  if (typeof renderMarkers === 'function' && map) renderMarkers();
-  if (typeof renderList === 'function') renderList();
-}
-
-// ══════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════
 const TYPES = {
@@ -1539,63 +1343,111 @@ let goingSet = new Set();
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let advTagFilters = new Set();
-let activeSort = 'dichtsbij'; // dichtsbij | datum | nieuwst | interesse
-// Gebruikerslocatie voor afstand-sortering (wordt gevuld zodra beschikbaar)
-var userLat = 52.37, userLng = 4.90; // fallback: Amsterdam centrum
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
-    if (activeSort === 'dichtsbij') renderList();
-  }, null, { timeout: 5000 });
-}
-let isGuest = false;
+let isGuest = true; // Iedereen start als gast totdat ze inloggen/registreren
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
-let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], uploadedFiles = [], addTagsSelected = new Set(), nextId = 10;
+let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
 let obStep = 0, obSelectedCats = ['Kleding'];
 let searchSuggestTimer = null;
 let attendanceData = { visited:4, total:5 };
 
 // ══════════════════════════════════════════════════
-// ONBOARDING
+// ONBOARDING — nieuwe flow
 // ══════════════════════════════════════════════════
-function obGoTo(n) {
-  obStep = n;
-  document.getElementById('ob-slider').style.transform = 'translateX(-' + (n * 25) + '%)';
-  for (var i = 0; i < 4; i++) document.getElementById('odd-' + i).classList.toggle('active', i === n);
-  document.getElementById('onboarding').classList.toggle('ob-dark', n === 0);
-  // Blobs only on screen 1
-  document.querySelectorAll('.ob-blob').forEach(function(b) { b.style.display = n === 0 ? '' : 'none'; });
-  document.getElementById('ob-skip').style.display = n === 3 ? 'none' : '';
-  // Re-trigger fade-up animations on new screen
-  var screens = document.querySelectorAll('.ob-screen');
+
+// Popup functies
+function showObPopup() {
+  var bd = document.getElementById('ob-popup-backdrop');
+  var pop = document.getElementById('ob-popup');
+  if (!bd) return;
+  bd.style.display = 'flex';
+  requestAnimationFrame(function() {
+    bd.style.opacity = '1';
+    pop.style.transform = 'translateY(0)';
+  });
+}
+function hideObPopup() {
+  var bd = document.getElementById('ob-popup-backdrop');
+  if (!bd) return;
+  bd.style.opacity = '0';
+  document.getElementById('ob-popup').style.transform = 'translateY(40px)';
+  setTimeout(function() { bd.style.display = 'none'; }, 400);
+}
+
+// Gast flow starten (3 stappen)
+var gstStep = 0;
+function obStartGuest() {
+  hideObPopup();
+  var flow = document.getElementById('ob-guest-flow');
+  flow.style.display = 'flex';
+  flow.style.background = 'var(--forest)';
+  gstGoTo(0);
+}
+function gstGoTo(n) {
+  gstStep = n;
+  document.getElementById('gst-slider').style.transform = 'translateX(-' + (n * 33.333) + '%)';
+  for (var i = 0; i < 3; i++) {
+    var dot = document.getElementById('gst-dot-' + i);
+    if (dot) dot.classList.toggle('active', i === n);
+  }
+  // Achtergrond kleur per stap
+  var flow = document.getElementById('ob-guest-flow');
+  flow.style.background = n === 0 ? 'var(--forest)' : '#F9F5EF';
+  // Animaties retriggeren
+  var screens = document.querySelectorAll('#gst-slider .ob-screen');
   if (screens[n]) {
-    var anims = screens[n].querySelectorAll('[class*="ob-anim-"]');
-    anims.forEach(function(el) {
+    screens[n].querySelectorAll('[class*="ob-anim-"]').forEach(function(el) {
       el.style.animation = 'none';
-      el.offsetHeight; // reflow
+      el.offsetHeight;
       el.style.animation = '';
     });
   }
 }
-function obNext()   { if (obStep < 3) obGoTo(obStep + 1); }
-function obSkip()   { obGoTo(3); }
+function gstNext() { if (gstStep < 2) gstGoTo(gstStep + 1); else obGuestFinish(); }
+function obGuestFinish() {
+  isGuest = true;
+  var flow = document.getElementById('ob-guest-flow');
+  flow.style.transition = 'opacity .4s';
+  flow.style.opacity = '0';
+  setTimeout(function() { flow.style.display = 'none'; flow.style.opacity = ''; flow.style.transition = ''; }, 400);
+  toast('Je bekijkt YardiGo als gast 👁️');
+  updateAttendanceUI();
+}
+
+// Account / login panel
+function obShowAccountPanel() {
+  hideObPopup();
+  var flow = document.getElementById('ob-guest-flow');
+  if (flow) { flow.style.transition = 'opacity .3s'; flow.style.opacity = '0'; setTimeout(function(){flow.style.display='none';flow.style.opacity='';flow.style.transition='';},300); }
+  document.getElementById('ob-account-backdrop').style.display = 'flex';
+  document.getElementById('ob-account-panel').style.display = 'block';
+  document.getElementById('ob-login-panel').style.display = 'none';
+}
+function obShowLoginPanel() {
+  hideObPopup();
+  var flow = document.getElementById('ob-guest-flow');
+  if (flow) { flow.style.transition = 'opacity .3s'; flow.style.opacity = '0'; setTimeout(function(){flow.style.display='none';flow.style.opacity='';flow.style.transition='';},300); }
+  document.getElementById('ob-account-backdrop').style.display = 'flex';
+  document.getElementById('ob-account-panel').style.display = 'none';
+  document.getElementById('ob-login-panel').style.display = 'block';
+}
+function obHideAccountPanel() {
+  document.getElementById('ob-account-backdrop').style.display = 'none';
+}
+
+// Locatie permissie (stap 1 gast flow)
 function obRequestLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      function() { document.getElementById('ob-loc-card').classList.add('granted'); document.querySelector('#ob-loc-card .ob-perm-status').textContent = '✓ Toegang verleend'; },
+      function() {
+        document.getElementById('ob-loc-card').classList.add('granted');
+        document.getElementById('ob-loc-status').textContent = '✓ Toegang verleend';
+      },
       function() { toast('Locatie niet beschikbaar'); }
     );
   }
 }
-function obRequestNotif() {
-  if ('Notification' in window) {
-    Notification.requestPermission().then(function(p) {
-      if (p === 'granted') { document.getElementById('ob-notif-card').classList.add('granted'); document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Meldingen aan'; }
-      else toast('Meldingen niet toegestaan');
-    });
-  }
-}
+
 function obToggleCat(el) {
   var cat = el.dataset.cat;
   var idx = obSelectedCats.indexOf(cat);
@@ -1607,77 +1459,31 @@ function obToggleCat(el) {
   }
   document.getElementById('ob-cat-count').textContent = obSelectedCats.length + ' categorie' + (obSelectedCats.length === 1 ? '' : 'ën') + ' geselecteerd';
 }
-async function obRegister() {
+function obRegister() {
   var name = document.getElementById('ob-name').value.trim();
   var email = document.getElementById('ob-email').value.trim();
   var pass = document.getElementById('ob-pass').value;
   if (!name) { toast('Vul je naam in'); return; }
   if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
   if (pass.length < 6) { toast('Wachtwoord minimaal 6 tekens'); return; }
-  // Supabase registratie
-  var result = await sbSignUp(email, pass, name);
-  if (!result.success) { toast('Registratie mislukt: ' + result.error); return; }
   isGuest = false;
+  obHideAccountPanel();
   obFinish(name);
 }
-function obShowLogin()  { document.getElementById('ob-login-modal').style.display = 'flex'; }
-function obHideLogin()  { document.getElementById('ob-login-modal').style.display = 'none'; }
-async function obLogin() {
-  var email = document.getElementById('ob-login-email') ? document.getElementById('ob-login-email').value.trim() : '';
-  var pass = document.getElementById('ob-login-pass') ? document.getElementById('ob-login-pass').value : '';
-  if (email && pass) {
-    var result = await sbSignIn(email, pass);
-    if (!result.success) { toast('Login mislukt: ' + result.error); return; }
-  }
-  isGuest = false; obHideLogin(); obFinish('Welkom terug!');
+function obLogin() {
+  isGuest = false;
+  obHideAccountPanel();
+  obFinish('Welkom terug!');
 }
-function obGuest()      { isGuest = true; obFinish('Gast'); }
 function obFinish(name) {
-  var ob = document.getElementById('onboarding');
-  ob.style.transition = 'opacity .4s';
-  ob.style.opacity = '0';
-  setTimeout(function() { ob.style.display = 'none'; }, 400);
-  localStorage.setItem('yg-onboarded', '1');
   toast(name === 'Gast' ? 'Je bekijkt YardiGo als gast 👁️' : 'Welkom, ' + name + '! 🎉');
   updateAttendanceUI();
-  updateAuthUI();
 }
 
-// Update UI op basis van inlog-status
-async function updateAuthUI() {
-  try {
-    var { data: { user } } = await sb.auth.getUser();
-    var loginBtn = document.getElementById('loginBtn');
-    var profileName = document.getElementById('profile-name');
-    var profileLocation = document.getElementById('profile-location');
-    if (user) {
-      isGuest = false;
-      var displayName = (user.user_metadata && user.user_metadata.display_name) || user.email.split('@')[0];
-      // Header: verberg Inloggen, toon naam
-      if (loginBtn) {
-        loginBtn.textContent = displayName;
-        loginBtn.onclick = function() { sv('mijn', document.querySelectorAll('.tab')[3]); };
-        loginBtn.style.background = 'rgba(255,255,255,.25)';
-      }
-      // Profiel: toon echte naam
-      if (profileName) profileName.textContent = displayName;
-      if (profileLocation) profileLocation.textContent = user.email;
-    } else {
-      // Niet ingelogd
-      if (loginBtn) {
-        loginBtn.textContent = 'Inloggen';
-        loginBtn.onclick = function() { openLogin(); };
-        loginBtn.style.background = 'rgba(255,255,255,.15)';
-      }
-      if (isGuest) {
-        if (profileName) profileName.textContent = 'Gast';
-        if (profileLocation) profileLocation.textContent = 'Niet ingelogd';
-      }
-    }
-  } catch(e) {
-    console.warn('Auth UI update mislukt:', e.message);
-  }
-}
+// Legacy aliases (worden nog gebruikt door header login-knop)
+function obShowLogin()  { obShowLoginPanel(); }
+function obHideLogin()  { obHideAccountPanel(); }
+function obGuest()      { obGuestFinish(); }
 
 // ══════════════════════════════════════════════════
 // MAP
@@ -1763,10 +1569,7 @@ function renderMarkers() {
     var tagsHtml = (sale.tags || []).map(function(tg) {
       return '<span class="pop-tag ' + sale.type + '">' + tg + '</span>';
     }).join('');
-    var addrHtml = isGuest
-      ? '📍 ' + sale.address.split(',').slice(-1)[0].trim() + ' <span style="filter:blur(3px)">••••••</span> 🔒'
-      : '📍 ' + sale.address;
-    // Foto preview of foto-teller
+    // Foto preview
     var photoHtml = '';
     if (sale.photos && sale.photos.length) {
       var photoCount = sale.photos.length;
@@ -1775,6 +1578,14 @@ function renderMarkers() {
         + (photoCount > 1 ? '<div style="position:absolute;bottom:7px;right:8px;background:rgba(44,36,22,.65);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">&#128247; ' + photoCount + '</div>' : '')
         + '</div>';
     }
+
+    var addrParts = sale.address.split(',');
+    var street = addrParts.slice(0, addrParts.length - 1).join(',').trim();
+    var city = addrParts[addrParts.length - 1].trim();
+    var addrHtml = isGuest
+      ? '&#128205; <span style="filter:blur(4px);user-select:none;">' + street + '</span>, ' + city + ' <span style="font-size:10px;font-weight:700;color:#E07B39;">&#128274;</span>'
+      : '&#128205; ' + sale.address;
+
     var popupHtml = '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:260px">'
       + photoHtml
       + '<div class="pop-head ' + sale.type + '">'
@@ -1786,8 +1597,8 @@ function renderMarkers() {
       + '<div class="pop-addr">' + addrHtml + '</div>'
       + '<div class="pop-tags">' + tagsHtml + '</div>'
       + '<div class="pop-actions">'
-      + '<button class="pop-btn ' + sale.type + '" onclick="openDetail(\'' + sale.id + '\')">Meer info &#8594;</button>'
-      + '<button class="pop-fav" onclick="toggleFav(\'' + sale.id + '\')">' + (fav ? '&#11088;' : '&#9734;') + '</button>'
+      + '<button class="pop-btn ' + sale.type + '" onclick="openDetail(' + sale.id + ')">Meer info &#8594;</button>'
+      + (isGuest ? '' : '<button class="pop-fav" onclick="toggleFav(' + sale.id + ')">' + (fav ? '&#11088;' : '&#9734;') + '</button>')
       + '</div></div></div>';
     var m = L.marker([sale.lat, sale.lng], { icon: makeMarkerIcon(sale) });
     m.bindPopup(popupHtml, { maxWidth: 260 });
@@ -1846,20 +1657,6 @@ function getDateRange(key) {
   return null;
 }
 function applyFilters() { renderMarkers(); renderList(); }
-
-function haversine(lat1, lng1, lat2, lng2) {
-  var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
-  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function setSort(sort) {
-  activeSort = sort;
-  document.querySelectorAll('.sort-pill').forEach(function(p) { p.classList.remove('active'); });
-  var btn = document.getElementById('sort-' + sort);
-  if (btn) btn.classList.add('active');
-  renderList();
-}
 function filterType(type) {
   if (type === 'all') { activeFilters.clear(); }
   else { if (activeFilters.has(type)) activeFilters.delete(type); else activeFilters.add(type); }
@@ -1903,21 +1700,6 @@ function fmtDate(d) {
 }
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
-  // Sorteer op basis van activeSort
-  visible.sort(function(a, b) {
-    if (activeSort === 'dichtsbij') {
-      var da = haversine(userLat, userLng, a.lat || 52.37, a.lng || 4.90);
-      var db = haversine(userLat, userLng, b.lat || 52.37, b.lng || 4.90);
-      return da - db;
-    } else if (activeSort === 'datum') {
-      return (a.date || '').localeCompare(b.date || '');
-    } else if (activeSort === 'nieuwst') {
-      return (b.id > a.id ? 1 : b.id < a.id ? -1 : 0);
-    } else if (activeSort === 'interesse') {
-      return (b.interested || 0) - (a.interested || 0);
-    }
-    return 0;
-  });
   var el = document.getElementById('lcount');
   if (el) el.textContent = visible.length + ' gevonden';
   var list = document.getElementById('cardList');
@@ -1950,7 +1732,7 @@ function renderList() {
   }
   list.innerHTML = visible.map(function(s, i) {
     var t = TYPES[s.type], fav = favorites.has(s.id);
-    var d2 = s.lat ? haversine(userLat, userLng, s.lat, s.lng).toFixed(1) : (Math.random() * 8 + 0.5).toFixed(1);
+    var d2 = (Math.random() * 8 + 0.5).toFixed(1);
     var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + tg + '</span>'; }).join('');
     var city = s.address.split(',').slice(-1)[0].trim();
     var addr = isGuest
@@ -1959,15 +1741,15 @@ function renderList() {
     var going = goingSet.has(s.id);
     return '<div class="card" style="animation:fadeUp .4s ' + (i * 0.06) + 's both">'
       + (s.photos && s.photos.length
-        ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(\'' + s.id + '\')" style="padding:0;overflow:hidden"><img src="' + s.photos[0] + '" data-fallback="' + s.emoji + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
-        : '<div class="card-thumb ' + s.type + '" onclick="openDetail(\'' + s.id + '\')">' + s.emoji + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
-      + '<div class="card-body" onclick="openDetail(\'' + s.id + '\')">'
+        ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + s.id + ')" style="padding:0;overflow:hidden"><img src="' + s.photos[0] + '" data-fallback="' + s.emoji + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
+        : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + s.id + ')">' + s.emoji + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
+      + '<div class="card-body" onclick="openDetail(' + s.id + ')">'
       + '<div class="card-top"><div class="card-title">' + s.title + '</div><span class="type-chip ' + s.type + '">' + t.label + '</span></div>'
       + '<div class="card-addr">' + addr + ' · ' + fmtDate(s.date) + '</div>'
       + '<div class="card-tags">' + tags + '</div>'
       + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + s.from + '–' + s.till + '</span>'
       + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + s.interested) + '</span>'
-      + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(\'' + s.id + '\')">' + (fav ? '⭐' : '☆') + '</button>'
+      + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + s.id + ')">' + (fav ? '⭐' : '☆') + '</button>'
       + '</div></div></div>';
   }).join('');
 }
@@ -1977,11 +1759,7 @@ function renderList() {
 // ══════════════════════════════════════════════════
 function toggleFav(id) {
   if (isGuest) { guestGate('favoriet'); return; }
-  id = String(id);
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
-  // Sync met Supabase (async, geen blocker)
-  var sale = sales.find(function(s) { return String(s.id) === id; });
-  if (sale && sale.supabase_id) sbToggleFavorite(sale.supabase_id);
   renderMarkers(); renderList(); updateFavProfile();
 }
 function updateFavProfile() {
@@ -1993,7 +1771,7 @@ function updateFavProfile() {
     return '<div class="my-sale-card"><div style="font-size:28px">' + s.emoji + '</div>'
       + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + s.title + '</div>'
       + '<div style="font-size:11px;color:var(--muted)">' + fmtDate(s.date) + ' · ' + s.from + '–' + s.till + '</div></div>'
-      + '<button onclick="toggleFav(\'' + s.id + '\')" style="background:none;border:none;font-size:20px;cursor:pointer">⭐</button></div>';
+      + '<button onclick="toggleFav(' + s.id + ')" style="background:none;border:none;font-size:20px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
 
@@ -2034,7 +1812,7 @@ function updateRouteView() {
     return '<div class="my-sale-card"><div style="width:28px;height:28px;border-radius:50%;background:' + colors[s.type] + ';color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">' + (i+1) + '</div>'
       + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + s.title + '</div>'
       + '<div style="font-size:11px;color:var(--muted)">📍 ' + (isGuest ? s.address.split(',').slice(-1)[0].trim() + ' (adres verborgen)' : s.address) + '</div></div>'
-      + '<button onclick="toggleFav(\'' + s.id + '\')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
+      + '<button onclick="toggleFav(' + s.id + ')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
 function clearRoute() { favorites.clear(); renderMarkers(); renderList(); updateRouteView(); toast('🗑️ Route gewist'); }
@@ -2069,7 +1847,7 @@ function ptab(i) {
 // DETAIL
 // ══════════════════════════════════════════════════
 function openDetail(id) {
-  var s = sales.find(function(x) { return String(x.id) === String(id); });
+  var s = sales.find(function(x) { return x.id === id; });
   if (!s) return;
   detailSaleId = id; carouselIdx = 0;
   var t = TYPES[s.type], fav = favorites.has(id);
@@ -2104,15 +1882,22 @@ function openDetail(id) {
   if (fb) { fb.textContent = fav ? '⭐' : '☆'; }
   // Guest mode
   if (isGuest) {
-    document.getElementById('det-addr').style.display = 'none';
-    document.getElementById('det-addr-guest').style.display = 'flex';
-    var city = s.address.split(',').slice(-1)[0].trim();
-    document.getElementById('det-addr-city').textContent = '📍 ' + city + ' · ';
-    document.getElementById('det-route-btn').onclick = function() { guestGate('route'); };
-    document.getElementById('det-route-btn').style.opacity = '0.5';
-    document.getElementById('det-fav-btn').onclick = function() { guestGate('favoriet'); };
-    document.getElementById('det-fav-btn').style.opacity = '0.5';
-    document.getElementById('det-minimap-wrap').style.display = 'none';
+    // Adres: straat geblurd, stad zichtbaar
+    var addrParts = s.address.split(',');
+    var dStreet = addrParts.slice(0, addrParts.length - 1).join(',').trim();
+    var dCity = addrParts[addrParts.length - 1].trim();
+    document.getElementById('det-addr').style.display = 'block';
+    document.getElementById('det-addr').innerHTML = '&#128205; <span style="filter:blur(4px);user-select:none;">' + dStreet + '</span>, ' + dCity + ' <span style="font-size:10px;font-weight:700;color:#E07B39;cursor:pointer;" onclick="obShowAccountPanel()">&#128274; Account nodig</span>';
+    document.getElementById('det-addr-guest').style.display = 'none';
+    // Route: gelockt
+    document.getElementById('det-route-btn').onclick = function() { obShowAccountPanel(); };
+    document.getElementById('det-route-btn').style.opacity = '0.45';
+    document.getElementById('det-route-btn').title = 'Account nodig voor navigatie';
+    // Fav: gelockt
+    document.getElementById('det-fav-btn').onclick = function() { obShowAccountPanel(); };
+    document.getElementById('det-fav-btn').style.opacity = '0.45';
+    // Minimap: tonen op buurt-niveau (zoom 13)
+    document.getElementById('det-minimap-wrap').style.display = 'block';
     document.getElementById('det-guest-banner').style.display = 'flex';
   } else {
     document.getElementById('det-addr').style.display = 'block';
@@ -2120,6 +1905,7 @@ function openDetail(id) {
     document.getElementById('det-addr-guest').style.display = 'none';
     document.getElementById('det-route-btn').onclick = detailRoute;
     document.getElementById('det-route-btn').style.opacity = '1';
+    document.getElementById('det-route-btn').title = '';
     document.getElementById('det-fav-btn').onclick = detailFav;
     document.getElementById('det-fav-btn').style.opacity = '1';
     document.getElementById('det-minimap-wrap').style.display = 'block';
@@ -2130,14 +1916,16 @@ function openDetail(id) {
   document.getElementById('detailOv').classList.add('open');
   // Mini map
   setTimeout(function() {
-    if (isGuest) return;
     var container = document.getElementById('det-minimap');
     container.innerHTML = '';
     if (detailMiniMap) { try { detailMiniMap.remove(); } catch(e) {} detailMiniMap = null; }
     try {
-      detailMiniMap = L.map('det-minimap', { zoomControl:false, dragging:false, scrollWheelZoom:false, touchZoom:false }).setView([s.lat, s.lng], 15);
+      var zoom = isGuest ? 13 : 15;
+      detailMiniMap = L.map('det-minimap', { zoomControl:false, dragging:false, scrollWheelZoom:false, touchZoom:false }).setView([s.lat, s.lng], zoom);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMiniMap);
-      L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s) }).addTo(detailMiniMap);
+      if (!isGuest) {
+        L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s) }).addTo(detailMiniMap);
+      }
     } catch(e) {}
   }, 300);
 }
@@ -2191,8 +1979,17 @@ function detailShare() {
   var s = sales.find(function(x) { return x.id === detailSaleId; });
   if (!s) return;
   document.getElementById('share-title-text').textContent = s.title;
-  document.getElementById('share-sub-text').textContent = s.address + ' · ' + s.date;
+  var addrParts = s.address.split(',');
+  var city = addrParts[addrParts.length - 1].trim();
+  document.getElementById('share-sub-text').textContent = (isGuest ? city : s.address) + ' · ' + s.date;
   document.getElementById('share-link-text').textContent = 'yardigo.nl/v/' + s.id;
+  // Maps-knop: zichtbaar maar gelockt voor gasten
+  var mapsBtn = document.getElementById('share-maps-btn');
+  if (mapsBtn) {
+    mapsBtn.style.opacity = isGuest ? '0.45' : '1';
+    mapsBtn.title = isGuest ? 'Account nodig' : '';
+    mapsBtn.innerHTML = isGuest ? '🗺️ Openen in Google Maps &nbsp;<span style="font-size:10px;font-weight:700;color:#E07B39;">&#128274;</span>' : '🗺️ Openen in Google Maps';
+  }
   document.getElementById('shareOv').classList.add('open');
 }
 function closeShare() { document.getElementById('shareOv').classList.remove('open'); }
@@ -2217,7 +2014,12 @@ function shareFacebook() {
   window.open(fbUrl, '_blank', 'width=600,height=400');
   closeShare();
 }
-function shareGoogleMaps() { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s) window.open('https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng); closeShare(); }
+function shareGoogleMaps() {
+  if (isGuest) { closeShare(); obShowAccountPanel(); return; }
+  var s = sales.find(function(x){return x.id===detailSaleId;});
+  if(s) window.open('https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng);
+  closeShare();
+}
 function shareCalendar() {
   var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
   var d = s.date.replace(/-/g,''), ics = ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','DTSTART:'+d+'T090000','DTEND:'+d+'T150000','SUMMARY:'+s.title,'LOCATION:'+s.address,'END:VEVENT','END:VCALENDAR'].join('\r\n');
@@ -2268,36 +2070,16 @@ function addNav(dir) {
 function handleAddPhotos(input) {
   Array.from(input.files).forEach(function(file) {
     if (uploadedPhotos.length >= 10) return;
-    uploadedFiles.push(file); // bewaar origineel File-object voor Supabase upload
     var reader = new FileReader();
     reader.onload = function(e) {
       uploadedPhotos.push(e.target.result);
       document.getElementById('photoGrid').innerHTML = uploadedPhotos.map(function(src, i) {
-        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);uploadedFiles.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
+        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
       }).join('');
       document.getElementById('photoCount').textContent = uploadedPhotos.length + '/10 foto\'s';
     };
     reader.readAsDataURL(file);
   });
-}
-
-// Upload foto's naar Supabase Storage, geeft array van publieke URLs terug
-async function sbUploadPhotos(files, listingTitle) {
-  var urls = [];
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
-    var ext = file.name.split('.').pop() || 'jpg';
-    var path = 'listings/' + Date.now() + '_' + i + '.' + ext;
-    try {
-      var { data, error } = await sb.storage.from('listing-photos').upload(path, file, { cacheControl: '3600', upsert: false });
-      if (error) throw error;
-      var { data: urlData } = sb.storage.from('listing-photos').getPublicUrl(path);
-      urls.push(urlData.publicUrl);
-    } catch(e) {
-      console.warn('Foto upload mislukt:', e.message);
-    }
-  }
-  return urls;
 }
 function toggleAddTag(el) { el.classList.toggle('sel'); if (el.classList.contains('sel')) addTagsSelected.add(el.dataset.tag); else addTagsSelected.delete(el.dataset.tag); }
 function validateDesc(v) {
@@ -2312,61 +2094,20 @@ function buildAddPreview() {
   document.getElementById('prevAddr').textContent = addr ? '📍 ' + addr.value : '';
   document.getElementById('prevBadge').textContent = t.icon + ' ' + t.label;
 }
-function showPubOverlay(title, sub, progress) {
-  var existing = document.getElementById('pub-overlay');
-  if (existing) {
-    document.getElementById('pub-step-title').textContent = title;
-    document.getElementById('pub-step-sub').textContent = sub;
-    document.getElementById('pub-progress-bar').style.width = progress + '%';
-    return;
-  }
-  var el = document.createElement('div');
-  el.className = 'pub-overlay'; el.id = 'pub-overlay';
-  el.innerHTML = '<div class="pub-overlay-box">'
-    + '<div class="pub-spinner"></div>'
-    + '<div class="pub-step-title" id="pub-step-title">' + title + '</div>'
-    + '<div class="pub-step-sub" id="pub-step-sub">' + sub + '</div>'
-    + '<div class="pub-progress"><div class="pub-progress-bar" id="pub-progress-bar" style="width:' + progress + '%"></div></div>'
-    + '</div>';
-  document.body.appendChild(el);
-}
-function hidePubOverlay() {
-  var el = document.getElementById('pub-overlay');
-  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function(){ el.remove(); }, 300); }
-}
-
 async function publishSale() {
   var title = document.getElementById('aTitle'), addr = document.getElementById('aAddr');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (!addr || !addr.value.trim()) { toast('Vul een adres in'); return; }
   showL();
   try {
-    // Stap 1: adres opzoeken
-    showPubOverlay('Adres controleren', 'We zoeken je adres op...', 15);
     var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr.value) + '&format=json&limit=1');
     var data = await res.json();
     var lat = data.length ? +data[0].lat : 52.3, lng = data.length ? +data[0].lon : 5.0;
     var tags = Array.from(addTagsSelected);
-    // Stap 2: foto's uploaden
-    var photoUrls = uploadedPhotos.slice();
-    if (uploadedFiles.length > 0) {
-      showPubOverlay('Foto\'s uploaden', uploadedFiles.length + ' foto' + (uploadedFiles.length > 1 ? '\'s worden' : ' wordt') + ' geüpload...', 45);
-      try {
-        var sbUrls = await sbUploadPhotos(uploadedFiles, title.value);
-        if (sbUrls.length > 0) photoUrls = sbUrls;
-      } catch(e) { console.warn('Foto upload overgeslagen:', e.message); }
-    }
-    // Stap 3: advertentie opslaan
-    showPubOverlay('Advertentie opslaan', 'Bijna klaar, je advertentie wordt geplaatst...', 80);
-    var newSale = { id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: photoUrls };
-    sales.unshift(newSale);
-    await sbCreateListing(newSale);
-    showPubOverlay('Geplaatst! 🎉', 'Je advertentie staat nu live op de kaart.', 100);
-    await new Promise(function(r){ setTimeout(r, 900); });
-    hidePubOverlay();
+    sales.unshift({ id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: uploadedPhotos.slice() });
     renderMarkers(); renderList(); closeAdd(); hideL(); toast('🎉 Verkoop geplaatst!');
-    uploadedPhotos = []; uploadedFiles = []; addTagsSelected.clear(); addStep = 0;
-  } catch(e) { hidePubOverlay(); hideL(); toast('❌ Publiceren mislukt'); }
+    uploadedPhotos = []; addTagsSelected.clear(); addStep = 0;
+  } catch(e) { hideL(); toast('❌ Publiceren mislukt'); }
 }
 
 // ══════════════════════════════════════════════════
@@ -2761,7 +2502,7 @@ function fbRenderMarkers() {
     var py = (my - cy) * 256 + h/2;
     if (px < -20 || px > w + 20 || py < -20 || py > h + 20) return '';
     var col = colors[sale.type];
-    return '<div onclick="openDetail(\'' + sale.id + '\')" style="position:absolute;left:' + (px-15) + 'px;top:' + (py-36) + 'px;width:30px;height:36px;cursor:pointer;pointer-events:all;z-index:10" title="' + sale.title + '">'
+    return '<div onclick="openDetail(' + sale.id + ')" style="position:absolute;left:' + (px-15) + 'px;top:' + (py-36) + 'px;width:30px;height:36px;cursor:pointer;pointer-events:all;z-index:10" title="' + sale.title + '">'
       + '<svg width="30" height="36" viewBox="0 0 30 36"><path d="M15 2C9 2 4 7 4 13C4 21 15 34 15 34C15 34 26 21 26 13C26 7 21 2 15 2Z" fill="' + col + '" stroke="white" stroke-width="1.5"/><circle cx="15" cy="13" r="5.5" fill="white"/><text x="15" y="17" text-anchor="middle" font-size="7">' + TYPES[sale.type].icon + '</text></svg>'
       + '</div>';
   }).join('');
@@ -2852,7 +2593,7 @@ window.addEventListener('appinstalled', function() {
   dismissInstall();
 });
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
   if (localStorage.getItem('yg-dark') === '1') {
     document.body.classList.add('dark');
     document.getElementById('dmBall').textContent = '🌙';
@@ -2862,26 +2603,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     var row = document.getElementById('dm-toggle-row');
     if (row) row.classList.add('off');
   }
-
-  // Check of gebruiker al onboarded is en/of ingelogd
-  var onboarded = localStorage.getItem('yg-onboarded') === '1';
-  if (onboarded) {
-    var ob = document.getElementById('onboarding');
-    if (ob) ob.style.display = 'none';
-    // Check of ingelogd of gast
-    try {
-      var { data: { user } } = await sb.auth.getUser();
-      isGuest = !user;
-    } catch(e) { isGuest = true; }
-  }
-
   renderList();
   updateAttendanceUI();
   initMap();
-  // Probeer Supabase data te laden (async, demo-data als fallback)
-  initSupabaseData();
-  // Update auth UI (naam in header, profiel)
-  if (onboarded) updateAuthUI();
+  // Popup na 1.5s tonen
+  setTimeout(showObPopup, 3000);
 });
 </script>
 </body>
