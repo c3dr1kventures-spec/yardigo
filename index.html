@@ -257,6 +257,12 @@ body.dark .dm-ball{left:21px;}
 /* ── LIST ── */
 .list-wrap{padding:12px;}
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted);}
+.sort-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px;}
+.sort-bar::-webkit-scrollbar{display:none;}
+.sort-pill{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;}
+.sort-pill.active{background:var(--forest);border-color:var(--forest);color:white;}
+body.dark .sort-pill{background:var(--bg2);border-color:var(--border);color:var(--muted);}
+body.dark .sort-pill.active{background:var(--forest);border-color:var(--forest);color:white;}
 .card{background:white;border-radius:14px;border:1.5px solid var(--border);margin-bottom:10px;overflow:hidden;display:flex;box-shadow:var(--shadow);}
 .card-thumb{width:80px;min-height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;position:relative;cursor:pointer;}
 .card-thumb.particulier{background:var(--amber-light);}
@@ -377,6 +383,17 @@ body.dark .dm-ball{left:21px;}
 
 /* ── LOADING BAR ── */
 .lbar{position:fixed;top:0;left:0;height:3px;background:var(--terra);width:0;transition:width .4s;z-index:9999;}
+
+/* ── PUBLISH OVERLAY ── */
+.pub-overlay{position:fixed;inset:0;background:rgba(44,36,22,.72);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(4px);}
+.pub-overlay-box{background:white;border-radius:20px;padding:32px 28px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(44,36,22,.2);}
+.pub-spinner{width:52px;height:52px;border:4px solid var(--border);border-top-color:var(--terra);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pub-step-title{font-size:16px;font-weight:800;color:var(--bark);margin-bottom:6px;}
+.pub-step-sub{font-size:12px;color:var(--muted);line-height:1.5;}
+.pub-progress{height:4px;background:var(--border);border-radius:4px;margin-top:18px;overflow:hidden;}
+.pub-progress-bar{height:100%;background:var(--terra);border-radius:4px;transition:width .5s ease;width:0%;}
+body.dark .pub-overlay-box{background:var(--bg2);}
 
 /* ── SETTINGS ── */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
@@ -650,7 +667,7 @@ body.dark .dm-ball{left:21px;}
       </g>
     </svg>
     <div class="logo-wrap" style="flex-direction:column;gap:0">
-      <span class="logo-text">Yardi<span>Go</span></span>
+      <span class="logo-text">Yard<span style="color:var(--birch)">i</span><span>Go</span></span>
       <span class="logo-sub">FIND · SELL · GO</span>
     </div>
   </div>
@@ -747,6 +764,12 @@ body.dark .dm-ball{left:21px;}
 <div class="view" id="view-lijst">
   <div class="list-wrap">
     <div class="list-header"><span id="lcount">0 gevonden</span></div>
+    <div class="sort-bar">
+      <button class="sort-pill active" id="sort-dichtsbij" onclick="setSort('dichtsbij')">📍 Dichtsbij</button>
+      <button class="sort-pill" id="sort-datum" onclick="setSort('datum')">📅 Eerstvolgende</button>
+      <button class="sort-pill" id="sort-nieuwst" onclick="setSort('nieuwst')">🆕 Nieuwste</button>
+      <button class="sort-pill" id="sort-interesse" onclick="setSort('interesse')">🔥 Populair</button>
+    </div>
     <div id="cardList"></div>
   </div>
 </div>
@@ -1516,6 +1539,15 @@ let goingSet = new Set();
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let advTagFilters = new Set();
+let activeSort = 'dichtsbij'; // dichtsbij | datum | nieuwst | interesse
+// Gebruikerslocatie voor afstand-sortering (wordt gevuld zodra beschikbaar)
+var userLat = 52.37, userLng = 4.90; // fallback: Amsterdam centrum
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    userLat = pos.coords.latitude; userLng = pos.coords.longitude;
+    if (activeSort === 'dichtsbij') renderList();
+  }, null, { timeout: 5000 });
+}
 let isGuest = false;
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
@@ -1814,6 +1846,20 @@ function getDateRange(key) {
   return null;
 }
 function applyFilters() { renderMarkers(); renderList(); }
+
+function haversine(lat1, lng1, lat2, lng2) {
+  var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function setSort(sort) {
+  activeSort = sort;
+  document.querySelectorAll('.sort-pill').forEach(function(p) { p.classList.remove('active'); });
+  var btn = document.getElementById('sort-' + sort);
+  if (btn) btn.classList.add('active');
+  renderList();
+}
 function filterType(type) {
   if (type === 'all') { activeFilters.clear(); }
   else { if (activeFilters.has(type)) activeFilters.delete(type); else activeFilters.add(type); }
@@ -1857,6 +1903,21 @@ function fmtDate(d) {
 }
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
+  // Sorteer op basis van activeSort
+  visible.sort(function(a, b) {
+    if (activeSort === 'dichtsbij') {
+      var da = haversine(userLat, userLng, a.lat || 52.37, a.lng || 4.90);
+      var db = haversine(userLat, userLng, b.lat || 52.37, b.lng || 4.90);
+      return da - db;
+    } else if (activeSort === 'datum') {
+      return (a.date || '').localeCompare(b.date || '');
+    } else if (activeSort === 'nieuwst') {
+      return (b.id > a.id ? 1 : b.id < a.id ? -1 : 0);
+    } else if (activeSort === 'interesse') {
+      return (b.interested || 0) - (a.interested || 0);
+    }
+    return 0;
+  });
   var el = document.getElementById('lcount');
   if (el) el.textContent = visible.length + ' gevonden';
   var list = document.getElementById('cardList');
@@ -1889,7 +1950,7 @@ function renderList() {
   }
   list.innerHTML = visible.map(function(s, i) {
     var t = TYPES[s.type], fav = favorites.has(s.id);
-    var d2 = (Math.random() * 8 + 0.5).toFixed(1);
+    var d2 = s.lat ? haversine(userLat, userLng, s.lat, s.lng).toFixed(1) : (Math.random() * 8 + 0.5).toFixed(1);
     var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + tg + '</span>'; }).join('');
     var city = s.address.split(',').slice(-1)[0].trim();
     var addr = isGuest
@@ -2251,31 +2312,61 @@ function buildAddPreview() {
   document.getElementById('prevAddr').textContent = addr ? '📍 ' + addr.value : '';
   document.getElementById('prevBadge').textContent = t.icon + ' ' + t.label;
 }
+function showPubOverlay(title, sub, progress) {
+  var existing = document.getElementById('pub-overlay');
+  if (existing) {
+    document.getElementById('pub-step-title').textContent = title;
+    document.getElementById('pub-step-sub').textContent = sub;
+    document.getElementById('pub-progress-bar').style.width = progress + '%';
+    return;
+  }
+  var el = document.createElement('div');
+  el.className = 'pub-overlay'; el.id = 'pub-overlay';
+  el.innerHTML = '<div class="pub-overlay-box">'
+    + '<div class="pub-spinner"></div>'
+    + '<div class="pub-step-title" id="pub-step-title">' + title + '</div>'
+    + '<div class="pub-step-sub" id="pub-step-sub">' + sub + '</div>'
+    + '<div class="pub-progress"><div class="pub-progress-bar" id="pub-progress-bar" style="width:' + progress + '%"></div></div>'
+    + '</div>';
+  document.body.appendChild(el);
+}
+function hidePubOverlay() {
+  var el = document.getElementById('pub-overlay');
+  if (el) { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function(){ el.remove(); }, 300); }
+}
+
 async function publishSale() {
   var title = document.getElementById('aTitle'), addr = document.getElementById('aAddr');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (!addr || !addr.value.trim()) { toast('Vul een adres in'); return; }
   showL();
   try {
+    // Stap 1: adres opzoeken
+    showPubOverlay('Adres controleren', 'We zoeken je adres op...', 15);
     var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr.value) + '&format=json&limit=1');
     var data = await res.json();
     var lat = data.length ? +data[0].lat : 52.3, lng = data.length ? +data[0].lon : 5.0;
     var tags = Array.from(addTagsSelected);
-    // Upload foto's naar Supabase Storage als er zijn
-    var photoUrls = uploadedPhotos.slice(); // fallback: base64 previews
+    // Stap 2: foto's uploaden
+    var photoUrls = uploadedPhotos.slice();
     if (uploadedFiles.length > 0) {
+      showPubOverlay('Foto\'s uploaden', uploadedFiles.length + ' foto' + (uploadedFiles.length > 1 ? '\'s worden' : ' wordt') + ' geüpload...', 45);
       try {
         var sbUrls = await sbUploadPhotos(uploadedFiles, title.value);
         if (sbUrls.length > 0) photoUrls = sbUrls;
       } catch(e) { console.warn('Foto upload overgeslagen:', e.message); }
     }
+    // Stap 3: advertentie opslaan
+    showPubOverlay('Advertentie opslaan', 'Bijna klaar, je advertentie wordt geplaatst...', 80);
     var newSale = { id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: photoUrls };
     sales.unshift(newSale);
-    // Sla ook op in Supabase (async, geen blocker)
-    sbCreateListing(newSale).then(function(sbRow) { if (sbRow) console.log('✅ Ook opgeslagen in Supabase'); });
+    await sbCreateListing(newSale);
+    showPubOverlay('Geplaatst! 🎉', 'Je advertentie staat nu live op de kaart.', 100);
+    await new Promise(function(r){ setTimeout(r, 900); });
+    hidePubOverlay();
     renderMarkers(); renderList(); closeAdd(); hideL(); toast('🎉 Verkoop geplaatst!');
     uploadedPhotos = []; uploadedFiles = []; addTagsSelected.clear(); addStep = 0;
-  } catch(e) { hideL(); toast('❌ Publiceren mislukt'); }
+  } catch(e) { hidePubOverlay(); hideL(); toast('❌ Publiceren mislukt'); }
 }
 
 // ══════════════════════════════════════════════════
