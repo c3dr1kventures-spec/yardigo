@@ -413,67 +413,67 @@ body.dark .dm-ball{left:21px;}
 .btn-pub:hover{border-color:var(--terra);color:var(--terra);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── BUURTVERKOOP ── */
-.buurtverkoop-card {
-  border-left: 4px solid #FF6B35;
+/* ── BUURTVERKOOP LIST CARD ── */
+.bv-list-card {
+  border-left: 4px solid #E07B39 !important;
+  overflow: hidden;
+  padding: 0 !important;
 }
-.bv-header {
+.bv-list-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
   cursor: pointer;
+  user-select: none;
 }
-.bv-icon {
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
+.bv-list-icon {
+  font-size: 22px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #FFF3ED;
   border-radius: 10px;
+  flex-shrink: 0;
 }
-.bv-info h3 {
-  margin: 0;
-  font-size: 15px;
+.bv-list-chevron {
+  font-size: 22px;
+  color: #E07B39;
+  font-weight: 700;
+  transition: transform .25s;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
-.bv-meta {
-  font-size: 13px;
-  color: #888;
+.bv-list-addresses {
+  border-top: 1.5px solid var(--border);
 }
-.bv-toggle {
-  margin-left: auto;
-  color: #888;
-  transition: transform 0.2s;
-}
-.bv-addresses {
-  padding: 0 12px 12px 52px;
-}
-.bv-address-item {
+.bv-addr-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-top: 1px solid #f0f0f0;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
+  transition: background .15s;
 }
-.bv-dot {
-  color: #FF6B35;
-  font-size: 8px;
+.bv-addr-row:last-child { border-bottom: none; }
+.bv-addr-row:active { background: var(--bg2); }
+.bv-fav-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
 }
-.bv-category {
-  font-size: 12px;
-  color: #888;
-}
-
-/* Dark mode buurtverkoop */
-[data-theme="dark"] .bv-icon, body.dark .bv-icon {
-  background: #3a2a1f;
-}
-[data-theme="dark"] .bv-address-item, body.dark .bv-address-item {
-  border-top-color: #333;
-}
+/* Dark mode */
+body.dark .bv-list-icon { background: #3a2a1f; }
+body.dark .bv-addr-row { border-bottom-color: var(--border); }
+body.dark .bv-addr-row:active { background: var(--bg); }
 
 /* MarkerCluster overrides */
 .buurtverkoop-cluster {
@@ -844,7 +844,10 @@ body.dark .dm-ball{left:21px;}
 
 <div class="view" id="view-lijst">
   <div class="list-wrap">
-    <div class="list-header"><span id="lcount">0 gevonden</span></div>
+    <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span id="lcount">0 gevonden</span>
+      <button id="autoRoutBtn" onclick="autoRouteFromLocation()" style="display:none;background:var(--forest);color:white;border:none;border-radius:8px;padding:6px 11px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📍 Auto route</button>
+    </div>
     <div id="cardList"></div>
   </div>
 </div>
@@ -1346,10 +1349,10 @@ body.dark .dm-ball{left:21px;}
         <!-- Enkel adres (particulier / evenement) -->
         <div id="add-s2-single" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
           <div style="position:relative">
-            <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" autocomplete="off">
+            <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, 9741 AB Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" autocomplete="off">
             <div id="aAddr-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
           </div>
-          <input class="form-input" id="aPC" placeholder="Postcode bijv. 9741 AB" maxlength="7">
+          <div style="font-size:11px;color:var(--muted);padding:0 2px">💡 Typ straat, postcode of plaatsnaam — selecteer een suggestie</div>
         </div>
         <!-- Multi-adres (buurtverkoop) -->
         <div id="add-s2-buurt" style="display:none;margin-bottom:16px">
@@ -2013,10 +2016,27 @@ function renderMarkers() {
       maxClusterRadius: 60,
       iconCreateFunction: function(cluster) {
         var count = cluster.getChildCount();
+        var c = '#E07B39';
+        // Groepje van 3 pins naast en achter elkaar
+        var svg = '<svg width="54" height="44" viewBox="0 0 54 44" fill="none" xmlns="http://www.w3.org/2000/svg">'
+          // Achterste pin links
+          + '<path d="M13 3C9.69 3 7 5.69 7 9C7 13.5 13 21 13 21C13 21 19 13.5 19 9C19 5.69 16.31 3 13 3Z" fill="' + c + '" opacity="0.55" stroke="white" stroke-width="1.2"/>'
+          + '<circle cx="13" cy="9" r="2.5" fill="white" opacity="0.7"/>'
+          // Achterste pin rechts
+          + '<path d="M41 3C37.69 3 35 5.69 35 9C35 13.5 41 21 41 21C41 21 47 13.5 47 9C47 5.69 44.31 3 41 3Z" fill="' + c + '" opacity="0.55" stroke="white" stroke-width="1.2"/>'
+          + '<circle cx="41" cy="9" r="2.5" fill="white" opacity="0.7"/>'
+          // Voorste pin midden (groter)
+          + '<path d="M27 2C22.58 2 19 5.58 19 10C19 16 27 26 27 26C27 26 35 16 35 10C35 5.58 31.42 2 27 2Z" fill="' + c + '" stroke="white" stroke-width="1.8"/>'
+          + '<circle cx="27" cy="10" r="3.5" fill="white"/>'
+          // Count badge
+          + '<rect x="18" y="28" width="18" height="14" rx="7" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
+          + '<text x="27" y="39" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Poppins,sans-serif">' + count + '</text>'
+          + '</svg>';
         return L.divIcon({
-          html: '<div style="background:#FF6B35;color:white;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:3px solid white;">🏘️ ' + count + '</div>',
+          html: svg,
           className: 'buurtverkoop-cluster',
-          iconSize: [44, 44]
+          iconSize: [54, 44],
+          iconAnchor: [27, 44]
         });
       }
     });
@@ -2139,6 +2159,8 @@ function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
   var el = document.getElementById('lcount');
   if (el) el.textContent = visible.length + ' gevonden';
+  var arBtn = document.getElementById('autoRoutBtn');
+  if (arBtn) arBtn.style.display = (!isGuest && visible.length > 1) ? 'block' : 'none';
   var list = document.getElementById('cardList');
   if (!list) return;
   if (!visible.length) {
@@ -2173,25 +2195,48 @@ function renderList() {
 
   var html = '';
 
-  // Buurtverkopen met accordion
+  // Buurtverkopen als uitklapbare kaart
   Object.values(bvGroups).forEach(function(bv) {
-    html += '<div class="list-card buurtverkoop-card">'
-      + '<div class="bv-header" id="bv-' + bv.info.id + '">'
-      + '<div class="bv-icon">🏘️</div>'
-      + '<div class="bv-info">'
-      + '<h3>' + bv.info.title + '</h3>'
-      + '<span class="bv-meta">' + fmtDate(bv.info.date) + ' · ' + bv.listings.length + ' adressen</span>'
+    var bvDate = fmtDate(bv.info.date);
+    var bvId = bv.info.id;
+    html += '<div class="card bv-list-card">'
+      // Klik-header (toggle)
+      + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
+      + '<div class="bv-list-icon">🏘️</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+      + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + bv.info.title + '</span>'
+      + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
       + '</div>'
-      + '<div class="bv-toggle">▼</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ Buurtverkoop</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
+      + bv.listings.slice(0,3).map(function(l) {
+          return (l.tags||[]).slice(0,1).map(function(tg) {
+            return '<span class="ctag buurt">' + tg + '</span>';
+          }).join('');
+        }).join('')
       + '</div>'
-      + '<div class="bv-addresses" style="display: none;">'
+      + '</div>'
+      + '<div class="bv-list-chevron" id="bv-chev-' + bvId + '">›</div>'
+      + '</div>'
+      // Uitklapbare adressenlijst
+      + '<div class="bv-list-addresses" id="bv-body-' + bvId + '" style="display:none">'
+      + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
       + bv.listings.map(function(listing) {
-          return '<div class="bv-address-item" id="bv-addr-' + listing.id + '">'
-            + '<span class="bv-dot">●</span>'
-            + '<div>'
-            + '<strong>' + (listing.address.split(',')[0] || listing.address) + '</strong>'
-            + '<span class="bv-category">' + (listing.tags && listing.tags.length ? listing.tags[0] : '') + '</span>'
+          var fav = favorites.has(listing.id);
+          var idAttr = typeof listing.id === 'string' ? "'" + listing.id + "'" : listing.id;
+          var addrShort = listing.address.split(',')[0] || listing.address;
+          var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
+            return '<span style="font-size:10px;color:var(--muted)">' + tg + '</span>';
+          }).join('');
+          return '<div class="bv-addr-row" id="bv-addr-' + listing.id + '" onclick="openDetail(' + idAttr + ')">'
+            + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
+            + '<div style="flex:1;min-width:0">'
+            + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
+            + '<div style="display:flex;gap:6px;margin-top:2px">' + tags + '</div>'
             + '</div>'
+            + '<button class="bv-fav-btn" onclick="event.stopPropagation();toggleFav(' + idAttr + ')" title="Favoriet / route">'
+            + (fav ? '⭐' : '☆') + '</button>'
             + '</div>';
         }).join('')
       + '</div>'
@@ -2205,24 +2250,15 @@ function renderList() {
 
   list.innerHTML = html;
 
-  // Event listeners voor accordions (NIET onclick in HTML)
-  document.querySelectorAll('.bv-header').forEach(function(header) {
-    header.addEventListener('click', function() {
-      var addresses = header.nextElementSibling;
-      var toggle = header.querySelector('.bv-toggle');
-      var isOpen = addresses.style.display !== 'none';
-      addresses.style.display = isOpen ? 'none' : 'block';
-      toggle.textContent = isOpen ? '▼' : '▲';
-    });
-  });
+}
 
-  // Klik op adres → zoom naar pin
-  document.querySelectorAll('.bv-address-item').forEach(function(item) {
-    item.addEventListener('click', function() {
-      var listingId = item.id.replace('bv-addr-', '');
-      zoomToListing(listingId);
-    });
-  });
+function toggleBvCard(bvId) {
+  var body = document.getElementById('bv-body-' + bvId);
+  var chev = document.getElementById('bv-chev-' + bvId);
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chev) { chev.style.transform = isOpen ? '' : 'rotate(90deg)'; }
 }
 
 function createListingCard(s, i) {
@@ -2321,6 +2357,39 @@ function updateRouteView() {
   }).join('');
 }
 function clearRoute() { favorites.clear(); renderMarkers(); renderList(); updateRouteView(); toast('🗑️ Route gewist'); }
+
+// ── Auto-route: plan route op basis van GPS-locatie ──
+function autoRouteFromLocation() {
+  if (isGuest) { guestGate('route'); return; }
+  if (!navigator.geolocation) { toast('📍 Locatie niet beschikbaar'); return; }
+  toast('📍 Locatie ophalen…');
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var userLat = pos.coords.latitude;
+    var userLng = pos.coords.longitude;
+    var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
+    if (!visible.length) { toast('Geen verkopen gevonden'); return; }
+    // Sorteer op afstand van gebruiker
+    var userPos = { lat: userLat, lng: userLng };
+    var sorted = visible.slice().sort(function(a, b) {
+      return dist(userPos, a) - dist(userPos, b);
+    });
+    // Voeg top 8 toe als favoriet (of allemaal als <8)
+    favorites.clear();
+    sorted.slice(0, 8).forEach(function(s) { favorites.add(s.id); });
+    renderMarkers(); renderList(); updateRouteView();
+    // Switch naar route-tabblad
+    var routeTab = document.querySelectorAll('.tab')[2];
+    var routeNavBtn = document.getElementById('bni-route');
+    if (routeNavBtn) {
+      document.querySelectorAll('.bni').forEach(function(b) { b.classList.remove('active'); });
+      routeNavBtn.classList.add('active');
+    }
+    sv('route', routeTab);
+    toast('✅ Route gepland met ' + Math.min(sorted.length, 8) + ' stops!');
+  }, function() {
+    toast('❌ Locatie geweigerd — zet locatie aan');
+  }, { timeout: 8000 });
+}
 function startNavigation() {
   var opt = optimizeRoute(sales.filter(function(s) { return favorites.has(s.id); }).slice());
   if (!opt.length) { toast('Voeg eerst verkopen toe'); return; }
@@ -2566,7 +2635,7 @@ function resetAddForm() {
   addTagsSelected.clear();
   buurtAdressen = [];
   // Reset velden
-  ['aTitle','aAddr','aPC','aDesc'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  ['aTitle','aAddr','aDesc'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   var af = document.getElementById('aFrom'), at = document.getElementById('aTill'), ad = document.getElementById('aDate');
   if (af) af.value = '09:00'; if (at) at.value = '15:00'; if (ad) ad.value = '';
   // Reset type knoppen
