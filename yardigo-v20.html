@@ -1420,8 +1420,8 @@ body.dark .dm-ball{left:21px;}
 // ══════════════════════════════════════════════════
 // SUPABASE CLIENT
 // ══════════════════════════════════════════════════
-const SUPABASE_URL = 'https://JOUW-PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'JOUW-ANON-KEY';
+const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
 let sbClient = null;
 try {
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1437,14 +1437,10 @@ async function fetchListings() {
   try {
     const { data, error } = await sbClient
       .from('listings')
-      .select(`
-        *,
-        category:categories(name, icon, color),
-        neighborhood_sale:neighborhood_sales(id, title, city, center_lat, center_lng, date, time_start, time_end)
-      `)
-      .eq('is_active', true)
-      .gte('date', new Date().toISOString().split('T')[0])
-      .order('date', { ascending: true });
+      .select('*')
+      .eq('status', 'active')
+      .gte('date_start', new Date().toISOString().split('T')[0])
+      .order('date_start', { ascending: true });
 
     if (error) {
       console.error('Fout bij ophalen listings:', error);
@@ -1458,29 +1454,34 @@ async function fetchListings() {
 }
 
 function mapSupabaseToSale(item) {
-  // Map Supabase listing naar het formaat dat de app verwacht
-  var typeMap = { garageverkoop: 'particulier', rommelmarkt: 'evenement', buurtverkoop: 'buurt' };
+  // Map Supabase listing (schema v1) naar het interne app-formaat
+  var typeMap = {
+    garagesale: 'particulier', garageverkoop: 'particulier',
+    rommelmarkt: 'evenement', vlooienmarkt: 'evenement', kofferbakverkoop: 'evenement',
+    buurtverkoop: 'buurt', overig: 'particulier'
+  };
   var emojiMap = { particulier: '🏠', buurt: '🏘️', evenement: '🎪' };
-  var mappedType = typeMap[item.type] || 'particulier';
-  var catIcon = item.category ? item.category.icon : '';
-  var catName = item.category ? item.category.name : '';
+  var mappedType = typeMap[item.category] || typeMap[item.type] || 'particulier';
+  var lat = item.latitude || (item.location ? extractCoords(item.location).lat : 52.3);
+  var lng = item.longitude || (item.location ? extractCoords(item.location).lng : 5.3);
   return {
     id: item.id,
     type: mappedType,
     title: item.title,
     emoji: emojiMap[mappedType],
-    address: (item.street || '') + ' ' + (item.house_number || '') + ', ' + item.city,
-    lat: item.location ? extractCoords(item.location).lat : 52.3,
-    lng: item.location ? extractCoords(item.location).lng : 5.3,
-    date: item.date,
-    from: item.time_start ? item.time_start.substring(0,5) : '09:00',
-    till: item.time_end ? item.time_end.substring(0,5) : '17:00',
-    tags: catName ? [catIcon + ' ' + catName] : [],
-    interested: Math.floor(Math.random() * 50) + 5,
-    photos: item.photos || [],
+    address: item.address ? item.address + ', ' + (item.city || '') : (item.city || 'Nederland'),
+    lat: lat,
+    lng: lng,
+    date: item.date_start || item.date || '',
+    from: item.time_start ? String(item.time_start).substring(0, 5) : '09:00',
+    till: item.time_end   ? String(item.time_end).substring(0, 5)   : '17:00',
+    tags: item.tags || [],
+    interested: item.view_count || 0,
+    photos: item.images || item.photos || [],
     neighborhood_sale_id: item.neighborhood_sale_id || null,
-    neighborhood_sale: item.neighborhood_sale || null,
-    description: item.description || ''
+    neighborhood_sale: null,
+    description: item.description || '',
+    desc: item.description || ''
   };
 }
 
@@ -1573,7 +1574,8 @@ function updateUserUI() {
 }
 
 // ── Uitloggen ──
-function doLogout() {
+async function doLogout() {
+  if (sbClient) { try { await sbClient.auth.signOut(); } catch(e) {} }
   isGuest = true;
   currentUser = { name: '', email: '' };
   localStorage.removeItem('yg-user');
@@ -1585,22 +1587,35 @@ function doLogout() {
 }
 
 // ── Inloggen via hoofd-login-overlay ──
-function doMainLogin() {
-  var emailEl = document.getElementById('login-email');
-  var passEl  = document.getElementById('login-pass');
-  var email = emailEl ? emailEl.value.trim() : '';
-  var pass  = passEl  ? passEl.value : '';
+async function doMainLogin() {
+  var email = (document.getElementById('login-email') || {}).value || '';
+  var pass  = (document.getElementById('login-pass')  || {}).value || '';
+  email = email.trim();
   if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
   if (!pass) { toast('Vul je wachtwoord in'); return; }
+  if (sbClient) {
+    try {
+      var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+      var u = res.data.user;
+      var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
+      isGuest = false;
+      currentUser = { name: name, email: email };
+      localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      localStorage.setItem('yg-onboarded', '1');
+      closeLogin(); updateUserUI();
+      if (map) renderMarkers(); renderList();
+      toast('Welkom, ' + name.split(' ')[0] + '! 🎉'); return;
+    } catch(e) { toast('❌ Inloggen mislukt'); return; }
+  }
+  // Fallback
   var name = emailToName(email);
   isGuest = false;
   currentUser = { name: name, email: email };
   localStorage.setItem('yg-user', JSON.stringify(currentUser));
   localStorage.setItem('yg-onboarded', '1');
-  closeLogin();
-  updateUserUI();
-  if (map) renderMarkers();
-  renderList();
+  closeLogin(); updateUserUI();
+  if (map) renderMarkers(); renderList();
   toast('Welkom, ' + name.split(' ')[0] + '! 🎉');
 }
 let profilePhotoData = null;
@@ -1661,13 +1676,27 @@ function obToggleCat(el) {
   }
   document.getElementById('ob-cat-count').textContent = obSelectedCats.length + ' categorie' + (obSelectedCats.length === 1 ? '' : 'ën') + ' geselecteerd';
 }
-function obRegister() {
-  var name = document.getElementById('ob-name').value.trim();
+async function obRegister() {
+  var name  = document.getElementById('ob-name').value.trim();
   var email = document.getElementById('ob-email').value.trim();
-  var pass = document.getElementById('ob-pass').value;
+  var pass  = document.getElementById('ob-pass').value;
   if (!name) { toast('Vul je naam in'); return; }
   if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
   if (pass.length < 6) { toast('Wachtwoord minimaal 6 tekens'); return; }
+  if (sbClient) {
+    try {
+      var res = await sbClient.auth.signUp({
+        email: email, password: pass,
+        options: { data: { display_name: name } }
+      });
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+      isGuest = false;
+      currentUser = { name: name, email: email };
+      localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      obFinish(); return;
+    } catch(e) { toast('❌ Registratie mislukt'); return; }
+  }
+  // Fallback
   isGuest = false;
   currentUser = { name: name, email: email };
   localStorage.setItem('yg-user', JSON.stringify(currentUser));
@@ -1675,15 +1704,31 @@ function obRegister() {
 }
 function obShowLogin()  { document.getElementById('ob-login-modal').style.display = 'flex'; }
 function obHideLogin()  { document.getElementById('ob-login-modal').style.display = 'none'; }
-function obLogin() {
+async function obLogin() {
   var emailEl = document.querySelector('#ob-login-modal input[type="email"]');
+  var passEl  = document.querySelector('#ob-login-modal input[type="password"]');
   var email = emailEl ? emailEl.value.trim() : '';
-  var name = email ? emailToName(email) : 'Gebruiker';
+  var pass  = passEl  ? passEl.value : '';
+  if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
+  if (!pass) { toast('Vul je wachtwoord in'); return; }
+  if (sbClient) {
+    try {
+      var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+      var u = res.data.user;
+      var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
+      isGuest = false;
+      currentUser = { name: name, email: email };
+      localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      obHideLogin(); obFinish(); return;
+    } catch(e) { toast('❌ Inloggen mislukt'); return; }
+  }
+  // Fallback (geen Supabase)
+  var name = emailToName(email);
   isGuest = false;
   currentUser = { name: name, email: email };
   localStorage.setItem('yg-user', JSON.stringify(currentUser));
-  obHideLogin();
-  obFinish();
+  obHideLogin(); obFinish();
 }
 function obGuest() { isGuest = true; currentUser = { name: '', email: '' }; obFinish(); }
 function obFinish() {
@@ -3042,15 +3087,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('Supabase laden mislukt, gebruik demo-data:', e);
   }
 
-  // Herstel ingelogde gebruiker uit localStorage
-  var storedUser = localStorage.getItem('yg-user');
-  if (storedUser) {
+  // Herstel sessie: eerst Supabase, dan localStorage als fallback
+  if (sbClient) {
     try {
-      currentUser = JSON.parse(storedUser);
-      if (currentUser && currentUser.name) {
+      var sessionRes = await sbClient.auth.getSession();
+      var session = sessionRes.data && sessionRes.data.session;
+      if (session && session.user) {
+        var u = session.user;
+        var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
         isGuest = false;
+        currentUser = { name: name, email: u.email };
+        localStorage.setItem('yg-user', JSON.stringify(currentUser));
       }
-    } catch(e) { currentUser = { name: '', email: '' }; }
+    } catch(e) {}
+  }
+  // Fallback: localStorage (als Supabase nog niet geconfigureerd was)
+  if (isGuest) {
+    var storedUser = localStorage.getItem('yg-user');
+    if (storedUser) {
+      try {
+        var parsed = JSON.parse(storedUser);
+        if (parsed && parsed.name) { currentUser = parsed; isGuest = false; }
+      } catch(e) {}
+    }
   }
 
   renderList();
