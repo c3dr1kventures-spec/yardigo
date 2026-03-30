@@ -88,6 +88,8 @@ body.dark .pop-body{background:var(--bg2);}
 body.dark .leaflet-popup-content-wrapper{background:var(--bg2) !important;border:1.5px solid var(--border) !important;box-shadow:0 8px 32px rgba(0,0,0,.4) !important;}
 body.dark .leaflet-popup-tip{background:var(--bg2) !important;}
 body.dark .leaflet-popup-close-button{color:var(--muted) !important;}
+body.dark #aAddr-dd,body.dark [id^="bv-dd-"]{background:var(--bg2) !important;border-color:var(--border) !important;}
+body.dark [id^="bv-dd-"] div,body.dark #aAddr-dd div{background:var(--bg2);color:var(--text);border-bottom-color:var(--border);}
 body.dark .pop-tag.particulier{background:#2A2010;color:#C89840;}
 body.dark .pop-tag.buurt{background:#251810;color:#C06030;}
 body.dark .pop-tag.evenement{background:#0F1F14;color:#5A9A6A;}
@@ -885,9 +887,9 @@ body.dark .dm-ball{left:21px;}
   </div>
   <div style="padding:0 14px 100px;margin-top:-36px">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-      <div class="stat-card"><div class="stat-num">4</div><div class="stat-lbl">Verkopen</div></div>
-      <div class="stat-card"><div class="stat-num">127</div><div class="stat-lbl">Weergaven</div></div>
-      <div class="stat-card"><div class="stat-num">38</div><div class="stat-lbl">Interesses</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-verkopen">0</div><div class="stat-lbl">Verkopen</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-weergaven">0</div><div class="stat-lbl">Weergaven</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-interesses">0</div><div class="stat-lbl">Interesses</div></div>
     </div>
 
     <!-- Attendance score -->
@@ -948,21 +950,7 @@ body.dark .dm-ball{left:21px;}
       <div class="ptab" id="pt-3" onclick="ptab(3)">Instellingen</div>
     </div>
     <div class="pp active" id="pp-0">
-      <div class="my-sale-card">
-        <div style="font-size:28px">🏠</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700">Zolder opruiming</div>
-          <div style="font-size:11px;color:var(--muted)">Za 7 mrt · 09:00–14:00 · Groningen</div>
-          <div style="display:flex;gap:10px;margin-top:5px">
-            <span style="font-size:10px;font-weight:600;color:var(--muted)">Views: <span style="color:var(--terra)">43</span></span>
-            <span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">12</span></span>
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px">
-          <button onclick="toast('Bewerken')" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bewerk</button>
-          <button onclick="toast('Verwijderd')" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:#FEE;color:#C00">Verwijder</button>
-        </div>
-      </div>
+      <div id="my-sales-list"></div>
       <button class="btn-pub" onclick="isGuest ? guestGate('plaatsen') : openAdd()">+ Nieuwe verkoop plaatsen</button>
     </div>
     <div class="pp" id="pp-1">
@@ -1355,9 +1343,20 @@ body.dark .dm-ball{left:21px;}
       <!-- Step 2: Location & tags -->
       <div id="add-s2" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:16px">Locatie & categorieën</div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-          <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, Groningen">
+        <!-- Enkel adres (particulier / evenement) -->
+        <div id="add-s2-single" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <div style="position:relative">
+            <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" autocomplete="off">
+            <div id="aAddr-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
+          </div>
           <input class="form-input" id="aPC" placeholder="Postcode bijv. 9741 AB" maxlength="7">
+        </div>
+        <!-- Multi-adres (buurtverkoop) -->
+        <div id="add-s2-buurt" style="display:none;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">DEELNEMENDE ADRESSEN</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Voeg alle adressen toe die meedoen aan de buurtverkoop.</div>
+          <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+          <button type="button" onclick="addBuurtAdres()" style="width:100%;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
         </div>
         <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">CATEGORIEËN</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -1478,8 +1477,8 @@ function mapSupabaseToSale(item) {
     tags: item.tags || [],
     interested: item.view_count || 0,
     photos: item.images || item.photos || [],
-    neighborhood_sale_id: item.neighborhood_sale_id || null,
-    neighborhood_sale: null,
+    neighborhood_sale_id: item.neighborhood_group_id || item.neighborhood_sale_id || null,
+    neighborhood_sale: item.neighborhood_group_id ? { id: item.neighborhood_group_id, title: item.title, date: item.date_start || '' } : null,
     description: item.description || '',
     desc: item.description || ''
   };
@@ -1571,6 +1570,67 @@ function updateUserUI() {
     if (profileName) profileName.textContent = 'Gast';
     if (profileSub)  profileSub.textContent  = 'Maak een account aan voor meer';
   }
+  renderMySales();
+}
+
+// ── Mijn verkopen in profiel ──
+function renderMySales() {
+  var list = document.getElementById('my-sales-list');
+  if (!list) return;
+  if (isGuest || !currentUser.email) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏪</div>'
+      + '<div class="empty-title">Nog geen verkopen</div>'
+      + '<div class="empty-sub">Log in of maak een account aan om verkopen te plaatsen.</div></div>';
+    var sv = document.getElementById('stat-verkopen');
+    var sw = document.getElementById('stat-weergaven');
+    var si = document.getElementById('stat-interesses');
+    if (sv) sv.textContent = '0';
+    if (sw) sw.textContent = '0';
+    if (si) si.textContent = '0';
+    return;
+  }
+  // Filter sales van de ingelogde gebruiker
+  var mine = sales.filter(function(s) { return s.user_email === currentUser.email; });
+  // Deduplicate buurtverkopen (toon per neighborhood_sale_id één keer)
+  var seenBv = {};
+  var display = mine.filter(function(s) {
+    if (s.neighborhood_sale_id) {
+      if (seenBv[s.neighborhood_sale_id]) return false;
+      seenBv[s.neighborhood_sale_id] = true;
+    }
+    return true;
+  });
+
+  var sv = document.getElementById('stat-verkopen');
+  var sw = document.getElementById('stat-weergaven');
+  var si = document.getElementById('stat-interesses');
+  if (sv) sv.textContent = display.length;
+  if (sw) sw.textContent = mine.reduce(function(a, s) { return a + (s.views || 0); }, 0);
+  if (si) si.textContent = mine.reduce(function(a, s) { return a + (s.interested || 0); }, 0);
+
+  if (!display.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏪</div>'
+      + '<div class="empty-title">Nog geen verkopen</div>'
+      + '<div class="empty-sub">Jouw geplaatste verkopen verschijnen hier.</div></div>';
+    return;
+  }
+  var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
+  list.innerHTML = display.map(function(s) {
+    var icon = s.neighborhood_sale_id ? '🏘️' : TYPES[s.type] ? TYPES[s.type].icon : '🏠';
+    var label = s.neighborhood_sale_id ? 'Buurtverkoop' : (TYPES[s.type] ? TYPES[s.type].label : s.type);
+    var addrShort = (s.address || '').split(',').slice(-1)[0].trim();
+    return '<div class="my-sale-card">'
+      + '<div style="font-size:28px">' + icon + '</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:14px;font-weight:700">' + s.title + '</div>'
+      + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + s.from + '–' + s.till + ' · ' + addrShort + '</div>'
+      + '<div style="display:flex;gap:10px;margin-top:5px">'
+      + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
+      + '</div></div>'
+      + '<div style="display:flex;flex-direction:column;gap:4px">'
+      + '<button onclick="openDetail(\'' + s.id + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
+      + '</div></div>';
+  }).join('');
 }
 
 // ── Uitloggen ──
@@ -2490,13 +2550,70 @@ function guestRegister() { closeGuestGate(); closeDetail(); document.getElementB
 // ══════════════════════════════════════════════════
 // ADD FORM
 // ══════════════════════════════════════════════════
-function openAdd()  { document.getElementById('addOv').classList.add('open'); document.body.style.overflow = 'hidden'; }
+var buurtAdressen = []; // array of {addr, pc} for buurtverkoop
+
+function openAdd() {
+  resetAddForm();
+  document.getElementById('addOv').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 function closeAdd() { document.getElementById('addOv').classList.remove('open'); document.body.style.overflow = ''; }
+
+function resetAddForm() {
+  addStep = 0;
+  selTypeVal = 'particulier';
+  uploadedPhotos = [];
+  addTagsSelected.clear();
+  buurtAdressen = [];
+  // Reset velden
+  ['aTitle','aAddr','aPC','aDesc'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  var af = document.getElementById('aFrom'), at = document.getElementById('aTill'), ad = document.getElementById('aDate');
+  if (af) af.value = '09:00'; if (at) at.value = '15:00'; if (ad) ad.value = '';
+  // Reset type knoppen
+  document.querySelectorAll('.type-opt').forEach(function(el) { el.classList.remove('active'); });
+  var toP = document.getElementById('to-particulier'); if (toP) toP.classList.add('active');
+  // Reset tags
+  document.querySelectorAll('.atag').forEach(function(el) { el.classList.remove('sel'); });
+  // Reset foto's
+  var pg = document.getElementById('photoGrid'); if (pg) pg.innerHTML = '';
+  var pc = document.getElementById('photoCount');
+  if (pc) pc.innerHTML = '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10';
+  // Reset buurt adressen list
+  var bl = document.getElementById('buurt-adressen-list'); if (bl) bl.innerHTML = '';
+  // Reset autocomplete dropdown
+  var dd = document.getElementById('aAddr-dd'); if (dd) dd.style.display = 'none';
+  // Stap-navigatie
+  ['add-s0','add-s1','add-s2','add-s3'].forEach(function(id, i) {
+    var el = document.getElementById(id); if (el) el.style.display = i === 0 ? 'block' : 'none';
+  });
+  document.querySelectorAll('.step-dot').forEach(function(d, i) { d.classList.toggle('active', i === 0); });
+  var prev = document.getElementById('addPrev'), next = document.getElementById('addNext'), pub = document.getElementById('addPublish');
+  if (prev) prev.style.visibility = 'hidden';
+  if (next) next.style.display = 'block';
+  if (pub) pub.style.display = 'none';
+  // Buurt vs single view
+  updateStep2View();
+}
+
+function updateStep2View() {
+  var single = document.getElementById('add-s2-single'), buurt = document.getElementById('add-s2-buurt');
+  if (!single || !buurt) return;
+  var isBuurt = selTypeVal === 'buurt';
+  single.style.cssText = isBuurt ? 'display:none' : 'display:flex;flex-direction:column;gap:10px;margin-bottom:16px';
+  buurt.style.display  = isBuurt ? 'block' : 'none';
+}
+
 function selType(t) {
   selTypeVal = t;
   document.querySelectorAll('.type-opt').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('to-' + t).classList.add('active');
+  updateStep2View();
+  // Voeg automatisch eerste adresrij toe bij buurtverkoop
+  if (t === 'buurt' && buurtAdressen.length === 0) {
+    addBuurtAdres();
+  }
 }
+
 function addNav(dir) {
   var steps = ['add-s0','add-s1','add-s2','add-s3'];
   addStep = Math.max(0, Math.min(3, addStep + dir));
@@ -2507,6 +2624,80 @@ function addNav(dir) {
   document.getElementById('addNext').style.display = addStep === 3 ? 'none' : 'block';
   document.getElementById('addPublish').style.display = addStep === 3 ? 'block' : 'none';
   if (addStep === 3) buildAddPreview();
+}
+
+// ── Buurtverkoop multi-adres ──
+function addBuurtAdres() {
+  var idx = buurtAdressen.length;
+  buurtAdressen.push({ addr: '', pc: '' });
+  var list = document.getElementById('buurt-adressen-list');
+  var row = document.createElement('div');
+  row.id = 'bv-row-' + idx;
+  row.style.cssText = 'display:flex;flex-direction:column;gap:6px;background:var(--bg2);border-radius:10px;padding:10px;position:relative;border:1.5px solid var(--border)';
+  row.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
+    + '<span style="font-size:11px;font-weight:700;color:var(--muted)">ADRES ' + (idx + 1) + '</span>'
+    + '<button type="button" onclick="removeBuurtAdres(' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted)">✕</button>'
+    + '</div>'
+    + '<div style="position:relative">'
+    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
+    + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
+    + '</div>'
+    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="Postcode bijv. 9741 AB" maxlength="7" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">';
+  if (list) list.appendChild(row);
+}
+function removeBuurtAdres(idx) {
+  buurtAdressen.splice(idx, 1);
+  var list = document.getElementById('buurt-adressen-list');
+  if (!list) return;
+  list.innerHTML = '';
+  var saved = buurtAdressen.slice();
+  buurtAdressen = [];
+  saved.forEach(function(a) {
+    addBuurtAdres();
+    var newIdx = buurtAdressen.length - 1;
+    buurtAdressen[newIdx] = a;
+    var ai = document.getElementById('bv-addr-' + newIdx);
+    var pi = document.getElementById('bv-pc-' + newIdx);
+    if (ai) ai.value = a.addr;
+    if (pi) pi.value = a.pc;
+  });
+}
+
+// ── Adres autocomplete via PDOK Locatieserver ──
+var addrSugTimer = null;
+function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
+  var dd = document.getElementById(ddId);
+  if (!dd) return;
+  if (!val || val.length < 3) { dd.style.display = 'none'; return; }
+  clearTimeout(addrSugTimer);
+  addrSugTimer = setTimeout(function() {
+    fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam', { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var docs = (data.response && data.response.docs) ? data.response.docs : [];
+        if (!docs.length) { dd.style.display = 'none'; return; }
+        dd.innerHTML = docs.map(function(d) {
+          var label = d.weergavenaam || '';
+          return '<div style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)" '
+            + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + label.replace(/'/g, "\\'") + '\')">'
+            + '📍 ' + label + '</div>';
+        }).join('');
+        dd.style.display = 'block';
+      })
+      .catch(function() { dd.style.display = 'none'; });
+  }, 280);
+}
+function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label) {
+  var dd = document.getElementById(ddId);
+  if (dd) dd.style.display = 'none';
+  if (isBuurtRow) {
+    var inp = document.getElementById('bv-addr-' + buurtIdx);
+    if (inp) inp.value = label;
+    if (buurtAdressen[buurtIdx]) buurtAdressen[buurtIdx].addr = label;
+  } else {
+    var aAddr = document.getElementById('aAddr');
+    if (aAddr) aAddr.value = label;
+  }
 }
 function handleAddPhotos(input) {
   Array.from(input.files).forEach(function(file) {
@@ -2539,20 +2730,103 @@ function buildAddPreview() {
   document.getElementById('prevBadge').textContent = t.icon + ' ' + t.label;
 }
 async function publishSale() {
-  var title = document.getElementById('aTitle'), addr = document.getElementById('aAddr');
+  var title = document.getElementById('aTitle');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
-  if (!addr || !addr.value.trim()) { toast('Vul een adres in'); return; }
   if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
+
+  var isBuurt = selTypeVal === 'buurt';
+  var addrEl  = document.getElementById('aAddr');
+  var mainAddr = isBuurt ? (buurtAdressen.length > 0 ? buurtAdressen[0].addr : '') : (addrEl ? addrEl.value.trim() : '');
+
+  if (!isBuurt && !mainAddr) { toast('Vul een adres in'); return; }
+  if (isBuurt && buurtAdressen.length === 0) { toast('Voeg minimaal 1 adres toe'); return; }
+  if (isBuurt && buurtAdressen.some(function(a) { return !a.addr.trim(); })) { toast('Vul alle adressen in'); return; }
+
   showL();
   try {
-    var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr.value) + '&format=json&limit=1');
-    var data = await res.json();
-    var lat = data.length ? +data[0].lat : 52.3, lng = data.length ? +data[0].lon : 5.0;
-    var tags = Array.from(addTagsSelected);
-    sales.unshift({ id: nextId++, type: selTypeVal, title: title.value, emoji: TYPES[selTypeVal].icon, address: addr.value, lat: lat, lng: lng, date: (document.getElementById('aDate')||{}).value || '', from: (document.getElementById('aFrom')||{}).value || '09:00', till: (document.getElementById('aTill')||{}).value || '15:00', tags: tags.length ? tags : ['Overig'], interested: 0, photos: uploadedPhotos.slice() });
-    renderMarkers(); renderList(); closeAdd(); hideL(); toast('🎉 Verkoop geplaatst!');
-    uploadedPhotos = []; addTagsSelected.clear(); addStep = 0;
-  } catch(e) { hideL(); toast('❌ Publiceren mislukt'); }
+    var tags  = Array.from(addTagsSelected);
+    var tagList = tags.length ? tags : ['📦 Overig'];
+    var dateVal = (document.getElementById('aDate')||{}).value || '';
+    var fromVal = (document.getElementById('aFrom')||{}).value || '09:00';
+    var tillVal = (document.getElementById('aTill')||{}).value || '15:00';
+    var descVal = (document.getElementById('aDesc')||{}).value || '';
+
+    // Geocode hoofd-adres
+    var geoAddr = isBuurt ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', Nederland') : (mainAddr + ', Nederland');
+    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&limit=1');
+    var geoData = await geoRes.json();
+    var lat = geoData.length ? +geoData[0].lat : 52.3;
+    var lng = geoData.length ? +geoData[0].lon : 5.0;
+
+    // Categorie mapping voor Supabase
+    var catMap = { particulier: 'garagesale', buurt: 'buurtverkoop', evenement: 'vlooienmarkt' };
+
+    if (isBuurt) {
+      // ── Buurtverkoop: sla op als neighbourhood_sale + meerdere listings ──
+      var bvId = 'bv-' + Date.now();
+
+      // Sla per adres een listing op
+      var addrsToGeo = buurtAdressen.slice(1); // al geocoded hoofd; rest geocoden
+      var geoPromises = addrsToGeo.map(function(a) {
+        return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', Nederland') + '&format=json&limit=1')
+          .then(function(r) { return r.json(); })
+          .then(function(d) { return { lat: d.length ? +d[0].lat : lat, lng: d.length ? +d[0].lon : lng }; })
+          .catch(function() { return { lat: lat, lng: lng }; });
+      });
+      var extraCoords = await Promise.all(geoPromises);
+
+      var allCoords = [{ lat: lat, lng: lng }].concat(extraCoords);
+
+      buurtAdressen.forEach(function(a, i) {
+        var coords = allCoords[i] || { lat: lat, lng: lng };
+        var newSale = {
+          id: nextId++, type: 'buurt', title: title.value.trim(),
+          emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
+          lat: coords.lat, lng: coords.lng,
+          date: dateVal, from: fromVal, till: tillVal,
+          tags: tagList, interested: 0, photos: uploadedPhotos.slice(),
+          neighborhood_sale_id: bvId,
+          neighborhood_sale: { id: bvId, title: title.value.trim(), date: dateVal },
+          desc: descVal,
+          user_email: currentUser.email
+        };
+        sales.unshift(newSale);
+        if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+          sbClient.from('listings').insert({
+            title: newSale.title, category: 'buurtverkoop',
+            address: newSale.address, latitude: coords.lat, longitude: coords.lng,
+            date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
+            tags: tagList, status: 'active', description: descVal,
+            neighborhood_group_id: bvId
+          }).then(function() {}).catch(function() {});
+        }
+      });
+
+    } else {
+      // ── Particulier / Evenement ──
+      var newSale = {
+        id: nextId++, type: selTypeVal, title: title.value.trim(),
+        emoji: TYPES[selTypeVal].icon, address: mainAddr,
+        lat: lat, lng: lng, date: dateVal, from: fromVal, till: tillVal,
+        tags: tagList, interested: 0, photos: uploadedPhotos.slice(),
+        desc: descVal, user_email: currentUser.email
+      };
+      sales.unshift(newSale);
+      if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+        sbClient.from('listings').insert({
+          title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
+          address: newSale.address, latitude: lat, longitude: lng,
+          date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
+          tags: tagList, status: 'active', description: descVal
+        }).then(function() {}).catch(function() {});
+      }
+    }
+
+    renderMarkers(); renderList();
+    renderMySales();
+    closeAdd(); hideL();
+    toast('🎉 Verkoop geplaatst!');
+  } catch(e) { console.error(e); hideL(); toast('❌ Publiceren mislukt'); }
 }
 
 // ══════════════════════════════════════════════════
