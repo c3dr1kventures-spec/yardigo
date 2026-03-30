@@ -1405,20 +1405,20 @@ body.dark .dm-ball{left:21px;}
 // ══════════════════════════════════════════════════
 const SUPABASE_URL = 'https://JOUW-PROJECT.supabase.co';
 const SUPABASE_ANON_KEY = 'JOUW-ANON-KEY';
-let supabase = null;
+let sbClient = null;
 try {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch(e) {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
 }
 
 async function fetchListings() {
-  if (!supabase || SUPABASE_URL.includes('JOUW-PROJECT')) {
+  if (!sbClient || SUPABASE_URL.includes('JOUW-PROJECT')) {
     console.log('Supabase niet geconfigureerd, gebruik demo-data');
     return null; // fallback naar hardcoded data
   }
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from('listings')
       .select(`
         *,
