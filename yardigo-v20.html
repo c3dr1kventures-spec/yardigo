@@ -880,8 +880,8 @@ body.dark .dm-ball{left:21px;}
       <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--terra);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px">📷</div>
     </div>
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhoto(this)">
-    <div style="font-size:20px;font-weight:800;color:white;margin-bottom:2px">Jan de Vries</div>
-    <div style="font-size:12px;color:rgba(255,255,255,.7)">Groningen</div>
+    <div id="profile-name" style="font-size:20px;font-weight:800;color:white;margin-bottom:2px">Gast</div>
+    <div id="profile-subtitle" style="font-size:12px;color:rgba(255,255,255,.7)">Maak een account aan voor meer</div>
   </div>
   <div style="padding:0 14px 100px;margin-top:-36px">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
@@ -993,7 +993,7 @@ body.dark .dm-ball{left:21px;}
         </div>
         <div class="settings-row" style="border-bottom:none">
           <div><div style="font-size:13px;font-weight:600">Uitloggen</div></div>
-          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="toast('Uitgelogd')">Uitloggen</div>
+          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="doLogout()">Uitloggen</div>
         </div>
       </div>
 
@@ -1407,10 +1407,10 @@ body.dark .dm-ball{left:21px;}
     <div style="padding:20px 24px">
       <div style="font-size:20px;font-weight:800;margin-bottom:16px">Inloggen</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <input class="form-input" type="email" placeholder="E-mailadres">
-        <input class="form-input" type="password" placeholder="Wachtwoord">
+        <input class="form-input" id="login-email" type="email" placeholder="E-mailadres" autocomplete="email">
+        <input class="form-input" id="login-pass" type="password" placeholder="Wachtwoord" autocomplete="current-password">
       </div>
-      <button style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px" onclick="closeLogin();toast('Ingelogd!')">Inloggen</button>
+      <button style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px" onclick="doMainLogin()">Inloggen</button>
       <button style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" onclick="closeLogin()">Annuleren</button>
     </div>
   </div>
@@ -1541,6 +1541,68 @@ let activeFilters = new Set();
 let activeDateFilter = 'all';
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
+let currentUser = { name: '', email: '' };
+
+// ── Hulpfunctie: e-mail → weergave-naam ──
+function emailToName(email) {
+  return (email || '').split('@')[0].replace(/[._\-]/g, ' ')
+    .replace(/\b\w/g, function(c) { return c.toUpperCase(); }).trim() || 'Gebruiker';
+}
+
+// ── Alle UI-elementen bijwerken na login/logout ──
+function updateUserUI() {
+  var btn = document.getElementById('loginBtn');
+  var profileName = document.getElementById('profile-name');
+  var profileSub  = document.getElementById('profile-subtitle');
+  if (!isGuest && currentUser.name) {
+    var firstName = currentUser.name.split(' ')[0];
+    if (btn) {
+      btn.textContent = '👤 ' + firstName;
+      btn.setAttribute('onclick', "sv('mijn',document.querySelectorAll('.tab')[3]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-mijn').classList.add('active')");
+    }
+    if (profileName) profileName.textContent = currentUser.name;
+    if (profileSub)  profileSub.textContent  = currentUser.email || '';
+  } else {
+    if (btn) {
+      btn.textContent = 'Inloggen';
+      btn.setAttribute('onclick', 'openLogin()');
+    }
+    if (profileName) profileName.textContent = 'Gast';
+    if (profileSub)  profileSub.textContent  = 'Maak een account aan voor meer';
+  }
+}
+
+// ── Uitloggen ──
+function doLogout() {
+  isGuest = true;
+  currentUser = { name: '', email: '' };
+  localStorage.removeItem('yg-user');
+  localStorage.removeItem('yg-onboarded');
+  updateUserUI();
+  if (map) renderMarkers();
+  renderList();
+  toast('Je bent uitgelogd');
+}
+
+// ── Inloggen via hoofd-login-overlay ──
+function doMainLogin() {
+  var emailEl = document.getElementById('login-email');
+  var passEl  = document.getElementById('login-pass');
+  var email = emailEl ? emailEl.value.trim() : '';
+  var pass  = passEl  ? passEl.value : '';
+  if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
+  if (!pass) { toast('Vul je wachtwoord in'); return; }
+  var name = emailToName(email);
+  isGuest = false;
+  currentUser = { name: name, email: email };
+  localStorage.setItem('yg-user', JSON.stringify(currentUser));
+  localStorage.setItem('yg-onboarded', '1');
+  closeLogin();
+  updateUserUI();
+  if (map) renderMarkers();
+  renderList();
+  toast('Welkom, ' + name.split(' ')[0] + '! 🎉');
+}
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
 let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
@@ -1607,19 +1669,35 @@ function obRegister() {
   if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
   if (pass.length < 6) { toast('Wachtwoord minimaal 6 tekens'); return; }
   isGuest = false;
-  obFinish(name);
+  currentUser = { name: name, email: email };
+  localStorage.setItem('yg-user', JSON.stringify(currentUser));
+  obFinish();
 }
 function obShowLogin()  { document.getElementById('ob-login-modal').style.display = 'flex'; }
 function obHideLogin()  { document.getElementById('ob-login-modal').style.display = 'none'; }
-function obLogin()      { isGuest = false; obHideLogin(); obFinish('Welkom terug!'); }
-function obGuest()      { isGuest = true; obFinish('Gast'); }
-function obFinish(name) {
+function obLogin() {
+  var emailEl = document.querySelector('#ob-login-modal input[type="email"]');
+  var email = emailEl ? emailEl.value.trim() : '';
+  var name = email ? emailToName(email) : 'Gebruiker';
+  isGuest = false;
+  currentUser = { name: name, email: email };
+  localStorage.setItem('yg-user', JSON.stringify(currentUser));
+  obHideLogin();
+  obFinish();
+}
+function obGuest() { isGuest = true; currentUser = { name: '', email: '' }; obFinish(); }
+function obFinish() {
   var ob = document.getElementById('onboarding');
   ob.style.transition = 'opacity .4s';
   ob.style.opacity = '0';
   setTimeout(function() { ob.style.display = 'none'; }, 400);
   localStorage.setItem('yg-onboarded', '1');
-  toast(name === 'Gast' ? 'Je bekijkt YardiGo als gast 👁️' : 'Welkom, ' + name + '! 🎉');
+  if (isGuest) {
+    toast('Je bekijkt YardiGo als gast 👁️');
+  } else {
+    toast('Welkom' + (currentUser.name ? ', ' + currentUser.name.split(' ')[0] : '') + '! 🎉');
+  }
+  updateUserUI();
   updateAttendanceUI();
   // Herrender kaart en lijst met juiste adres-zichtbaarheid
   if (map) renderMarkers();
@@ -2964,8 +3042,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('Supabase laden mislukt, gebruik demo-data:', e);
   }
 
+  // Herstel ingelogde gebruiker uit localStorage
+  var storedUser = localStorage.getItem('yg-user');
+  if (storedUser) {
+    try {
+      currentUser = JSON.parse(storedUser);
+      if (currentUser && currentUser.name) {
+        isGuest = false;
+      }
+    } catch(e) { currentUser = { name: '', email: '' }; }
+  }
+
   renderList();
   updateAttendanceUI();
+  updateUserUI();
   initMap();
 
   // Toon welcome sheet na 3 sec voor nieuwe gebruikers
