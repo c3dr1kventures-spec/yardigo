@@ -495,7 +495,7 @@ body.dark .dm-ball{left:21px;}
 <div class="toast" id="toast"></div>
 
 <!-- ════════════════════════════════════ ONBOARDING ════════════════════════════════════ -->
-<div id="onboarding" class="ob-dark" style="position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden">
+<div id="onboarding" class="ob-dark" style="position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden">
 
   <!-- Floating blobs (screen 1 atmosphere) -->
   <div class="ob-blob ob-blob-1"></div>
@@ -711,6 +711,22 @@ body.dark .dm-ball{left:21px;}
     </div>
   </div>
 </div><!-- /onboarding -->
+
+<!-- ── Welcome Sheet (verschijnt na 3 sec voor nieuwe gebruikers) ── -->
+<div id="welcome-sheet" style="display:none;position:fixed;inset:0;z-index:9998;align-items:flex-end">
+  <div style="position:absolute;inset:0;background:rgba(44,36,22,.45)" onclick="dismissWelcomeSheet()"></div>
+  <div id="welcome-sheet-body" style="position:relative;background:#F9F5EF;border-radius:24px 24px 0 0;padding:28px 24px max(28px,env(safe-area-inset-bottom,28px));width:100%;box-sizing:border-box;transform:translateY(100%);transition:transform .45s cubic-bezier(.4,0,.2,1)">
+    <div style="width:40px;height:4px;background:#D8D0C5;border-radius:2px;margin:0 auto 24px"></div>
+    <div style="text-align:center;font-size:36px;margin-bottom:12px">👋</div>
+    <div style="font-size:20px;font-weight:800;color:#2C2416;text-align:center;margin-bottom:6px">Welkom bij YardiGo!</div>
+    <div style="font-size:13px;color:#7A6E62;text-align:center;line-height:1.65;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto">Log in of maak een gratis account aan om het meeste uit YardiGo te halen.</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="startOnboarding(false)" style="background:#E07B39;color:white;border:none;border-radius:14px;padding:15px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;letter-spacing:-.1px">Gratis account aanmaken ✨</button>
+      <button onclick="startOnboarding(true)" style="background:white;color:#E07B39;border:2px solid #E07B39;border-radius:14px;padding:14px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%">Inloggen</button>
+      <button onclick="dismissWelcomeSheet()" style="background:transparent;color:#9A8E82;border:none;border-radius:14px;padding:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%">Niet nu, als gast verder →</button>
+    </div>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════ APP ════════════════════════════════════ -->
 
@@ -1601,8 +1617,50 @@ function obFinish(name) {
   ob.style.transition = 'opacity .4s';
   ob.style.opacity = '0';
   setTimeout(function() { ob.style.display = 'none'; }, 400);
+  localStorage.setItem('yg-onboarded', '1');
   toast(name === 'Gast' ? 'Je bekijkt YardiGo als gast 👁️' : 'Welkom, ' + name + '! 🎉');
   updateAttendanceUI();
+}
+
+// ── Welcome Sheet ──
+function showWelcomeSheet() {
+  var sheet = document.getElementById('welcome-sheet');
+  if (!sheet) return;
+  sheet.style.display = 'flex';
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      document.getElementById('welcome-sheet-body').style.transform = 'translateY(0)';
+    });
+  });
+}
+function hideWelcomeSheet(cb) {
+  var body = document.getElementById('welcome-sheet-body');
+  var sheet = document.getElementById('welcome-sheet');
+  if (!body || !sheet) { if (cb) cb(); return; }
+  body.style.transform = 'translateY(100%)';
+  setTimeout(function() { sheet.style.display = 'none'; if (cb) cb(); }, 450);
+}
+function dismissWelcomeSheet() {
+  hideWelcomeSheet(function() {
+    isGuest = true;
+    localStorage.setItem('yg-onboarded', '1');
+    toast('Je bekijkt YardiGo als gast 👁️');
+    updateAttendanceUI();
+  });
+}
+function startOnboarding(goLogin) {
+  hideWelcomeSheet(function() {
+    var ob = document.getElementById('onboarding');
+    ob.style.display = 'flex';
+    ob.style.opacity = '1';
+    ob.style.transition = '';
+    if (goLogin) {
+      obGoTo(3);
+      setTimeout(function() { obShowLogin(); }, 150);
+    } else {
+      obGoTo(0);
+    }
+  });
 }
 
 // ══════════════════════════════════════════════════
@@ -2100,7 +2158,7 @@ function ptab(i) {
 // DETAIL
 // ══════════════════════════════════════════════════
 function openDetail(id) {
-  var s = sales.find(function(x) { return x.id === id; });
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
   detailSaleId = id; carouselIdx = 0;
   var t = TYPES[s.type], fav = favorites.has(id);
@@ -2849,6 +2907,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   renderList();
   updateAttendanceUI();
   initMap();
+
+  // Toon welcome sheet na 3 sec voor nieuwe gebruikers
+  if (!localStorage.getItem('yg-onboarded')) {
+    setTimeout(showWelcomeSheet, 3000);
+  }
 });
 </script>
 </body>
