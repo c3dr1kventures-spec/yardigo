@@ -209,6 +209,7 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 .logo-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .logo-text{font-size:18px;font-weight:800;color:white;letter-spacing:-.3px;}
 .logo-text span{color:var(--terra);}
+.logo-text span.logo-i{color:var(--birch);}
 .logo-sub{font-size:7px;color:rgba(255,255,255,.5);letter-spacing:1.5px;font-weight:600;display:block;margin-top:-2px;}
 .header-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
 
@@ -732,7 +733,7 @@ body.dark .dm-ball{left:21px;}
 
 <!-- Header -->
 <header class="header">
-  <div class="logo-wrap">
+  <div class="logo-wrap" style="cursor:pointer" onclick="goHome()">
     <svg width="34" height="38" viewBox="0 0 118 128" fill="none">
       <path d="M66 11C46 11 30 27 30 47C30 67 66 109 66 109C66 109 102 67 102 47C102 27 86 11 66 11Z" fill="#3A6B4A" opacity="0.55"/>
       <path d="M54 7C34 7 18 23 18 43C18 63 54 105 54 105C54 105 90 63 90 43C90 23 74 7 54 7Z" fill="#E07B39"/>
@@ -745,14 +746,14 @@ body.dark .dm-ball{left:21px;}
       </g>
     </svg>
     <div class="logo-wrap" style="flex-direction:column;gap:0">
-      <span class="logo-text">Yardi<span>Go</span></span>
+      <span class="logo-text">Yard<span class="logo-i">i</span><span>Go</span></span>
       <span class="logo-sub">FIND · SELL · GO</span>
     </div>
   </div>
   <div class="header-right">
     <button class="dm-toggle" onclick="toggleDark()"><div class="dm-ball" id="dmBall">☀️</div></button>
     <button onclick="openLogin()" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" id="loginBtn">Inloggen</button>
-    <button onclick="openAdd()" style="background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Plaatsen</button>
+    <button onclick="isGuest ? guestGate('plaatsen') : openAdd()" style="background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Plaatsen</button>
   </div>
 </header>
 
@@ -962,7 +963,7 @@ body.dark .dm-ball{left:21px;}
           <button onclick="toast('Verwijderd')" style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:#FEE;color:#C00">Verwijder</button>
         </div>
       </div>
-      <button class="btn-pub" onclick="openAdd()">+ Nieuwe verkoop plaatsen</button>
+      <button class="btn-pub" onclick="isGuest ? guestGate('plaatsen') : openAdd()">+ Nieuwe verkoop plaatsen</button>
     </div>
     <div class="pp" id="pp-1">
       <div id="fav-list"></div>
@@ -1214,7 +1215,7 @@ body.dark .dm-ball{left:21px;}
     Mijn
   </div>
 </nav>
-<button class="fab" onclick="openAdd()">＋ Verkoop plaatsen</button>
+<button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()">＋ Verkoop plaatsen</button>
 
 <!-- ═══════════ DETAIL SHEET ═══════════ -->
 <div class="overlay" id="detailOv" onclick="if(event.target===this)closeDetail()">
@@ -1374,7 +1375,7 @@ body.dark .dm-ball{left:21px;}
       <!-- Step 3: Photos + preview -->
       <div id="add-s3" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:4px">Foto's & preview</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px" id="photoCount">0/10 foto's</div>
+        <div style="font-size:12px;margin-bottom:14px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:16px">
           📷 Foto's toevoegen
@@ -1539,7 +1540,7 @@ let goingSet = new Set();
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let advTagFilters = new Set();
-let isGuest = false;
+let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
 let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
@@ -1620,6 +1621,9 @@ function obFinish(name) {
   localStorage.setItem('yg-onboarded', '1');
   toast(name === 'Gast' ? 'Je bekijkt YardiGo als gast 👁️' : 'Welkom, ' + name + '! 🎉');
   updateAttendanceUI();
+  // Herrender kaart en lijst met juiste adres-zichtbaarheid
+  if (map) renderMarkers();
+  renderList();
 }
 
 // ── Welcome Sheet ──
@@ -1661,6 +1665,13 @@ function startOnboarding(goLogin) {
       obGoTo(0);
     }
   });
+}
+
+function goHome() {
+  sv('kaart', document.querySelector('.tab'));
+  document.querySelectorAll('.bni').forEach(function(b) { b.classList.remove('active'); });
+  var bni = document.getElementById('bni-kaart');
+  if (bni) bni.classList.add('active');
 }
 
 // ══════════════════════════════════════════════════
@@ -2160,7 +2171,7 @@ function ptab(i) {
 function openDetail(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
-  detailSaleId = id; carouselIdx = 0;
+  detailSaleId = s.id; carouselIdx = 0;
   var t = TYPES[s.type], fav = favorites.has(id);
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
@@ -2172,10 +2183,23 @@ function openDetail(id) {
   var photos = document.getElementById('det-photos'), noPhoto = document.getElementById('det-no-photo');
   noPhoto.textContent = t.icon; noPhoto.style.display = 'flex'; photos.innerHTML = '';
   document.getElementById('det-prev').style.display = 'none'; document.getElementById('det-next').style.display = 'none';
+  var detDots = document.getElementById('det-dots');
+  if (detDots) detDots.innerHTML = '';
   if (s.photos && s.photos.length) {
     noPhoto.style.display = 'none';
-    photos.innerHTML = s.photos.map(function(src) { return '<img src="' + src + '" style="width:100%;height:200px;object-fit:cover;flex-shrink:0">'; }).join('');
-    if (s.photos.length > 1) { document.getElementById('det-prev').style.display = 'flex'; document.getElementById('det-next').style.display = 'flex'; }
+    photos.innerHTML = s.photos.map(function(src) {
+      return '<img src="' + src + '" style="min-width:100%;width:100%;height:200px;object-fit:cover;flex-shrink:0">';
+    }).join('');
+    photos.style.transform = 'translateX(0)';
+    if (s.photos.length > 1) {
+      document.getElementById('det-prev').style.display = 'flex';
+      document.getElementById('det-next').style.display = 'flex';
+      if (detDots) {
+        detDots.innerHTML = s.photos.map(function(_, i) {
+          return '<div style="width:7px;height:7px;border-radius:50%;background:' + (i === 0 ? 'white' : 'rgba(255,255,255,.45)') + ';transition:background .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)"></div>';
+        }).join('');
+      }
+    }
   }
   // Tags
   var tagColors = { particulier:'#FEF5E4', buurt:'#FDF0E7', evenement:'#EAF2EC' };
@@ -2232,10 +2256,17 @@ function openDetail(id) {
 }
 function closeDetail() { document.getElementById('detailOv').classList.remove('open'); }
 function carouselStep(dir) {
-  var s = sales.find(function(x) { return x.id === detailSaleId; });
+  var s = sales.find(function(x) { return String(x.id) === String(detailSaleId); });
   if (!s || !s.photos) return;
   carouselIdx = (carouselIdx + dir + s.photos.length) % s.photos.length;
   document.getElementById('det-photos').style.transform = 'translateX(-' + carouselIdx + '00%)';
+  // Update dots
+  var detDots = document.getElementById('det-dots');
+  if (detDots) {
+    Array.from(detDots.children).forEach(function(d, i) {
+      d.style.background = i === carouselIdx ? 'white' : 'rgba(255,255,255,.45)';
+    });
+  }
 }
 function detailFav() {
   if (!detailSaleId) return;
@@ -2363,7 +2394,10 @@ function handleAddPhotos(input) {
       document.getElementById('photoGrid').innerHTML = uploadedPhotos.map(function(src, i) {
         return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
       }).join('');
-      document.getElementById('photoCount').textContent = uploadedPhotos.length + '/10 foto\'s';
+      var pc = document.getElementById('photoCount');
+      if (pc) pc.innerHTML = uploadedPhotos.length === 0
+        ? '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10'
+        : '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max 10';
     };
     reader.readAsDataURL(file);
   });
@@ -2385,6 +2419,7 @@ async function publishSale() {
   var title = document.getElementById('aTitle'), addr = document.getElementById('aAddr');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (!addr || !addr.value.trim()) { toast('Vul een adres in'); return; }
+  if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
   showL();
   try {
     var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr.value) + '&format=json&limit=1');
@@ -2425,27 +2460,36 @@ var activeSugIdx = -1;
 function searchSuggest(val) {
   var dd = document.getElementById('s-dropdown');
   var inp = document.getElementById('pcInput');
-  if (!val || val.length < 2) { dd.classList.remove('open'); currentSuggestions = []; return; }
+  var isDigit = /^[0-9]/.test(val);
+  var minLen = isDigit ? 1 : 2;
+  if (!val || val.length < minLen) { dd.classList.remove('open'); currentSuggestions = []; return; }
   clearTimeout(searchSuggestTimer);
   searchSuggestTimer = setTimeout(function() {
     var q = val.toLowerCase(), sugs = [];
 
-    // Postcode detection
-    if (/^[0-9]{1,4}/.test(val) && /^[0-9]/.test(val)) {
-      var pc = val.replace(/[^0-9]/g,'');
-      var hint = postcodeMap[pc[0]] ? ' — ' + postcodeMap[pc[0]] : '';
-      sugs.push({ icon:'📮', text: pc + (pc.length >= 4 ? '' : hint), type:'postcode', hint: hint });
+    // Postcode detection — toon regio-hint
+    if (isDigit) {
+      var pc = val.replace(/\s/g, '').toUpperCase();
+      var digits = pc.replace(/[^0-9]/g, '');
+      var regionHints = {
+        '1': 'Amsterdam regio', '2': 'Den Haag / Rotterdam', '3': 'Utrecht regio',
+        '4': 'Zeeland / Brabant', '5': 'Brabant / Limburg', '6': 'Limburg / Nijmegen',
+        '7': 'Overijssel / Gelderland', '8': 'Friesland / Overijssel', '9': 'Groningen / Drenthe'
+      };
+      var region = regionHints[digits[0]] || '';
+      var label = pc + (region && digits.length < 4 ? ' — ' + region : '');
+      sugs.push({ icon: '📮', text: pc, label: label, type: 'postcode' });
     }
 
-    // startsWith matches first (most relevant)
+    // startsWith matches (meest relevant)
     dutchPlaces.filter(function(p) { return p.toLowerCase().startsWith(q); })
-      .slice(0, 5).forEach(function(p) { sugs.push({ icon:'📍', text: p, type:'city' }); });
+      .slice(0, 5).forEach(function(p) { sugs.push({ icon: '📍', text: p, label: p, type: 'city' }); });
 
-    // then includes matches
-    if (sugs.length < 5) {
+    // includes matches
+    if (sugs.length < 6) {
       dutchPlaces.filter(function(p) {
         return p.toLowerCase().includes(q) && !p.toLowerCase().startsWith(q);
-      }).slice(0, 5 - sugs.length).forEach(function(p) { sugs.push({ icon:'📍', text: p, type:'city' }); });
+      }).slice(0, 6 - sugs.length).forEach(function(p) { sugs.push({ icon: '📍', text: p, label: p, type: 'city' }); });
     }
 
     currentSuggestions = sugs;
@@ -2453,34 +2497,50 @@ function searchSuggest(val) {
 
     if (!sugs.length) { dd.classList.remove('open'); return; }
 
-    // Inline autocomplete: fill rest of first suggestion
+    // Inline autocomplete voor plaatsen
     var first = sugs[0];
     if (first.type === 'city' && first.text.toLowerCase().startsWith(q)) {
-      var completion = first.text.slice(val.length);
-      if (completion && inp.value === val) {
-        // Set value with completion selected
+      if (inp.value === val) {
         inp.value = first.text;
         try { inp.setSelectionRange(val.length, first.text.length); } catch(e) {}
       }
     }
 
-    // Build dropdown
+    // Bouw dropdown
     dd.innerHTML = '';
+
+    // "Gebruik mijn locatie" als eerste optie
+    var locItem = document.createElement('div');
+    locItem.className = 's-drop-item';
+    locItem.innerHTML = '<span style="margin-right:8px">🎯</span><span style="font-weight:600;color:var(--forest)">Gebruik mijn locatie</span>';
+    locItem.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    locItem.addEventListener('click', function() {
+      document.getElementById('s-dropdown').classList.remove('open');
+      document.getElementById('pcInput').value = '';
+      if (navigator.geolocation) {
+        toast('📍 Locatie ophalen…');
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          if (map) { map.setView([pos.coords.latitude, pos.coords.longitude], 13); toast('✓ Kaart op jouw locatie'); }
+        }, function() { toast('Locatie niet beschikbaar'); });
+      } else { toast('Locatie niet beschikbaar'); }
+    });
+    dd.appendChild(locItem);
+
     sugs.forEach(function(s, i) {
       var item = document.createElement('div');
       item.className = 's-drop-item';
-      // Bold the typed part, normal for completion
-      var boldPart = val.length <= s.text.length ? s.text.slice(0, val.length) : s.text;
-      var restPart = s.text.slice(val.length);
+      var typedLen = val.length;
+      var boldPart = typedLen <= s.label.length ? s.label.slice(0, typedLen) : s.label;
+      var restPart = s.label.slice(typedLen);
       item.innerHTML = '<span style="margin-right:8px">' + s.icon + '</span>'
         + '<span style="font-weight:700">' + boldPart + '</span>'
         + '<span style="color:var(--muted)">' + restPart + '</span>';
-      item.addEventListener('mousedown', function(e) { e.preventDefault(); }); // prevent blur
+      item.addEventListener('mousedown', function(e) { e.preventDefault(); });
       item.addEventListener('click', function() { pickSuggestion(i); });
       dd.appendChild(item);
     });
     dd.classList.add('open');
-  }, 80);
+  }, 60);
 }
 
 function pickSuggestion(idx) {
