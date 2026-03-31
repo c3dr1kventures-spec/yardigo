@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>YardiGo gebruikt je locatie om garageverkopen en rommelmarkten bij jou in de buurt te tonen.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>YardiGo gebruikt je locatie om garageverkopen en rommelmarkten bij jou in de buurt te tonen.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>YardiGo gebruikt de camera om foto's toe te voegen aan je verkoop.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>YardiGo gebruikt je fotobibliotheek om foto's toe te voegen aan je verkoop.</string>
 </dict>
 </plist>

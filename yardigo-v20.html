@@ -1642,7 +1642,6 @@ async function doLogout() {
   isGuest = true;
   currentUser = { name: '', email: '' };
   localStorage.removeItem('yg-user');
-  localStorage.removeItem('yg-onboarded');
   updateUserUI();
   if (map) renderMarkers();
   renderList();
@@ -1721,11 +1720,21 @@ function obRequestLocation() {
   }
 }
 function obRequestNotif() {
+  // In Capacitor (native app): meldingen via iOS Instellingen
+  if (window.Capacitor) {
+    document.getElementById('ob-notif-card').classList.add('granted');
+    document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Ingesteld via Instellingen';
+    toast('Meldingen kun je beheren via iOS Instellingen');
+    return;
+  }
+  // In browser/PWA: gebruik web Notification API
   if ('Notification' in window) {
     Notification.requestPermission().then(function(p) {
       if (p === 'granted') { document.getElementById('ob-notif-card').classList.add('granted'); document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Meldingen aan'; }
-      else toast('Meldingen niet toegestaan');
+      else toast('Meldingen kun je later aanzetten via je browserinstellingen');
     });
+  } else {
+    toast('Meldingen worden niet ondersteund in deze browser');
   }
 }
 function obToggleCat(el) {
@@ -3457,6 +3466,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         isGuest = false;
         currentUser = { name: name, email: u.email };
         localStorage.setItem('yg-user', JSON.stringify(currentUser));
+        localStorage.setItem('yg-onboarded', '1');
       }
     } catch(e) {}
   }
@@ -3466,7 +3476,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (storedUser) {
       try {
         var parsed = JSON.parse(storedUser);
-        if (parsed && parsed.name) { currentUser = parsed; isGuest = false; }
+        if (parsed && parsed.name) { currentUser = parsed; isGuest = false; localStorage.setItem('yg-onboarded', '1'); }
       } catch(e) {}
     }
   }
