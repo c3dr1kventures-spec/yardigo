@@ -1,0 +1,27 @@
+{
+  "name": "yardigo",
+  "version": "1.0.0",
+  "description": "Nederlandse garage sale & rommelmarkt discovery app.",
+  "scripts": {
+    "sync": "cp yardigo-v20.html www/yardigo-v20.html && npx cap sync ios",
+    "open": "npx cap open ios",
+    "build": "cp yardigo-v20.html www/yardigo-v20.html && npx cap sync ios && npx cap open ios"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c3dr1kventures-spec/yardigo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/c3dr1kventures-spec/yardigo/issues"
+  },
+  "homepage": "https://github.com/c3dr1kventures-spec/yardigo#readme",
+  "dependencies": {
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/splash-screen": "^6.0.0"
+  }
+}
