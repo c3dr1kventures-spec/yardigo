@@ -846,7 +846,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="list-wrap">
     <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <span id="lcount">0 gevonden</span>
-      <button id="autoRoutBtn" onclick="autoRouteFromLocation()" style="display:none;background:var(--forest);color:white;border:none;border-radius:8px;padding:6px 11px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📍 Auto route</button>
+      <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
+        <option value="date-asc">📅 Vroegste eerst</option>
+        <option value="date-desc">📅 Laatste eerst</option>
+        <option value="nearby">📍 Dichtstbijzijnde</option>
+        <option value="interest">🔥 Meest populair</option>
+      </select>
     </div>
     <div id="cardList"></div>
   </div>
@@ -1239,6 +1244,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">OMSCHRIJVING</div>
         <div id="det-desc" style="font-size:13px;color:var(--text);line-height:1.6"></div>
       </div>
+      <div id="det-seller" style="display:none;font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:500"></div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button id="det-route-btn" onclick="detailRoute()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)">🧭 Route</button>
         <button id="det-fav-btn" onclick="detailFav()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)">☆ Favoriet</button>
@@ -1327,6 +1333,24 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span>Particulier — eigen spullen</span></div>
           <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span>Buurtverkoop — meerdere huizen</span></div>
           <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span>Evenement — vlooienmarkt</span></div>
+        </div>
+        <!-- Evenement subtype dropdown -->
+        <div id="evenement-subtype-wrap" style="display:none;margin-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">WAT VOOR EVENEMENT?</div>
+          <select id="aEventType" class="form-input" onchange="toggleEventAnders(this.value)" style="width:100%;cursor:pointer">
+            <option value="">— Kies een type —</option>
+            <option value="Vlooienmarkt">🎪 Vlooienmarkt</option>
+            <option value="Rommelmarkt">🛒 Rommelmarkt</option>
+            <option value="Kofferbakverkoop">🚗 Kofferbakverkoop</option>
+            <option value="Braderie">🏪 Braderie</option>
+            <option value="Kerstmarkt">🎄 Kerstmarkt</option>
+            <option value="Boekenmarkt">📚 Boekenmarkt</option>
+            <option value="Antiekmarkt">🏺 Antiekmarkt</option>
+            <option value="Anders">✏️ Anders</option>
+          </select>
+          <div id="evenement-anders-wrap" style="display:none;margin-top:8px">
+            <input class="form-input" id="aEventAnders" placeholder="Omschrijf het evenement type..." style="width:100%">
+          </div>
         </div>
       </div>
       <!-- Step 1: Details -->
@@ -1483,7 +1507,9 @@ function mapSupabaseToSale(item) {
     neighborhood_sale_id: item.neighborhood_group_id || item.neighborhood_sale_id || null,
     neighborhood_sale: item.neighborhood_group_id ? { id: item.neighborhood_group_id, title: item.title, date: item.date_start || '' } : null,
     description: item.description || '',
-    desc: item.description || ''
+    desc: item.description || '',
+    user_name: item.user_name || item.contact_name || '',
+    user_email: item.user_email || ''
   };
 }
 
@@ -1953,10 +1979,25 @@ function createListingPopup(sale) {
   var photoHtml = '';
   if (sale.photos && sale.photos.length) {
     var photoCount = sale.photos.length;
-    photoHtml = '<div style="position:relative;height:130px;overflow:hidden;background:#F0EBE3">'
-      + '<img src="' + sale.photos[0] + '" style="width:100%;height:130px;object-fit:cover;display:block" loading="lazy">'
-      + (photoCount > 1 ? '<div style="position:absolute;bottom:7px;right:8px;background:rgba(44,36,22,.65);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">&#128247; ' + photoCount + '</div>' : '')
-      + '</div>';
+    var popId = 'pop-sw-' + sale.id;
+    if (!isGuest && photoCount > 1) {
+      // Swipeable carousel voor ingelogde gebruikers
+      var imgs = sale.photos.map(function(src) {
+        return '<img src="' + src + '" style="min-width:100%;width:100%;height:130px;object-fit:cover;flex-shrink:0" loading="lazy">';
+      }).join('');
+      var dots = sale.photos.map(function(_, i) {
+        return '<div style="width:6px;height:6px;border-radius:50%;background:' + (i===0?'white':'rgba(255,255,255,.45)') + ';transition:background .2s"></div>';
+      }).join('');
+      photoHtml = '<div id="' + popId + '" data-idx="0" data-count="' + photoCount + '" style="position:relative;height:130px;overflow:hidden;background:#F0EBE3">'
+        + '<div class="pop-slides" style="display:flex;height:130px;transition:transform .3s;will-change:transform">' + imgs + '</div>'
+        + '<div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;pointer-events:none">' + dots + '</div>'
+        + '</div>';
+    } else {
+      photoHtml = '<div style="position:relative;height:130px;overflow:hidden;background:#F0EBE3">'
+        + '<img src="' + sale.photos[0] + '" style="width:100%;height:130px;object-fit:cover;display:block" loading="lazy">'
+        + (photoCount > 1 ? '<div style="position:absolute;bottom:7px;right:8px;background:rgba(44,36,22,.65);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">&#128247; ' + photoCount + '</div>' : '')
+        + '</div>';
+    }
   }
   return '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:260px">'
     + photoHtml
@@ -1979,13 +2020,17 @@ function createDefaultPin(sale) {
 }
 
 function createSmallPin(sale) {
+  // Zelfde grootte als normale markers (36×46) voor consistentie
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type] || '#E07B39';
-  var svg = '<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
-    + '<circle cx="12" cy="10" r="4" fill="white"/>'
+  var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
+  var icon = sale.type === 'buurt' ? '🏘️' : (sale.type === 'evenement' ? '🎪' : '🏠');
+  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="' + p + '" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
+    + '<circle cx="12" cy="10" r="5" fill="white"/>'
+    + '<text x="12" y="14" text-anchor="middle" font-size="7" font-family="sans-serif">' + icon + '</text>'
     + '</svg>';
-  return L.divIcon({ className: '', html: svg, iconSize: [24, 32], iconAnchor: [12, 32], popupAnchor: [0, -34] });
+  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 var clusterGroups = [];
@@ -2138,6 +2183,19 @@ function getDateRange(key) {
   }
   return null;
 }
+var listSortMode = 'date-asc';
+var userLocation = null;
+function applyListSort(mode) {
+  listSortMode = mode;
+  if (mode === 'nearby') {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        renderList();
+      }, function() { toast('📍 Locatie niet beschikbaar'); });
+    }
+  } else { renderList(); }
+}
 function applyFilters() { renderMarkers(); renderList(); }
 function filterType(type) {
   if (type === 'all') { activeFilters.clear(); }
@@ -2184,8 +2242,17 @@ function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
   var el = document.getElementById('lcount');
   if (el) el.textContent = visible.length + ' gevonden';
-  var arBtn = document.getElementById('autoRoutBtn');
-  if (arBtn) arBtn.style.display = (!isGuest && visible.length > 1) ? 'block' : 'none';
+  // Sorteer de lijst op basis van geselecteerde modus
+  visible = visible.slice();
+  if (listSortMode === 'date-desc') {
+    visible.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
+  } else if (listSortMode === 'date-asc') {
+    visible.sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
+  } else if (listSortMode === 'interest') {
+    visible.sort(function(a,b) { return (b.interested||0) - (a.interested||0); });
+  } else if (listSortMode === 'nearby' && userLocation) {
+    visible.sort(function(a,b) { return dist(userLocation,a) - dist(userLocation,b); });
+  }
   var list = document.getElementById('cardList');
   if (!list) return;
   if (!visible.length) {
@@ -2487,6 +2554,14 @@ function openDetail(id) {
   // Desc
   var dw = document.getElementById('det-desc-wrap'), de = document.getElementById('det-desc');
   if (s.desc && s.desc.trim()) { de.textContent = s.desc; dw.style.display = 'block'; } else { dw.style.display = 'none'; }
+  // Verkoper naam
+  var sellerEl = document.getElementById('det-seller');
+  if (sellerEl) {
+    var sellerName = s.user_name ? s.user_name.split(' ')[0] : '';
+    if (!sellerName && s.user_email) sellerName = emailToName(s.user_email).split(' ')[0];
+    if (sellerName) { sellerEl.textContent = '👤 ' + sellerName; sellerEl.style.display = 'block'; }
+    else { sellerEl.style.display = 'none'; }
+  }
   // Interest
   document.getElementById('det-interest-num').textContent = s.interested || 0;
   // Fav btn
@@ -2537,7 +2612,6 @@ function carouselStep(dir) {
   if (!s || !s.photos) return;
   carouselIdx = (carouselIdx + dir + s.photos.length) % s.photos.length;
   document.getElementById('det-photos').style.transform = 'translateX(-' + carouselIdx + '00%)';
-  // Update dots
   var detDots = document.getElementById('det-dots');
   if (detDots) {
     Array.from(detDots.children).forEach(function(d, i) {
@@ -2545,6 +2619,48 @@ function carouselStep(dir) {
     });
   }
 }
+// Touch swipe voor foto carousel (grote popup)
+(function() {
+  var startX = 0, startY = 0, isDragging = false;
+  document.addEventListener('DOMContentLoaded', function() {
+    var wrap = document.getElementById('det-photos-wrap');
+    if (!wrap) return;
+    wrap.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true;
+    }, { passive: true });
+    wrap.addEventListener('touchend', function(e) {
+      if (!isDragging) return; isDragging = false;
+      var dx = e.changedTouches[0].clientX - startX;
+      var dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) carouselStep(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  });
+})();
+
+// Touch swipe voor foto's in pin popup (kleine popup op kaart)
+(function() {
+  var popStartX = 0, popStartY = 0;
+  document.addEventListener('touchstart', function(e) {
+    var el = e.target.closest('[id^="pop-sw-"]');
+    if (!el) return;
+    popStartX = e.touches[0].clientX; popStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    var el = e.target.closest('[id^="pop-sw-"]');
+    if (!el) return;
+    var dx = e.changedTouches[0].clientX - popStartX;
+    var dy = e.changedTouches[0].clientY - popStartY;
+    if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) <= 40) return;
+    var idx = parseInt(el.dataset.idx) || 0;
+    var count = parseInt(el.dataset.count) || 1;
+    idx = (idx + (dx < 0 ? 1 : -1) + count) % count;
+    el.dataset.idx = idx;
+    var slides = el.querySelector('.pop-slides');
+    if (slides) slides.style.transform = 'translateX(-' + idx + '00%)';
+    var dotEls = el.querySelectorAll('div > div');
+    dotEls.forEach(function(d, i) { d.style.background = i === idx ? 'white' : 'rgba(255,255,255,.45)'; });
+  }, { passive: true });
+})();
 function detailFav() {
   if (!detailSaleId) return;
   toggleFav(detailSaleId);
@@ -2676,6 +2792,11 @@ function resetAddForm() {
   var bl = document.getElementById('buurt-adressen-list'); if (bl) bl.innerHTML = '';
   // Reset autocomplete dropdown
   var dd = document.getElementById('aAddr-dd'); if (dd) dd.style.display = 'none';
+  // Reset evenement subtype
+  var evWrap = document.getElementById('evenement-subtype-wrap'); if (evWrap) evWrap.style.display = 'none';
+  var evSel = document.getElementById('aEventType'); if (evSel) evSel.value = '';
+  var evAnd = document.getElementById('aEventAnders'); if (evAnd) evAnd.value = '';
+  var evAndWrap = document.getElementById('evenement-anders-wrap'); if (evAndWrap) evAndWrap.style.display = 'none';
   // Stap-navigatie
   ['add-s0','add-s1','add-s2','add-s3'].forEach(function(id, i) {
     var el = document.getElementById(id); if (el) el.style.display = i === 0 ? 'block' : 'none';
@@ -2701,11 +2822,18 @@ function selType(t) {
   selTypeVal = t;
   document.querySelectorAll('.type-opt').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('to-' + t).classList.add('active');
+  // Toon evenement subtype dropdown alleen bij evenement
+  var evWrap = document.getElementById('evenement-subtype-wrap');
+  if (evWrap) evWrap.style.display = (t === 'evenement') ? 'block' : 'none';
   updateStep2View();
   // Voeg automatisch eerste adresrij toe bij buurtverkoop
   if (t === 'buurt' && buurtAdressen.length === 0) {
     addBuurtAdres();
   }
+}
+function toggleEventAnders(val) {
+  var w = document.getElementById('evenement-anders-wrap');
+  if (w) w.style.display = (val === 'Anders') ? 'block' : 'none';
 }
 
 function addNav(dir) {
