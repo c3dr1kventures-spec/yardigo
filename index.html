@@ -3685,10 +3685,35 @@ function selectFtype(btn, type) {
 function sendFeedback() {
   var msg = document.getElementById('feedbackMsg').value.trim();
   if (!msg) { toast('Schrijf eerst een bericht 😊'); return; }
-  var subject = encodeURIComponent('[YardiGo ' + currentFtype + '] Feedback');
-  var body = encodeURIComponent(msg);
-  window.location.href = 'mailto:yardigo.app@gmail.com?subject=' + subject + '&body=' + body;
-  closeFeedback();
+  var btn = document.querySelector('.btn-feedback-send');
+  btn.textContent = '⏳ Versturen...';
+  btn.disabled = true;
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
+      subject: '[YardiGo ' + currentFtype + '] Feedback',
+      message: msg,
+      from_name: 'YardiGo App'
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.textContent = '📧 Verstuur';
+    btn.disabled = false;
+    if (data.success) {
+      closeFeedback();
+      toast('Bedankt voor je feedback! 🙏');
+    } else {
+      toast('Er ging iets mis, probeer opnieuw.');
+    }
+  })
+  .catch(function(){
+    btn.textContent = '📧 Verstuur';
+    btn.disabled = false;
+    toast('Geen verbinding, probeer opnieuw.');
+  });
 }
 </script>
 </body>
