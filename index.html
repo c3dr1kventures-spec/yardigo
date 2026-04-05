@@ -1767,7 +1767,7 @@ async function doDeleteAccount() {
         if (!res.ok) {
           var errData = {};
           try { errData = await res.json(); } catch(e) {}
-          throw new Error(errData.error || 'Verwijderen mislukt (status ' + res.status + ')');
+          throw new Error(errData.error || errData.message || 'Verwijderen mislukt (status ' + res.status + ')');
         }
       } else {
         // Geen actieve sessie — lokaal uitloggen volstaat
