@@ -1760,6 +1760,7 @@ async function doDeleteAccount() {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + accessToken,
+            'apikey': SUPABASE_ANON_KEY,
             'Content-Type': 'application/json'
           }
         });
