@@ -1008,9 +1008,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div><div style="font-size:13px;font-weight:600">Donkere modus</div><div style="font-size:11px;color:var(--muted)">Schakel thema</div></div>
           <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
         </div>
-        <div class="settings-row" style="border-bottom:none">
+        <div class="settings-row">
           <div><div style="font-size:13px;font-weight:600">Uitloggen</div></div>
           <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="doLogout()">Uitloggen</div>
+        </div>
+        <div class="settings-row" style="border-bottom:none">
+          <div><div style="font-size:13px;font-weight:600;color:var(--terra)">Account verwijderen</div><div style="font-size:11px;color:var(--muted)">Wis al je data permanent</div></div>
+          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="openDeleteConfirm()">Verwijderen →</div>
         </div>
       </div>
 
@@ -1353,6 +1357,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </ul>
       <button onclick="guestRegister()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Gratis account aanmaken →</button>
       <button onclick="closeGuestGate()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Verder als gast</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DELETE ACCOUNT CONFIRMATION ═══════════ -->
+<div class="overlay" id="deleteAccOv" onclick="if(event.target===this)closeDeleteConfirm()">
+  <div class="sheet" style="max-height:55vh">
+    <div class="sheet-handle"></div>
+    <div style="padding:20px 24px 32px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:18px;font-weight:800;color:var(--terra);margin-bottom:8px">Account verwijderen</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Weet je zeker dat je je account wilt verwijderen? Al je verkopen en gegevens worden permanent gewist. Dit kan niet ongedaan worden gemaakt.</div>
+      <button onclick="doDeleteAccount()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Ja, verwijder mijn account</button>
+      <button onclick="closeDeleteConfirm()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
     </div>
   </div>
 </div>
@@ -1717,6 +1735,58 @@ async function doLogout() {
   if (map) renderMarkers();
   renderList();
   toast('Je bent uitgelogd');
+}
+
+// ── Account verwijderen ──
+function openDeleteConfirm() {
+  if (isGuest) { toast('Je bent niet ingelogd'); return; }
+  document.getElementById('deleteAccOv').classList.add('open');
+}
+function closeDeleteConfirm() {
+  document.getElementById('deleteAccOv').classList.remove('open');
+}
+async function doDeleteAccount() {
+  closeDeleteConfirm();
+  try {
+    if (sbClient && !isGuest) {
+      // Haal het toegangstoken op voor de Edge Function aanroep
+      var sessionRes = await sbClient.auth.getSession();
+      var accessToken = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+
+      if (accessToken) {
+        // Roep de Edge Function aan — die verwijdert de auth user server-side
+        // (cascade wist ook profiles, listings en favorites automatisch)
+        var res = await fetch(SUPABASE_URL + '/functions/v1/delete-account', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!res.ok) {
+          var errData = {};
+          try { errData = await res.json(); } catch(e) {}
+          throw new Error(errData.error || 'Verwijderen mislukt (status ' + res.status + ')');
+        }
+      } else {
+        // Geen actieve sessie — lokaal uitloggen volstaat
+        await sbClient.auth.signOut().catch(function(){});
+      }
+    }
+
+    // Lokale staat opschonen
+    isGuest = true;
+    currentUser = { name: '', email: '' };
+    localStorage.removeItem('yg-user');
+    localStorage.removeItem('yg-onboarded');
+    localStorage.removeItem('yg-dark');
+    updateUserUI();
+    if (map) renderMarkers();
+    renderList();
+    toast('✓ Je account is verwijderd');
+  } catch(e) {
+    toast('❌ ' + (e.message || 'Er ging iets fout. Probeer opnieuw.'));
+  }
 }
 
 // ── Inloggen via hoofd-login-overlay ──

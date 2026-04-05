@@ -366,10 +366,31 @@ body.dark .dm-ball{left:21px;}
 .atag{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);}
 .atag.sel{background:var(--forest);color:white;border-color:var(--forest);}
 
+/* ── FAB ROW ── */
+.fab-row{position:fixed;bottom:76px;right:18px;display:flex;align-items:center;gap:10px;z-index:400;transition:opacity .18s;}
+.fab-row.hidden{opacity:0;pointer-events:none;}
 /* ── FAB ── */
-.fab{position:fixed;bottom:76px;right:18px;background:var(--terra);color:white;border:none;border-radius:12px;padding:13px 18px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 18px rgba(224,123,57,.45);display:flex;align-items:center;gap:8px;z-index:400;transition:all .18s;}
+.fab{background:var(--terra);color:white;border:none;border-radius:12px;padding:13px 18px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 18px rgba(224,123,57,.45);display:flex;align-items:center;gap:8px;transition:all .18s;}
 .fab:hover{background:var(--terra-dark);}
-.fab.hidden{opacity:0;pointer-events:none;}
+/* ── FAB FEEDBACK ── */
+.fab-feedback{background:var(--forest);color:white;border:none;border-radius:10px;padding:10px 14px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(58,107,74,.4);display:flex;align-items:center;gap:5px;transition:all .18s;}
+.fab-feedback:hover{background:var(--forest-dark);}
+/* ── FEEDBACK MODAL ── */
+.feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.feedback-overlay.open{opacity:1;pointer-events:all;}
+.feedback-card{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 20px 36px;transform:translateY(30px);transition:transform .25s;}
+.feedback-overlay.open .feedback-card{transform:translateY(0);}
+body.dark .feedback-card{background:var(--bg2);}
+.feedback-card h3{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text);}
+.feedback-card p{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.feedback-types{display:flex;gap:8px;margin-bottom:14px;}
+.ftype{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);background:transparent;font-family:'Poppins',sans-serif;transition:all .15s;}
+.ftype.active{background:var(--forest);color:white;border-color:var(--forest);}
+.feedback-card textarea{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-family:'Poppins',sans-serif;font-size:13px;resize:none;height:110px;background:var(--bg);color:var(--text);outline:none;}
+.feedback-card textarea:focus{border-color:var(--forest);}
+.feedback-actions{display:flex;gap:10px;margin-top:14px;}
+.btn-feedback-send{flex:1;background:var(--forest);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-feedback-cancel{padding:13px 18px;background:var(--bg2);color:var(--muted);border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
 
 /* ── BOTTOM NAV ── */
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:white;border-top:1px solid var(--border);display:flex;z-index:500;padding-bottom:env(safe-area-inset-bottom,0);}
@@ -987,9 +1008,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div><div style="font-size:13px;font-weight:600">Donkere modus</div><div style="font-size:11px;color:var(--muted)">Schakel thema</div></div>
           <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
         </div>
-        <div class="settings-row" style="border-bottom:none">
+        <div class="settings-row">
           <div><div style="font-size:13px;font-weight:600">Uitloggen</div></div>
           <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="doLogout()">Uitloggen</div>
+        </div>
+        <div class="settings-row" style="border-bottom:none">
+          <div><div style="font-size:13px;font-weight:600;color:var(--terra)">Account verwijderen</div><div style="font-size:11px;color:var(--muted)">Wis al je data permanent</div></div>
+          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="openDeleteConfirm()">Verwijderen →</div>
         </div>
       </div>
 
@@ -1211,7 +1236,31 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     Mijn
   </div>
 </nav>
-<button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()">＋ Verkoop plaatsen</button>
+<div class="fab-row" id="fab-row">
+  <button class="fab-feedback" onclick="openFeedback()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Feedback
+  </button>
+  <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()">＋ Verkoop plaatsen</button>
+</div>
+
+<!-- ═══════════ FEEDBACK MODAL ═══════════ -->
+<div class="feedback-overlay" id="feedbackOv" onclick="if(event.target===this)closeFeedback()">
+  <div class="feedback-card">
+    <h3>📬 Stuur feedback</h3>
+    <p>Meld een bug, doe een suggestie, of neem contact op.</p>
+    <div class="feedback-types">
+      <button class="ftype active" onclick="selectFtype(this,'Bug')">🐛 Bug</button>
+      <button class="ftype" onclick="selectFtype(this,'Suggestie')">💡 Suggestie</button>
+      <button class="ftype" onclick="selectFtype(this,'Contact')">✉️ Contact</button>
+    </div>
+    <textarea id="feedbackMsg" placeholder="Beschrijf het probleem of je idee..."></textarea>
+    <div class="feedback-actions">
+      <button class="btn-feedback-cancel" onclick="closeFeedback()">Annuleer</button>
+      <button class="btn-feedback-send" onclick="sendFeedback()">📧 Verstuur</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════ DETAIL SHEET ═══════════ -->
 <div class="overlay" id="detailOv" onclick="if(event.target===this)closeDetail()">
@@ -1308,6 +1357,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </ul>
       <button onclick="guestRegister()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Gratis account aanmaken →</button>
       <button onclick="closeGuestGate()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Verder als gast</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ DELETE ACCOUNT CONFIRMATION ═══════════ -->
+<div class="overlay" id="deleteAccOv" onclick="if(event.target===this)closeDeleteConfirm()">
+  <div class="sheet" style="max-height:55vh">
+    <div class="sheet-handle"></div>
+    <div style="padding:20px 24px 32px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:18px;font-weight:800;color:var(--terra);margin-bottom:8px">Account verwijderen</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Weet je zeker dat je je account wilt verwijderen? Al je verkopen en gegevens worden permanent gewist. Dit kan niet ongedaan worden gemaakt.</div>
+      <button onclick="doDeleteAccount()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Ja, verwijder mijn account</button>
+      <button onclick="closeDeleteConfirm()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
     </div>
   </div>
 </div>
@@ -1672,6 +1735,58 @@ async function doLogout() {
   if (map) renderMarkers();
   renderList();
   toast('Je bent uitgelogd');
+}
+
+// ── Account verwijderen ──
+function openDeleteConfirm() {
+  if (isGuest) { toast('Je bent niet ingelogd'); return; }
+  document.getElementById('deleteAccOv').classList.add('open');
+}
+function closeDeleteConfirm() {
+  document.getElementById('deleteAccOv').classList.remove('open');
+}
+async function doDeleteAccount() {
+  closeDeleteConfirm();
+  try {
+    if (sbClient && !isGuest) {
+      // Haal het toegangstoken op voor de Edge Function aanroep
+      var sessionRes = await sbClient.auth.getSession();
+      var accessToken = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+
+      if (accessToken) {
+        // Roep de Edge Function aan — die verwijdert de auth user server-side
+        // (cascade wist ook profiles, listings en favorites automatisch)
+        var res = await fetch(SUPABASE_URL + '/functions/v1/delete-account', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + accessToken,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!res.ok) {
+          var errData = {};
+          try { errData = await res.json(); } catch(e) {}
+          throw new Error(errData.error || 'Verwijderen mislukt (status ' + res.status + ')');
+        }
+      } else {
+        // Geen actieve sessie — lokaal uitloggen volstaat
+        await sbClient.auth.signOut().catch(function(){});
+      }
+    }
+
+    // Lokale staat opschonen
+    isGuest = true;
+    currentUser = { name: '', email: '' };
+    localStorage.removeItem('yg-user');
+    localStorage.removeItem('yg-onboarded');
+    localStorage.removeItem('yg-dark');
+    updateUserUI();
+    if (map) renderMarkers();
+    renderList();
+    toast('✓ Je account is verwijderd');
+  } catch(e) {
+    toast('❌ ' + (e.message || 'Er ging iets fout. Probeer opnieuw.'));
+  }
 }
 
 // ── Inloggen via hoofd-login-overlay ──
@@ -2499,8 +2614,8 @@ function sv(name, tabEl) {
   if (vEl) vEl.classList.add('active');
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
-  var fab = document.querySelector('.fab');
-  if (fab) fab.classList.toggle('hidden', name === 'kaart');
+  var fabRow = document.getElementById('fab-row');
+  if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart');
 }
 function ptab(i) {
   document.querySelectorAll('.pp').forEach(function(p) { p.classList.remove('active'); });
@@ -3619,6 +3734,57 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(showWelcomeSheet, 3000);
   }
 });
+
+// ─── FEEDBACK ────────────────────────────────────────────
+var currentFtype = 'Bug';
+function openFeedback() {
+  document.getElementById('feedbackMsg').value = '';
+  document.querySelectorAll('.ftype').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.ftype')[0].classList.add('active');
+  currentFtype = 'Bug';
+  document.getElementById('feedbackOv').classList.add('open');
+}
+function closeFeedback() {
+  document.getElementById('feedbackOv').classList.remove('open');
+}
+function selectFtype(btn, type) {
+  document.querySelectorAll('.ftype').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFtype = type;
+}
+function sendFeedback() {
+  var msg = document.getElementById('feedbackMsg').value.trim();
+  if (!msg) { toast('Schrijf eerst een bericht 😊'); return; }
+  var btn = document.querySelector('.btn-feedback-send');
+  btn.textContent = '⏳ Versturen...';
+  btn.disabled = true;
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
+      subject: '[YardiGo ' + currentFtype + '] Feedback',
+      message: msg,
+      from_name: 'YardiGo App'
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.textContent = '📧 Verstuur';
+    btn.disabled = false;
+    if (data.success) {
+      closeFeedback();
+      toast('Bedankt voor je feedback! 🙏');
+    } else {
+      toast('Er ging iets mis, probeer opnieuw.');
+    }
+  })
+  .catch(function(){
+    btn.textContent = '📧 Verstuur';
+    btn.disabled = false;
+    toast('Geen verbinding, probeer opnieuw.');
+  });
+}
 </script>
 </body>
 </html>
