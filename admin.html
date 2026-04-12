@@ -8,182 +8,205 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --terra:  #E07B39;
-    --amber:  #F2A830;
-    --forest: #3A6B4A;
-    --bark:   #2C2416;
-    --bg:     #FAF7F2;
-    --bg2:    #F0EBE3;
-    --border: #E8E0D4;
-    --text:   #2C2416;
-    --muted:  #9E9E9E;
-    --red:    #D94040;
-    --green:  #3A6B4A;
-  }
-  body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --terra:  #E07B39; --amber: #F2A830; --forest: #3A6B4A;
+  --bark:   #2C2416; --bg: #FAF7F2; --bg2: #F0EBE3;
+  --border: #E8E0D4; --text: #2C2416; --muted: #9E9E9E;
+  --red: #D94040; --green: #3A6B4A; --blue: #3A78B4;
+}
+body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-  /* ── LOGIN ── */
-  #login-screen {
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; padding: 24px;
-  }
-  .login-card {
-    background: white; border-radius: 20px; padding: 40px 32px;
-    box-shadow: 0 8px 40px rgba(44,36,22,.12); width: 100%; max-width: 380px;
-  }
-  .login-logo { text-align: center; margin-bottom: 28px; }
-  .login-logo .logo-icon { font-size: 48px; }
-  .login-logo h1 { font-size: 22px; font-weight: 800; color: var(--bark); margin-top: 8px; }
-  .login-logo p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
-  .field input {
-    width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
-    border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 14px;
-    color: var(--text); outline: none; transition: border-color .2s;
-  }
-  .field input:focus { border-color: var(--terra); }
-  .btn-primary {
-    width: 100%; padding: 14px; background: var(--terra); color: white;
-    border: none; border-radius: 12px; font-family: 'Poppins', sans-serif;
-    font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px;
-    transition: background .2s;
-  }
-  .btn-primary:hover { background: #c96a2a; }
-  #login-error { color: var(--red); font-size: 12px; text-align: center; margin-top: 10px; min-height: 18px; }
+/* LOGIN */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.login-card { background:white; border-radius:20px; padding:40px 32px; box-shadow:0 8px 40px rgba(44,36,22,.12); width:100%; max-width:380px; }
+.login-logo { text-align:center; margin-bottom:28px; }
+.login-logo .logo-icon { font-size:48px; }
+.login-logo h1 { font-size:22px; font-weight:800; color:var(--bark); margin-top:8px; }
+.login-logo p { font-size:12px; color:var(--muted); margin-top:2px; }
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.5px; }
+.field input { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'Poppins',sans-serif; font-size:14px; color:var(--text); outline:none; transition:border-color .2s; }
+.field input:focus { border-color:var(--terra); }
+.btn-primary { width:100%; padding:14px; background:var(--terra); color:white; border:none; border-radius:12px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:700; cursor:pointer; margin-top:6px; transition:background .2s; }
+.btn-primary:hover { background:#c96a2a; }
+#login-error { color:var(--red); font-size:12px; text-align:center; margin-top:10px; min-height:18px; }
 
-  /* ── MAIN LAYOUT ── */
-  #app { display: none; }
-  .topbar {
-    background: white; border-bottom: 1.5px solid var(--border);
-    padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
-    height: 60px; position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 12px rgba(44,36,22,.06);
-  }
-  .topbar-left { display: flex; align-items: center; gap: 12px; }
-  .topbar-logo { font-size: 22px; font-weight: 800; color: var(--bark); }
-  .topbar-badge { background: var(--terra); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-  .topbar-right { display: flex; align-items: center; gap: 10px; }
-  .btn-logout { background: var(--bg2); border: none; border-radius: 8px; padding: 7px 14px; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text); transition: background .2s; }
-  .btn-logout:hover { background: var(--border); }
+/* LAYOUT */
+#app { display:none; }
+.topbar { background:white; border-bottom:1.5px solid var(--border); padding:0 24px; display:flex; align-items:center; justify-content:space-between; height:60px; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(44,36,22,.06); }
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.topbar-logo { font-size:22px; font-weight:800; color:var(--bark); }
+.topbar-badge { background:var(--terra); color:white; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.btn-logout { background:var(--bg2); border:none; border-radius:8px; padding:7px 14px; font-family:'Poppins',sans-serif; font-size:12px; font-weight:600; cursor:pointer; color:var(--text); }
+.btn-logout:hover { background:var(--border); }
 
-  /* ── NAV TABS ── */
-  .nav { background: white; border-bottom: 1.5px solid var(--border); padding: 0 24px; display: flex; gap: 4px; }
-  .nav-tab {
-    padding: 14px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
-    border-bottom: 2.5px solid transparent; color: var(--muted); transition: all .2s;
-    display: flex; align-items: center; gap: 7px; white-space: nowrap;
-  }
-  .nav-tab.active { color: var(--terra); border-bottom-color: var(--terra); }
-  .nav-tab:hover:not(.active) { color: var(--text); }
+/* NAV */
+.nav { background:white; border-bottom:1.5px solid var(--border); padding:0 24px; display:flex; gap:4px; overflow-x:auto; }
+.nav::-webkit-scrollbar { display:none; }
+.nav-tab { padding:14px 16px; font-size:13px; font-weight:600; cursor:pointer; border-bottom:2.5px solid transparent; color:var(--muted); transition:all .2s; display:flex; align-items:center; gap:7px; white-space:nowrap; }
+.nav-tab.active { color:var(--terra); border-bottom-color:var(--terra); }
+.nav-tab:hover:not(.active) { color:var(--text); }
 
-  /* ── CONTENT ── */
-  .content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
-  .tab-pane { display: none; }
-  .tab-pane.active { display: block; }
+/* CONTENT */
+.content { padding:28px 24px; max-width:1200px; margin:0 auto; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
 
-  /* ── STAT CARDS ── */
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: white; border-radius: 14px; padding: 20px; border: 1.5px solid var(--border); }
-  .stat-card .s-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-  .stat-card .s-value { font-size: 32px; font-weight: 800; color: var(--bark); line-height: 1; }
-  .stat-card .s-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .stat-card.accent { border-color: var(--terra); }
-  .stat-card.accent .s-value { color: var(--terra); }
+/* STAT CARDS */
+.stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin-bottom:24px; }
+.stat-card { background:white; border-radius:14px; padding:18px 20px; border:1.5px solid var(--border); }
+.stat-card .s-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+.stat-card .s-value { font-size:30px; font-weight:800; color:var(--bark); line-height:1; }
+.stat-card .s-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+.stat-card .s-trend { font-size:11px; font-weight:700; margin-top:6px; }
+.trend-up   { color:#2ecc71; }
+.trend-down { color:var(--red); }
+.trend-flat { color:var(--muted); }
+.stat-card.accent { border-color:var(--terra); }
+.stat-card.accent .s-value { color:var(--terra); }
+.stat-card.green { border-color:var(--green); }
+.stat-card.green .s-value { color:var(--green); }
 
-  /* ── SECTION HEADER ── */
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .section-title { font-size: 16px; font-weight: 700; }
-  .section-count { background: var(--bg2); border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; color: var(--muted); }
+/* CHART PANELS */
+.panel { background:white; border-radius:14px; border:1.5px solid var(--border); padding:20px; margin-bottom:16px; }
+.panel-title { font-size:13px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+.panel-title span { font-size:11px; font-weight:500; color:var(--muted); }
 
-  /* ── TABLE ── */
-  .table-wrap { background: white; border-radius: 14px; border: 1.5px solid var(--border); overflow: hidden; }
-  .table-toolbar { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-  .search-input {
-    flex: 1; max-width: 280px; padding: 8px 14px; border: 1.5px solid var(--border);
-    border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none;
-  }
-  .search-input:focus { border-color: var(--terra); }
-  table { width: 100%; border-collapse: collapse; }
-  th { padding: 10px 16px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap; }
-  td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--bg2); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--bg); }
+/* BAR CHART */
+.bar-chart { display:flex; align-items:flex-end; gap:6px; height:110px; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.bar { width:100%; border-radius:4px 4px 0 0; min-height:2px; transition:height .5s cubic-bezier(.4,0,.2,1); }
+.bar.primary   { background:var(--terra); }
+.bar.secondary { background:var(--amber); opacity:.7; }
+.bar-label { font-size:8px; color:var(--muted); font-weight:600; text-align:center; }
+.bar-val { font-size:9px; color:var(--text); font-weight:700; }
 
-  /* ── BADGES ── */
-  .badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
-  .badge-particulier { background: #FEF5E4; color: #7A5A10; }
-  .badge-buurt { background: #FDF0E7; color: #A04A18; }
-  .badge-evenement { background: #EAF2EC; color: #2A5038; }
-  .badge-active { background: #EAF2EC; color: #2A5038; }
-  .badge-expired { background: #F5F5F5; color: #888; }
-  .badge-sample { background: #F0EBE3; color: #7A6A55; border: 1px solid #DDD5C8; }
+/* CITY BARS */
+.city-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.city-name { font-size:12px; font-weight:600; width:100px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.city-bar-wrap { flex:1; height:8px; background:var(--bg2); border-radius:4px; overflow:hidden; }
+.city-bar-fill { height:100%; border-radius:4px; background:var(--terra); transition:width .6s; }
+.city-count { font-size:11px; font-weight:700; color:var(--muted); width:28px; text-align:right; }
 
-  /* ── ACTION BUTTONS ── */
-  .btn-sm { padding: 5px 12px; border: none; border-radius: 7px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; }
-  .btn-del { background: #FEF0F0; color: var(--red); }
-  .btn-del:hover { background: var(--red); color: white; }
-  .btn-view { background: var(--bg2); color: var(--text); }
-  .btn-view:hover { background: var(--border); }
+/* HEALTH CHECK */
+.health-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--bg2); }
+.health-row:last-child { border-bottom:none; }
+.health-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.health-ok      { background:#2ecc71; }
+.health-warn    { background:var(--amber); }
+.health-danger  { background:var(--red); }
+.health-neutral { background:var(--muted); }
+.health-text { font-size:12px; flex:1; }
+.health-val { font-size:12px; font-weight:700; }
 
-  /* ── EMPTY STATE ── */
-  .empty { padding: 48px 24px; text-align: center; color: var(--muted); }
-  .empty .e-icon { font-size: 36px; margin-bottom: 10px; }
-  .empty .e-text { font-size: 13px; }
+/* RECENT FEED */
+.feed-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--bg2); }
+.feed-item:last-child { border-bottom:none; }
+.feed-icon { width:36px; height:36px; border-radius:10px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.feed-body { flex:1; min-width:0; }
+.feed-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.feed-sub { font-size:11px; color:var(--muted); }
+.feed-time { font-size:10px; color:var(--muted); white-space:nowrap; }
 
-  /* ── LOADING ── */
-  .loading { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 13px; }
-  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--terra); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* TABLE */
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:16px; font-weight:700; }
+.section-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.section-count { background:var(--bg2); border-radius:20px; padding:2px 10px; font-size:11px; font-weight:700; color:var(--muted); }
+.table-wrap { background:white; border-radius:14px; border:1.5px solid var(--border); overflow:hidden; }
+.table-toolbar { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.search-input { flex:1; min-width:160px; max-width:260px; padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; outline:none; }
+.search-input:focus { border-color:var(--terra); }
+select.filter-sel { padding:8px 10px; border:1.5px solid var(--border); border-radius:8px; font-family:'Poppins',sans-serif; font-size:12px; outline:none; background:white; }
+.table-scroll { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; min-width:600px; }
+th { padding:10px 14px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); border-bottom:1px solid var(--border); background:var(--bg); white-space:nowrap; }
+th.check-col { width:36px; padding:10px 10px 10px 14px; }
+td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--bg2); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#FDFBF8; }
+td.check-col { padding:11px 10px 11px 14px; }
+input[type=checkbox] { width:15px; height:15px; accent-color:var(--terra); cursor:pointer; }
 
-  /* ── SETTINGS ── */
-  .settings-card { background: white; border-radius: 14px; border: 1.5px solid var(--border); padding: 24px; margin-bottom: 16px; }
-  .settings-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-  .settings-card p { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
-  .toggle-label { font-size: 13px; font-weight: 600; }
-  .toggle { position: relative; width: 46px; height: 26px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 26px; cursor: pointer; transition: .3s; }
-  .toggle-slider::before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .3s; }
-  .toggle input:checked + .toggle-slider { background: var(--terra); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
-  .info-box { background: var(--bg2); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 12px; }
+/* BADGES */
+.badge { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.badge-particulier { background:#FEF5E4; color:#7A5A10; }
+.badge-buurt       { background:#FDF0E7; color:#A04A18; }
+.badge-evenement   { background:#EAF2EC; color:#2A5038; }
+.badge-active      { background:#EAF2EC; color:#2A5038; }
+.badge-expired     { background:#F5F5F5; color:#888; }
+.badge-blocked     { background:#FDEAEA; color:var(--red); }
+.badge-super       { background:#FEF5E4; color:#A06010; }
 
-  /* ── TOAST ── */
-  #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bark); color: white; padding: 10px 22px; border-radius: 20px; font-size: 12px; font-weight: 600; opacity: 0; transition: all .3s; pointer-events: none; z-index: 9999; white-space: nowrap; }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* BUTTONS */
+.btn { padding:7px 14px; border:none; border-radius:8px; font-family:'Poppins',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:5px; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+.btn-danger  { background:#FEF0F0; color:var(--red); }
+.btn-danger:hover  { background:var(--red); color:white; }
+.btn-ghost   { background:var(--bg2); color:var(--text); }
+.btn-ghost:hover   { background:var(--border); }
+.btn-terra   { background:var(--terra); color:white; }
+.btn-terra:hover   { background:#c96a2a; }
+.btn-green   { background:#EAF2EC; color:var(--green); }
+.btn-green:hover   { background:var(--green); color:white; }
+.bulk-bar { background:var(--bark); color:white; border-radius:10px; padding:10px 16px; display:none; align-items:center; gap:12px; margin-bottom:12px; font-size:13px; font-weight:600; }
+.bulk-bar.visible { display:flex; }
 
-  /* ── CHART ── */
-  .chart-wrap { background: white; border-radius: 14px; border: 1.5px solid var(--border); padding: 20px; margin-top: 16px; }
-  .chart-title { font-size: 13px; font-weight: 700; margin-bottom: 16px; }
-  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
-  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .bar { width: 100%; background: var(--terra); border-radius: 4px 4px 0 0; min-height: 2px; transition: height .4s; }
-  .bar-label { font-size: 9px; color: var(--muted); font-weight: 600; }
-  .bar-val { font-size: 9px; color: var(--text); font-weight: 700; }
+/* SETTINGS */
+.settings-card { background:white; border-radius:14px; border:1.5px solid var(--border); padding:24px; margin-bottom:16px; }
+.settings-card h3 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.settings-card p  { font-size:12px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
+.toggle-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.toggle-label { font-size:13px; font-weight:600; }
+.toggle-sub   { font-size:11px; color:var(--muted); }
+.toggle { position:relative; width:46px; height:26px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; inset:0; background:#ccc; border-radius:26px; cursor:pointer; transition:.3s; }
+.toggle-slider::before { content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:white; border-radius:50%; transition:.3s; }
+.toggle input:checked + .toggle-slider { background:var(--terra); }
+.toggle input:checked + .toggle-slider::before { transform:translateX(20px); }
+.info-box { background:var(--bg2); border-radius:10px; padding:12px 16px; font-size:12px; color:var(--muted); line-height:1.5; margin-top:10px; }
+.setting-input { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; outline:none; margin-bottom:8px; }
+.setting-input:focus { border-color:var(--terra); }
+textarea.setting-input { min-height:80px; resize:vertical; }
+.setting-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:12px; }
+.setting-row label { font-size:12px; font-weight:600; margin-bottom:4px; display:block; }
 
-  @media (max-width: 600px) {
-    .content { padding: 16px 14px; }
-    .nav-tab { padding: 12px 12px; font-size: 12px; }
-    th, td { padding: 9px 10px; font-size: 12px; }
-    .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  }
+/* EMPTY / LOADING */
+.empty { padding:48px 24px; text-align:center; color:var(--muted); }
+.empty .e-icon { font-size:36px; margin-bottom:10px; }
+.empty .e-text { font-size:13px; }
+.loading { padding:40px 24px; text-align:center; color:var(--muted); font-size:13px; }
+.spinner { width:26px; height:26px; border:3px solid var(--border); border-top-color:var(--terra); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* TOAST */
+#toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--bark); color:white; padding:10px 22px; border-radius:20px; font-size:12px; font-weight:600; opacity:0; transition:all .3s; pointer-events:none; z-index:9999; white-space:nowrap; }
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* RESPONSIVE */
+@media (max-width:640px) {
+  .content { padding:14px 12px; }
+  .nav-tab { padding:12px 10px; font-size:11px; }
+  th, td { padding:9px 10px; font-size:12px; }
+  .stat-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .topbar { padding:0 14px; }
+}
 </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════════════ -->
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <!-- ══════════════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
       <div class="logo-icon">📍</div>
       <h1>YardiGo Admin</h1>
-      <p>Beheer advertenties, gebruikers en statistieken</p>
+      <p>Beheer advertenties, gebruikers en instellingen</p>
     </div>
     <div class="field">
       <label>E-mailadres</label>
@@ -193,13 +216,13 @@
       <label>Wachtwoord</label>
       <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="btn-primary" onclick="doLogin()">Inloggen</button>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Inloggen</button>
     <div id="login-error"></div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════ -->
-<!-- MAIN APP -->
+<!-- APP -->
 <!-- ══════════════════════════════════════════════ -->
 <div id="app">
   <div class="topbar">
@@ -214,131 +237,228 @@
   </div>
 
   <div class="nav">
-    <div class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
-    <div class="nav-tab" data-tab="listings" onclick="switchTab('listings',this)">📋 Advertenties</div>
-    <div class="nav-tab" data-tab="users" onclick="switchTab('users',this)">👥 Gebruikers</div>
-    <div class="nav-tab" data-tab="settings" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
+    <div class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-tab" onclick="switchTab('listings',this)">📋 Advertenties</div>
+    <div class="nav-tab" onclick="switchTab('users',this)">👥 Gebruikers</div>
+    <div class="nav-tab" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
   </div>
 
   <div class="content">
 
-    <!-- ── DASHBOARD TAB ── -->
+    <!-- ══ DASHBOARD ══ -->
     <div class="tab-pane active" id="tab-dashboard">
       <div class="stat-grid" id="stat-grid">
-        <div class="stat-card loading"><div class="spinner"></div></div>
+        <div class="stat-card"><div class="spinner"></div></div>
       </div>
-      <div class="chart-wrap" id="chart-wrap" style="display:none">
-        <div class="chart-title">Advertenties per type</div>
-        <div class="bar-chart" id="type-chart"></div>
-      </div>
-      <div class="chart-wrap" id="recent-wrap" style="display:none;margin-top:16px">
-        <div class="chart-title">Recente advertenties</div>
-        <div id="recent-list"></div>
+
+      <!-- Twee kolommen op brede schermen -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="dash-grid">
+
+        <!-- Weekgrafiek -->
+        <div class="panel">
+          <div class="panel-title">Nieuwe advertenties per week <span id="week-range"></span></div>
+          <div class="bar-chart" id="week-chart">
+            <div class="loading" style="padding:10px"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Top steden -->
+        <div class="panel">
+          <div class="panel-title">Top steden <span>op basis van adres</span></div>
+          <div id="city-chart">
+            <div class="loading" style="padding:10px"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Gezondheidscheck -->
+        <div class="panel">
+          <div class="panel-title">Gezondheidscheck</div>
+          <div id="health-list">
+            <div class="loading" style="padding:10px"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Recente activiteit -->
+        <div class="panel">
+          <div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div>
+          <div id="recent-list">
+            <div class="loading" style="padding:10px"><div class="spinner"></div></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- ── LISTINGS TAB ── -->
+    <!-- ══ ADVERTENTIES ══ -->
     <div class="tab-pane" id="tab-listings">
       <div class="section-header">
         <span class="section-title">Alle advertenties</span>
-        <span class="section-count" id="listings-count">—</span>
+        <div class="section-actions">
+          <span class="section-count" id="listings-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇️ Exporteer CSV</button>
+        </div>
       </div>
+
+      <div class="bulk-bar" id="bulk-bar">
+        <span id="bulk-label">0 geselecteerd</span>
+        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑️ Verwijder geselecteerde</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearSelection()">Annuleer</button>
+      </div>
+
       <div class="table-wrap">
         <div class="table-toolbar">
           <input class="search-input" type="text" id="listings-search" placeholder="Zoek op titel of adres…" oninput="filterListings()">
-          <select id="listings-filter" onchange="filterListings()" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px;outline:none">
+          <select class="filter-sel" id="listings-type-filter" onchange="filterListings()">
             <option value="all">Alle types</option>
             <option value="particulier">Particulier</option>
             <option value="buurt">Buurtverkoop</option>
             <option value="evenement">Evenement</option>
           </select>
+          <select class="filter-sel" id="listings-status-filter" onchange="filterListings()">
+            <option value="all">Alle statussen</option>
+            <option value="active">Actief</option>
+            <option value="expired">Verlopen</option>
+          </select>
         </div>
-        <div id="listings-table-body">
-          <div class="loading"><div class="spinner"></div>Advertenties laden…</div>
+        <div class="table-scroll">
+          <div id="listings-table-body">
+            <div class="loading"><div class="spinner"></div>Advertenties laden…</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ── USERS TAB ── -->
+    <!-- ══ GEBRUIKERS ══ -->
     <div class="tab-pane" id="tab-users">
       <div class="section-header">
         <span class="section-title">Geregistreerde gebruikers</span>
-        <span class="section-count" id="users-count">—</span>
+        <div class="section-actions">
+          <span class="section-count" id="users-count">—</span>
+        </div>
       </div>
       <div class="table-wrap">
         <div class="table-toolbar">
-          <input class="search-input" type="text" id="users-search" placeholder="Zoek op e-mail…" oninput="filterUsers()">
+          <input class="search-input" type="text" id="users-search" placeholder="Zoek op e-mail of naam…" oninput="filterUsers()">
+          <select class="filter-sel" id="users-filter" onchange="filterUsers()">
+            <option value="all">Alle gebruikers</option>
+            <option value="active">Met advertenties</option>
+            <option value="blocked">Geblokkeerd</option>
+          </select>
         </div>
-        <div id="users-table-body">
-          <div class="loading"><div class="spinner"></div>Gebruikers laden…</div>
+        <div class="table-scroll">
+          <div id="users-table-body">
+            <div class="loading"><div class="spinner"></div>Gebruikers laden…</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ── SETTINGS TAB ── -->
+    <!-- ══ INSTELLINGEN ══ -->
     <div class="tab-pane" id="tab-settings">
+
+      <!-- Voorbeeldadvertenties -->
       <div class="settings-card">
         <h3>🏷️ Voorbeeldadvertenties</h3>
-        <p>De app bevat 20 hardcoded voorbeeldadvertenties om de kaart te vullen zolang er nog weinig echte advertenties zijn. Je kunt ze hier verbergen of zichtbaar houden.</p>
+        <p>De app bevat 20 hardcoded voorbeeldadvertenties. Stel in of ze zichtbaar zijn en bij hoeveel echte advertenties ze automatisch verdwijnen.</p>
         <div class="toggle-row">
-          <span class="toggle-label">Voorbeeldadvertenties tonen</span>
+          <div>
+            <div class="toggle-label">Voorbeeldadvertenties tonen</div>
+            <div class="toggle-sub" id="real-ads-count-label">Laden…</div>
+          </div>
           <label class="toggle">
-            <input type="checkbox" id="sample-toggle" checked onchange="saveSampleSetting()">
+            <input type="checkbox" id="sample-toggle" checked onchange="saveSetting('show_samples', this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <div class="info-box" id="sample-info">
-          ✅ Voorbeeldadvertenties zijn zichtbaar en voorzien van een "Voorbeeld"-label.
+        <div class="setting-row" style="margin-top:14px">
+          <div style="flex:1">
+            <label for="sample-threshold">Automatisch verbergen zodra er <strong id="threshold-val">10</strong> echte advertenties zijn</label>
+            <input type="range" id="sample-threshold" min="1" max="50" value="10" style="width:100%;accent-color:var(--terra);margin-top:6px" oninput="updateThreshold(this.value)" onchange="saveSetting('sample_threshold', this.value)">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>1</span><span>50</span></div>
+          </div>
+        </div>
+        <div class="info-box" id="sample-info">Laden…</div>
+      </div>
+
+      <!-- Onderhoudsmodus -->
+      <div class="settings-card">
+        <h3>🔧 Onderhoudsmodus</h3>
+        <p>Toon een melding bovenaan de app voor alle gebruikers. Handig bij updates of storingen. De app blijft gewoon werken.</p>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Onderhoudsmodus actief</div>
+            <div class="toggle-sub">Toont een gele banner in de app</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="maintenance-toggle" onchange="saveSetting('maintenance_mode', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div style="margin-top:14px">
+          <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px">Bannertekst</label>
+          <textarea class="setting-input" id="banner-text" placeholder="Bijv: We voeren onderhoud uit. Terug om 14:00." oninput="updateBannerPreview()"></textarea>
+          <button class="btn btn-terra btn-sm" onclick="saveBannerText()">Opslaan</button>
+        </div>
+        <div class="info-box" id="banner-preview" style="margin-top:10px;display:none">
+          <strong>Voorbeeld banner:</strong><br>
+          <span id="banner-preview-text"></span>
         </div>
       </div>
 
+      <!-- E-mailnotificatie -->
+      <div class="settings-card">
+        <h3>📧 E-mailnotificaties</h3>
+        <p>Ontvang een e-mail op <strong>yardigo.app@gmail.com</strong> wanneer een nieuwe advertentie wordt geplaatst.</p>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Notificatie bij nieuwe advertentie</div>
+            <div class="toggle-sub">Via Web3Forms naar yardigo.app@gmail.com</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="notify-toggle" onchange="saveSetting('notify_new_listing', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="sendTestEmail()">📤 Stuur testmail</button>
+        <div class="info-box" style="margin-top:10px">
+          Notificaties worden verstuurd via Web3Forms zodra de hoofdapp een nieuwe advertentie opslaat. Zorg dat de toggle ook in <code>index.html</code> is aangesloten.
+        </div>
+      </div>
+
+      <!-- Snelkoppelingen -->
       <div class="settings-card">
         <h3>🔗 Snelkoppelingen</h3>
         <p>Directe links naar externe beheerpanelen.</p>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/editor" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600">
-            <span>🗄️</span> Supabase SQL Editor
-          </a>
-          <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600">
-            <span>👥</span> Supabase Auth gebruikers
-          </a>
-          <a href="https://vercel.com" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600">
-            <span>🚀</span> Vercel Deployments
-          </a>
-          <a href="/" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600">
-            <span>📍</span> Open YardiGo App
-          </a>
+          <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/editor" target="_blank" class="quicklink">🗄️ Supabase SQL Editor</a>
+          <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" class="quicklink">👥 Supabase Auth gebruikers</a>
+          <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/storage" target="_blank" class="quicklink">📁 Supabase Storage</a>
+          <a href="https://vercel.com" target="_blank" class="quicklink">🚀 Vercel Deployments</a>
+          <a href="/" target="_blank" class="quicklink">📍 Open YardiGo App</a>
         </div>
       </div>
 
+      <!-- App info -->
       <div class="settings-card">
         <h3>📱 App info</h3>
-        <p>Versie-informatie en technische details.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div style="background:var(--bg2);border-radius:10px;padding:12px">
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Supabase Project</div>
-            <div style="font-size:12px;font-weight:600">fwehqudhwzcnkcuypuqw</div>
-          </div>
-          <div style="background:var(--bg2);border-radius:10px;padding:12px">
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Hosting</div>
-            <div style="font-size:12px;font-weight:600">Vercel + GitHub</div>
-          </div>
-          <div style="background:var(--bg2);border-radius:10px;padding:12px">
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Domain</div>
-            <div style="font-size:12px;font-weight:600">www.yardigo.nl</div>
-          </div>
-          <div style="background:var(--bg2);border-radius:10px;padding:12px">
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Tech stack</div>
-            <div style="font-size:12px;font-weight:600">Vanilla JS + Leaflet</div>
-          </div>
+          <div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Supabase ID</div><div style="font-size:12px;font-weight:600">fwehqudhwzcnkcuypuqw</div></div>
+          <div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Hosting</div><div style="font-size:12px;font-weight:600">Vercel + GitHub</div></div>
+          <div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Domain</div><div style="font-size:12px;font-weight:600">www.yardigo.nl</div></div>
+          <div style="background:var(--bg2);border-radius:10px;padding:12px"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Stack</div><div style="font-size:12px;font-weight:600">Vanilla JS + Leaflet</div></div>
         </div>
       </div>
-    </div>
 
-  </div>
-</div>
+    </div><!-- /settings -->
+  </div><!-- /content -->
+</div><!-- /app -->
 
 <div id="toast"></div>
+
+<style>
+.quicklink { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--bg2); border-radius:10px; text-decoration:none; color:var(--text); font-size:13px; font-weight:600; transition:background .2s; }
+.quicklink:hover { background:var(--border); }
+</style>
 
 <script>
 // ══════════════════════════════════════════════════
@@ -347,34 +467,33 @@
 const SUPABASE_URL  = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
 const ADMIN_EMAIL   = 'yardigo.app@gmail.com';
+const WEB3FORMS_KEY = 'd773551b-e958-449f-b60a-5aab393f6c0a';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-// ── State ──
-let allListings = [];
-let allUsers    = [];
-let currentAdmin = null;
+let allListings = [], allUsers = [], currentAdmin = null;
+let selectedIds = new Set();
+let settings = {};
 
 // ══════════════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════════════
 async function doLogin() {
+  var btn   = document.getElementById('login-btn');
   var email = document.getElementById('login-email').value.trim();
   var pass  = document.getElementById('login-pass').value;
   var errEl = document.getElementById('login-error');
   errEl.textContent = '';
-
   if (!email || !pass) { errEl.textContent = 'Vul e-mail en wachtwoord in.'; return; }
-
+  btn.textContent = 'Bezig…'; btn.disabled = true;
   var { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = 'Inloggen'; btn.disabled = false;
   if (error) { errEl.textContent = '❌ ' + error.message; return; }
-
   if (data.user.email !== ADMIN_EMAIL) {
     await sb.auth.signOut();
     errEl.textContent = '❌ Dit account heeft geen admin-rechten.';
     return;
   }
-
   currentAdmin = data.user;
   showApp();
 }
@@ -387,7 +506,6 @@ async function doLogout() {
   currentAdmin = null;
 }
 
-// Check bestaande sessie bij laden
 sb.auth.getSession().then(function({ data }) {
   if (data.session && data.session.user.email === ADMIN_EMAIL) {
     currentAdmin = data.session.user;
@@ -398,12 +516,13 @@ sb.auth.getSession().then(function({ data }) {
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  var nameEl = document.getElementById('admin-name');
-  if (nameEl && currentAdmin) nameEl.textContent = currentAdmin.email;
-  loadDashboard();
-  loadListings();
-  loadUsers();
-  loadSampleSetting();
+  var n = document.getElementById('admin-name');
+  if (n && currentAdmin) n.textContent = currentAdmin.email;
+  loadSettings().then(function() {
+    loadDashboard();
+    loadListings();
+    loadUsers();
+  });
 }
 
 // ══════════════════════════════════════════════════
@@ -417,70 +536,215 @@ function switchTab(name, el) {
 }
 
 // ══════════════════════════════════════════════════
+// SETTINGS (Supabase app_settings table, fallback localStorage)
+// ══════════════════════════════════════════════════
+async function loadSettings() {
+  var { data } = await sb.from('app_settings').select('*');
+  settings = {};
+  (data || []).forEach(function(row) { settings[row.key] = row.value; });
+
+  // Vul UI
+  var showSamples = settings.show_samples !== 'false';
+  document.getElementById('sample-toggle').checked = showSamples;
+  var threshold = parseInt(settings.sample_threshold) || 10;
+  document.getElementById('sample-threshold').value = threshold;
+  updateThreshold(threshold);
+  document.getElementById('maintenance-toggle').checked = settings.maintenance_mode === 'true';
+  document.getElementById('banner-text').value = settings.banner_text || '';
+  document.getElementById('notify-toggle').checked = settings.notify_new_listing === 'true';
+  updateBannerPreview();
+}
+
+async function saveSetting(key, value) {
+  var strVal = String(value);
+  settings[key] = strVal;
+
+  // Upsert in app_settings (maak tabel aan als die nog niet bestaat)
+  var { error } = await sb.from('app_settings').upsert({ key: key, value: strVal }, { onConflict: 'key' });
+  if (error) {
+    // Tabel bestaat nog niet — sla op in localStorage als fallback
+    localStorage.setItem('yardigo_admin_' + key, strVal);
+  }
+
+  // UI-feedback
+  if (key === 'show_samples')      updateSampleInfo();
+  if (key === 'maintenance_mode')  toast(value === true || value === 'true' ? '🔧 Onderhoudsmodus ingeschakeld' : '✅ Onderhoudsmodus uitgeschakeld');
+  if (key === 'notify_new_listing') toast(value === true || value === 'true' ? '🔔 Notificaties ingeschakeld' : '🔕 Notificaties uitgeschakeld');
+}
+
+async function saveBannerText() {
+  var txt = document.getElementById('banner-text').value.trim();
+  await saveSetting('banner_text', txt);
+  toast('✅ Bannertekst opgeslagen');
+}
+
+function updateThreshold(val) {
+  document.getElementById('threshold-val').textContent = val;
+  saveSetting('sample_threshold', val);
+  updateSampleInfo();
+}
+
+function updateBannerPreview() {
+  var txt = document.getElementById('banner-text').value.trim();
+  var el = document.getElementById('banner-preview');
+  var tel = document.getElementById('banner-preview-text');
+  if (txt) { tel.textContent = txt; el.style.display = 'block'; }
+  else     { el.style.display = 'none'; }
+}
+
+function updateSampleInfo() {
+  var show      = document.getElementById('sample-toggle').checked;
+  var threshold = parseInt(document.getElementById('sample-threshold').value) || 10;
+  var realCount = allListings.filter(function(l) { return typeof l.id === 'string'; }).length;
+  var el = document.getElementById('sample-info');
+  var countLbl = document.getElementById('real-ads-count-label');
+  if (countLbl) countLbl.textContent = realCount + ' echte advertenties in de database';
+  if (!show) { el.textContent = '🙈 Voorbeeldadvertenties zijn verborgen voor alle gebruikers.'; return; }
+  if (realCount >= threshold) {
+    el.textContent = '🔄 Er zijn ' + realCount + ' echte advertenties — de drempel van ' + threshold + ' is bereikt. Voorbeeldadvertenties worden nu automatisch verborgen.';
+  } else {
+    el.textContent = '✅ Voorbeeldadvertenties zijn zichtbaar. Ze verdwijnen automatisch zodra er ' + threshold + ' echte advertenties zijn (' + realCount + '/' + threshold + ').';
+  }
+}
+
+// ══════════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════════
 async function loadDashboard() {
-  // Alle listings ophalen (ook verlopen)
   var { data: listings } = await sb.from('listings').select('*').order('created_at', { ascending: false });
   listings = listings || [];
-
   var today = new Date().toISOString().split('T')[0];
-  var active    = listings.filter(function(l) { return l.status === 'active' && l.date_start >= today; });
-  var real      = listings.filter(function(l) { return l.id && typeof l.id === 'string'; }); // UUID = echt
-  var thisWeek  = listings.filter(function(l) {
-    var d = new Date(l.created_at);
-    var now = new Date();
-    return (now - d) < 7 * 24 * 60 * 60 * 1000;
+
+  // Stats
+  var active   = listings.filter(function(l) { return l.status === 'active' && l.date_start >= today; });
+  var expired  = listings.filter(function(l) { return !l.date_start || l.date_start < today; });
+  var thisWeek = listings.filter(function(l) { return (Date.now() - new Date(l.created_at)) < 7*86400000; });
+  var today24  = listings.filter(function(l) { return (Date.now() - new Date(l.created_at)) < 86400000; });
+  var lastWeek = listings.filter(function(l) {
+    var age = Date.now() - new Date(l.created_at);
+    return age >= 7*86400000 && age < 14*86400000;
   });
+  var weekDiff = thisWeek.length - lastWeek.length;
 
-  var grid = document.getElementById('stat-grid');
-  grid.innerHTML =
+  document.getElementById('stat-grid').innerHTML =
     statCard('Totaal listings', listings.length, 'In de database', '') +
-    statCard('Actief', active.length, 'Komende verkopen', 'accent') +
-    statCard('Deze week', thisWeek.length, 'Nieuw toegevoegd', '') +
-    statCard('Echte ads', real.length, 'Van echte gebruikers', '');
+    statCard('Actief', active.length, active.length + ' komende verkopen', 'accent') +
+    statCard('Deze week', thisWeek.length, trendLabel(weekDiff, 'vorige week'), '') +
+    statCard('Vandaag', today24.length, today24.length === 0 ? '⚠️ Geen nieuwe ads' : 'Nieuw geplaatst', today24.length === 0 ? '' : 'green');
 
-  // Type chart
-  var types = { garagesale:0, buurtverkoop:0, vlooienmarkt:0, rommelmarkt:0, kofferbakverkoop:0, overig:0 };
-  listings.forEach(function(l) { if (types[l.category] !== undefined) types[l.category]++; });
+  // Weekgrafiek (laatste 8 weken)
+  renderWeekChart(listings);
 
-  var typeLabels = { garagesale:'Particulier', buurtverkoop:'Buurt', vlooienmarkt:'Evenement', rommelmarkt:'Rommel', kofferbakverkoop:'Kofferbak', overig:'Overig' };
-  var maxVal = Math.max(1, ...Object.values(types));
-  var chartHtml = Object.entries(types).filter(function(e) { return e[1] > 0; }).map(function(e) {
-    var pct = Math.round((e[1] / maxVal) * 90);
-    return '<div class="bar-col">'
-      + '<div class="bar-val">' + e[1] + '</div>'
-      + '<div class="bar" style="height:' + pct + 'px"></div>'
-      + '<div class="bar-label">' + (typeLabels[e[0]] || e[0]) + '</div>'
-      + '</div>';
-  }).join('');
+  // Top steden
+  renderCityChart(listings);
 
-  var chartWrap = document.getElementById('chart-wrap');
-  if (chartHtml) {
-    document.getElementById('type-chart').innerHTML = chartHtml || '<div class="empty"><div class="e-icon">📊</div><div class="e-text">Nog geen data</div></div>';
-    chartWrap.style.display = 'block';
-  }
+  // Gezondheidscheck
+  renderHealthCheck(listings, active, expired, today24);
 
-  // Recente listings
-  var recentWrap = document.getElementById('recent-wrap');
-  var recentList = document.getElementById('recent-list');
-  if (listings.length > 0) {
-    recentList.innerHTML = listings.slice(0, 5).map(function(l) {
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg2)">'
-        + '<div style="width:36px;height:36px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + (l.category === 'buurtverkoop' ? '🏘️' : l.category === 'vlooienmarkt' || l.category === 'rommelmarkt' ? '🎪' : '🏠') + '</div>'
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.title || '—') + '</div>'
-        + '<div style="font-size:11px;color:var(--muted)">' + (l.address || '') + ' · ' + fmtDate(l.date_start) + '</div>'
-        + '</div>'
-        + '<div style="font-size:10px;color:var(--muted);white-space:nowrap">' + fmtRelTime(l.created_at) + '</div>'
-        + '</div>';
-    }).join('');
-    recentWrap.style.display = 'block';
-  }
+  // Recente feed
+  renderRecentFeed(listings.slice(0, 6));
 }
 
 function statCard(label, value, sub, cls) {
   return '<div class="stat-card ' + cls + '"><div class="s-label">' + label + '</div><div class="s-value">' + value + '</div><div class="s-sub">' + sub + '</div></div>';
+}
+
+function trendLabel(diff, period) {
+  if (diff > 0)  return '<span class="trend-up">▲ ' + diff + ' meer dan ' + period + '</span>';
+  if (diff < 0)  return '<span class="trend-down">▼ ' + Math.abs(diff) + ' minder dan ' + period + '</span>';
+  return '<span class="trend-flat">Gelijk aan ' + period + '</span>';
+}
+
+function renderWeekChart(listings) {
+  var weeks = [];
+  for (var i = 7; i >= 0; i--) {
+    var start = new Date(); start.setDate(start.getDate() - i*7 - 6);
+    var end   = new Date(); end.setDate(end.getDate() - i*7);
+    start.setHours(0,0,0,0); end.setHours(23,59,59,999);
+    var count = listings.filter(function(l) {
+      var d = new Date(l.created_at);
+      return d >= start && d <= end;
+    }).length;
+    var label = 'W' + weekNumber(end);
+    weeks.push({ label: label, count: count });
+  }
+  var maxVal = Math.max(1, ...weeks.map(function(w) { return w.count; }));
+  var html = weeks.map(function(w, i) {
+    var h = Math.max(2, Math.round((w.count / maxVal) * 90));
+    var isLast = i === weeks.length - 1;
+    return '<div class="bar-col">'
+      + '<div class="bar-val">' + (w.count || '') + '</div>'
+      + '<div class="bar ' + (isLast ? 'primary' : 'secondary') + '" style="height:' + h + 'px"></div>'
+      + '<div class="bar-label">' + w.label + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('week-chart').innerHTML = html || '<div class="empty"><div class="e-text">Geen data</div></div>';
+  document.getElementById('week-range').textContent = 'laatste 8 weken';
+}
+
+function weekNumber(d) {
+  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  var yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function renderCityChart(listings) {
+  var cities = {};
+  listings.forEach(function(l) {
+    if (!l.address) return;
+    var parts = l.address.split(',');
+    var city = parts[parts.length - 1].trim().replace(/\d/g, '').trim();
+    if (city.length < 2) return;
+    cities[city] = (cities[city] || 0) + 1;
+  });
+  var sorted = Object.entries(cities).sort(function(a,b) { return b[1]-a[1]; }).slice(0, 6);
+  var maxVal = sorted.length ? sorted[0][1] : 1;
+  var html = sorted.map(function(e) {
+    var pct = Math.round((e[1] / maxVal) * 100);
+    return '<div class="city-row">'
+      + '<div class="city-name">' + e[0] + '</div>'
+      + '<div class="city-bar-wrap"><div class="city-bar-fill" style="width:' + pct + '%"></div></div>'
+      + '<div class="city-count">' + e[1] + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('city-chart').innerHTML = html || '<div class="empty"><div class="e-icon">🗺️</div><div class="e-text">Geen steden gevonden</div></div>';
+}
+
+function renderHealthCheck(listings, active, expired, today24) {
+  var today  = new Date().toISOString().split('T')[0];
+  var noView = listings.filter(function(l) { return l.status === 'active' && (l.view_count || 0) === 0 && l.date_start >= today; });
+  var ratio  = listings.length ? Math.round((active.length / listings.length) * 100) : 0;
+  var checks = [
+    { ok: today24.length > 0, warn: today24.length === 0, text: 'Activiteit vandaag', val: today24.length > 0 ? today24.length + ' nieuwe advertenties' : '⚠️ Geen nieuwe advertenties' },
+    { ok: ratio >= 30, warn: ratio > 0 && ratio < 30, text: 'Actief / totaal ratio', val: ratio + '% actief' },
+    { ok: noView.length === 0, warn: noView.length > 0 && noView.length < 5, text: 'Actieve ads zonder views', val: noView.length + ' advertentie' + (noView.length !== 1 ? 's' : '') },
+    { ok: active.length >= 5, warn: active.length > 0 && active.length < 5, text: 'Minimale vulling kaart', val: active.length + ' actieve advertenties' },
+    { ok: listings.length > 20, warn: listings.length <= 20 && listings.length > 0, text: 'Totale database groei', val: listings.length + ' listings totaal' },
+  ];
+  var html = checks.map(function(c) {
+    var dotCls = c.ok ? 'health-ok' : (c.warn ? 'health-warn' : 'health-danger');
+    return '<div class="health-row">'
+      + '<div class="health-dot ' + dotCls + '"></div>'
+      + '<div class="health-text">' + c.text + '</div>'
+      + '<div class="health-val">' + c.val + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('health-list').innerHTML = html;
+}
+
+function renderRecentFeed(items) {
+  var html = items.map(function(l) {
+    var icon = l.category === 'buurtverkoop' ? '🏘️' : (l.category === 'vlooienmarkt' || l.category === 'rommelmarkt' ? '🎪' : '🏠');
+    return '<div class="feed-item">'
+      + '<div class="feed-icon">' + icon + '</div>'
+      + '<div class="feed-body"><div class="feed-title">' + (l.title || '—') + '</div>'
+      + '<div class="feed-sub">' + (l.address || '') + '</div></div>'
+      + '<div class="feed-time">' + fmtRelTime(l.created_at) + '</div>'
+      + '</div>';
+  }).join('');
+  document.getElementById('recent-list').innerHTML = html || '<div class="empty"><div class="e-icon">📋</div><div class="e-text">Nog geen advertenties</div></div>';
+  document.getElementById('recent-subtitle').textContent = 'laatste ' + items.length;
 }
 
 // ══════════════════════════════════════════════════
@@ -491,7 +755,11 @@ async function loadListings() {
   allListings = data || [];
   document.getElementById('listings-count').textContent = allListings.length + ' totaal';
   renderListingsTable(allListings);
+  updateSampleInfo();
 }
+
+var typeMap   = { garagesale:'particulier', garageverkoop:'particulier', buurtverkoop:'buurt', vlooienmarkt:'evenement', rommelmarkt:'evenement', kofferbakverkoop:'evenement', overig:'particulier' };
+var typeLabel = { particulier:'Particulier', buurt:'Buurtverkoop', evenement:'Evenement' };
 
 function renderListingsTable(rows) {
   var today = new Date().toISOString().split('T')[0];
@@ -500,59 +768,136 @@ function renderListingsTable(rows) {
     tbody.innerHTML = '<div class="empty"><div class="e-icon">📋</div><div class="e-text">Geen advertenties gevonden</div></div>';
     return;
   }
-  var typeLabels = { garagesale:'Particulier', garageverkoop:'Particulier', buurtverkoop:'Buurtverkoop', vlooienmarkt:'Evenement', rommelmarkt:'Evenement', kofferbakverkoop:'Kofferbakverkoop', overig:'Overig' };
-  var typeCls    = { garagesale:'particulier', garageverkoop:'particulier', buurtverkoop:'buurt', vlooienmarkt:'evenement', rommelmarkt:'evenement', kofferbakverkoop:'evenement', overig:'particulier' };
-
   tbody.innerHTML = '<table>'
-    + '<thead><tr><th>Titel</th><th>Type</th><th>Datum</th><th>Adres</th><th>Status</th><th>Aangemaakt</th><th>Acties</th></tr></thead>'
-    + '<tbody>' + rows.map(function(l) {
+    + '<thead><tr>'
+    + '<th class="check-col"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th>'
+    + '<th>Titel</th><th>Type</th><th>Datum</th><th>Adres</th><th>Status</th><th>Views</th><th>Aangemaakt</th><th>Acties</th>'
+    + '</tr></thead><tbody>'
+    + rows.map(function(l) {
+      var tc  = typeMap[l.category] || 'particulier';
+      var tl  = typeLabel[tc] || tc;
       var isActive = l.status === 'active' && l.date_start >= today;
-      var tc = typeCls[l.category] || 'particulier';
-      var tl = typeLabels[l.category] || l.category || '—';
+      var checked = selectedIds.has(l.id) ? 'checked' : '';
+      var appUrl  = '/?listing=' + l.id;
       return '<tr>'
+        + '<td class="check-col"><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'' + l.id + '\',this.checked)"></td>'
         + '<td style="font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.title || '—') + '</td>'
         + '<td><span class="badge badge-' + tc + '">' + tl + '</span></td>'
-        + '<td style="white-space:nowrap">' + fmtDate(l.date_start) + '</td>'
+        + '<td style="white-space:nowrap;font-size:12px">' + fmtDate(l.date_start) + '</td>'
         + '<td style="font-size:12px;color:var(--muted);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.address || '—') + '</td>'
         + '<td><span class="badge ' + (isActive ? 'badge-active' : 'badge-expired') + '">' + (isActive ? '✓ Actief' : 'Verlopen') + '</span></td>'
+        + '<td style="font-size:12px;text-align:center">' + (l.view_count || 0) + '</td>'
         + '<td style="font-size:11px;color:var(--muted);white-space:nowrap">' + fmtRelTime(l.created_at) + '</td>'
-        + '<td><button class="btn-sm btn-del" onclick="deleteListing(\'' + l.id + '\')">Verwijder</button></td>'
+        + '<td style="white-space:nowrap">'
+        + '<a href="' + appUrl + '" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;margin-right:4px">👁️</a>'
+        + '<button class="btn btn-sm btn-danger" onclick="deleteListing(\'' + l.id + '\')">🗑️</button>'
+        + '</td>'
         + '</tr>';
-    }).join('') + '</tbody></table>';
+    }).join('')
+    + '</tbody></table>';
 }
 
 function filterListings() {
   var q  = document.getElementById('listings-search').value.toLowerCase();
-  var ft = document.getElementById('listings-filter').value;
-  var typeMap = { particulier: ['garagesale','garageverkoop','overig'], buurt: ['buurtverkoop'], evenement: ['vlooienmarkt','rommelmarkt','kofferbakverkoop'] };
+  var ft = document.getElementById('listings-type-filter').value;
+  var fs = document.getElementById('listings-status-filter').value;
+  var today = new Date().toISOString().split('T')[0];
+  var typeGroups = { particulier:['garagesale','garageverkoop','overig'], buurt:['buurtverkoop'], evenement:['vlooienmarkt','rommelmarkt','kofferbakverkoop'] };
   var rows = allListings.filter(function(l) {
-    var matchQ  = !q || (l.title||'').toLowerCase().includes(q) || (l.address||'').toLowerCase().includes(q);
-    var matchT  = ft === 'all' || (typeMap[ft] || []).includes(l.category);
-    return matchQ && matchT;
+    var matchQ = !q || (l.title||'').toLowerCase().includes(q) || (l.address||'').toLowerCase().includes(q);
+    var matchT = ft === 'all' || (typeGroups[ft]||[]).includes(l.category);
+    var isActive = l.status === 'active' && l.date_start >= today;
+    var matchS = fs === 'all' || (fs === 'active' && isActive) || (fs === 'expired' && !isActive);
+    return matchQ && matchT && matchS;
   });
   renderListingsTable(rows);
 }
 
-async function deleteListing(id) {
-  if (!confirm('Weet je zeker dat je deze advertentie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
-  var { error } = await sb.from('listings').delete().eq('id', id);
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('#listings-table-body tbody input[type=checkbox]').forEach(function(cb) {
+    cb.checked = checked;
+    var id = cb.closest('tr').querySelector('td:nth-child(9) button') ? cb.closest('tr') : null;
+    // get id from onchange
+    var oc = cb.getAttribute('onchange');
+    if (oc) {
+      var m = oc.match(/toggleSelect\('([^']+)'/);
+      if (m) { if (checked) selectedIds.add(m[1]); else selectedIds.delete(m[1]); }
+    }
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  var bar = document.getElementById('bulk-bar');
+  var lbl = document.getElementById('bulk-label');
+  if (selectedIds.size > 0) { bar.classList.add('visible'); lbl.textContent = selectedIds.size + ' geselecteerd'; }
+  else { bar.classList.remove('visible'); }
+}
+
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('#listings-table-body input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  document.getElementById('select-all') && (document.getElementById('select-all').checked = false);
+  updateBulkBar();
+}
+
+async function bulkDelete() {
+  if (!selectedIds.size) return;
+  if (!confirm('Weet je zeker dat je ' + selectedIds.size + ' advertenties wilt verwijderen?')) return;
+  var ids = Array.from(selectedIds);
+  var { error } = await sb.from('listings').delete().in('id', ids);
   if (error) { toast('❌ Fout: ' + error.message); return; }
-  toast('✅ Advertentie verwijderd');
-  allListings = allListings.filter(function(l) { return l.id !== id; });
+  allListings = allListings.filter(function(l) { return !selectedIds.has(l.id); });
+  selectedIds.clear();
+  updateBulkBar();
   document.getElementById('listings-count').textContent = allListings.length + ' totaal';
   filterListings();
+  toast('✅ ' + ids.length + ' advertenties verwijderd');
+}
+
+async function deleteListing(id) {
+  if (!confirm('Weet je zeker dat je deze advertentie wilt verwijderen?')) return;
+  var { error } = await sb.from('listings').delete().eq('id', id);
+  if (error) { toast('❌ Fout: ' + error.message); return; }
+  allListings = allListings.filter(function(l) { return l.id !== id; });
+  selectedIds.delete(id);
+  document.getElementById('listings-count').textContent = allListings.length + ' totaal';
+  filterListings();
+  toast('✅ Advertentie verwijderd');
+}
+
+function exportCSV() {
+  if (!allListings.length) { toast('Geen advertenties om te exporteren'); return; }
+  var cols = ['id','title','category','address','date_start','time_start','time_end','status','view_count','created_at'];
+  var csv  = cols.join(';') + '\n';
+  allListings.forEach(function(l) {
+    csv += cols.map(function(c) {
+      var v = l[c] != null ? String(l[c]) : '';
+      return v.includes(';') || v.includes('"') ? '"' + v.replace(/"/g,'""') + '"' : v;
+    }).join(';') + '\n';
+  });
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'yardigo_listings_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  toast('⬇️ CSV gedownload');
 }
 
 // ══════════════════════════════════════════════════
-// USERS
+// GEBRUIKERS
 // ══════════════════════════════════════════════════
 async function loadUsers() {
-  // Probeer profiles tabel (als die bestaat), anders fallback
   var { data, error } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
   if (error) {
-    // Geen profiles tabel — toon instructie
     document.getElementById('users-table-body').innerHTML =
-      '<div class="empty"><div class="e-icon">👥</div><div class="e-text" style="max-width:320px;margin:0 auto">Gebruikersdata is niet beschikbaar via de publieke API.<br><br>Bekijk gebruikers via <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" style="color:var(--terra)">Supabase Auth →</a></div></div>';
+      '<div class="empty"><div class="e-icon">👥</div><div class="e-text">Gebruikersdata niet beschikbaar via publieke API.<br><br>'
+      + '<a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" style="color:var(--terra)">Bekijk via Supabase Auth →</a></div></div>';
     document.getElementById('users-count').textContent = '—';
     return;
   }
@@ -567,49 +912,78 @@ function renderUsersTable(rows) {
     tbody.innerHTML = '<div class="empty"><div class="e-icon">👥</div><div class="e-text">Geen gebruikers gevonden</div></div>';
     return;
   }
+
+  // Superuser = meeste listings
+  var listingsByUser = {};
+  allListings.forEach(function(l) { if (l.user_id) listingsByUser[l.user_id] = (listingsByUser[l.user_id]||0)+1; });
+  var maxListings = Math.max(1, ...Object.values(listingsByUser));
+
   tbody.innerHTML = '<table>'
-    + '<thead><tr><th>Naam</th><th>E-mail</th><th>Geregistreerd</th><th>Advertenties</th></tr></thead>'
+    + '<thead><tr><th>Naam</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th>Acties</th></tr></thead>'
     + '<tbody>' + rows.map(function(u) {
-      var listingCount = allListings.filter(function(l) { return l.user_id === u.id; }).length;
+      var count  = listingsByUser[u.id] || 0;
+      var isSuper = count >= Math.max(3, maxListings);
+      var isBlocked = u.is_blocked;
       return '<tr>'
-        + '<td style="font-weight:600">' + (u.display_name || u.name || '—') + '</td>'
+        + '<td style="font-weight:600">'
+        + (u.display_name || u.name || '—')
+        + (isSuper ? ' <span class="badge badge-super">⭐ Top</span>' : '')
+        + '</td>'
         + '<td style="font-size:12px;color:var(--muted)">' + (u.email || '—') + '</td>'
+        + '<td style="font-weight:700;text-align:center">' + count + '</td>'
         + '<td style="font-size:11px;color:var(--muted);white-space:nowrap">' + fmtRelTime(u.created_at) + '</td>'
-        + '<td><span style="font-weight:600">' + listingCount + '</span></td>'
+        + '<td>' + (isBlocked ? '<span class="badge badge-blocked">🚫 Geblokkeerd</span>' : '<span class="badge badge-active">✓ Actief</span>') + '</td>'
+        + '<td><button class="btn btn-sm ' + (isBlocked ? 'btn-green' : 'btn-danger') + '" onclick="toggleBlock(\'' + u.id + '\',' + !isBlocked + ')">'
+        + (isBlocked ? '✅ Deblokkeer' : '🚫 Blokkeer') + '</button></td>'
         + '</tr>';
     }).join('') + '</tbody></table>';
 }
 
 function filterUsers() {
-  var q = document.getElementById('users-search').value.toLowerCase();
-  var rows = !q ? allUsers : allUsers.filter(function(u) {
-    return (u.email||'').toLowerCase().includes(q) || (u.display_name||'').toLowerCase().includes(q);
+  var q  = document.getElementById('users-search').value.toLowerCase();
+  var ft = document.getElementById('users-filter').value;
+  var listingsByUser = {};
+  allListings.forEach(function(l) { if (l.user_id) listingsByUser[l.user_id] = (listingsByUser[l.user_id]||0)+1; });
+  var rows = allUsers.filter(function(u) {
+    var matchQ = !q || (u.email||'').toLowerCase().includes(q) || (u.display_name||'').toLowerCase().includes(q);
+    var matchF = ft === 'all' || (ft === 'active' && (listingsByUser[u.id]||0) > 0) || (ft === 'blocked' && u.is_blocked);
+    return matchQ && matchF;
   });
   renderUsersTable(rows);
 }
 
-// ══════════════════════════════════════════════════
-// SAMPLE SETTINGS
-// ══════════════════════════════════════════════════
-function loadSampleSetting() {
-  var stored = localStorage.getItem('yardigo_show_samples');
-  var show = stored !== 'false';
-  document.getElementById('sample-toggle').checked = show;
-  updateSampleInfo(show);
+async function toggleBlock(userId, block) {
+  var action = block ? 'blokkeren' : 'deblokkeren';
+  if (!confirm('Weet je zeker dat je dit account wilt ' + action + '?')) return;
+  var { error } = await sb.from('profiles').update({ is_blocked: block }).eq('id', userId);
+  if (error) { toast('❌ Fout: ' + error.message + ' (voeg is_blocked kolom toe aan profiles)'); return; }
+  allUsers = allUsers.map(function(u) { return u.id === userId ? Object.assign({}, u, { is_blocked: block }) : u; });
+  filterUsers();
+  toast(block ? '🚫 Account geblokkeerd' : '✅ Account gedeblokkeerd');
 }
 
-function saveSampleSetting() {
-  var show = document.getElementById('sample-toggle').checked;
-  localStorage.setItem('yardigo_show_samples', show ? 'true' : 'false');
-  updateSampleInfo(show);
-  toast(show ? '✅ Voorbeeldadvertenties worden getoond' : '🙈 Voorbeeldadvertenties zijn verborgen');
-}
-
-function updateSampleInfo(show) {
-  var el = document.getElementById('sample-info');
-  el.textContent = show
-    ? '✅ Voorbeeldadvertenties zijn zichtbaar en voorzien van een "Voorbeeld"-label.'
-    : '🙈 Voorbeeldadvertenties zijn verborgen. Alleen echte advertenties zijn zichtbaar in de app.';
+// ══════════════════════════════════════════════════
+// E-MAIL NOTIFICATIE
+// ══════════════════════════════════════════════════
+async function sendTestEmail() {
+  toast('📤 Testmail versturen…');
+  try {
+    var res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject: '🧪 YardiGo Admin — Testmail',
+        message: 'Dit is een testmail van het YardiGo admin panel.\n\nDatum: ' + new Date().toLocaleString('nl-NL') + '\nAdmin: ' + (currentAdmin ? currentAdmin.email : '—'),
+        from_name: 'YardiGo Admin'
+      })
+    });
+    var data = await res.json();
+    if (data.success) toast('✅ Testmail verstuurd naar yardigo.app@gmail.com');
+    else toast('❌ Fout: ' + (data.message || 'Onbekende fout'));
+  } catch(e) {
+    toast('❌ Kon testmail niet versturen');
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -619,38 +993,39 @@ function fmtDate(d) {
   if (!d) return '—';
   var dt = new Date(d);
   if (isNaN(dt)) return d;
-  return dt.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
+  return dt.toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
 }
 
 function fmtRelTime(d) {
   if (!d) return '—';
-  var dt = new Date(d);
-  var diff = Date.now() - dt;
-  var mins  = Math.floor(diff / 60000);
-  var hours = Math.floor(diff / 3600000);
-  var days  = Math.floor(diff / 86400000);
+  var dt = new Date(d); var diff = Date.now() - dt;
+  var mins = Math.floor(diff/60000), hours = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
   if (mins < 2)   return 'Zojuist';
   if (mins < 60)  return mins + ' min geleden';
   if (hours < 24) return hours + ' uur geleden';
   if (days < 7)   return days + ' dag' + (days > 1 ? 'en' : '') + ' geleden';
-  return dt.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+  return dt.toLocaleDateString('nl-NL', { day:'numeric', month:'short' });
 }
 
-var toastTimer;
+var _toastTimer;
 function toast(msg) {
   var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function() { el.classList.remove('show'); }, 2800);
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); }, 3000);
 }
 
-// Enter-toets op login
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
-    doLogin();
-  }
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
 });
+
+// Responsive: op klein scherm dash-grid op 1 kolom
+function checkLayout() {
+  var g = document.getElementById('dash-grid');
+  if (g) g.style.gridTemplateColumns = window.innerWidth < 800 ? '1fr' : '1fr 1fr';
+}
+window.addEventListener('resize', checkLayout);
+checkLayout();
 </script>
 </body>
 </html>
