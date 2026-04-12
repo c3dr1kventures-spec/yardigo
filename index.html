@@ -366,14 +366,14 @@ body.dark .dm-ball{left:21px;}
 .atag{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);}
 .atag.sel{background:var(--forest);color:white;border-color:var(--forest);}
 
-/* ── FAB ROW ── */
-.fab-row{position:fixed;bottom:76px;right:18px;display:flex;align-items:center;gap:10px;z-index:400;transition:opacity .18s;}
+/* ── FAB ROW ── half-verscholen onder nav ── */
+.fab-row{position:fixed;bottom:calc(50px + env(safe-area-inset-bottom,0px));left:0;right:0;max-width:480px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 14px;z-index:495;pointer-events:none;transition:opacity .18s;}
 .fab-row.hidden{opacity:0;pointer-events:none;}
 /* ── FAB ── */
-.fab{background:var(--terra);color:white;border:none;border-radius:12px;padding:13px 18px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 18px rgba(224,123,57,.45);display:flex;align-items:center;gap:8px;transition:all .18s;}
+.fab{pointer-events:all;background:var(--terra);color:white;border:none;border-radius:12px 12px 0 0;padding:10px 16px 18px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 -2px 14px rgba(224,123,57,.35);display:flex;align-items:center;gap:7px;transition:background .18s;}
 .fab:hover{background:var(--terra-dark);}
 /* ── FAB FEEDBACK ── */
-.fab-feedback{background:var(--forest);color:white;border:none;border-radius:10px;padding:10px 14px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(58,107,74,.4);display:flex;align-items:center;gap:5px;transition:all .18s;}
+.fab-feedback{pointer-events:all;background:var(--forest);color:white;border:none;border-radius:10px 10px 0 0;padding:8px 12px 18px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;box-shadow:0 -2px 10px rgba(58,107,74,.25);display:flex;align-items:center;gap:4px;transition:background .18s;}
 .fab-feedback:hover{background:var(--forest-dark);}
 /* ── FEEDBACK MODAL ── */
 .feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -1265,6 +1265,36 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </div>
 
+<!-- ═══════════ MELD MODAL ═══════════ -->
+<div class="feedback-overlay" id="reportOv" onclick="if(event.target===this)closeReport()">
+  <div class="feedback-card">
+    <h3>🚩 Advertentie melden</h3>
+    <p>Wat klopt er niet aan deze advertentie?</p>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px" id="report-options">
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Spam of nep advertentie" style="accent-color:var(--terra)"> Spam of nep advertentie
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Misleidende of onjuiste informatie" style="accent-color:var(--terra)"> Misleidende of onjuiste informatie
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Ongepaste of aanstootgevende foto's" style="accent-color:var(--terra)"> Ongepaste of aanstootgevende foto's
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Onjuist adres of locatie" style="accent-color:var(--terra)"> Onjuist adres of locatie
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Anders" style="accent-color:var(--terra)"> Anders
+      </label>
+    </div>
+    <textarea class="feedback-card textarea" id="report-extra" placeholder="Optioneel: toelichting…" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;resize:none;height:70px;background:var(--bg);color:var(--text);outline:none"></textarea>
+    <div class="feedback-actions">
+      <button class="btn-feedback-cancel" onclick="closeReport()">Annuleer</button>
+      <button class="btn-feedback-send" style="background:var(--red)" onclick="sendReport()">🚩 Verstuur melding</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ DETAIL SHEET ═══════════ -->
 <div class="overlay" id="detailOv" onclick="if(event.target===this)closeDetail()">
   <div class="sheet">
@@ -1317,6 +1347,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <button id="det-cta" onclick="toggleInterest()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(224,123,57,.35)">
         <span id="det-cta-icon">🎉</span><span id="det-cta-text">Ik ga erheen!</span>
       </button>
+      <!-- Melden knop -->
+      <div style="text-align:center;margin-top:12px">
+        <button onclick="openReport()" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px 8px">🚩 Advertentie melden</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1452,17 +1486,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <button type="button" onclick="addBuurtAdres()" style="width:100%;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">CATEGORIEËN</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <div class="atag" data-tag="👗 Kleding" onclick="toggleAddTag(this)">👗 Kleding</div>
-          <div class="atag" data-tag="🛋️ Meubels" onclick="toggleAddTag(this)">🛋️ Meubels</div>
-          <div class="atag" data-tag="🧸 Speelgoed" onclick="toggleAddTag(this)">🧸 Speelgoed</div>
-          <div class="atag" data-tag="📱 Elektronica" onclick="toggleAddTag(this)">📱 Elektronica</div>
-          <div class="atag" data-tag="📚 Boeken" onclick="toggleAddTag(this)">📚 Boeken</div>
-          <div class="atag" data-tag="🌿 Tuin" onclick="toggleAddTag(this)">🌿 Tuin</div>
-          <div class="atag" data-tag="⚽ Sport" onclick="toggleAddTag(this)">⚽ Sport</div>
-          <div class="atag" data-tag="🎨 Kunst" onclick="toggleAddTag(this)">🎨 Kunst</div>
-          <div class="atag" data-tag="📦 Overig" onclick="toggleAddTag(this)">📦 Overig</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px" id="add-tags-label">CATEGORIEËN</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px" id="add-tags-grid">
+          <!-- Wordt dynamisch gevuld door updateTagsForType() -->
         </div>
       </div>
       <!-- Step 3: Photos + preview -->
@@ -2035,6 +2061,9 @@ function initMap() {
       attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>', maxZoom: 19
     }).addTo(map);
     renderMarkers();
+
+    // Foto swipe in kaartpopup
+    map.on('popupopen', function(e) { if (typeof attachPopupSwipe === 'function') attachPopupSwipe(e.popup); });
 
     // iOS two-finger gesture hint
     var hintTimer = null;
@@ -2716,6 +2745,7 @@ function openDetail(id) {
   updateInterestUI(s);
   // Open
   document.getElementById('detailOv').classList.add('open');
+  var zc = document.querySelector('.leaflet-control-zoom'); if (zc) zc.style.display = 'none';
   // Mini map
   setTimeout(function() {
     if (isGuest) return;
@@ -2729,7 +2759,10 @@ function openDetail(id) {
     } catch(e) {}
   }, 300);
 }
-function closeDetail() { document.getElementById('detailOv').classList.remove('open'); }
+function closeDetail() {
+  document.getElementById('detailOv').classList.remove('open');
+  var zc = document.querySelector('.leaflet-control-zoom'); if (zc) zc.style.display = '';
+}
 function carouselStep(dir) {
   var s = sales.find(function(x) { return String(x.id) === String(detailSaleId); });
   if (!s || !s.photos) return;
@@ -2761,29 +2794,36 @@ function carouselStep(dir) {
 })();
 
 // Touch swipe voor foto's in pin popup (kleine popup op kaart)
-(function() {
-  var popStartX = 0, popStartY = 0;
-  document.addEventListener('touchstart', function(e) {
-    var el = e.target.closest('[id^="pop-sw-"]');
-    if (!el) return;
-    popStartX = e.touches[0].clientX; popStartY = e.touches[0].clientY;
+// Gebruik map.on('popupopen') zodat Leaflet's event-blocking omzeild wordt
+function attachPopupSwipe(popup) {
+  var popEl = popup.getElement ? popup.getElement() : null;
+  if (!popEl) return;
+  var sw = popEl.querySelector('[id^="pop-sw-"]');
+  if (!sw) return;
+  var sx = 0, sy = 0;
+  sw.addEventListener('touchstart', function(e) {
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    e.stopPropagation();
   }, { passive: true });
-  document.addEventListener('touchend', function(e) {
-    var el = e.target.closest('[id^="pop-sw-"]');
-    if (!el) return;
-    var dx = e.changedTouches[0].clientX - popStartX;
-    var dy = e.changedTouches[0].clientY - popStartY;
-    if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) <= 40) return;
-    var idx = parseInt(el.dataset.idx) || 0;
-    var count = parseInt(el.dataset.count) || 1;
+  sw.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - sx;
+    var dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) <= 35) return;
+    var idx = parseInt(sw.dataset.idx) || 0;
+    var count = parseInt(sw.dataset.count) || 1;
     idx = (idx + (dx < 0 ? 1 : -1) + count) % count;
-    el.dataset.idx = idx;
-    var slides = el.querySelector('.pop-slides');
+    sw.dataset.idx = idx;
+    var slides = sw.querySelector('.pop-slides');
     if (slides) slides.style.transform = 'translateX(-' + idx + '00%)';
-    var dotEls = el.querySelectorAll('div > div');
-    dotEls.forEach(function(d, i) { d.style.background = i === idx ? 'white' : 'rgba(255,255,255,.45)'; });
+    sw.querySelectorAll(':scope > div > div').forEach(function(d, i) {
+      d.style.background = i === idx ? 'white' : 'rgba(255,255,255,.45)';
+    });
+    e.stopPropagation();
   }, { passive: true });
-})();
+}
+if (typeof map !== 'undefined' && map && map.on) {
+  map.on('popupopen', function(e) { attachPopupSwipe(e.popup); });
+}
 function detailFav() {
   if (!detailSaleId) return;
   toggleFav(detailSaleId);
@@ -2898,6 +2938,7 @@ function resetAddForm() {
   uploadedPhotos = [];
   addTagsSelected.clear();
   buurtAdressen = [];
+  updateTagsForType('particulier');
   // Reset velden
   ['aTitle','aAddr','aDesc'].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   var af = document.getElementById('aFrom'), at = document.getElementById('aTill'), ad = document.getElementById('aDate');
@@ -2941,6 +2982,24 @@ function updateStep2View() {
   buurt.style.display  = isBuurt ? 'block' : 'none';
 }
 
+var TYPE_TAGS = {
+  particulier: ['👗 Kleding','🛋️ Meubels','🧸 Speelgoed','📱 Elektronica','📚 Boeken','🌿 Tuin','⚽ Sport','🎨 Kunst','🏠 Huishoudspullen','📦 Overig'],
+  buurt:       ['👗 Kleding','🛋️ Meubels','🧸 Speelgoed','🌿 Tuin','🚲 Fietsen','⚽ Sport','🏠 Huishoudspullen','🍳 Keuken','📦 Overig','🎁 Diversen'],
+  evenement:   ['👗 Kleding','🛋️ Meubels','🎨 Kunst & Antiek','📚 Boeken','📱 Elektronica','🧸 Speelgoed','🍽️ Eten & Drinken','🏺 Verzamelaars','⚽ Sport','📦 Overig']
+};
+var TYPE_TAGS_LABEL = { particulier:'WAT VERKOOP JE?', buurt:'WAT IS ER TE KOOP IN DE BUURT?', evenement:'WAT KUN JE VERWACHTEN?' };
+
+function updateTagsForType(t) {
+  var grid = document.getElementById('add-tags-grid');
+  var label = document.getElementById('add-tags-label');
+  if (!grid) return;
+  addTagsSelected.clear();
+  if (label) label.textContent = TYPE_TAGS_LABEL[t] || 'CATEGORIEËN';
+  grid.innerHTML = (TYPE_TAGS[t] || TYPE_TAGS.particulier).map(function(tag) {
+    return '<div class="atag" data-tag="' + tag + '" onclick="toggleAddTag(this)">' + tag + '</div>';
+  }).join('');
+}
+
 function selType(t) {
   selTypeVal = t;
   document.querySelectorAll('.type-opt').forEach(function(el) { el.classList.remove('active'); });
@@ -2948,6 +3007,7 @@ function selType(t) {
   // Toon evenement subtype dropdown alleen bij evenement
   var evWrap = document.getElementById('evenement-subtype-wrap');
   if (evWrap) evWrap.style.display = (t === 'evenement') ? 'block' : 'none';
+  updateTagsForType(t);
   updateStep2View();
   // Voeg automatisch eerste adresrij toe bij buurtverkoop
   if (t === 'buurt' && buurtAdressen.length === 0) {
@@ -3652,10 +3712,16 @@ function showInstallBanner() {
   installBanner = document.createElement('div');
   installBanner.id = 'install-banner';
   installBanner.style.cssText = 'position:fixed;bottom:70px;left:12px;right:12px;background:var(--forest);color:white;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:800;box-shadow:0 8px 32px rgba(0,0,0,.25);font-family:Poppins,sans-serif;animation:obFadeUp .4s cubic-bezier(.4,0,.2,1) both';
-  installBanner.innerHTML = '<div style="font-size:28px">📲</div>'
-    + '<div style="flex:1"><div style="font-size:13px;font-weight:700">Installeer YardiGo</div><div style="font-size:11px;opacity:.8;margin-top:2px">Voeg toe aan je beginscherm</div></div>'
-    + '<button id="install-btn" style="background:var(--terra);border:none;color:white;border-radius:10px;padding:8px 14px;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer">Installeer</button>'
-    + '<button id="install-dismiss" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px">✕</button>';
+  var logoSvg = '<svg width="36" height="40" viewBox="0 0 36 40" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    + '<ellipse cx="18" cy="17" rx="14" ry="14" fill="#E07B39"/>'
+    + '<ellipse cx="18" cy="17" rx="9" ry="9" fill="white" opacity=".95"/>'
+    + '<text x="18" y="22" text-anchor="middle" font-size="11" font-family="Poppins,sans-serif" font-weight="800" fill="#E07B39">Y</text>'
+    + '<polygon points="18,38 11,26 25,26" fill="#E07B39"/>'
+    + '</svg>';
+  installBanner.innerHTML = '<div style="flex-shrink:0;width:36px;height:40px;display:flex;align-items:center;justify-content:center">' + logoSvg + '</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap">Installeer YardiGo</div><div style="font-size:11px;opacity:.8;margin-top:2px;white-space:nowrap">Voeg toe aan je beginscherm</div></div>'
+    + '<button id="install-btn" style="background:var(--terra);border:none;color:white;border-radius:10px;padding:8px 14px;font-family:Poppins,sans-serif;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Installeer</button>'
+    + '<button id="install-dismiss" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">✕</button>';
   document.body.appendChild(installBanner);
   document.getElementById('install-btn').addEventListener('click', doInstall);
   document.getElementById('install-dismiss').addEventListener('click', dismissInstall);
@@ -3742,6 +3808,57 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(showWelcomeSheet, 3000);
   }
 });
+
+// ─── RAPPORTEER ──────────────────────────────────────────
+function openReport() {
+  // reset
+  document.querySelectorAll('input[name="report-reason"]').forEach(function(r){ r.checked = false; });
+  document.getElementById('report-extra').value = '';
+  document.getElementById('reportOv').classList.add('open');
+}
+function closeReport() {
+  document.getElementById('reportOv').classList.remove('open');
+}
+function sendReport() {
+  var chosen = document.querySelector('input[name="report-reason"]:checked');
+  if (!chosen) { toast('Selecteer eerst een reden 🙏'); return; }
+  var reason = chosen.value;
+  var extra = document.getElementById('report-extra').value.trim();
+  var btn = document.querySelector('#reportOv .btn-feedback-send');
+  btn.textContent = '⏳ Versturen...';
+  btn.disabled = true;
+  var saleInfo = '';
+  if (typeof detailSaleId !== 'undefined' && detailSaleId) {
+    var s = sales.find(function(x){ return String(x.id) === String(detailSaleId); });
+    if (s) saleInfo = '\n\nAdvertentie: ' + s.title + ' (ID: ' + detailSaleId + ')';
+  }
+  fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
+      subject: '[YardiGo Melding] ' + reason,
+      message: reason + (extra ? '\n\nToelichting: ' + extra : '') + saleInfo,
+      from_name: 'YardiGo App – Meldingssysteem'
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.textContent = '🚩 Verstuur melding';
+    btn.disabled = false;
+    if (data.success) {
+      closeReport();
+      toast('Melding ontvangen, bedankt! 🙏');
+    } else {
+      toast('Er ging iets mis, probeer opnieuw.');
+    }
+  })
+  .catch(function(){
+    btn.textContent = '🚩 Verstuur melding';
+    btn.disabled = false;
+    toast('Geen verbinding, probeer opnieuw.');
+  });
+}
 
 // ─── FEEDBACK ────────────────────────────────────────────
 var currentFtype = 'Bug';
