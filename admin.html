@@ -186,6 +186,41 @@ textarea.setting-input { min-height:80px; resize:vertical; }
 #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--bark); color:white; padding:10px 22px; border-radius:20px; font-size:12px; font-weight:600; opacity:0; transition:all .3s; pointer-events:none; z-index:9999; white-space:nowrap; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
+/* DRAWER */
+.drawer-overlay { position:fixed; inset:0; background:rgba(44,36,22,.45); z-index:500; opacity:0; pointer-events:none; transition:opacity .3s; }
+.drawer-overlay.open { opacity:1; pointer-events:all; }
+.drawer { position:fixed; top:0; right:0; bottom:0; width:480px; max-width:100vw; background:white; box-shadow:-8px 0 40px rgba(44,36,22,.18); z-index:501; transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; overflow:hidden; }
+.drawer-overlay.open .drawer { transform:translateX(0); }
+.drawer-header { padding:18px 20px; border-bottom:1.5px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.drawer-title { font-size:16px; font-weight:800; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.drawer-close { background:var(--bg2); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .2s; }
+.drawer-close:hover { background:var(--border); }
+.drawer-body { flex:1; overflow-y:auto; padding:20px; }
+.drawer-body::-webkit-scrollbar { width:4px; }
+.drawer-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.drawer-footer { padding:14px 20px; border-top:1.5px solid var(--border); display:flex; gap:8px; flex-shrink:0; background:white; }
+.drawer-photo { width:100%; height:180px; object-fit:cover; border-radius:12px; margin-bottom:16px; display:block; background:var(--bg2); }
+.drawer-photo-placeholder { width:100%; height:120px; background:var(--bg2); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:48px; margin-bottom:16px; }
+.drawer-section { margin-bottom:18px; }
+.drawer-section-title { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+.drawer-field { margin-bottom:12px; }
+.drawer-field label { display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+.drawer-field input, .drawer-field select, .drawer-field textarea { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:'Poppins',sans-serif; font-size:13px; color:var(--text); outline:none; transition:border-color .2s; background:white; }
+.drawer-field input:focus, .drawer-field select:focus, .drawer-field textarea:focus { border-color:var(--terra); }
+.drawer-field textarea { min-height:72px; resize:vertical; }
+.drawer-field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.drawer-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+.drawer-meta-item { background:var(--bg2); border-radius:8px; padding:10px 12px; }
+.drawer-meta-item .m-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:2px; }
+.drawer-meta-item .m-val { font-size:13px; font-weight:600; }
+.user-avatar { width:56px; height:56px; border-radius:50%; background:var(--terra); color:white; font-size:22px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.user-listing-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--bg2); cursor:pointer; transition:background .15s; border-radius:6px; padding:8px; }
+.user-listing-row:last-child { border-bottom:none; }
+.user-listing-row:hover { background:var(--bg2); }
+.user-listing-icon { width:30px; height:30px; border-radius:8px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+tr.clickable-row { cursor:pointer; }
+tr.clickable-row:hover td { background:#F5F1EB; }
+
 /* RESPONSIVE */
 @media (max-width:640px) {
   .content { padding:14px 12px; }
@@ -452,6 +487,173 @@ textarea.setting-input { min-height:80px; resize:vertical; }
     </div><!-- /settings -->
   </div><!-- /content -->
 </div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LISTING DETAIL DRAWER -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="drawer-overlay" id="listing-overlay" onclick="closeListingDrawer(event)">
+  <div class="drawer" id="listing-drawer">
+    <div class="drawer-header">
+      <span id="ld-type-badge" class="badge">—</span>
+      <span class="drawer-title" id="ld-header-title">Advertentie</span>
+      <button class="drawer-close" onclick="closeListingDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <!-- Foto -->
+      <div id="ld-photo-wrap"></div>
+
+      <!-- Meta stats -->
+      <div class="drawer-meta-grid">
+        <div class="drawer-meta-item"><div class="m-label">Views</div><div class="m-val" id="ld-views">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Status</div><div class="m-val" id="ld-status-badge">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Aangemaakt</div><div class="m-val" id="ld-created">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Geplaatst door</div><div class="m-val" id="ld-user">—</div></div>
+      </div>
+
+      <!-- Bewerkbare velden -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">✏️ Bewerken</div>
+
+        <div class="drawer-field">
+          <label>Titel</label>
+          <input type="text" id="ld-title" placeholder="Titel van de advertentie">
+        </div>
+
+        <div class="drawer-field-row">
+          <div class="drawer-field">
+            <label>Type</label>
+            <select id="ld-category">
+              <option value="garagesale">🏠 Particulier (garagesale)</option>
+              <option value="buurtverkoop">🏘️ Buurtverkoop</option>
+              <option value="vlooienmarkt">🎪 Vlooienmarkt</option>
+              <option value="rommelmarkt">🛒 Rommelmarkt</option>
+              <option value="kofferbakverkoop">🚗 Kofferbakverkoop</option>
+              <option value="overig">📦 Overig</option>
+            </select>
+          </div>
+          <div class="drawer-field">
+            <label>Status</label>
+            <select id="ld-status">
+              <option value="active">✓ Actief</option>
+              <option value="inactive">Inactief</option>
+              <option value="blocked">🚫 Geblokkeerd</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="drawer-field">
+          <label>Adres</label>
+          <input type="text" id="ld-address" placeholder="Straatnaam 12, Stad">
+        </div>
+
+        <div class="drawer-field-row">
+          <div class="drawer-field">
+            <label>Datum</label>
+            <input type="date" id="ld-date">
+          </div>
+          <div class="drawer-field">
+            <label>Eindatum (optioneel)</label>
+            <input type="date" id="ld-date-end">
+          </div>
+        </div>
+
+        <div class="drawer-field-row">
+          <div class="drawer-field">
+            <label>Tijd van</label>
+            <input type="time" id="ld-time-start">
+          </div>
+          <div class="drawer-field">
+            <label>Tijd tot</label>
+            <input type="time" id="ld-time-end">
+          </div>
+        </div>
+
+        <div class="drawer-field">
+          <label>Beschrijving</label>
+          <textarea id="ld-desc" placeholder="Omschrijving (optioneel)"></textarea>
+        </div>
+
+        <div class="drawer-field">
+          <label>Admin notitie (intern)</label>
+          <textarea id="ld-note" placeholder="Interne notitie, niet zichtbaar voor gebruikers" style="min-height:52px"></textarea>
+        </div>
+      </div>
+
+      <!-- ID voor referentie -->
+      <div class="info-box" style="font-size:10px;word-break:break-all">
+        <strong>ID:</strong> <span id="ld-id">—</span>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn btn-terra" onclick="saveListingEdit()" style="flex:1">💾 Opslaan</button>
+      <a id="ld-app-link" href="#" target="_blank" class="btn btn-ghost" style="text-decoration:none">🔗 In app</a>
+      <button class="btn btn-danger" onclick="deleteFromListingDrawer()">🗑️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- USER DETAIL DRAWER -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="drawer-overlay" id="user-overlay" onclick="closeUserDrawer(event)">
+  <div class="drawer" id="user-drawer">
+    <div class="drawer-header">
+      <div class="user-avatar" id="ud-avatar">?</div>
+      <div style="flex:1;min-width:0">
+        <div class="drawer-title" id="ud-header-name">Gebruiker</div>
+        <div style="font-size:11px;color:var(--muted)" id="ud-header-email"></div>
+      </div>
+      <button class="drawer-close" onclick="closeUserDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+
+      <!-- Stats -->
+      <div class="drawer-meta-grid">
+        <div class="drawer-meta-item"><div class="m-label">Advertenties</div><div class="m-val" id="ud-ads-count">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Status</div><div class="m-val" id="ud-status">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Geregistreerd</div><div class="m-val" id="ud-created">—</div></div>
+        <div class="drawer-meta-item"><div class="m-label">Laatste login</div><div class="m-val" id="ud-last-login">—</div></div>
+      </div>
+
+      <!-- Bewerkbare velden -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">✏️ Profiel bewerken</div>
+        <div class="drawer-field">
+          <label>Weergavenaam</label>
+          <input type="text" id="ud-name" placeholder="Naam van de gebruiker">
+        </div>
+        <div class="drawer-field">
+          <label>E-mail <span style="font-size:10px;color:var(--muted);text-transform:none">(via Supabase Auth)</span></label>
+          <input type="email" id="ud-email" placeholder="e-mailadres" disabled style="background:var(--bg2);color:var(--muted)">
+        </div>
+        <div class="drawer-field">
+          <label>Admin notitie (intern)</label>
+          <textarea id="ud-note" placeholder="Interne notitie over deze gebruiker" style="min-height:52px"></textarea>
+        </div>
+      </div>
+
+      <!-- Advertenties van deze gebruiker -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">📋 Advertenties van deze gebruiker</div>
+        <div id="ud-listings-list">
+          <div style="font-size:12px;color:var(--muted)">Laden…</div>
+        </div>
+      </div>
+
+      <!-- ID -->
+      <div class="info-box" style="font-size:10px;word-break:break-all">
+        <strong>ID:</strong> <span id="ud-id">—</span>
+      </div>
+
+    </div>
+    <div class="drawer-footer">
+      <button class="btn btn-terra" onclick="saveUserEdit()" style="flex:1">💾 Opslaan</button>
+      <button class="btn btn-sm" id="ud-block-btn" onclick="toggleBlockFromDrawer()">🚫 Blokkeer</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteUserFromDrawer()">🗑️ Verwijder</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -760,6 +962,7 @@ async function loadListings() {
 
 var typeMap   = { garagesale:'particulier', garageverkoop:'particulier', buurtverkoop:'buurt', vlooienmarkt:'evenement', rommelmarkt:'evenement', kofferbakverkoop:'evenement', overig:'particulier' };
 var typeLabel = { particulier:'Particulier', buurt:'Buurtverkoop', evenement:'Evenement' };
+var typeEmoji = { particulier:'🏠', buurt:'🏘️', evenement:'🎪' };
 
 function renderListingsTable(rows) {
   var today = new Date().toISOString().split('T')[0];
@@ -771,16 +974,16 @@ function renderListingsTable(rows) {
   tbody.innerHTML = '<table>'
     + '<thead><tr>'
     + '<th class="check-col"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th>'
-    + '<th>Titel</th><th>Type</th><th>Datum</th><th>Adres</th><th>Status</th><th>Views</th><th>Aangemaakt</th><th>Acties</th>'
+    + '<th>Titel</th><th>Type</th><th>Datum</th><th>Adres</th><th>Status</th><th>Views</th><th>Aangemaakt</th><th></th>'
     + '</tr></thead><tbody>'
     + rows.map(function(l) {
       var tc  = typeMap[l.category] || 'particulier';
       var tl  = typeLabel[tc] || tc;
       var isActive = l.status === 'active' && l.date_start >= today;
       var checked = selectedIds.has(l.id) ? 'checked' : '';
-      var appUrl  = '/?listing=' + l.id;
-      return '<tr>'
-        + '<td class="check-col"><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'' + l.id + '\',this.checked)"></td>'
+      var idStr = typeof l.id === 'string' ? l.id : String(l.id);
+      return '<tr class="clickable-row" onclick="handleListingRowClick(event,\'' + idStr + '\')">'
+        + '<td class="check-col" onclick="event.stopPropagation()"><input type="checkbox" ' + checked + ' onchange="toggleSelect(\'' + idStr + '\',this.checked)"></td>'
         + '<td style="font-weight:600;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.title || '—') + '</td>'
         + '<td><span class="badge badge-' + tc + '">' + tl + '</span></td>'
         + '<td style="white-space:nowrap;font-size:12px">' + fmtDate(l.date_start) + '</td>'
@@ -788,13 +991,17 @@ function renderListingsTable(rows) {
         + '<td><span class="badge ' + (isActive ? 'badge-active' : 'badge-expired') + '">' + (isActive ? '✓ Actief' : 'Verlopen') + '</span></td>'
         + '<td style="font-size:12px;text-align:center">' + (l.view_count || 0) + '</td>'
         + '<td style="font-size:11px;color:var(--muted);white-space:nowrap">' + fmtRelTime(l.created_at) + '</td>'
-        + '<td style="white-space:nowrap">'
-        + '<a href="' + appUrl + '" target="_blank" class="btn btn-sm btn-ghost" style="text-decoration:none;margin-right:4px">👁️</a>'
-        + '<button class="btn btn-sm btn-danger" onclick="deleteListing(\'' + l.id + '\')">🗑️</button>'
+        + '<td onclick="event.stopPropagation()" style="white-space:nowrap">'
+        + '<button class="btn btn-sm btn-ghost" onclick="openListingDetail(\'' + idStr + '\')" title="Bekijk details">👁️</button>'
         + '</td>'
         + '</tr>';
     }).join('')
     + '</tbody></table>';
+}
+
+function handleListingRowClick(e, id) {
+  // Klik op checkbox overgeslagen via stopPropagation
+  openListingDetail(id);
 }
 
 function filterListings() {
@@ -919,13 +1126,15 @@ function renderUsersTable(rows) {
   var maxListings = Math.max(1, ...Object.values(listingsByUser));
 
   tbody.innerHTML = '<table>'
-    + '<thead><tr><th>Naam</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th>Acties</th></tr></thead>'
+    + '<thead><tr><th>Naam</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
     + '<tbody>' + rows.map(function(u) {
-      var count  = listingsByUser[u.id] || 0;
-      var isSuper = count >= Math.max(3, maxListings);
+      var count    = listingsByUser[u.id] || 0;
+      var isSuper  = count >= Math.max(3, maxListings);
       var isBlocked = u.is_blocked;
-      return '<tr>'
-        + '<td style="font-weight:600">'
+      var initials = (u.display_name || u.name || u.email || '?').charAt(0).toUpperCase();
+      return '<tr class="clickable-row" onclick="openUserDetail(\'' + u.id + '\')">'
+        + '<td style="font-weight:600;display:flex;align-items:center;gap:8px">'
+        + '<span style="width:30px;height:30px;border-radius:50%;background:var(--terra);color:white;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">' + initials + '</span>'
         + (u.display_name || u.name || '—')
         + (isSuper ? ' <span class="badge badge-super">⭐ Top</span>' : '')
         + '</td>'
@@ -933,8 +1142,10 @@ function renderUsersTable(rows) {
         + '<td style="font-weight:700;text-align:center">' + count + '</td>'
         + '<td style="font-size:11px;color:var(--muted);white-space:nowrap">' + fmtRelTime(u.created_at) + '</td>'
         + '<td>' + (isBlocked ? '<span class="badge badge-blocked">🚫 Geblokkeerd</span>' : '<span class="badge badge-active">✓ Actief</span>') + '</td>'
-        + '<td><button class="btn btn-sm ' + (isBlocked ? 'btn-green' : 'btn-danger') + '" onclick="toggleBlock(\'' + u.id + '\',' + !isBlocked + ')">'
-        + (isBlocked ? '✅ Deblokkeer' : '🚫 Blokkeer') + '</button></td>'
+        + '<td onclick="event.stopPropagation()">'
+        + '<button class="btn btn-sm ' + (isBlocked ? 'btn-green' : 'btn-danger') + '" onclick="toggleBlock(\'' + u.id + '\',' + !isBlocked + ')">'
+        + (isBlocked ? '✅ Deblokkeer' : '🚫 Blokkeer') + '</button>'
+        + '</td>'
         + '</tr>';
     }).join('') + '</tbody></table>';
 }
@@ -960,6 +1171,244 @@ async function toggleBlock(userId, block) {
   allUsers = allUsers.map(function(u) { return u.id === userId ? Object.assign({}, u, { is_blocked: block }) : u; });
   filterUsers();
   toast(block ? '🚫 Account geblokkeerd' : '✅ Account gedeblokkeerd');
+}
+
+// ══════════════════════════════════════════════════
+// LISTING DETAIL DRAWER
+// ══════════════════════════════════════════════════
+var currentListingId = null;
+
+function openListingDetail(id) {
+  var l = allListings.find(function(x) { return String(x.id) === String(id); });
+  if (!l) return;
+  currentListingId = l.id;
+  var today = new Date().toISOString().split('T')[0];
+  var tc = typeMap[l.category] || 'particulier';
+  var tl = typeLabel[tc] || tc;
+  var isActive = l.status === 'active' && l.date_start >= today;
+
+  // Header
+  var typeBadge = document.getElementById('ld-type-badge');
+  typeBadge.textContent = (typeEmoji[tc]||'') + ' ' + tl;
+  typeBadge.className = 'badge badge-' + tc;
+  document.getElementById('ld-header-title').textContent = l.title || 'Advertentie';
+
+  // Meta
+  document.getElementById('ld-views').textContent = l.view_count || 0;
+  document.getElementById('ld-status-badge').innerHTML = isActive
+    ? '<span class="badge badge-active">✓ Actief</span>'
+    : '<span class="badge badge-expired">Verlopen</span>';
+  document.getElementById('ld-created').textContent = fmtDate(l.created_at);
+  document.getElementById('ld-id').textContent = l.id;
+  document.getElementById('ld-app-link').href = 'https://www.yardigo.nl/?listing=' + l.id;
+
+  // Gebruiker
+  var userEl = document.getElementById('ld-user');
+  if (l.user_id) {
+    var usr = allUsers.find(function(u) { return u.id === l.user_id; });
+    userEl.textContent = usr ? (usr.display_name || usr.name || usr.email || l.user_id.slice(0,8)) : l.user_id.slice(0,8) + '…';
+    userEl.style.cursor = 'pointer';
+    userEl.onclick = function() { closeListingDrawer(); openUserDetail(l.user_id); };
+  } else {
+    userEl.textContent = '—';
+    userEl.style.cursor = 'default';
+    userEl.onclick = null;
+  }
+
+  // Foto
+  var photoWrap = document.getElementById('ld-photo-wrap');
+  var photos = l.images || l.photos || [];
+  if (photos.length) {
+    photoWrap.innerHTML = '<img class="drawer-photo" src="' + photos[0] + '" onerror="this.style.display=\'none\'">'
+      + (photos.length > 1 ? '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;margin-top:-8px">📷 ' + photos.length + ' foto\'s</div>' : '');
+  } else {
+    photoWrap.innerHTML = '<div class="drawer-photo-placeholder">' + (typeEmoji[tc]||'📦') + '</div>';
+  }
+
+  // Velden
+  document.getElementById('ld-title').value      = l.title || '';
+  document.getElementById('ld-category').value   = l.category || 'garagesale';
+  document.getElementById('ld-status').value     = l.status || 'active';
+  document.getElementById('ld-address').value    = l.address || '';
+  document.getElementById('ld-date').value       = l.date_start || '';
+  document.getElementById('ld-date-end').value   = l.date_end || '';
+  document.getElementById('ld-time-start').value = l.time_start ? String(l.time_start).substring(0,5) : '';
+  document.getElementById('ld-time-end').value   = l.time_end   ? String(l.time_end).substring(0,5)   : '';
+  document.getElementById('ld-desc').value       = l.description || l.desc || '';
+  document.getElementById('ld-note').value       = l.admin_note || '';
+
+  document.getElementById('listing-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeListingDrawer(e) {
+  if (e && e.target !== document.getElementById('listing-overlay')) return;
+  document.getElementById('listing-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentListingId = null;
+}
+
+async function saveListingEdit() {
+  if (!currentListingId) return;
+  var updates = {
+    title:       document.getElementById('ld-title').value.trim(),
+    category:    document.getElementById('ld-category').value,
+    status:      document.getElementById('ld-status').value,
+    address:     document.getElementById('ld-address').value.trim(),
+    date_start:  document.getElementById('ld-date').value || null,
+    date_end:    document.getElementById('ld-date-end').value || null,
+    time_start:  document.getElementById('ld-time-start').value || null,
+    time_end:    document.getElementById('ld-time-end').value || null,
+    description: document.getElementById('ld-desc').value.trim(),
+    admin_note:  document.getElementById('ld-note').value.trim(),
+  };
+  if (!updates.title) { toast('❌ Titel mag niet leeg zijn'); return; }
+
+  var { error } = await sb.from('listings').update(updates).eq('id', currentListingId);
+  if (error) { toast('❌ Opslaan mislukt: ' + error.message); return; }
+
+  // Update lokale data
+  allListings = allListings.map(function(l) {
+    return String(l.id) === String(currentListingId) ? Object.assign({}, l, updates) : l;
+  });
+  filterListings();
+  document.getElementById('ld-header-title').textContent = updates.title;
+  toast('✅ Advertentie opgeslagen');
+}
+
+async function deleteFromListingDrawer() {
+  if (!currentListingId) return;
+  if (!confirm('Weet je zeker dat je deze advertentie wilt verwijderen?')) return;
+  var { error } = await sb.from('listings').delete().eq('id', currentListingId);
+  if (error) { toast('❌ Fout: ' + error.message); return; }
+  allListings = allListings.filter(function(l) { return String(l.id) !== String(currentListingId); });
+  selectedIds.delete(currentListingId);
+  document.getElementById('listings-count').textContent = allListings.length + ' totaal';
+  filterListings();
+  closeListingDrawer();
+  toast('✅ Advertentie verwijderd');
+}
+
+// ══════════════════════════════════════════════════
+// USER DETAIL DRAWER
+// ══════════════════════════════════════════════════
+var currentUserId = null;
+
+function openUserDetail(id) {
+  var u = allUsers.find(function(x) { return String(x.id) === String(id); });
+  if (!u) return;
+  currentUserId = u.id;
+
+  var name     = u.display_name || u.name || '';
+  var initials = (name || u.email || '?').charAt(0).toUpperCase();
+  var listingsByThisUser = allListings.filter(function(l) { return l.user_id === u.id; });
+
+  // Header
+  document.getElementById('ud-avatar').textContent = initials;
+  document.getElementById('ud-header-name').textContent = name || u.email || '—';
+  document.getElementById('ud-header-email').textContent = u.email || '';
+
+  // Meta
+  document.getElementById('ud-ads-count').textContent = listingsByThisUser.length;
+  document.getElementById('ud-status').innerHTML = u.is_blocked
+    ? '<span class="badge badge-blocked">🚫 Geblokkeerd</span>'
+    : '<span class="badge badge-active">✓ Actief</span>';
+  document.getElementById('ud-created').textContent = fmtDate(u.created_at);
+  document.getElementById('ud-last-login').textContent = fmtRelTime(u.last_sign_in_at || u.updated_at);
+  document.getElementById('ud-id').textContent = u.id;
+
+  // Block knop
+  var blockBtn = document.getElementById('ud-block-btn');
+  if (u.is_blocked) {
+    blockBtn.textContent = '✅ Deblokkeer';
+    blockBtn.className = 'btn btn-green btn-sm';
+  } else {
+    blockBtn.textContent = '🚫 Blokkeer';
+    blockBtn.className = 'btn btn-danger btn-sm';
+  }
+
+  // Velden
+  document.getElementById('ud-name').value  = name;
+  document.getElementById('ud-email').value = u.email || '';
+  document.getElementById('ud-note').value  = u.admin_note || '';
+
+  // Advertenties van deze gebruiker
+  var listEl = document.getElementById('ud-listings-list');
+  if (listingsByThisUser.length === 0) {
+    listEl.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">Nog geen advertenties geplaatst.</div>';
+  } else {
+    var today = new Date().toISOString().split('T')[0];
+    listEl.innerHTML = listingsByThisUser.map(function(l) {
+      var tc = typeMap[l.category] || 'particulier';
+      var isActive = l.status === 'active' && l.date_start >= today;
+      return '<div class="user-listing-row" onclick="closeUserDrawer();openListingDetail(\'' + l.id + '\')">'
+        + '<div class="user-listing-icon">' + (typeEmoji[tc]||'📦') + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.title || '—') + '</div>'
+        + '<div style="font-size:10px;color:var(--muted)">' + fmtDate(l.date_start) + ' · ' + (l.address || '') + '</div>'
+        + '</div>'
+        + '<span class="badge ' + (isActive ? 'badge-active' : 'badge-expired') + '" style="flex-shrink:0">' + (isActive ? '✓' : 'Verlopen') + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  document.getElementById('user-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeUserDrawer(e) {
+  if (e && e.target !== document.getElementById('user-overlay')) return;
+  document.getElementById('user-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentUserId = null;
+}
+
+async function saveUserEdit() {
+  if (!currentUserId) return;
+  var updates = {
+    display_name: document.getElementById('ud-name').value.trim(),
+    admin_note:   document.getElementById('ud-note').value.trim(),
+  };
+  var { error } = await sb.from('profiles').update(updates).eq('id', currentUserId);
+  if (error) { toast('❌ Opslaan mislukt: ' + error.message); return; }
+
+  allUsers = allUsers.map(function(u) {
+    return u.id === currentUserId ? Object.assign({}, u, updates) : u;
+  });
+  document.getElementById('ud-header-name').textContent = updates.display_name || document.getElementById('ud-email').value;
+  filterUsers();
+  toast('✅ Gebruiker opgeslagen');
+}
+
+async function toggleBlockFromDrawer() {
+  if (!currentUserId) return;
+  var u = allUsers.find(function(x) { return x.id === currentUserId; });
+  if (!u) return;
+  await toggleBlock(currentUserId, !u.is_blocked);
+  // Refresh drawer
+  var updated = allUsers.find(function(x) { return x.id === currentUserId; });
+  if (updated) {
+    var blockBtn = document.getElementById('ud-block-btn');
+    document.getElementById('ud-status').innerHTML = updated.is_blocked
+      ? '<span class="badge badge-blocked">🚫 Geblokkeerd</span>'
+      : '<span class="badge badge-active">✓ Actief</span>';
+    if (updated.is_blocked) { blockBtn.textContent = '✅ Deblokkeer'; blockBtn.className = 'btn btn-green btn-sm'; }
+    else                    { blockBtn.textContent = '🚫 Blokkeer';   blockBtn.className = 'btn btn-danger btn-sm'; }
+  }
+}
+
+async function deleteUserFromDrawer() {
+  if (!currentUserId) return;
+  var u = allUsers.find(function(x) { return x.id === currentUserId; });
+  var name = (u && (u.display_name || u.email)) || 'deze gebruiker';
+  if (!confirm('Weet je zeker dat je ' + name + ' wilt verwijderen? Dit verwijdert ook alle advertenties van deze gebruiker.')) return;
+  var { error } = await sb.from('profiles').delete().eq('id', currentUserId);
+  if (error) { toast('❌ Fout: ' + error.message); return; }
+  allUsers = allUsers.filter(function(u) { return u.id !== currentUserId; });
+  document.getElementById('users-count').textContent = allUsers.length + ' geregistreerd';
+  filterUsers();
+  closeUserDrawer();
+  toast('✅ Gebruiker verwijderd');
 }
 
 // ══════════════════════════════════════════════════
@@ -1017,6 +1466,10 @@ function toast(msg) {
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+  if (e.key === 'Escape') {
+    if (document.getElementById('listing-overlay').classList.contains('open')) closeListingDrawer();
+    else if (document.getElementById('user-overlay').classList.contains('open')) closeUserDrawer();
+  }
 });
 
 // Responsive: op klein scherm dash-grid op 1 kolom
