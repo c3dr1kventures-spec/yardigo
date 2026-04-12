@@ -367,13 +367,13 @@ body.dark .dm-ball{left:21px;}
 .atag.sel{background:var(--forest);color:white;border-color:var(--forest);}
 
 /* ── FAB ROW ── half-verscholen onder nav ── */
-.fab-row{position:fixed;bottom:calc(50px + env(safe-area-inset-bottom,0px));left:0;right:0;max-width:480px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;padding:0 14px;z-index:495;pointer-events:none;transition:opacity .18s;}
+.fab-row{position:fixed;bottom:calc(50px + env(safe-area-inset-bottom,0px));left:0;right:0;max-width:480px;margin:0 auto;display:flex;align-items:flex-end;justify-content:flex-end;gap:5px;padding:0 14px;z-index:495;pointer-events:none;transition:opacity .18s;}
 .fab-row.hidden{opacity:0;pointer-events:none;}
 /* ── FAB ── */
-.fab{pointer-events:all;background:var(--terra);color:white;border:none;border-radius:12px 12px 0 0;padding:10px 16px 18px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 -2px 14px rgba(224,123,57,.35);display:flex;align-items:center;gap:7px;transition:background .18s;}
+.fab{pointer-events:all;background:var(--terra);color:white;border:none;border-radius:10px 10px 0 0;padding:7px 13px 15px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 -2px 14px rgba(224,123,57,.35);display:flex;align-items:center;gap:5px;transition:background .18s;}
 .fab:hover{background:var(--terra-dark);}
 /* ── FAB FEEDBACK ── */
-.fab-feedback{pointer-events:all;background:var(--forest);color:white;border:none;border-radius:10px 10px 0 0;padding:8px 12px 18px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;box-shadow:0 -2px 10px rgba(58,107,74,.25);display:flex;align-items:center;gap:4px;transition:background .18s;}
+.fab-feedback{pointer-events:all;background:var(--forest);color:white;border:none;border-radius:10px 10px 0 0;padding:7px 11px 15px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:700;cursor:pointer;box-shadow:0 -2px 10px rgba(58,107,74,.25);display:flex;align-items:center;transition:background .18s;}
 .fab-feedback:hover{background:var(--forest-dark);}
 /* ── FEEDBACK MODAL ── */
 .feedback-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:850;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -961,17 +961,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <!-- Badges -->
     <div class="att-card">
       <div class="section-label">Jouw badges</div>
-      <div class="badge-grid">
-        <div class="badge-item earned"><div class="badge-icon">🎉</div><div class="badge-name">Eerste stap</div></div>
-        <div class="badge-item earned"><div class="badge-icon">👣</div><div class="badge-name">Vaste gast</div></div>
-        <div class="badge-item earned"><div class="badge-icon">⭐</div><div class="badge-name">Betrouwbaar</div></div>
-        <div class="badge-item locked"><div class="badge-icon">🏆</div><div class="badge-name">Trouwe bezoeker</div></div>
-        <div class="badge-item locked"><div class="badge-icon">🏪</div><div class="badge-name">Actieve verkoper</div></div>
-        <div class="badge-item locked"><div class="badge-icon">🌟</div><div class="badge-name">YardiGo Pro</div></div>
-        <div class="badge-item locked"><div class="badge-icon">☀️</div><div class="badge-name">Weekend­kampioen</div></div>
-        <div class="badge-item locked"><div class="badge-icon">🐦</div><div class="badge-name">Vroege vogel</div></div>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center" id="badge-count">3 van 8 badges verdiend</div>
+      <div class="badge-grid" id="user-badge-grid"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center" id="badge-count">Laden...</div>
     </div>
 
     <!-- Profile tabs -->
@@ -1240,9 +1231,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </nav>
 <div class="fab-row" id="fab-row">
-  <button class="fab-feedback" onclick="openFeedback()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    Feedback
+  <button class="fab-feedback" onclick="openFeedback()" title="Feedback geven">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
   <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()">＋ Verkoop plaatsen</button>
 </div>
@@ -1693,6 +1683,7 @@ function updateUserUI() {
     if (profileSub)  profileSub.textContent  = 'Maak een account aan voor meer';
   }
   renderMySales();
+  loadAndRenderUserBadges();
 }
 
 // ── Mijn verkopen in profiel ──
@@ -3445,6 +3436,74 @@ function handleProfilePhoto(input) {
 }
 
 // ══════════════════════════════════════════════════
+// UNIFIED BADGE SYSTEM
+// ══════════════════════════════════════════════════
+var APP_BADGES = [
+  // Auto badges — verdiend op basis van activiteit
+  {key:'pionier',    emoji:'🔭', label:'Pionier',         desc:'Eerste advertentie geplaatst',    type:'auto'},
+  {key:'top',        emoji:'⭐', label:'Top verkoper',     desc:'3 of meer advertenties geplaatst',type:'auto'},
+  {key:'photographer',emoji:'📸',label:'Fotograaf',        desc:"Advertentie met foto's geplaatst", type:'auto'},
+  {key:'connector',  emoji:'🏘️', label:'Buurtconnector',   desc:'Buurtverkoop georganiseerd',      type:'auto'},
+  {key:'eventmaker', emoji:'🎪', label:'Evenementmaker',   desc:'Evenement aangemaakt',            type:'auto'},
+  // Manual badges — toegewezen door admin
+  {key:'beta',       emoji:'🧪', label:'Beta tester',     desc:'Vroege beta tester van YardiGo', type:'manual'},
+  {key:'vip',        emoji:'💎', label:'VIP',             desc:'Speciale VIP-gebruiker',         type:'manual'},
+  {key:'ambassador', emoji:'👑', label:'Ambassadeur',     desc:'Promoot YardiGo actief',         type:'manual'},
+  {key:'pro',        emoji:'🛒', label:'Rommelmarkt Pro', desc:'Ervaren verkoper op markten',    type:'manual'},
+];
+
+function computeAutoBadgeKeys(mine) {
+  var earned = {};
+  if (mine.length >= 1) earned['pionier'] = true;
+  if (mine.length >= 3) earned['top'] = true;
+  if (mine.some(function(l){ return l.photos && l.photos.length > 0; })) earned['photographer'] = true;
+  if (mine.some(function(l){ return l.type === 'buurt'; })) earned['connector'] = true;
+  if (mine.some(function(l){ return l.type === 'evenement'; })) earned['eventmaker'] = true;
+  return earned;
+}
+
+async function loadAndRenderUserBadges() {
+  var grid = document.getElementById('user-badge-grid');
+  var countEl = document.getElementById('badge-count');
+  if (!grid) return;
+
+  var mine = (!isGuest && currentUser.email)
+    ? sales.filter(function(s){ return s.user_email === currentUser.email; })
+    : [];
+
+  var autoEarned = computeAutoBadgeKeys(mine);
+  var manualKeys = {};
+
+  // Haal admin_badges op uit Supabase voor ingelogde gebruiker
+  if (!isGuest && sbClient) {
+    try {
+      var userRes = await sbClient.auth.getUser();
+      if (userRes.data && userRes.data.user) {
+        var uid = userRes.data.user.id;
+        var res = await sbClient.from('profiles').select('admin_badges').eq('id', uid).maybeSingle();
+        if (res.data && res.data.admin_badges) {
+          var raw = res.data.admin_badges;
+          var arr = Array.isArray(raw) ? raw : JSON.parse(raw || '[]');
+          arr.forEach(function(k){ manualKeys[k] = true; });
+        }
+      }
+    } catch(e) {}
+  }
+
+  var count = 0;
+  grid.innerHTML = APP_BADGES.map(function(b) {
+    var earned = b.type === 'auto' ? !!autoEarned[b.key] : !!manualKeys[b.key];
+    if (earned) count++;
+    return '<div class="badge-item ' + (earned ? 'earned' : 'locked') + '" title="' + b.desc + '">'
+      + '<div class="badge-icon">' + b.emoji + '</div>'
+      + '<div class="badge-name">' + b.label + '</div>'
+      + '</div>';
+  }).join('');
+
+  if (countEl) countEl.textContent = count + ' van ' + APP_BADGES.length + ' badges verdiend';
+}
+
+// ══════════════════════════════════════════════════
 // ATTENDANCE
 // ══════════════════════════════════════════════════
 function updateAttendanceUI() {
@@ -3455,11 +3514,7 @@ function updateAttendanceUI() {
   var lbl = document.getElementById('att-label'); if (lbl) { lbl.textContent = pct >= 90 ? '✓ Komt altijd' : pct >= 70 ? '👍 Meestal aanwezig' : '⚠️ Wisselvallig'; lbl.style.color = pct >= 90 ? '#3A6B4A' : pct >= 70 ? '#F2A830' : '#E07B39'; }
   var v = document.getElementById('att-visits'); if (v) v.textContent = attendanceData.visited;
   var tot = document.getElementById('att-total'); if (tot) tot.textContent = attendanceData.total;
-  var earned = [true, attendanceData.visited>=3, pct>=80, attendanceData.visited>=10, false, false, false, false];
-  var items = document.querySelectorAll('.badge-item');
-  var count = 0;
-  earned.forEach(function(e, i) { if (items[i]) { items[i].classList.toggle('earned', e); items[i].classList.toggle('locked', !e); if(e) count++; } });
-  var bc = document.getElementById('badge-count'); if (bc) bc.textContent = count + ' van 8 badges verdiend';
+  loadAndRenderUserBadges();
 }
 function doCheckin(attended) {
   attendanceData.total++;
