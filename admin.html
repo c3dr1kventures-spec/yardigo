@@ -143,6 +143,17 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--terra);cursor:poi
 .badge-pending{background:#FEF9E4;color:#8A6A00;}
 .badge-blocked{background:#FDEAEA;color:var(--red);}
 .badge-super{background:#FEF5E4;color:#A06010;}
+/* user achievement badges */
+.badge-beta{background:#EEE4FE;color:#5B2DA6;}
+.badge-pioneer{background:#FEF9E4;color:#7A5A10;}
+.badge-vip{background:#FFF0E0;color:#C04010;}
+.badge-ambassador{background:#E4F0FE;color:#1A5AA6;}
+.badge-pro{background:#E4FEF0;color:#0A7A40;}
+.badge-photographer{background:#F0F0F0;color:#444;}
+.badge-connector{background:#FDF0E7;color:#A04A18;}
+.badge-eventmaker{background:#EAF2EC;color:#2A5038;}
+/* badge strip in user table */
+.user-badge-strip{display:flex;gap:3px;flex-wrap:wrap;}
 .badge-featured{background:#FDF0E7;color:var(--terra);}
 .badge-dupe{background:#FDEAEA;color:var(--red);}
 
@@ -499,6 +510,16 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       </div>
 
       <div class="settings-card">
+        <h3>🏅 Badge-systeem — Supabase setup</h3>
+        <p>Het badge-systeem slaat handmatige badges op in de <strong>profiles</strong> tabel. Voer dit eenmalig uit in de Supabase SQL Editor:</p>
+        <div style="background:#1E1E1E;color:#D4D4D4;border-radius:10px;padding:14px;font-family:monospace;font-size:12px;line-height:1.6;overflow-x:auto;margin-bottom:10px">
+          ALTER TABLE profiles ADD COLUMN IF NOT EXISTS admin_badges text DEFAULT '[]';<br>
+          ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_blocked boolean DEFAULT false;
+        </div>
+        <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/editor" target="_blank" class="btn btn-terra btn-sm">→ Open SQL Editor</a>
+      </div>
+
+      <div class="settings-card">
         <h3>🔗 Snelkoppelingen</h3>
         <div style="display:flex;flex-direction:column;gap:7px">
           <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/editor" target="_blank" class="quicklink">🗄️ Supabase SQL Editor</a>
@@ -606,6 +627,10 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="drawer-field"><label>Admin notitie (intern)</label><textarea id="ud-note" style="min-height:50px"></textarea></div>
       </div>
       <div class="drawer-section">
+        <div class="drawer-section-title" style="margin-bottom:0">🏅 Badges</div>
+        <div id="ud-badges-wrap" style="margin-top:10px"></div>
+      </div>
+      <div class="drawer-section">
         <div class="drawer-section-title">📋 Advertenties van deze gebruiker</div>
         <div id="ud-listings-list"></div>
       </div>
@@ -648,6 +673,106 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let allListings=[], allUsers=[], currentAdmin=null, settings={};
 let selectedIds=new Set(), currentListingId=null, currentUserId=null;
+
+// ══════════════════════════════════════════════════
+// BADGE SYSTEEM
+// ══════════════════════════════════════════════════
+const MANUAL_BADGES = [
+  {key:'beta',      emoji:'🧪', label:'Beta',          cls:'badge-beta',        desc:'Vroege beta tester van YardiGo'},
+  {key:'vip',       emoji:'💎', label:'VIP',           cls:'badge-vip',         desc:'Speciale VIP-gebruiker'},
+  {key:'ambassador',emoji:'👑', label:'Ambassadeur',   cls:'badge-ambassador',  desc:'Promoot YardiGo actief'},
+  {key:'pro',       emoji:'🛒', label:'Rommelmarkt Pro',cls:'badge-pro',        desc:'Ervaren verkoper op markten'},
+];
+const AUTO_BADGES = [
+  {key:'pioneer',   emoji:'🔭', label:'Pionier',       cls:'badge-pioneer'},
+  {key:'top',       emoji:'⭐', label:'Top verkoper',  cls:'badge-super'},
+  {key:'active',    emoji:'🎯', label:'Actief',        cls:'badge-active'},
+  {key:'photographer',emoji:'📸',label:'Fotograaf',   cls:'badge-photographer'},
+  {key:'connector', emoji:'🏘️', label:'Buurtconnector',cls:'badge-connector'},
+  {key:'eventmaker',emoji:'🎪', label:'Evenementmaker',cls:'badge-eventmaker'},
+];
+
+function getManualBadges(user){
+  try{return JSON.parse(user.admin_badges||'[]');}catch(e){return[];}
+}
+
+function getAutoBadges(user, userListings, allUsers){
+  var badges=[];
+  var sortedByDate=[...allUsers].sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at);});
+  var rank=sortedByDate.findIndex(function(u){return u.id===user.id;});
+  if(rank>=0&&rank<50) badges.push('pioneer');
+  var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
+  var mx=Math.max(1,...Object.values(lbu));
+  if((lbu[user.id]||0)>=Math.max(3,mx)) badges.push('top');
+  var today=new Date().toISOString().split('T')[0];
+  if(userListings.some(function(l){return l.status==='active'&&l.date_start>=today;})) badges.push('active');
+  if(userListings.some(function(l){var p=l.images||l.photos||[];return p.length>0;})) badges.push('photographer');
+  if(userListings.some(function(l){return l.category==='buurtverkoop';})) badges.push('connector');
+  if(userListings.some(function(l){return['vlooienmarkt','rommelmarkt','kofferbakverkoop'].includes(l.category);})) badges.push('eventmaker');
+  return badges;
+}
+
+function renderBadgeStrip(user, compact){
+  var manual=getManualBadges(user);
+  var userListings=allListings.filter(function(l){return l.user_id===user.id;});
+  var auto=getAutoBadges(user,userListings,allUsers);
+  var all=[...MANUAL_BADGES.filter(function(b){return manual.includes(b.key);}), ...AUTO_BADGES.filter(function(b){return auto.includes(b.key);})];
+  if(!all.length) return '';
+  if(compact){
+    return '<div class="user-badge-strip">'+all.map(function(b){return '<span title="'+b.label+'" style="font-size:14px">'+b.emoji+'</span>';}).join('')+'</div>';
+  }
+  return '<div class="user-badge-strip">'+all.map(function(b){return '<span class="badge '+b.cls+'">'+b.emoji+' '+b.label+'</span>';}).join('')+'</div>';
+}
+
+async function toggleManualBadge(userId, badgeKey, add){
+  var u=allUsers.find(function(x){return x.id===userId;});
+  if(!u) return;
+  var badges=getManualBadges(u);
+  if(add&&!badges.includes(badgeKey)) badges.push(badgeKey);
+  if(!add) badges=badges.filter(function(b){return b!==badgeKey;});
+  var{error}=await sb.from('profiles').update({admin_badges:JSON.stringify(badges)}).eq('id',userId);
+  if(error){toast('❌ '+error.message+' (voeg admin_badges toe aan profiles tabel)');return;}
+  allUsers=allUsers.map(function(x){return x.id===userId?Object.assign({},x,{admin_badges:JSON.stringify(badges)}):x;});
+  var action=add?'toegekend':'verwijderd';
+  var bd=MANUAL_BADGES.find(function(b){return b.key===badgeKey;});
+  addLog('edit','🏅 Badge '+(bd?bd.label:badgeKey)+' '+action+' aan '+(u.display_name||u.email));
+  filterUsers();
+  renderBadgePanelInDrawer(userId);
+  toast('✅ Badge '+(bd?bd.emoji+' '+bd.label:badgeKey)+' '+(add?'toegekend':'verwijderd'));
+}
+
+function renderBadgePanelInDrawer(userId){
+  var u=allUsers.find(function(x){return x.id===userId;});
+  if(!u) return;
+  var manual=getManualBadges(u);
+  var userListings=allListings.filter(function(l){return l.user_id===u.id;});
+  var auto=getAutoBadges(u,userListings,allUsers);
+  var container=document.getElementById('ud-badges-wrap');
+  if(!container) return;
+  var html='<div style="margin-bottom:10px">';
+  html+='<div class="drawer-section-title" style="margin-bottom:8px">🏅 Handmatige badges</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:8px">';
+  MANUAL_BADGES.forEach(function(b){
+    var has=manual.includes(b.key);
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:8px">'
+      +'<div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">'+b.emoji+'</span>'
+      +'<div><div style="font-size:12px;font-weight:700">'+b.label+'</div><div style="font-size:10px;color:var(--muted)">'+b.desc+'</div></div></div>'
+      +'<label class="toggle" style="flex-shrink:0"><input type="checkbox"'+(has?' checked':'')
+      +' onchange="toggleManualBadge(\''+userId+'\',\''+b.key+'\',this.checked)">'
+      +'<span class="toggle-slider"></span></label></div>';
+  });
+  html+='</div>';
+  if(auto.length){
+    html+='<div class="drawer-section-title" style="margin-top:14px;margin-bottom:8px">⚡ Automatische badges</div>';
+    html+='<div class="user-badge-strip">';
+    auto.forEach(function(ak){var bd=AUTO_BADGES.find(function(b){return b.key===ak;});if(bd) html+='<span class="badge '+bd.cls+'">'+bd.emoji+' '+bd.label+'</span>';});
+    html+='</div>';
+  }else{
+    html+='<div style="font-size:11px;color:var(--muted);margin-top:12px">Nog geen automatische badges verdiend.</div>';
+  }
+  html+='</div>';
+  container.innerHTML=html;
+}
 
 const typeMap   = {garagesale:'particulier',garageverkoop:'particulier',buurtverkoop:'buurt',vlooienmarkt:'evenement',rommelmarkt:'evenement',kofferbakverkoop:'evenement',overig:'particulier'};
 const typeLabel = {particulier:'Particulier',buurt:'Buurtverkoop',evenement:'Evenement'};
@@ -1149,13 +1274,15 @@ function renderUsersTable(rows){
   if(!rows.length){tbody.innerHTML='<div class="empty"><div class="e-icon">👥</div><div class="e-text">Geen gebruikers gevonden</div></div>';return;}
   var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
   var mx=Math.max(1,...Object.values(lbu));
-  tbody.innerHTML='<table><thead><tr><th>Naam</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
+  tbody.innerHTML='<table><thead><tr><th>Naam</th><th>Badges</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
     +'<tbody>'+rows.map(function(u){
-      var cnt=lbu[u.id]||0, isSuper=cnt>=Math.max(3,mx), isBlocked=u.is_blocked;
+      var cnt=lbu[u.id]||0, isBlocked=u.is_blocked;
       var initials=(u.display_name||u.name||u.email||'?').charAt(0).toUpperCase();
+      var badgeStrip=renderBadgeStrip(u,true);
       return '<tr class="clickable-row" onclick="openUserDetail(\''+u.id+'\')">'
         +'<td style="font-weight:600"><span style="width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:8px">'+initials+'</span>'
-        +(u.display_name||u.name||'—')+(isSuper?' <span class="badge badge-super">⭐ Top</span>':'')+' </td>'
+        +(u.display_name||u.name||'—')+'</td>'
+        +'<td>'+(badgeStrip||'<span style="color:var(--muted);font-size:11px">—</span>')+'</td>'
         +'<td style="font-size:12px;color:var(--muted)">'+(u.email||'—')+'</td>'
         +'<td style="font-weight:700;text-align:center">'+cnt+'</td>'
         +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtRelTime(u.created_at)+'</td>'
@@ -1189,8 +1316,14 @@ async function toggleBlock(userId,block){
 function exportUsersCSV(){
   if(!allUsers.length){toast('Geen gebruikers');return;}
   var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
-  var csv='id;naam;email;advertenties;geregistreerd;geblokkeerd\n';
-  allUsers.forEach(function(u){csv+=[u.id,u.display_name||u.name||'',u.email||'',lbu[u.id]||0,u.created_at||'',u.is_blocked?'ja':'nee'].join(';')+'\n';});
+  var csv='id;naam;email;advertenties;geregistreerd;geblokkeerd;badges\n';
+  allUsers.forEach(function(u){
+    var manual=getManualBadges(u);
+    var userListings=allListings.filter(function(l){return l.user_id===u.id;});
+    var auto=getAutoBadges(u,userListings,allUsers);
+    var allBadges=[...manual,...auto].join(',');
+    csv+=[u.id,u.display_name||u.name||'',u.email||'',lbu[u.id]||0,u.created_at||'',u.is_blocked?'ja':'nee',allBadges].join(';')+'\n';
+  });
   var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download='yardigo_users_'+new Date().toISOString().split('T')[0]+'.csv'; a.click();
@@ -1234,6 +1367,7 @@ function openUserDetail(id){
         +'</div>';
     }).join('');
   }
+  renderBadgePanelInDrawer(u.id);
   document.getElementById('user-overlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
