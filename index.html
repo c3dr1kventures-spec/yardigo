@@ -678,13 +678,26 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
         <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
           <div class="ob-cat-tile active" data-cat="Kleding" onclick="obToggleCat(this)"><span class="cat-icon">👗</span><div class="cat-name">Kleding</div></div>
+          <div class="ob-cat-tile" data-cat="Schoenen" onclick="obToggleCat(this)"><span class="cat-icon">👟</span><div class="cat-name">Schoenen</div></div>
+          <div class="ob-cat-tile" data-cat="Tassen" onclick="obToggleCat(this)"><span class="cat-icon">👜</span><div class="cat-name">Tassen</div></div>
+          <div class="ob-cat-tile" data-cat="Sieraden" onclick="obToggleCat(this)"><span class="cat-icon">💍</span><div class="cat-name">Sieraden</div></div>
+          <div class="ob-cat-tile" data-cat="Antiek & Vintage" onclick="obToggleCat(this)"><span class="cat-icon">🏺</span><div class="cat-name">Antiek & Vintage</div></div>
+          <div class="ob-cat-tile" data-cat="Retro" onclick="obToggleCat(this)"><span class="cat-icon">📻</span><div class="cat-name">Retro</div></div>
           <div class="ob-cat-tile" data-cat="Meubels" onclick="obToggleCat(this)"><span class="cat-icon">🛋️</span><div class="cat-name">Meubels</div></div>
+          <div class="ob-cat-tile" data-cat="Huishoudspullen" onclick="obToggleCat(this)"><span class="cat-icon">🏠</span><div class="cat-name">Huishoudspullen</div></div>
+          <div class="ob-cat-tile" data-cat="Keuken" onclick="obToggleCat(this)"><span class="cat-icon">🍳</span><div class="cat-name">Keuken & Koken</div></div>
           <div class="ob-cat-tile" data-cat="Speelgoed" onclick="obToggleCat(this)"><span class="cat-icon">🧸</span><div class="cat-name">Speelgoed</div></div>
+          <div class="ob-cat-tile" data-cat="Baby & Kind" onclick="obToggleCat(this)"><span class="cat-icon">👶</span><div class="cat-name">Baby & Kind</div></div>
           <div class="ob-cat-tile" data-cat="Elektronica" onclick="obToggleCat(this)"><span class="cat-icon">📱</span><div class="cat-name">Elektronica</div></div>
+          <div class="ob-cat-tile" data-cat="Films & Games" onclick="obToggleCat(this)"><span class="cat-icon">🎮</span><div class="cat-name">Films & Games</div></div>
           <div class="ob-cat-tile" data-cat="Boeken" onclick="obToggleCat(this)"><span class="cat-icon">📚</span><div class="cat-name">Boeken</div></div>
-          <div class="ob-cat-tile" data-cat="Tuin" onclick="obToggleCat(this)"><span class="cat-icon">🌿</span><div class="cat-name">Tuin</div></div>
-          <div class="ob-cat-tile" data-cat="Sport" onclick="obToggleCat(this)"><span class="cat-icon">⚽</span><div class="cat-name">Sport</div></div>
-          <div class="ob-cat-tile" data-cat="Kunst" onclick="obToggleCat(this)"><span class="cat-icon">🎨</span><div class="cat-name">Kunst & Deco</div></div>
+          <div class="ob-cat-tile" data-cat="Vinyl & Muziek" onclick="obToggleCat(this)"><span class="cat-icon">🎵</span><div class="cat-name">Vinyl & Muziek</div></div>
+          <div class="ob-cat-tile" data-cat="Sport" onclick="obToggleCat(this)"><span class="cat-icon">⚽</span><div class="cat-name">Sport & Fitness</div></div>
+          <div class="ob-cat-tile" data-cat="Fietsen" onclick="obToggleCat(this)"><span class="cat-icon">🚲</span><div class="cat-name">Fietsen & Steps</div></div>
+          <div class="ob-cat-tile" data-cat="Tuin" onclick="obToggleCat(this)"><span class="cat-icon">🌿</span><div class="cat-name">Tuin & Buiten</div></div>
+          <div class="ob-cat-tile" data-cat="Gereedschap" onclick="obToggleCat(this)"><span class="cat-icon">🔧</span><div class="cat-name">Gereedschap</div></div>
+          <div class="ob-cat-tile" data-cat="Kunst & Deco" onclick="obToggleCat(this)"><span class="cat-icon">🎨</span><div class="cat-name">Kunst & Deco</div></div>
+          <div class="ob-cat-tile" data-cat="Verzamelaars" onclick="obToggleCat(this)"><span class="cat-icon">🔭</span><div class="cat-name">Verzamelaars</div></div>
           <div class="ob-cat-tile" data-cat="Overig" onclick="obToggleCat(this)"><span class="cat-icon">📦</span><div class="cat-name">Overig</div></div>
         </div>
 
@@ -1313,11 +1326,23 @@ body.dark .bv-addr-row:active { background: var(--bg); }
                 <span style="font-size:12px;font-weight:600;color:var(--muted)">Categorieën</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding</button>
+                  <button class="notif-pill" data-g="5" data-v="Schoenen" onclick="toggleNotifPill(this)">👟 Schoenen</button>
+                  <button class="notif-pill" data-g="5" data-v="Antiek & Vintage" onclick="toggleNotifPill(this)">🏺 Antiek & Vintage</button>
+                  <button class="notif-pill" data-g="5" data-v="Retro" onclick="toggleNotifPill(this)">📻 Retro</button>
                   <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels</button>
+                  <button class="notif-pill" data-g="5" data-v="Huishoudspullen" onclick="toggleNotifPill(this)">🏠 Huishoudspullen</button>
                   <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed</button>
+                  <button class="notif-pill" data-g="5" data-v="Baby & Kind" onclick="toggleNotifPill(this)">👶 Baby & Kind</button>
                   <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica</button>
+                  <button class="notif-pill" data-g="5" data-v="Films & Games" onclick="toggleNotifPill(this)">🎮 Films & Games</button>
                   <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken</button>
-                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin</button>
+                  <button class="notif-pill" data-g="5" data-v="Vinyl & Muziek" onclick="toggleNotifPill(this)">🎵 Vinyl & Muziek</button>
+                  <button class="notif-pill" data-g="5" data-v="Sport" onclick="toggleNotifPill(this)">⚽ Sport & Fitness</button>
+                  <button class="notif-pill" data-g="5" data-v="Fietsen" onclick="toggleNotifPill(this)">🚲 Fietsen & Steps</button>
+                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin & Buiten</button>
+                  <button class="notif-pill" data-g="5" data-v="Gereedschap" onclick="toggleNotifPill(this)">🔧 Gereedschap</button>
+                  <button class="notif-pill" data-g="5" data-v="Kunst & Deco" onclick="toggleNotifPill(this)">🎨 Kunst & Deco</button>
+                  <button class="notif-pill" data-g="5" data-v="Verzamelaars" onclick="toggleNotifPill(this)">🔭 Verzamelaars</button>
                 </div>
               </div>
               <div class="notif-setting-row">
@@ -3194,9 +3219,28 @@ function updateStep2View() {
 }
 
 var TYPE_TAGS = {
-  particulier: ['👗 Kleding','🛋️ Meubels','🧸 Speelgoed','📱 Elektronica','📚 Boeken','🌿 Tuin','⚽ Sport','🎨 Kunst','🏠 Huishoudspullen','📦 Overig'],
-  buurt:       ['👗 Kleding','🛋️ Meubels','🧸 Speelgoed','🌿 Tuin','🚲 Fietsen','⚽ Sport','🏠 Huishoudspullen','🍳 Keuken','📦 Overig','🎁 Diversen'],
-  evenement:   ['👗 Kleding','🛋️ Meubels','🎨 Kunst & Antiek','📚 Boeken','📱 Elektronica','🧸 Speelgoed','🍽️ Eten & Drinken','🏺 Verzamelaars','⚽ Sport','📦 Overig']
+  particulier: [
+    '👗 Kleding','👟 Schoenen','👜 Tassen','💍 Sieraden',
+    '🏺 Antiek & Vintage','📻 Retro','🛋️ Meubels','🏠 Huishoudspullen',
+    '🍳 Keuken & Koken','🧸 Speelgoed','👶 Baby & Kind','📱 Elektronica',
+    '🎮 Films & Games','📚 Boeken','🎵 Vinyl & Muziek','⚽ Sport & Fitness',
+    '🚲 Fietsen & Steps','🌿 Tuin & Buiten','🔧 Gereedschap','🎨 Kunst & Deco',
+    '🔭 Verzamelaars','📦 Overig'
+  ],
+  buurt: [
+    '👗 Kleding','👟 Schoenen','🛋️ Meubels','🏠 Huishoudspullen',
+    '🍳 Keuken & Koken','🧸 Speelgoed','👶 Baby & Kind','📱 Elektronica',
+    '🎮 Films & Games','📚 Boeken','🎵 Vinyl & Muziek','⚽ Sport & Fitness',
+    '🚲 Fietsen & Steps','🌿 Tuin & Buiten','🔧 Gereedschap','🏺 Antiek & Vintage',
+    '📻 Retro','🔭 Verzamelaars','📦 Overig'
+  ],
+  evenement: [
+    '👗 Kleding','👟 Schoenen','🛋️ Meubels','🏺 Antiek & Vintage',
+    '📻 Retro','🔭 Verzamelaars','🎵 Vinyl & Muziek','📚 Boeken',
+    '📱 Elektronica','🧸 Speelgoed','👶 Baby & Kind','🎨 Kunst & Deco',
+    '💍 Sieraden','🍽️ Eten & Drinken','⚽ Sport & Fitness','🌿 Tuin & Buiten',
+    '🔧 Gereedschap','📦 Overig'
+  ]
 };
 var TYPE_TAGS_LABEL = { particulier:'WAT VERKOOP JE?', buurt:'WAT IS ER TE KOOP IN DE BUURT?', evenement:'WAT KUN JE VERWACHTEN?' };
 
