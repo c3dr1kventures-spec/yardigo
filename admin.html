@@ -790,7 +790,15 @@ async function doLogin() {
   var{data,error}=await sb.auth.signInWithPassword({email,password:pass});
   btn.textContent='Inloggen';btn.disabled=false;
   if(error){errEl.textContent='❌ '+error.message;return;}
-  if(data.user.email!==ADMIN_EMAIL){await sb.auth.signOut();errEl.textContent='❌ Geen admin-rechten.';return;}
+  // Server-side admin-check: controleer is_admin kolom in profiles (niet alleen e-mail)
+  var adminCheck = await sb.from('profiles').select('is_admin').eq('id', data.user.id).single();
+  var isAdmin = adminCheck.data && adminCheck.data.is_admin === true;
+  // Fallback: ook ADMIN_EMAIL-check voor backwards compatibility
+  if(!isAdmin && data.user.email !== ADMIN_EMAIL){
+    await sb.auth.signOut();
+    errEl.textContent='❌ Geen admin-rechten.';
+    return;
+  }
   currentAdmin=data.user; showApp();
 }
 async function doLogout(){
@@ -799,8 +807,15 @@ async function doLogout(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-pass').value=''; currentAdmin=null;
 }
-sb.auth.getSession().then(function({data}){
-  if(data.session&&data.session.user.email===ADMIN_EMAIL){currentAdmin=data.session.user;showApp();}
+sb.auth.getSession().then(async function({data}){
+  if(data.session){
+    // Server-side admin-check bij sessie-herstel
+    var adminCheck = await sb.from('profiles').select('is_admin').eq('id', data.session.user.id).single();
+    var isAdmin = adminCheck.data && adminCheck.data.is_admin === true;
+    if(isAdmin || data.session.user.email === ADMIN_EMAIL){
+      currentAdmin = data.session.user; showApp();
+    }
+  }
 });
 function showApp(){
   document.getElementById('login-screen').style.display='none';

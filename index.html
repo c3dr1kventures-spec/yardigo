@@ -416,6 +416,30 @@ body.dark .feedback-card{background:var(--bg2);}
 .toggle-ball{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;transition:left .2s;}
 .toggle-wrap.off .toggle-ball{left:3px;}
 .toggle-wrap:not(.off) .toggle-ball{left:21px;}
+/* settings sections */
+.settings-section{margin-bottom:6px;}
+.settings-section-header{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:16px 4px 6px;}
+.settings-card{background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:4px;}
+body.dark .settings-card{background:var(--bg2);border-color:var(--border);}
+.srow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:default;}
+.srow:last-child{border-bottom:none;}
+.srow.tappable{cursor:pointer;}
+.srow.tappable:active{background:var(--bg2);}
+.srow-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.srow-body{flex:1;min-width:0;}
+.srow-title{font-size:13px;font-weight:600;color:var(--text);}
+.srow-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.srow-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.srow-value{font-size:12px;color:var(--muted);font-weight:500;}
+.srow-chevron{font-size:16px;color:var(--muted);line-height:1;}
+.srow-input{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:var(--text);text-align:right;width:120px;outline:none;}
+.srow-input::placeholder{color:var(--muted);}
+.srow-textarea{border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);width:100%;outline:none;resize:none;margin-top:6px;line-height:1.5;}
+.srow-textarea::placeholder{color:var(--muted);}
+.seg-ctrl{display:flex;background:var(--bg2);border-radius:8px;padding:2px;gap:2px;}
+.seg-opt{flex:1;text-align:center;padding:5px 4px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:transparent;font-family:'Poppins',sans-serif;}
+.seg-opt.active{background:white;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+body.dark .seg-opt.active{background:var(--bg);}
 
 /* ── SHARE SHEET ── */
 .share-icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;}
@@ -996,216 +1020,399 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
     <div class="pp" id="pp-3">
 
-      <!-- Algemeen -->
-      <div style="background:white;border-radius:12px;padding:14px;border:1.5px solid var(--border);margin-bottom:10px">
-        <div class="settings-row">
-          <div><div style="font-size:13px;font-weight:600">Donkere modus</div><div style="font-size:11px;color:var(--muted)">Schakel thema</div></div>
-          <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
-        </div>
-        <div class="settings-row">
-          <div><div style="font-size:13px;font-weight:600">Uitloggen</div></div>
-          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="doLogout()">Uitloggen</div>
-        </div>
-        <div class="settings-row" style="border-bottom:none">
-          <div><div style="font-size:13px;font-weight:600;color:var(--terra)">Account verwijderen</div><div style="font-size:11px;color:var(--muted)">Wis al je data permanent</div></div>
-          <div style="font-size:13px;color:var(--terra);font-weight:600;cursor:pointer" onclick="openDeleteConfirm()">Verwijderen →</div>
+      <!-- ── PROFIEL ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">Profiel</div>
+        <div class="settings-card">
+          <!-- Naam -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#FFF0E8;">✏️</div>
+            <div class="srow-body"><div class="srow-title">Naam</div></div>
+            <div class="srow-right">
+              <input class="srow-input" id="set-name" placeholder="Jouw naam" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+            </div>
+          </div>
+          <!-- Stad -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F4ED;">📍</div>
+            <div class="srow-body"><div class="srow-title">Woonplaats</div></div>
+            <div class="srow-right">
+              <input class="srow-input" id="set-city" placeholder="Bijv. Amsterdam" maxlength="40" onblur="saveProfileField('city',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+            </div>
+          </div>
+          <!-- Bio -->
+          <div class="srow" style="flex-direction:column;align-items:flex-start;">
+            <div style="display:flex;align-items:center;gap:12px;width:100%;">
+              <div class="srow-icon" style="background:#F0EBF8;">💬</div>
+              <div class="srow-body"><div class="srow-title">Bio</div><div class="srow-sub">Korte beschrijving over jezelf</div></div>
+            </div>
+            <textarea class="srow-textarea" id="set-bio" rows="2" placeholder="Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️" maxlength="120" onblur="saveProfileField('bio',this.value)"></textarea>
+            <div style="font-size:10px;color:var(--muted);text-align:right;width:100%;margin-top:2px"><span id="bio-count">0</span>/120</div>
+          </div>
         </div>
       </div>
 
-      <!-- Master toggle -->
-      <div style="background:white;border-radius:12px;padding:14px;border:1.5px solid var(--border);margin-bottom:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-size:13px;font-weight:700">Alle meldingen</div>
-            <div style="font-size:11px;color:var(--muted)" id="notif-master-lbl">Ingeschakeld</div>
+      <!-- ── APP-VOORKEUREN ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">App-voorkeuren</div>
+        <div class="settings-card">
+          <!-- Donkere modus -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#1A1A2E;">🌙</div>
+            <div class="srow-body"><div class="srow-title">Donkere modus</div><div class="srow-sub">Schakel tussen licht en donker thema</div></div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
+            </div>
           </div>
-          <div class="toggle-wrap" id="notif-master" onclick="toggleMaster()"><div class="toggle-ball"></div></div>
+          <!-- Standaard zoekradius -->
+          <div class="srow" style="flex-wrap:wrap;gap:8px;">
+            <div class="srow-icon" style="background:#E8F4ED;">🔍</div>
+            <div class="srow-body"><div class="srow-title">Standaard zoekradius</div><div class="srow-sub" id="radius-sub">10 km rondom jouw locatie</div></div>
+            <div style="width:100%;padding-left:44px;">
+              <div class="seg-ctrl" id="seg-radius">
+                <button class="seg-opt" data-v="5" onclick="setRadiusPref(this)">5 km</button>
+                <button class="seg-opt active" data-v="10" onclick="setRadiusPref(this)">10 km</button>
+                <button class="seg-opt" data-v="25" onclick="setRadiusPref(this)">25 km</button>
+                <button class="seg-opt" data-v="50" onclick="setRadiusPref(this)">50 km</button>
+              </div>
+            </div>
+          </div>
+          <!-- Kaarttype -->
+          <div class="srow" style="flex-wrap:wrap;gap:8px;">
+            <div class="srow-icon" style="background:#E8F0F8;">🗺️</div>
+            <div class="srow-body"><div class="srow-title">Kaarttype</div><div class="srow-sub" id="maptype-sub">Standaard kaartweergave</div></div>
+            <div style="width:100%;padding-left:44px;">
+              <div class="seg-ctrl" id="seg-maptype">
+                <button class="seg-opt active" data-v="roadmap" onclick="setMapTypePref(this)">Standaard</button>
+                <button class="seg-opt" data-v="satellite" onclick="setMapTypePref(this)">Satelliet</button>
+                <button class="seg-opt" data-v="terrain" onclick="setMapTypePref(this)">Terrein</button>
+              </div>
+            </div>
+          </div>
+          <!-- Kaart auto-centreren -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#FFF8E8;">🎯</div>
+            <div class="srow-body"><div class="srow-title">Auto-centreren</div><div class="srow-sub">Kaart centreert op jouw locatie bij openen</div></div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="autocenter-toggle" onclick="togglePref('autocenter',this)"><div class="toggle-ball"></div></div>
+            </div>
+          </div>
+          <!-- Afstand tonen -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F4ED;">📏</div>
+            <div class="srow-body"><div class="srow-title">Afstand tonen</div><div class="srow-sub">Toon kilometer-afstand bij elke verkoop</div></div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="showdist-toggle" onclick="togglePref('showdist',this)"><div class="toggle-ball"></div></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Notificatiekaarten -->
-      <div id="notif-cards">
-
-        <!-- 1. Nieuwe verkopen in de buurt -->
-        <div class="notif-card" id="nc-0">
-          <div class="notif-card-head" onclick="toggleNotifCard(0)">
-            <div style="font-size:22px">🏠</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">Nieuwe verkopen in de buurt</div>
-              <div class="notif-card-sub" id="ncs-0">Direct · binnen 2 km</div>
+      <!-- ── PRIVACY ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">Privacy</div>
+        <div class="settings-card">
+          <!-- Adres zichtbaarheid -->
+          <div class="srow" style="flex-wrap:wrap;gap:8px;">
+            <div class="srow-icon" style="background:#E8F4ED;">🏠</div>
+            <div class="srow-body"><div class="srow-title">Adres van mijn verkopen</div><div class="srow-sub" id="addr-pref-sub">Alleen voor ingelogde gebruikers</div></div>
+            <div style="width:100%;padding-left:44px;">
+              <div class="seg-ctrl" id="seg-addrpref">
+                <button class="seg-opt active" data-v="members" onclick="setAddrPref(this)">Leden</button>
+                <button class="seg-opt" data-v="all" onclick="setAddrPref(this)">Iedereen</button>
+                <button class="seg-opt" data-v="none" onclick="setAddrPref(this)">Niemand</button>
+              </div>
             </div>
-            <div class="toggle-wrap" id="nt-0" onclick="event.stopPropagation();toggleNotifType(0)"><div class="toggle-ball"></div></div>
-            <div class="notif-chevron" id="nch-0">›</div>
           </div>
-          <div class="notif-card-body" id="nb-0">
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Afstand</span>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="notif-pill active" data-g="0" data-v="1" onclick="pickNotifPill(this)">1 km</button>
-                <button class="notif-pill active" data-g="0" data-v="2" onclick="pickNotifPill(this)">2 km</button>
-                <button class="notif-pill" data-g="0" data-v="5" onclick="pickNotifPill(this)">5 km</button>
-                <button class="notif-pill" data-g="0" data-v="10" onclick="pickNotifPill(this)">10 km</button>
-                <button class="notif-pill" data-g="0" data-v="25" onclick="pickNotifPill(this)">25 km</button>
-              </div>
+          <!-- Profiel zichtbaarheid -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#F0EBF8;">👤</div>
+            <div class="srow-body"><div class="srow-title">Profiel publiek zichtbaar</div><div class="srow-sub">Anderen kunnen jouw profiel bekijken</div></div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="pubprofile-toggle" onclick="togglePref('pubprofile',this)"><div class="toggle-ball"></div></div>
             </div>
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Timing</span>
-              <div style="display:flex;gap:6px">
-                <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
-                <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks overzicht</button>
-              </div>
+          </div>
+          <!-- Statistieken tonen -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#FFF0E8;">📊</div>
+            <div class="srow-body"><div class="srow-title">Statistieken tonen</div><div class="srow-sub">Weergaven en interesses op jouw profiel</div></div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="showstats-toggle" onclick="togglePref('showstats',this)"><div class="toggle-ball"></div></div>
             </div>
-            <div class="notif-setting-row" style="border:none">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Types</span>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 Particulier</button>
-                <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ Buurt</button>
-                <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 Evenement</button>
-              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MELDINGEN ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">Meldingen</div>
+
+        <!-- Master toggle -->
+        <div class="settings-card" style="margin-bottom:4px;">
+          <div class="srow">
+            <div class="srow-icon" style="background:#FFF8E8;">🔔</div>
+            <div class="srow-body">
+              <div class="srow-title">Alle meldingen</div>
+              <div class="srow-sub" id="notif-master-lbl">Ingeschakeld</div>
+            </div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="notif-master" onclick="toggleMaster()"><div class="toggle-ball"></div></div>
             </div>
           </div>
         </div>
 
-        <!-- 2. Herinneringen favorieten -->
-        <div class="notif-card" id="nc-1">
-          <div class="notif-card-head" onclick="toggleNotifCard(1)">
-            <div style="font-size:22px">⭐</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">Herinneringen favorieten</div>
-              <div class="notif-card-sub" id="ncs-1">20 min van tevoren</div>
+        <!-- Notificatiekaarten -->
+        <div id="notif-cards">
+
+          <!-- 1. Nieuwe verkopen in de buurt -->
+          <div class="notif-card" id="nc-0">
+            <div class="notif-card-head" onclick="toggleNotifCard(0)">
+              <div style="font-size:22px">🏠</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700">Nieuwe verkopen in de buurt</div>
+                <div class="notif-card-sub" id="ncs-0">Direct · binnen 2 km</div>
+              </div>
+              <div class="toggle-wrap" id="nt-0" onclick="event.stopPropagation();toggleNotifType(0)"><div class="toggle-ball"></div></div>
+              <div class="notif-chevron" id="nch-0">›</div>
             </div>
-            <div class="toggle-wrap" id="nt-1" onclick="event.stopPropagation();toggleNotifType(1)"><div class="toggle-ball"></div></div>
-            <div class="notif-chevron" id="nch-1">›</div>
-          </div>
-          <div class="notif-card-body" id="nb-1">
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Hoe ver van tevoren?</span>
-              <div style="padding:0 4px">
-                <input type="range" min="5" max="120" step="5" value="20" id="fav-slider"
-                  oninput="updateSliderLabel('fav-slider','fav-lbl',this.value+' min voor aanvang')"
-                  style="width:100%;accent-color:var(--terra)">
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                  <span>5 min</span><span id="fav-lbl" style="font-weight:700;color:var(--terra)">20 min</span><span>2 uur</span>
+            <div class="notif-card-body" id="nb-0">
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Afstand</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="notif-pill active" data-g="0" data-v="1" onclick="pickNotifPill(this)">1 km</button>
+                  <button class="notif-pill active" data-g="0" data-v="2" onclick="pickNotifPill(this)">2 km</button>
+                  <button class="notif-pill" data-g="0" data-v="5" onclick="pickNotifPill(this)">5 km</button>
+                  <button class="notif-pill" data-g="0" data-v="10" onclick="pickNotifPill(this)">10 km</button>
+                  <button class="notif-pill" data-g="0" data-v="25" onclick="pickNotifPill(this)">25 km</button>
+                </div>
+              </div>
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Timing</span>
+                <div style="display:flex;gap:6px">
+                  <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
+                  <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks overzicht</button>
+                </div>
+              </div>
+              <div class="notif-setting-row" style="border:none">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Types</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 Particulier</button>
+                  <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ Buurt</button>
+                  <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 Evenement</button>
                 </div>
               </div>
             </div>
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Extra opties</span>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                  <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> Ochtendoverzicht om 08:00
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                  <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> Routeherinnering meesturen
-                </label>
+          </div>
+
+          <!-- 2. Herinneringen favorieten -->
+          <div class="notif-card" id="nc-1">
+            <div class="notif-card-head" onclick="toggleNotifCard(1)">
+              <div style="font-size:22px">⭐</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700">Herinneringen favorieten</div>
+                <div class="notif-card-sub" id="ncs-1">20 min van tevoren</div>
               </div>
+              <div class="toggle-wrap" id="nt-1" onclick="event.stopPropagation();toggleNotifType(1)"><div class="toggle-ball"></div></div>
+              <div class="notif-chevron" id="nch-1">›</div>
             </div>
-            <div class="notif-setting-row" style="border:none">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Stilte-uren</span>
-              <div style="padding:0 4px">
-                <input type="range" min="0" max="1440" step="30" value="480" id="quiet-start"
-                  oninput="updateTimeSlider('quiet-start','qs-lbl')"
-                  style="width:100%;accent-color:var(--forest)">
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                  <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)">Geen stilte-uren</span><span>23:30</span>
+            <div class="notif-card-body" id="nb-1">
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Hoe ver van tevoren?</span>
+                <div style="padding:0 4px">
+                  <input type="range" min="5" max="120" step="5" value="20" id="fav-slider"
+                    oninput="updateSliderLabel('fav-slider','fav-lbl',this.value+' min voor aanvang')"
+                    style="width:100%;accent-color:var(--terra)">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                    <span>5 min</span><span id="fav-lbl" style="font-weight:700;color:var(--terra)">20 min</span><span>2 uur</span>
+                  </div>
+                </div>
+              </div>
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Extra opties</span>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+                    <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> Ochtendoverzicht om 08:00
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+                    <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> Routeherinnering meesturen
+                  </label>
+                </div>
+              </div>
+              <div class="notif-setting-row" style="border:none">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Stilte-uren</span>
+                <div style="padding:0 4px">
+                  <input type="range" min="0" max="1440" step="30" value="480" id="quiet-start"
+                    oninput="updateTimeSlider('quiet-start','qs-lbl')"
+                    style="width:100%;accent-color:var(--forest)">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                    <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)">Geen stilte-uren</span><span>23:30</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 3. Ochtendroute-overzicht -->
-        <div class="notif-card" id="nc-2">
-          <div class="notif-card-head" onclick="toggleNotifCard(2)">
-            <div style="font-size:22px">🌅</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">Ochtendroute-overzicht</div>
-              <div class="notif-card-sub" id="ncs-2">Za & zo · om 08:00</div>
+          <!-- 3. Ochtendroute-overzicht -->
+          <div class="notif-card" id="nc-2">
+            <div class="notif-card-head" onclick="toggleNotifCard(2)">
+              <div style="font-size:22px">🌅</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700">Ochtendroute-overzicht</div>
+                <div class="notif-card-sub" id="ncs-2">Za & zo · om 08:00</div>
+              </div>
+              <div class="toggle-wrap" id="nt-2" onclick="event.stopPropagation();toggleNotifType(2)"><div class="toggle-ball"></div></div>
+              <div class="notif-chevron" id="nch-2">›</div>
             </div>
-            <div class="toggle-wrap" id="nt-2" onclick="event.stopPropagation();toggleNotifType(2)"><div class="toggle-ball"></div></div>
-            <div class="notif-chevron" id="nch-2">›</div>
-          </div>
-          <div class="notif-card-body" id="nb-2">
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Tijdstip</span>
-              <div style="padding:0 4px">
-                <input type="range" min="300" max="720" step="15" value="480" id="route-time"
-                  oninput="updateTimeSlider('route-time','rt-lbl')"
-                  style="width:100%;accent-color:var(--terra)">
-                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                  <span>05:00</span><span id="rt-lbl" style="font-weight:700;color:var(--terra)">08:00</span><span>12:00</span>
+            <div class="notif-card-body" id="nb-2">
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Tijdstip</span>
+                <div style="padding:0 4px">
+                  <input type="range" min="300" max="720" step="15" value="480" id="route-time"
+                    oninput="updateTimeSlider('route-time','rt-lbl')"
+                    style="width:100%;accent-color:var(--terra)">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                    <span>05:00</span><span id="rt-lbl" style="font-weight:700;color:var(--terra)">08:00</span><span>12:00</span>
+                  </div>
+                </div>
+              </div>
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Op welke dagen?</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)">Ma</button>
+                  <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)">Di</button>
+                  <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)">Wo</button>
+                  <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)">Do</button>
+                  <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)">Vr</button>
+                  <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)">Za</button>
+                  <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)">Zo</button>
+                </div>
+              </div>
+              <div class="notif-setting-row" style="border:none">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Sturen als</span>
+                <div style="display:flex;gap:6px">
+                  <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)">Altijd</button>
+                  <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)">Alleen met favorieten</button>
                 </div>
               </div>
             </div>
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Op welke dagen?</span>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)">Ma</button>
-                <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)">Di</button>
-                <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)">Wo</button>
-                <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)">Do</button>
-                <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)">Vr</button>
-                <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)">Za</button>
-                <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)">Zo</button>
+          </div>
+
+          <!-- 4. Nieuwe items in categorieën -->
+          <div class="notif-card" id="nc-3">
+            <div class="notif-card-head" onclick="toggleNotifCard(3)">
+              <div style="font-size:22px">🏷️</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700">Nieuwe items in categorieën</div>
+                <div class="notif-card-sub" id="ncs-3">Kleding · binnen 25 km</div>
+              </div>
+              <div class="toggle-wrap" id="nt-3" onclick="event.stopPropagation();toggleNotifType(3)"><div class="toggle-ball"></div></div>
+              <div class="notif-chevron" id="nch-3">›</div>
+            </div>
+            <div class="notif-card-body" id="nb-3">
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Categorieën</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding</button>
+                  <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels</button>
+                  <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed</button>
+                  <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica</button>
+                  <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken</button>
+                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin</button>
+                </div>
+              </div>
+              <div class="notif-setting-row">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Zoekradius</span>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="notif-pill" data-g="6" data-v="5" onclick="pickNotifPill(this)">5 km</button>
+                  <button class="notif-pill" data-g="6" data-v="10" onclick="pickNotifPill(this)">10 km</button>
+                  <button class="notif-pill active" data-g="6" data-v="25" onclick="pickNotifPill(this)">25 km</button>
+                  <button class="notif-pill" data-g="6" data-v="50" onclick="pickNotifPill(this)">50 km</button>
+                </div>
+              </div>
+              <div class="notif-setting-row" style="border:none">
+                <span style="font-size:12px;font-weight:600;color:var(--muted)">Frequentie</span>
+                <div style="display:flex;gap:6px">
+                  <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
+                  <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks</button>
+                  <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)">Wekelijks</button>
+                </div>
               </div>
             </div>
-            <div class="notif-setting-row" style="border:none">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Sturen als</span>
-              <div style="display:flex;gap:6px">
-                <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)">Altijd</button>
-                <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)">Alleen met favorieten</button>
-              </div>
-            </div>
+          </div>
+
+        </div><!-- /notif-cards -->
+
+        <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px">✓ Meldingen opslaan</button>
+      </div>
+
+      <!-- ── ACCOUNT ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">Account</div>
+        <div class="settings-card">
+          <!-- E-mail (readonly) -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F0F8;">📧</div>
+            <div class="srow-body"><div class="srow-title">E-mailadres</div><div class="srow-sub" id="set-email-display">—</div></div>
+          </div>
+          <!-- Wachtwoord wijzigen -->
+          <div class="srow tappable" onclick="openChangePassword()">
+            <div class="srow-icon" style="background:#F0EBF8;">🔑</div>
+            <div class="srow-body"><div class="srow-title">Wachtwoord wijzigen</div><div class="srow-sub">Stuur een herstel-e-mail</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
+          </div>
+          <!-- Uitloggen -->
+          <div class="srow tappable" onclick="doLogout()">
+            <div class="srow-icon" style="background:#FFF0E8;">🚪</div>
+            <div class="srow-body"><div class="srow-title" style="color:var(--terra)">Uitloggen</div></div>
+            <div class="srow-right"><span class="srow-chevron" style="color:var(--terra)">›</span></div>
+          </div>
+          <!-- Account verwijderen -->
+          <div class="srow tappable" onclick="openDeleteConfirm()">
+            <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
+            <div class="srow-body"><div class="srow-title" style="color:#C0392B">Account verwijderen</div><div class="srow-sub">Wis al je data permanent</div></div>
+            <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
           </div>
         </div>
+      </div>
 
-        <!-- 4. Nieuwe items in categorieën -->
-        <div class="notif-card" id="nc-3">
-          <div class="notif-card-head" onclick="toggleNotifCard(3)">
-            <div style="font-size:22px">🏷️</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:700">Nieuwe items in categorieën</div>
-              <div class="notif-card-sub" id="ncs-3">Kleding · binnen 25 km</div>
-            </div>
-            <div class="toggle-wrap" id="nt-3" onclick="event.stopPropagation();toggleNotifType(3)"><div class="toggle-ball"></div></div>
-            <div class="notif-chevron" id="nch-3">›</div>
+      <!-- ── APP INFO ── -->
+      <div class="settings-section">
+        <div class="settings-section-header">Over YardiGo</div>
+        <div class="settings-card">
+          <!-- Feedback -->
+          <div class="srow tappable" onclick="openFeedback()">
+            <div class="srow-icon" style="background:#FFF0E8;">💌</div>
+            <div class="srow-body"><div class="srow-title">Feedback geven</div><div class="srow-sub">Ideeën of verbeterpunten sturen</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
-          <div class="notif-card-body" id="nb-3">
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Categorieën</span>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding</button>
-                <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels</button>
-                <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed</button>
-                <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica</button>
-                <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken</button>
-                <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin</button>
-              </div>
-            </div>
-            <div class="notif-setting-row">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Zoekradius</span>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="notif-pill" data-g="6" data-v="5" onclick="pickNotifPill(this)">5 km</button>
-                <button class="notif-pill" data-g="6" data-v="10" onclick="pickNotifPill(this)">10 km</button>
-                <button class="notif-pill active" data-g="6" data-v="25" onclick="pickNotifPill(this)">25 km</button>
-                <button class="notif-pill" data-g="6" data-v="50" onclick="pickNotifPill(this)">50 km</button>
-              </div>
-            </div>
-            <div class="notif-setting-row" style="border:none">
-              <span style="font-size:12px;font-weight:600;color:var(--muted)">Frequentie</span>
-              <div style="display:flex;gap:6px">
-                <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
-                <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks</button>
-                <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)">Wekelijks</button>
-              </div>
-            </div>
+          <!-- Probleem melden -->
+          <div class="srow tappable" onclick="openReport()">
+            <div class="srow-icon" style="background:#FDE8E8;">🚨</div>
+            <div class="srow-body"><div class="srow-title">Probleem melden</div><div class="srow-sub">Fout of misbruik rapporteren</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
+          </div>
+          <!-- Privacy beleid -->
+          <div class="srow tappable" onclick="window.open('https://yardigo.nl/privacy','_blank')">
+            <div class="srow-icon" style="background:#E8F4ED;">🔒</div>
+            <div class="srow-body"><div class="srow-title">Privacybeleid</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
+          </div>
+          <!-- Gebruiksvoorwaarden -->
+          <div class="srow tappable" onclick="window.open('https://yardigo.nl/voorwaarden','_blank')">
+            <div class="srow-icon" style="background:#E8F0F8;">📋</div>
+            <div class="srow-body"><div class="srow-title">Gebruiksvoorwaarden</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
+          </div>
+          <!-- Versie -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
+            <div class="srow-body"><div class="srow-title">Versie</div></div>
+            <div class="srow-right"><span class="srow-value">1.0.0</span></div>
           </div>
         </div>
+      </div>
 
-      </div><!-- /notif-cards -->
-
-      <!-- Opslaan -->
-      <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px">✓ Instellingen opslaan</button>
+      <div style="height:16px;"></div>
 
     </div>
   </div>
@@ -1527,6 +1734,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <script>
 // ══════════════════════════════════════════════════
+// SECURITY: HTML-ESCAPING (XSS-preventie)
+// ══════════════════════════════════════════════════
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ══════════════════════════════════════════════════
 // SUPABASE CLIENT
 // ══════════════════════════════════════════════════
 const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
@@ -1544,11 +1764,9 @@ async function fetchListings() {
     return null; // fallback naar hardcoded data
   }
   try {
+    // Gebruik RPC zodat het adres server-side verborgen wordt voor gasten
     const { data, error } = await sbClient
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .gte('date_start', new Date().toISOString().split('T')[0])
+      .rpc('get_listings_for_user')
       .order('date_start', { ascending: true });
 
     if (error) {
@@ -1735,13 +1953,13 @@ function renderMySales() {
     return '<div class="my-sale-card">'
       + '<div style="font-size:28px">' + icon + '</div>'
       + '<div style="flex:1">'
-      + '<div style="font-size:14px;font-weight:700">' + s.title + '</div>'
-      + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + s.from + '–' + s.till + ' · ' + addrShort + '</div>'
+      + '<div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + ' · ' + escapeHtml(addrShort) + '</div>'
       + '<div style="display:flex;gap:10px;margin-top:5px">'
       + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
       + '</div></div>'
       + '<div style="display:flex;flex-direction:column;gap:4px">'
-      + '<button onclick="openDetail(\'' + s.id + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
+      + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
       + '</div></div>';
   }).join('');
 }
@@ -2437,14 +2655,14 @@ function renderList() {
       + '<div class="bv-list-icon">🏘️</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-      + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + bv.info.title + '</span>'
+      + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
       + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
       + '</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ Buurtverkoop</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
       + bv.listings.slice(0,3).map(function(l) {
           return (l.tags||[]).slice(0,1).map(function(tg) {
-            return '<span class="ctag buurt">' + tg + '</span>';
+            return '<span class="ctag buurt">' + escapeHtml(tg) + '</span>';
           }).join('');
         }).join('')
       + '</div>'
@@ -2457,11 +2675,11 @@ function renderList() {
       + bv.listings.map(function(listing) {
           var fav = favorites.has(listing.id);
           var idAttr = typeof listing.id === 'string' ? "'" + listing.id + "'" : listing.id;
-          var addrShort = listing.address.split(',')[0] || listing.address;
+          var addrShort = escapeHtml(listing.address.split(',')[0] || listing.address);
           var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
-            return '<span style="font-size:10px;color:var(--muted)">' + tg + '</span>';
+            return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
           }).join('');
-          return '<div class="bv-addr-row" id="bv-addr-' + listing.id + '" onclick="openDetail(' + idAttr + ')">'
+          return '<div class="bv-addr-row" id="bv-addr-' + escapeHtml(listing.id) + '" onclick="openDetail(' + idAttr + ')">'
             + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
             + '<div style="flex:1;min-width:0">'
             + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
@@ -2496,24 +2714,25 @@ function toggleBvCard(bvId) {
 function createListingCard(s, i) {
   var t = TYPES[s.type], fav = favorites.has(s.id);
   var d2 = (Math.random() * 8 + 0.5).toFixed(1);
-  var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + tg + '</span>'; }).join('');
-  var city = s.address.split(',').slice(-1)[0].trim();
-  var addr = isGuest
-    ? '📍 ' + city + ' · <span style="filter:blur(3.5px);user-select:none">Straatnaam 00</span> 🔒'
-    : '📍 ' + s.address;
+  var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + escapeHtml(tg) + '</span>'; }).join('');
+  // Adres is server-side al verborgen (NULL) voor gasten via get_listings_for_user()
+  var city = escapeHtml((s.city || (s.address || '').split(',').slice(-1)[0]).trim());
+  var addr = s.address
+    ? '📍 ' + escapeHtml(s.address)
+    : '📍 ' + city + ' · <span style="opacity:0.5">Adres zichtbaar na inloggen</span> 🔒';
   var going = goingSet.has(s.id);
-  var idAttr = typeof s.id === 'string' ? "'" + s.id + "'" : s.id;
+  var idAttr = typeof s.id === 'string' ? "'" + escapeHtml(s.id) + "'" : s.id;
   return '<div class="card" style="animation:fadeUp .4s ' + ((i || 0) * 0.06) + 's both">'
     + (s.photos && s.photos.length
-      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + s.photos[0] + '" data-fallback="' + s.emoji + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
-      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + s.emoji + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
+      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(s.emoji) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
+      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(s.emoji) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
-    + '<div class="card-top"><div class="card-title">' + s.title + '</div><span class="type-chip ' + s.type + '">' + t.label + '</span></div>'
+    + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(t.label) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
     + '<div class="card-addr">' + addr + ' · ' + fmtDate(s.date) + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
-    + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + s.from + '–' + s.till + '</span>'
-    + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + s.interested) + '</span>'
+    + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
+    + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
     + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + idAttr + ')">' + (fav ? '⭐' : '☆') + '</button>'
     + '</div></div></div>';
 }
@@ -2542,10 +2761,10 @@ function updateFavProfile() {
   var favs = sales.filter(function(s) { return favorites.has(s.id); });
   if (empty) empty.style.display = favs.length ? 'none' : 'block';
   list.innerHTML = favs.map(function(s) {
-    return '<div class="my-sale-card"><div style="font-size:28px">' + s.emoji + '</div>'
-      + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + s.title + '</div>'
-      + '<div style="font-size:11px;color:var(--muted)">' + fmtDate(s.date) + ' · ' + s.from + '–' + s.till + '</div></div>'
-      + '<button onclick="toggleFav(' + s.id + ')" style="background:none;border:none;font-size:20px;cursor:pointer">⭐</button></div>';
+    return '<div class="my-sale-card"><div style="font-size:28px">' + escapeHtml(s.emoji) + '</div>'
+      + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted)">' + fmtDate(s.date) + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</div></div>'
+      + '<button onclick="toggleFav(\'' + escapeHtml(s.id) + '\')" style="background:none;border:none;font-size:20px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
 
@@ -2584,9 +2803,9 @@ function updateRouteView() {
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   list.innerHTML = opt.map(function(s, i) {
     return '<div class="my-sale-card"><div style="width:28px;height:28px;border-radius:50%;background:' + colors[s.type] + ';color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">' + (i+1) + '</div>'
-      + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + s.title + '</div>'
-      + '<div style="font-size:11px;color:var(--muted)">📍 ' + (isGuest ? s.address.split(',').slice(-1)[0].trim() + ' (adres verborgen)' : s.address) + '</div></div>'
-      + '<button onclick="toggleFav(' + s.id + ')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
+      + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted)">📍 ' + (s.address ? escapeHtml(s.address) : escapeHtml(s.city || '') + ' (adres zichtbaar na inloggen)') + '</div></div>'
+      + '<button onclick="toggleFav(\'' + escapeHtml(s.id) + '\')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
 function clearRoute() { favorites.clear(); renderMarkers(); renderList(); updateRouteView(); toast('🗑️ Route gewist'); }
@@ -2648,6 +2867,7 @@ function ptab(i) {
   document.getElementById('pp-' + i).classList.add('active');
   document.querySelectorAll('.ptab').forEach(function(t, j) { t.classList.toggle('active', j === i); });
   if (i === 1) updateFavProfile();
+  if (i === 3) loadSettingsTab();
 }
 
 // ══════════════════════════════════════════════════
@@ -2692,7 +2912,7 @@ function openDetail(id) {
   var tagColors = { particulier:'#FEF5E4', buurt:'#FDF0E7', evenement:'#EAF2EC' };
   var tagText = { particulier:'#7A5A10', buurt:'#A04A18', evenement:'#2A5038' };
   document.getElementById('det-tags').innerHTML = (s.tags || []).map(function(tg) {
-    return '<span style="background:' + tagColors[s.type] + ';color:' + tagText[s.type] + ';border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600">' + tg + '</span>';
+    return '<span style="background:' + tagColors[s.type] + ';color:' + tagText[s.type] + ';border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600">' + escapeHtml(tg) + '</span>';
   }).join('');
   // Desc
   var dw = document.getElementById('det-desc-wrap'), de = document.getElementById('det-desc');
@@ -3125,7 +3345,19 @@ function buildAddPreview() {
   document.getElementById('prevAddr').textContent = addr ? '📍 ' + addr.value : '';
   document.getElementById('prevBadge').textContent = t.icon + ' ' + t.label;
 }
+var lastPublishTime = 0; // rate limiting: minimaal 60s tussen publicaties
 async function publishSale() {
+  // Authenticatiecheck
+  if (isGuest || !currentUser || !currentUser.email) { guestGate('listing plaatsen'); return; }
+
+  // Frontend rate limiting: max 1 publicatie per 60 seconden
+  var now = Date.now();
+  if (now - lastPublishTime < 60000) {
+    var secLeft = Math.ceil((60000 - (now - lastPublishTime)) / 1000);
+    toast('Even wachten — je kunt over ' + secLeft + ' seconden opnieuw publiceren.');
+    return;
+  }
+
   var title = document.getElementById('aTitle');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
@@ -3157,6 +3389,16 @@ async function publishSale() {
     // Categorie mapping voor Supabase
     var catMap = { particulier: 'garagesale', buurt: 'buurtverkoop', evenement: 'vlooienmarkt' };
 
+    // Haal user_id op (vereist voor RLS-policy)
+    var currentUserId = null;
+    if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+      try {
+        var userRes = await sbClient.auth.getUser();
+        currentUserId = userRes && userRes.data && userRes.data.user ? userRes.data.user.id : null;
+      } catch(e) { console.warn('Kon user ID niet ophalen:', e); }
+      if (!currentUserId) { hideL(); toast('❌ Je bent niet meer ingelogd. Log opnieuw in.'); return; }
+    }
+
     if (isBuurt) {
       // ── Buurtverkoop: sla op als neighbourhood_sale + meerdere listings ──
       var bvId = 'bv-' + Date.now();
@@ -3187,14 +3429,17 @@ async function publishSale() {
           user_email: currentUser.email
         };
         sales.unshift(newSale);
-        if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+        if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
           sbClient.from('listings').insert({
             title: newSale.title, category: 'buurtverkoop',
+            user_id: currentUserId,
             address: newSale.address, latitude: coords.lat, longitude: coords.lng,
             date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
             tags: tagList, status: 'active', description: descVal,
             neighborhood_group_id: bvId
-          }).then(function() {}).catch(function() {});
+          }).then(function(res) {
+            if (res && res.error) console.error('Listing insert mislukt:', res.error.message);
+          }).catch(function(e) { console.error('Listing insert fout:', e); });
         }
       });
 
@@ -3208,16 +3453,23 @@ async function publishSale() {
         desc: descVal, user_email: currentUser.email
       };
       sales.unshift(newSale);
-      if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+      if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
         sbClient.from('listings').insert({
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
+          user_id: currentUserId,
           address: newSale.address, latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
           tags: tagList, status: 'active', description: descVal
-        }).then(function() {}).catch(function() {});
+        }).then(function(res) {
+          if (res && res.error) {
+            console.error('Listing insert mislukt:', res.error.message);
+            toast('❌ ' + (res.error.message || 'Publiceren mislukt'));
+          }
+        }).catch(function(e) { console.error('Listing insert fout:', e); });
       }
     }
 
+    lastPublishTime = Date.now(); // rate limiting timestamp bijwerken
     renderMarkers(); renderList();
     renderMySales();
     closeAdd(); hideL();
@@ -3621,6 +3873,158 @@ function saveNotifSettings() {
 }
 
 // ══════════════════════════════════════════════════
+// SETTINGS — PROFIEL, VOORKEUREN, PRIVACY
+// ══════════════════════════════════════════════════
+
+// Vul settings-tab met huidige gebruikersdata
+async function loadSettingsTab() {
+  // E-mail
+  var emailEl = document.getElementById('set-email-display');
+  if (!isGuest && currentUser && currentUser.email && emailEl) {
+    emailEl.textContent = currentUser.email;
+  }
+  // Naam, stad, bio uit Supabase profiles
+  if (!isGuest && sbClient && currentUser) {
+    try {
+      var res = await sbClient.from('profiles').select('display_name,city,bio').eq('id', currentUser.id).maybeSingle();
+      if (res.data) {
+        var n = document.getElementById('set-name');
+        var c = document.getElementById('set-city');
+        var b = document.getElementById('set-bio');
+        if (n && res.data.display_name) n.value = res.data.display_name;
+        if (c && res.data.city) c.value = res.data.city;
+        if (b && res.data.bio) {
+          b.value = res.data.bio;
+          var cnt = document.getElementById('bio-count');
+          if (cnt) cnt.textContent = res.data.bio.length;
+        }
+      }
+    } catch(e) {}
+  }
+  // LocalStorage-voorkeuren
+  loadPrefToggles();
+}
+
+// Sla één profielveld op in Supabase
+async function saveProfileField(field, value) {
+  if (isGuest || !sbClient || !currentUser) return;
+  value = value.trim();
+  try {
+    var upd = {};
+    upd[field] = value;
+    await sbClient.from('profiles').update(upd).eq('id', currentUser.id);
+    toast('✓ ' + (field === 'display_name' ? 'Naam' : field === 'city' ? 'Woonplaats' : 'Bio') + ' opgeslagen');
+    // Update header-naam als naam wordt gewijzigd
+    if (field === 'display_name') {
+      var el = document.getElementById('profile-name');
+      if (el && value) el.textContent = value;
+    }
+  } catch(e) { toast('Fout bij opslaan'); }
+}
+
+// Bio karakter-teller
+(function() {
+  document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'set-bio') {
+      var cnt = document.getElementById('bio-count');
+      if (cnt) cnt.textContent = e.target.value.length;
+    }
+  });
+})();
+
+// Wachtwoord wijzigen via Supabase reset-e-mail
+async function openChangePassword() {
+  if (isGuest || !currentUser || !currentUser.email) { toast('Niet ingelogd'); return; }
+  try {
+    if (sbClient) await sbClient.auth.resetPasswordForEmail(currentUser.email, { redirectTo: window.location.origin });
+    toast('✉️ Herstel-e-mail verstuurd naar ' + currentUser.email);
+  } catch(e) { toast('Fout: ' + (e.message || 'probeer opnieuw')); }
+}
+
+// Segmented-control: zoekradius
+function setRadiusPref(btn) {
+  document.querySelectorAll('#seg-radius .seg-opt').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var v = btn.dataset.v;
+  localStorage.setItem('yg-radius', v);
+  var sub = document.getElementById('radius-sub');
+  if (sub) sub.textContent = v + ' km rondom jouw locatie';
+  toast('Zoekradius: ' + v + ' km');
+}
+
+// Segmented-control: kaarttype
+function setMapTypePref(btn) {
+  document.querySelectorAll('#seg-maptype .seg-opt').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var v = btn.dataset.v;
+  localStorage.setItem('yg-maptype', v);
+  var labels = { roadmap: 'Standaard kaartweergave', satellite: 'Satellietweergave', terrain: 'Terreinkaart' };
+  var sub = document.getElementById('maptype-sub');
+  if (sub) sub.textContent = labels[v] || v;
+  // Pas kaart aan als Google Maps beschikbaar
+  if (window.map && map.setMapTypeId) { try { map.setMapTypeId(v); } catch(e) {} }
+  toast('Kaarttype: ' + (labels[v] || v));
+}
+
+// Segmented-control: adres zichtbaarheid
+function setAddrPref(btn) {
+  document.querySelectorAll('#seg-addrpref .seg-opt').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  var v = btn.dataset.v;
+  localStorage.setItem('yg-addrpref', v);
+  var labels = { members: 'Alleen voor ingelogde gebruikers', all: 'Zichtbaar voor iedereen', none: 'Altijd verborgen' };
+  var sub = document.getElementById('addr-pref-sub');
+  if (sub) sub.textContent = labels[v] || v;
+  toast('Adresvoorkeur opgeslagen');
+}
+
+// Algemene toggle voor boolse voorkeuren
+function togglePref(key, el) {
+  var isOn = !el.classList.contains('off');
+  el.classList.toggle('off', isOn);
+  localStorage.setItem('yg-pref-' + key, isOn ? '0' : '1');
+}
+
+// Laad alle localStorage-voorkeuren terug in de UI
+function loadPrefToggles() {
+  // Radius
+  var radius = localStorage.getItem('yg-radius') || '10';
+  document.querySelectorAll('#seg-radius .seg-opt').forEach(function(b){
+    b.classList.toggle('active', b.dataset.v === radius);
+  });
+  var rsub = document.getElementById('radius-sub');
+  if (rsub) rsub.textContent = radius + ' km rondom jouw locatie';
+
+  // Kaarttype
+  var mt = localStorage.getItem('yg-maptype') || 'roadmap';
+  document.querySelectorAll('#seg-maptype .seg-opt').forEach(function(b){
+    b.classList.toggle('active', b.dataset.v === mt);
+  });
+  var mtLabels = { roadmap: 'Standaard kaartweergave', satellite: 'Satellietweergave', terrain: 'Terreinkaart' };
+  var mtsub = document.getElementById('maptype-sub');
+  if (mtsub) mtsub.textContent = mtLabels[mt] || mt;
+
+  // Adresprefs
+  var ap = localStorage.getItem('yg-addrpref') || 'members';
+  document.querySelectorAll('#seg-addrpref .seg-opt').forEach(function(b){
+    b.classList.toggle('active', b.dataset.v === ap);
+  });
+  var apLabels = { members: 'Alleen voor ingelogde gebruikers', all: 'Zichtbaar voor iedereen', none: 'Altijd verborgen' };
+  var apsub = document.getElementById('addr-pref-sub');
+  if (apsub) apsub.textContent = apLabels[ap] || ap;
+
+  // Boolse toggles
+  var bools = ['autocenter','showdist','pubprofile','showstats'];
+  var defaults = { autocenter:1, showdist:1, pubprofile:1, showstats:1 };
+  bools.forEach(function(k) {
+    var val = localStorage.getItem('yg-pref-' + k);
+    var on = val !== null ? val === '1' : !!defaults[k];
+    var el = document.getElementById(k + '-toggle');
+    if (el) el.classList.toggle('off', !on);
+  });
+}
+
+// ══════════════════════════════════════════════════
 // DARK MODE + MISC
 // ══════════════════════════════════════════════════
 function toggleDark() {
@@ -3706,7 +4110,7 @@ function fbRenderMarkers() {
     var py = (my - cy) * 256 + h/2;
     if (px < -20 || px > w + 20 || py < -20 || py > h + 20) return '';
     var col = colors[sale.type];
-    return '<div onclick="openDetail(' + sale.id + ')" style="position:absolute;left:' + (px-15) + 'px;top:' + (py-36) + 'px;width:30px;height:36px;cursor:pointer;pointer-events:all;z-index:10" title="' + sale.title + '">'
+    return '<div onclick="openDetail(\'' + escapeHtml(sale.id) + '\')" style="position:absolute;left:' + (px-15) + 'px;top:' + (py-36) + 'px;width:30px;height:36px;cursor:pointer;pointer-events:all;z-index:10" title="' + escapeHtml(sale.title) + '">'
       + '<svg width="30" height="36" viewBox="0 0 30 36"><path d="M15 2C9 2 4 7 4 13C4 21 15 34 15 34C15 34 26 21 26 13C26 7 21 2 15 2Z" fill="' + col + '" stroke="white" stroke-width="1.5"/><circle cx="15" cy="13" r="5.5" fill="white"/><text x="15" y="17" text-anchor="middle" font-size="7">' + TYPES[sale.type].icon + '</text></svg>'
       + '</div>';
   }).join('');
