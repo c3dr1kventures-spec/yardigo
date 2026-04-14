@@ -1849,7 +1849,8 @@ function mapSupabaseToSale(item) {
     description: item.description || '',
     desc: item.description || '',
     user_name: item.user_name || item.contact_name || '',
-    user_email: item.user_email || ''
+    user_email: item.user_email || '',
+    user_id: item.user_id || ''
   };
 }
 
@@ -2968,8 +2969,10 @@ function openDetail(id) {
         sellerName = emailToName(s.user_email).split(' ')[0];
       }
     }
-    if (sellerName) { sellerEl.textContent = '👤 ' + sellerName; sellerEl.style.display = 'block'; }
-    else { sellerEl.style.display = 'none'; }
+    if (sellerName) {
+      sellerEl.innerHTML = '<span onclick="openSellerProfile(' + JSON.stringify(s.user_email) + ',' + JSON.stringify(sellerName) + ',' + JSON.stringify(s.user_id||'') + ')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">👤 ' + escapeHtml(sellerName) + ' <span style="font-size:10px;color:var(--terra)">›</span></span>';
+      sellerEl.style.display = 'block';
+    } else { sellerEl.style.display = 'none'; }
   }
   // Interest
   document.getElementById('det-interest-num').textContent = s.interested || 0;
@@ -3512,7 +3515,7 @@ async function publishSale() {
           sbClient.from('listings').insert({
             title: newSale.title, category: 'buurtverkoop',
             user_id: currentUserId,
-            address: newSale.address, city: cityName,
+            address: newSale.address, city: cityName || 'Onbekend',
             latitude: coords.lat, longitude: coords.lng,
             date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
             tags: tagList, status: 'active', description: descVal,
@@ -3537,7 +3540,7 @@ async function publishSale() {
         sbClient.from('listings').insert({
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
           user_id: currentUserId,
-          address: newSale.address, city: cityName, contact_name: currentUser.name,
+          address: newSale.address, city: cityName || 'Onbekend',
           latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
           tags: tagList, status: 'active', description: descVal
@@ -4496,6 +4499,86 @@ function sendFeedback() {
     toast('Geen verbinding, probeer opnieuw.');
   });
 }
+// ══════════════════════════════════════════════════
+// VERKOPER PROFIEL SHEET
+// ══════════════════════════════════════════════════
+async function openSellerProfile(email, name, userId) {
+  var ov = document.getElementById('sellerProfileOv');
+  document.getElementById('sellerProfileTitle').textContent = name + '\'s profiel';
+  document.getElementById('sp-name').textContent = name;
+  document.getElementById('sp-city').textContent = '';
+  document.getElementById('sp-bio').style.display = 'none';
+  document.getElementById('sp-badges').innerHTML = '';
+  document.getElementById('sp-listings-wrap').style.display = 'none';
+  var avatarEl = document.getElementById('sp-avatar');
+  avatarEl.innerHTML = '😊';
+  ov.classList.add('open');
+
+  // Laad profieldata uit Supabase
+  if (sbClient && userId) {
+    try {
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,badges').eq('id', userId).maybeSingle();
+      if (res.data) {
+        var d = res.data;
+        if (d.display_name) document.getElementById('sp-name').textContent = d.display_name.split(' ')[0];
+        if (d.city) document.getElementById('sp-city').textContent = '📍 ' + d.city;
+        if (d.bio) { var b = document.getElementById('sp-bio'); b.textContent = d.bio; b.style.display = 'block'; }
+        if (d.avatar_url) {
+          avatarEl.innerHTML = '<img src="' + d.avatar_url + '" style="width:100%;height:100%;object-fit:cover">';
+        }
+        if (d.badges && d.badges.length) {
+          document.getElementById('sp-badges').innerHTML = d.badges.map(function(key) {
+            var b = (APP_BADGES || []).find(function(x){return x.key===key;});
+            return b ? '<span style="background:var(--bg2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600">' + b.emoji + ' ' + b.label + '</span>' : '';
+          }).join('');
+        }
+      }
+    } catch(e) {}
+
+    // Andere actieve listings van deze verkoper
+    try {
+      var otherSales = sales.filter(function(s) {
+        return s.user_id === userId && !s.is_sample;
+      });
+      if (otherSales.length) {
+        document.getElementById('sp-listings-wrap').style.display = 'block';
+        document.getElementById('sp-listings').innerHTML = otherSales.slice(0,4).map(function(s) {
+          return '<div onclick="closeSellerProfile();openDetail(' + JSON.stringify(s.id) + ')" style="display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:10px;padding:10px;cursor:pointer">'
+            + '<div style="font-size:22px">' + (s.emoji||'🏠') + '</div>'
+            + '<div><div style="font-size:13px;font-weight:700">' + escapeHtml(s.title) + '</div>'
+            + '<div style="font-size:11px;color:var(--muted)">' + (s.date||'') + '</div></div></div>';
+        }).join('');
+      }
+    } catch(e) {}
+  }
+}
+function closeSellerProfile() {
+  document.getElementById('sellerProfileOv').classList.remove('open');
+}
 </script>
+<!-- Verkoper profiel sheet -->
+<div class="feedback-overlay" id="sellerProfileOv" onclick="if(event.target===this)closeSellerProfile()">
+  <div class="feedback-card" style="max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800" id="sellerProfileTitle">Profiel</div>
+      <button onclick="closeSellerProfile()" style="background:var(--bg2);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+    <div id="sellerProfileBody" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="sp-avatar" style="width:56px;height:56px;border-radius:50%;background:var(--terra);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden">😊</div>
+        <div>
+          <div id="sp-name" style="font-size:16px;font-weight:800"></div>
+          <div id="sp-city" style="font-size:12px;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div id="sp-bio" style="font-size:13px;color:var(--text);display:none"></div>
+      <div id="sp-badges" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div id="sp-listings-wrap" style="display:none">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">Andere verkopen</div>
+        <div id="sp-listings" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
