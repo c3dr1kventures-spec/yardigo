@@ -1679,13 +1679,27 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Step 1: Details -->
       <div id="add-s1" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:16px">Details</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:12px">
           <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <input class="form-input" id="aFrom" type="time" value="09:00">
-            <input class="form-input" id="aTill" type="time" value="15:00">
+          <div style="background:var(--bg2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">🕐 Tijden</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Van</div>
+                  <input class="form-input" id="aFrom" type="time" value="09:00">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Tot</div>
+                  <input class="form-input" id="aTill" type="time" value="15:00">
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">📅 Datum</div>
+              <input class="form-input" id="aDate" type="date">
+            </div>
           </div>
-          <input class="form-input" id="aDate" type="date">
           <textarea class="form-input" id="aDesc" placeholder="Omschrijving (optioneel)" rows="3" oninput="validateDesc(this.value)" style="resize:none"></textarea>
           <div id="desc-warn" style="display:none;font-size:10px;color:#E07B39;font-weight:600">⚠️ Geen telefoonnummers, e-mails of links</div>
         </div>
@@ -2947,7 +2961,13 @@ function openDetail(id) {
   var sellerEl = document.getElementById('det-seller');
   if (sellerEl) {
     var sellerName = s.user_name ? s.user_name.split(' ')[0] : '';
-    if (!sellerName && s.user_email) sellerName = emailToName(s.user_email).split(' ')[0];
+    if (!sellerName && s.user_email) {
+      if (!isGuest && currentUser && s.user_email === currentUser.email) {
+        sellerName = currentUser.name.split(' ')[0];
+      } else {
+        sellerName = emailToName(s.user_email).split(' ')[0];
+      }
+    }
     if (sellerName) { sellerEl.textContent = '👤 ' + sellerName; sellerEl.style.display = 'block'; }
     else { sellerEl.style.display = 'none'; }
   }
@@ -3510,14 +3530,14 @@ async function publishSale() {
         emoji: TYPES[selTypeVal].icon, address: mainAddr,
         lat: lat, lng: lng, date: dateVal, from: fromVal, till: tillVal,
         tags: tagList, interested: 0, photos: uploadedPhotos.slice(),
-        desc: descVal, user_email: currentUser.email
+        desc: descVal, user_email: currentUser.email, user_name: currentUser.name
       };
       sales.unshift(newSale);
       if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
         sbClient.from('listings').insert({
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
           user_id: currentUserId,
-          address: newSale.address, city: cityName,
+          address: newSale.address, city: cityName, contact_name: currentUser.name,
           latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
           tags: tagList, status: 'active', description: descVal
