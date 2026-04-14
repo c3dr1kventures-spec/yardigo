@@ -3717,18 +3717,32 @@ async function doSearch() {
 // ══════════════════════════════════════════════════
 // PROFILE PHOTO
 // ══════════════════════════════════════════════════
-function handleProfilePhoto(input) {
+async function handleProfilePhoto(input) {
   var file = input.files[0]; if (!file) return;
   if (file.size > 5*1024*1024) { toast('Max 5MB'); return; }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    profilePhotoData = e.target.result;
+  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); return; }
+  toast('⏳ Uploaden...');
+  try {
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var path = currentUser.id + '/avatar.' + ext;
+    var up = await sbClient.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+    if (up.error) throw up.error;
+    var urlData = sbClient.storage.from('avatars').getPublicUrl(path);
+    var avatarUrl = urlData.data.publicUrl + '?t=' + Date.now();
+    await sbClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
     var emoji = document.getElementById('profile-avatar-emoji'), img = document.getElementById('profile-avatar-img');
     if (emoji) emoji.style.display = 'none';
-    if (img) { img.src = profilePhotoData; img.style.display = 'block'; }
-    toast('✓ Profielfoto bijgewerkt!');
-  };
-  reader.readAsDataURL(file);
+    if (img) { img.src = avatarUrl; img.style.display = 'block'; }
+    // ook avatar in profielheader bijwerken
+    var ha = document.getElementById('profile-avatar-img');
+    if (ha) { ha.src = avatarUrl; ha.style.display = 'block'; }
+    var he = document.getElementById('profile-avatar-emoji');
+    if (he) he.style.display = 'none';
+    toast('✓ Profielfoto opgeslagen!');
+  } catch(e) {
+    console.error('avatar upload error', e);
+    toast('Fout bij uploaden: ' + (e.message || JSON.stringify(e)));
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -3930,7 +3944,7 @@ async function loadSettingsTab() {
   // Naam, stad, bio uit Supabase profiles
   if (!isGuest && sbClient && currentUser) {
     try {
-      var res = await sbClient.from('profiles').select('display_name,city,bio').eq('id', currentUser.id).maybeSingle();
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url').eq('id', currentUser.id).maybeSingle();
       if (res.data) {
         var n = document.getElementById('set-name');
         var c = document.getElementById('set-city');
@@ -3941,6 +3955,13 @@ async function loadSettingsTab() {
           b.value = res.data.bio;
           var cnt = document.getElementById('bio-count');
           if (cnt) cnt.textContent = res.data.bio.length;
+        }
+        // Profielfoto laden
+        if (res.data.avatar_url) {
+          var emoji = document.getElementById('profile-avatar-emoji');
+          var img = document.getElementById('profile-avatar-img');
+          if (emoji) emoji.style.display = 'none';
+          if (img) { img.src = res.data.avatar_url; img.style.display = 'block'; }
         }
       }
     } catch(e) {}
