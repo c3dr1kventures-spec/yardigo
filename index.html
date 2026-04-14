@@ -2068,7 +2068,7 @@ async function doMainLogin() {
       var u = res.data.user;
       var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
       isGuest = false;
-      currentUser = { name: name, email: email };
+      currentUser = { name: name, email: email, id: u.id };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       localStorage.setItem('yg-onboarded', '1');
       closeLogin(); updateUserUI();
@@ -2168,8 +2168,9 @@ async function obRegister() {
         options: { data: { display_name: name } }
       });
       if (res.error) { toast('❌ ' + res.error.message); return; }
+      var signedUpId = res.data.user ? res.data.user.id : null;
       isGuest = false;
-      currentUser = { name: name, email: email };
+      currentUser = { name: name, email: email, id: signedUpId };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       obFinish(); return;
     } catch(e) { toast('❌ Registratie mislukt'); return; }
@@ -2196,7 +2197,7 @@ async function obLogin() {
       var u = res.data.user;
       var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
       isGuest = false;
-      currentUser = { name: name, email: email };
+      currentUser = { name: name, email: email, id: u.id };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       obHideLogin(); obFinish(); return;
     } catch(e) { toast('❌ Inloggen mislukt'); return; }
@@ -3723,13 +3724,23 @@ async function handleProfilePhoto(input) {
   if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); return; }
   toast('⏳ Uploaden...');
   try {
+    // Haal altijd de live user ID op uit de sessie (currentUser.id kan undefined zijn na page refresh)
+    var userId = currentUser.id;
+    if (!userId) {
+      var sessionRes = await sbClient.auth.getUser();
+      if (sessionRes.data && sessionRes.data.user) {
+        userId = sessionRes.data.user.id;
+        currentUser.id = userId;
+      }
+    }
+    if (!userId) { toast('Kon gebruiker niet verifiëren, log opnieuw in'); return; }
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    var path = currentUser.id + '/avatar.' + ext;
+    var path = userId + '/avatar.' + ext;
     var up = await sbClient.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
     if (up.error) throw up.error;
     var urlData = sbClient.storage.from('avatars').getPublicUrl(path);
     var avatarUrl = urlData.data.publicUrl + '?t=' + Date.now();
-    await sbClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    await sbClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
     var emoji = document.getElementById('profile-avatar-emoji'), img = document.getElementById('profile-avatar-img');
     if (emoji) emoji.style.display = 'none';
     if (img) { img.src = avatarUrl; img.style.display = 'block'; }
@@ -4305,7 +4316,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         var u = session.user;
         var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
         isGuest = false;
-        currentUser = { name: name, email: u.email };
+        currentUser = { name: name, email: u.email, id: u.id };
         localStorage.setItem('yg-user', JSON.stringify(currentUser));
         localStorage.setItem('yg-onboarded', '1');
       }
