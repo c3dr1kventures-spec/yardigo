@@ -2086,6 +2086,7 @@ async function doMainLogin() {
       currentUser = { name: name, email: email, id: u.id };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       localStorage.setItem('yg-onboarded', '1');
+      ensureProfile(u.id, name, email);
       closeLogin(); updateUserUI();
       if (map) renderMarkers(); renderList();
       toast('Welkom, ' + name.split(' ')[0] + '! 🎉'); return;
@@ -2187,6 +2188,7 @@ async function obRegister() {
       isGuest = false;
       currentUser = { name: name, email: email, id: signedUpId };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      ensureProfile(signedUpId, name, email);
       obFinish(); return;
     } catch(e) { toast('❌ Registratie mislukt'); return; }
   }
@@ -2214,6 +2216,7 @@ async function obLogin() {
       isGuest = false;
       currentUser = { name: name, email: email, id: u.id };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      ensureProfile(u.id, name, email);
       obHideLogin(); obFinish(); return;
     } catch(e) { toast('❌ Inloggen mislukt'); return; }
   }
@@ -3984,6 +3987,17 @@ function saveNotifSettings() {
 // SETTINGS — PROFIEL, VOORKEUREN, PRIVACY
 // ══════════════════════════════════════════════════
 
+// Zorg dat er een profiles-rij bestaat voor de ingelogde gebruiker
+async function ensureProfile(userId, name, email) {
+  if (!sbClient || !userId) return;
+  try {
+    await sbClient.from('profiles').upsert(
+      { id: userId, display_name: name, email: email },
+      { onConflict: 'id', ignoreDuplicates: true }
+    );
+  } catch(e) {}
+}
+
 // Laad profielfoto bij opstarten
 async function loadAvatarFromProfile() {
   if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
@@ -4372,6 +4386,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currentUser = { name: name, email: u.email, id: u.id };
         localStorage.setItem('yg-user', JSON.stringify(currentUser));
         localStorage.setItem('yg-onboarded', '1');
+        ensureProfile(u.id, name, u.email);
       }
     } catch(e) {}
   }
