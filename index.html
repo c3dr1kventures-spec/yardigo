@@ -3424,12 +3424,26 @@ async function publishSale() {
     var tillVal = (document.getElementById('aTill')||{}).value || '15:00';
     var descVal = (document.getElementById('aDesc')||{}).value || '';
 
-    // Geocode hoofd-adres
+    // Helper: haal stadsnaam uit adresstring (fallback)
+    function extractCity(addr) {
+      if (!addr) return 'Onbekend';
+      var parts = addr.split(',').map(function(s){return s.trim();}).filter(Boolean);
+      if (parts.length < 2) return 'Onbekend';
+      var last = parts[parts.length - 1];
+      if (/nederland|netherlands/i.test(last)) last = parts[parts.length - 2] || 'Onbekend';
+      last = last.replace(/^\d{4}\s?[A-Z]{2}\s+/i, '').trim();
+      return last || 'Onbekend';
+    }
+
+    // Geocode hoofd-adres (met addressdetails voor city)
     var geoAddr = isBuurt ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', Nederland') : (mainAddr + ', Nederland');
-    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&limit=1');
+    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1');
     var geoData = await geoRes.json();
     var lat = geoData.length ? +geoData[0].lat : 52.3;
     var lng = geoData.length ? +geoData[0].lon : 5.0;
+    var cityName = (geoData.length && geoData[0].address)
+      ? (geoData[0].address.city || geoData[0].address.town || geoData[0].address.village || geoData[0].address.municipality || extractCity(mainAddr))
+      : extractCity(mainAddr);
 
     // Categorie mapping voor Supabase
     var catMap = { particulier: 'garagesale', buurt: 'buurtverkoop', evenement: 'vlooienmarkt' };
@@ -3478,7 +3492,8 @@ async function publishSale() {
           sbClient.from('listings').insert({
             title: newSale.title, category: 'buurtverkoop',
             user_id: currentUserId,
-            address: newSale.address, latitude: coords.lat, longitude: coords.lng,
+            address: newSale.address, city: cityName,
+            latitude: coords.lat, longitude: coords.lng,
             date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
             tags: tagList, status: 'active', description: descVal,
             neighborhood_group_id: bvId
@@ -3502,7 +3517,8 @@ async function publishSale() {
         sbClient.from('listings').insert({
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
           user_id: currentUserId,
-          address: newSale.address, latitude: lat, longitude: lng,
+          address: newSale.address, city: cityName,
+          latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
           tags: tagList, status: 'active', description: descVal
         }).then(function(res) {
