@@ -3945,6 +3945,20 @@ function saveNotifSettings() {
 // SETTINGS — PROFIEL, VOORKEUREN, PRIVACY
 // ══════════════════════════════════════════════════
 
+// Laad profielfoto bij opstarten
+async function loadAvatarFromProfile() {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  try {
+    var res = await sbClient.from('profiles').select('avatar_url').eq('id', currentUser.id).maybeSingle();
+    if (res.data && res.data.avatar_url) {
+      var emoji = document.getElementById('profile-avatar-emoji');
+      var img   = document.getElementById('profile-avatar-img');
+      if (emoji) emoji.style.display = 'none';
+      if (img)   { img.src = res.data.avatar_url; img.style.display = 'block'; }
+    }
+  } catch(e) {}
+}
+
 // Vul settings-tab met huidige gebruikersdata
 async function loadSettingsTab() {
   // E-mail
@@ -4336,6 +4350,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   renderList();
   updateAttendanceUI();
   updateUserUI();
+  loadAvatarFromProfile();
   initMap();
 
   // Toon welcome sheet na 3 sec voor nieuwe gebruikers
