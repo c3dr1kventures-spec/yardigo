@@ -1172,19 +1172,25 @@ async function bulkDelete(){
   if(!selectedIds.size)return;
   if(!confirm('Weet je zeker dat je '+selectedIds.size+' advertenties wilt verwijderen?'))return;
   var ids=Array.from(selectedIds);
-  var{error}=await sb.from('listings').delete().in('id',ids);
+  // .select() dwingt Supabase om de verwijderde rijen terug te geven — zo zien we of RLS iets blokkeerde
+  var{data:deletedRows,error}=await sb.from('listings').delete().in('id',ids).select('id');
   if(error){toast('❌ '+error.message);return;}
-  addLog('delete','🗑️ Bulk verwijderd: '+ids.length+' advertenties');
-  allListings=allListings.filter(function(l){return!selectedIds.has(l.id);});
+  var actuallyDeleted=(deletedRows||[]).length;
+  if(actuallyDeleted===0){toast('⚠️ Geen advertenties verwijderd — waarschijnlijk geen permissie (RLS). Draai admin-delete-policy.sql.');return;}
+  if(actuallyDeleted<ids.length){toast('⚠️ Slechts '+actuallyDeleted+' van '+ids.length+' verwijderd (rest geblokkeerd door RLS)');}
+  var deletedIdSet=new Set((deletedRows||[]).map(function(r){return r.id;}));
+  addLog('delete','🗑️ Bulk verwijderd: '+actuallyDeleted+' advertenties');
+  allListings=allListings.filter(function(l){return!deletedIdSet.has(l.id);});
   selectedIds.clear(); updateBulkBar();
   document.getElementById('listings-count').textContent=allListings.length+' totaal';
-  filterListings(); toast('✅ '+ids.length+' advertenties verwijderd');
+  filterListings(); toast('✅ '+actuallyDeleted+' advertenties verwijderd');
 }
 async function deleteListing(id){
   if(!confirm('Weet je zeker dat je deze advertentie wilt verwijderen?'))return;
   var l=allListings.find(function(x){return String(x.id)===String(id);});
-  var{error}=await sb.from('listings').delete().eq('id',id);
+  var{data:deletedRows,error}=await sb.from('listings').delete().eq('id',id).select('id');
   if(error){toast('❌ '+error.message);return;}
+  if(!deletedRows || deletedRows.length===0){toast('⚠️ Niet verwijderd — geen permissie (RLS). Draai admin-delete-policy.sql.');return;}
   addLog('delete','🗑️ Verwijderd: '+(l?l.title:id));
   allListings=allListings.filter(function(x){return x.id!==id;});
   selectedIds.delete(id);
@@ -1261,8 +1267,9 @@ async function deleteFromListingDrawer(){
   if(!currentListingId)return;
   if(!confirm('Advertentie verwijderen?'))return;
   var l=allListings.find(function(x){return String(x.id)===String(currentListingId);});
-  var{error}=await sb.from('listings').delete().eq('id',currentListingId);
+  var{data:deletedRows,error}=await sb.from('listings').delete().eq('id',currentListingId).select('id');
   if(error){toast('❌ '+error.message);return;}
+  if(!deletedRows || deletedRows.length===0){toast('⚠️ Niet verwijderd — geen permissie (RLS). Draai admin-delete-policy.sql.');return;}
   addLog('delete','🗑️ Verwijderd: '+(l?l.title:currentListingId));
   allListings=allListings.filter(function(x){return String(x.id)!==String(currentListingId);});
   selectedIds.delete(currentListingId);
