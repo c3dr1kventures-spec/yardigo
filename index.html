@@ -3548,13 +3548,27 @@ async function publishSale() {
     // Categorie mapping voor Supabase
     var catMap = { particulier: 'garagesale', buurt: 'buurtverkoop', evenement: 'vlooienmarkt' };
 
-    // Haal user_id op (vereist voor RLS-policy)
+    // Haal user_id op (vereist voor RLS-policy) — robuust: lokale session eerst, netwerk-check pas als laatste
     var currentUserId = null;
     if (sbClient && !SUPABASE_URL.includes('JOUW')) {
+      // 1) getSession is lokaal (leest uit storage) — geen netwerk, altijd snel en betrouwbaar
       try {
-        var userRes = await sbClient.auth.getUser();
-        currentUserId = userRes && userRes.data && userRes.data.user ? userRes.data.user.id : null;
-      } catch(e) { console.warn('Kon user ID niet ophalen:', e); }
+        var sessRes = await sbClient.auth.getSession();
+        if (sessRes && sessRes.data && sessRes.data.session && sessRes.data.session.user) {
+          currentUserId = sessRes.data.session.user.id;
+        }
+      } catch(e) { console.warn('getSession faalde:', e); }
+      // 2) Fallback: in-memory currentUser.id (gezet bij inloggen/herstel)
+      if (!currentUserId && currentUser && currentUser.id) {
+        currentUserId = currentUser.id;
+      }
+      // 3) Laatste redmiddel: getUser (netwerk-call, kan timeout'en bij trage verbinding)
+      if (!currentUserId) {
+        try {
+          var userRes = await sbClient.auth.getUser();
+          currentUserId = userRes && userRes.data && userRes.data.user ? userRes.data.user.id : null;
+        } catch(e) { console.warn('getUser faalde:', e); }
+      }
       if (!currentUserId) { hideL(); toast('❌ Je bent niet meer ingelogd. Log opnieuw in.'); return; }
     }
 
@@ -3903,12 +3917,15 @@ async function loadAndRenderUserBadges() {
   var autoEarned = computeAutoBadgeKeys(mine);
   var manualKeys = {};
 
-  // Haal admin_badges op uit Supabase voor ingelogde gebruiker
+  // Haal admin_badges op uit Supabase voor ingelogde gebruiker — gebruik in-memory id, geen extra netwerk-call
   if (!isGuest && sbClient) {
     try {
-      var userRes = await sbClient.auth.getUser();
-      if (userRes.data && userRes.data.user) {
-        var uid = userRes.data.user.id;
+      var uid = currentUser && currentUser.id;
+      if (!uid) {
+        var sessRes = await sbClient.auth.getSession();
+        uid = sessRes && sessRes.data && sessRes.data.session ? sessRes.data.session.user.id : null;
+      }
+      if (uid) {
         var res = await sbClient.from('profiles').select('admin_badges').eq('id', uid).maybeSingle();
         if (res.data && res.data.admin_badges) {
           var raw = res.data.admin_badges;
@@ -5010,8 +5027,16 @@ async function saveCroppedAvatar() {
 
     var userId = currentUser.id;
     if (!userId) {
-      var sr = await sbClient.auth.getUser();
-      if (sr.data && sr.data.user) { userId = sr.data.user.id; currentUser.id = userId; }
+      try {
+        var sess = await sbClient.auth.getSession();
+        if (sess && sess.data && sess.data.session) { userId = sess.data.session.user.id; currentUser.id = userId; }
+      } catch(e) {}
+    }
+    if (!userId) {
+      try {
+        var sr = await sbClient.auth.getUser();
+        if (sr.data && sr.data.user) { userId = sr.data.user.id; currentUser.id = userId; }
+      } catch(e) {}
     }
     if (!userId) { toast('Kon gebruiker niet verifiëren, log opnieuw in'); return; }
 
