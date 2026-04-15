@@ -3450,6 +3450,28 @@ async function publishSale() {
     var tillVal = (document.getElementById('aTill')||{}).value || '15:00';
     var descVal = (document.getElementById('aDesc')||{}).value || '';
 
+    // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
+    async function uploadPhotosToStorage(dataUrls, userId) {
+      if (!sbClient || !dataUrls || dataUrls.length === 0) return [];
+      var publicUrls = [];
+      for (var i = 0; i < dataUrls.length; i++) {
+        var d = dataUrls[i];
+        // Sla http(s) URL's gewoon door — geen upload nodig
+        if (typeof d === 'string' && /^https?:\/\//i.test(d)) { publicUrls.push(d); continue; }
+        try {
+          var resp = await fetch(d);
+          var blob = await resp.blob();
+          var ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
+          var path = userId + '/' + Date.now() + '-' + i + '.' + ext;
+          var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: blob.type, upsert: false });
+          if (up.error) { console.error('Foto upload mislukt:', up.error.message); continue; }
+          var url = sbClient.storage.from('listings').getPublicUrl(path);
+          if (url.data && url.data.publicUrl) publicUrls.push(url.data.publicUrl);
+        } catch(e) { console.error('Foto upload exception:', e); }
+      }
+      return publicUrls;
+    }
+
     // Helper: haal stadsnaam uit adresstring (fallback)
     function extractCity(addr) {
       if (!addr) return 'Onbekend';
@@ -3484,6 +3506,12 @@ async function publishSale() {
       if (!currentUserId) { hideL(); toast('❌ Je bent niet meer ingelogd. Log opnieuw in.'); return; }
     }
 
+    // Upload foto's naar publieke storage en gebruik de URL's i.p.v. base64
+    var publicPhotoUrls = await uploadPhotosToStorage(uploadedPhotos, currentUserId);
+    if (publicPhotoUrls.length === 0 && uploadedPhotos.length > 0) {
+      hideL(); toast('❌ Foto upload mislukt — controleer storage permissions'); return;
+    }
+
     if (isBuurt) {
       // ── Buurtverkoop: sla op als neighbourhood_sale + meerdere listings ──
       var bvId = 'bv-' + Date.now();
@@ -3500,14 +3528,15 @@ async function publishSale() {
 
       var allCoords = [{ lat: lat, lng: lng }].concat(extraCoords);
 
-      buurtAdressen.forEach(function(a, i) {
-        var coords = allCoords[i] || { lat: lat, lng: lng };
+      for (var bi = 0; bi < buurtAdressen.length; bi++) {
+        var a = buurtAdressen[bi];
+        var coords = allCoords[bi] || { lat: lat, lng: lng };
         var newSale = {
           id: nextId++, type: 'buurt', title: title.value.trim(),
           emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
           lat: coords.lat, lng: coords.lng,
           date: dateVal, from: fromVal, till: tillVal,
-          tags: tagList, interested: 0, photos: uploadedPhotos.slice(),
+          tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
           neighborhood_sale_id: bvId,
           neighborhood_sale: { id: bvId, title: title.value.trim(), date: dateVal },
           desc: descVal,
@@ -3515,19 +3544,22 @@ async function publishSale() {
         };
         sales.unshift(newSale);
         if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
-          sbClient.from('listings').insert({
+          var insRes = await sbClient.from('listings').insert({
             title: newSale.title, category: 'buurtverkoop',
             user_id: currentUserId,
             address: newSale.address, city: cityName || 'Onbekend',
             latitude: coords.lat, longitude: coords.lng,
             date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
             tags: tagList, status: 'active', description: descVal,
+            images: publicPhotoUrls.slice(),
             neighborhood_group_id: bvId
-          }).then(function(res) {
-            if (res && res.error) console.error('Listing insert mislukt:', res.error.message);
-          }).catch(function(e) { console.error('Listing insert fout:', e); });
+          });
+          if (insRes && insRes.error) {
+            console.error('Listing insert mislukt:', insRes.error);
+            toast('❌ ' + insRes.error.message);
+          }
         }
-      });
+      }
 
     } else {
       // ── Particulier / Evenement ──
@@ -3535,24 +3567,25 @@ async function publishSale() {
         id: nextId++, type: selTypeVal, title: title.value.trim(),
         emoji: TYPES[selTypeVal].icon, address: mainAddr,
         lat: lat, lng: lng, date: dateVal, from: fromVal, till: tillVal,
-        tags: tagList, interested: 0, photos: uploadedPhotos.slice(),
+        tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
         desc: descVal, user_email: currentUser.email, user_name: currentUser.name
       };
       sales.unshift(newSale);
       if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
-        sbClient.from('listings').insert({
+        var insRes = await sbClient.from('listings').insert({
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
           user_id: currentUserId,
           address: newSale.address, city: cityName || 'Onbekend',
           latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
-          tags: tagList, status: 'active', description: descVal
-        }).then(function(res) {
-          if (res && res.error) {
-            console.error('Listing insert mislukt:', res.error.message);
-            toast('❌ ' + (res.error.message || 'Publiceren mislukt'));
-          }
-        }).catch(function(e) { console.error('Listing insert fout:', e); });
+          tags: tagList, status: 'active', description: descVal,
+          images: publicPhotoUrls.slice()
+        });
+        if (insRes && insRes.error) {
+          console.error('Listing insert mislukt:', insRes.error);
+          toast('❌ ' + (insRes.error.message || 'Publiceren mislukt'));
+          hideL(); return;
+        }
       }
     }
 
