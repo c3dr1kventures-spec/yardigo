@@ -3504,8 +3504,9 @@ async function publishSale() {
 
     // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
     async function uploadPhotosToStorage(dataUrls, userId) {
-      if (!sbClient || !dataUrls || dataUrls.length === 0) return [];
+      if (!sbClient || !dataUrls || dataUrls.length === 0) return { urls: [], errors: [] };
       var publicUrls = [];
+      var errors = [];
       for (var i = 0; i < dataUrls.length; i++) {
         var d = dataUrls[i];
         // Sla http(s) URL's gewoon door — geen upload nodig
@@ -3513,15 +3514,22 @@ async function publishSale() {
         try {
           var resp = await fetch(d);
           var blob = await resp.blob();
-          var ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
-          var path = userId + '/' + Date.now() + '-' + i + '.' + ext;
-          var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: blob.type, upsert: false });
-          if (up.error) { console.error('Foto upload mislukt:', up.error.message); continue; }
+          var contentType = blob.type || 'image/jpeg';
+          var ext = (contentType.split('/')[1] || 'jpg').replace('jpeg','jpg');
+          // Gebruik random suffix + index om collisions uit te sluiten (bijv. bij retry na mislukte publicatie)
+          var rand = Math.random().toString(36).substring(2, 8);
+          var path = userId + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
+          // upsert:true zodat hergebruik van pad niet crasht
+          var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
+          if (up.error) { console.error('Foto upload mislukt:', up.error); errors.push(up.error.message || up.error); continue; }
           var url = sbClient.storage.from('listings').getPublicUrl(path);
           if (url.data && url.data.publicUrl) publicUrls.push(url.data.publicUrl);
-        } catch(e) { console.error('Foto upload exception:', e); }
+        } catch(e) {
+          console.error('Foto upload exception:', e);
+          errors.push(e.message || String(e));
+        }
       }
-      return publicUrls;
+      return { urls: publicUrls, errors: errors };
     }
 
     // Helper: haal stadsnaam uit adresstring (fallback)
@@ -3573,9 +3581,17 @@ async function publishSale() {
     }
 
     // Upload foto's naar publieke storage en gebruik de URL's i.p.v. base64
-    var publicPhotoUrls = await uploadPhotosToStorage(uploadedPhotos, currentUserId);
+    var uploadResult = await uploadPhotosToStorage(uploadedPhotos, currentUserId);
+    var publicPhotoUrls = uploadResult.urls;
     if (publicPhotoUrls.length === 0 && uploadedPhotos.length > 0) {
-      hideL(); toast('❌ Foto upload mislukt — controleer storage permissions'); return;
+      hideL();
+      var reason = uploadResult.errors.length ? uploadResult.errors[0] : 'onbekende fout';
+      toast('❌ Foto upload mislukt: ' + reason);
+      return;
+    }
+    // Waarschuw als sommige foto's faalden maar andere wel geüpload zijn
+    if (publicPhotoUrls.length > 0 && uploadResult.errors.length > 0) {
+      toast('⚠️ ' + uploadResult.errors.length + ' van ' + uploadedPhotos.length + ' foto\'s faalden — andere gaan wel door');
     }
 
     if (isBuurt) {
