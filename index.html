@@ -907,12 +907,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="list-wrap">
     <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <span id="lcount">0 gevonden</span>
-      <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
-        <option value="date-asc">📅 Vroegste eerst</option>
-        <option value="date-desc">📅 Laatste eerst</option>
-        <option value="nearby">📍 Dichtstbijzijnde</option>
-        <option value="interest">🔥 Meest populair</option>
-      </select>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--muted);font-weight:600">Sorteer op:</span>
+        <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
+          <option value="newest">🆕 Nieuwste eerst</option>
+          <option value="date-asc">📅 Vroegste eerst</option>
+          <option value="date-desc">📅 Laatste eerst</option>
+          <option value="nearby">📍 Dichtstbijzijnde</option>
+          <option value="interest">🔥 Meest populair</option>
+        </select>
+      </div>
     </div>
     <div id="cardList"></div>
   </div>
@@ -1850,7 +1854,9 @@ function mapSupabaseToSale(item) {
     desc: item.description || '',
     user_name: item.user_name || item.contact_name || '',
     user_email: item.user_email || '',
-    user_id: item.user_id || ''
+    user_id: item.user_id || '',
+    created_at: item.created_at || null,
+    status: item.status || 'active'
   };
 }
 
@@ -2000,6 +2006,8 @@ function renderMySales() {
       + '</div></div>'
       + '<div style="display:flex;flex-direction:column;gap:4px">'
       + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
+      + '<button onclick="openEditSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--terra);color:white">✏️ Bewerk</button>'
+      + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
       + '</div></div>';
   }).join('');
 }
@@ -2585,7 +2593,7 @@ function getDateRange(key) {
   }
   return null;
 }
-var listSortMode = 'date-asc';
+var listSortMode = 'newest';
 var userLocation = null;
 function applyListSort(mode) {
   listSortMode = mode;
@@ -2646,7 +2654,15 @@ function renderList() {
   if (el) el.textContent = visible.length + ' gevonden';
   // Sorteer de lijst op basis van geselecteerde modus
   visible = visible.slice();
-  if (listSortMode === 'date-desc') {
+  if (listSortMode === 'newest') {
+    visible.sort(function(a,b) {
+      var ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      var tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      // Fallback: numerieke ID descending
+      return (typeof b.id === 'number' && typeof a.id === 'number') ? b.id - a.id : 0;
+    });
+  } else if (listSortMode === 'date-desc') {
     visible.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
   } else if (listSortMode === 'date-asc') {
     visible.sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
@@ -4603,7 +4619,160 @@ async function openSellerProfile(email, name, userId) {
 function closeSellerProfile() {
   document.getElementById('sellerProfileOv').classList.remove('open');
 }
+
+// ══════════════════════════════════════════════════
+// EDIT / DELETE EIGEN ADVERTENTIE
+// ══════════════════════════════════════════════════
+var _editingSaleId = null;
+var _deletingSaleId = null;
+
+function openEditSale(id) {
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
+  if (!s) { toast('Advertentie niet gevonden'); return; }
+  if (isGuest || !currentUser || s.user_email !== currentUser.email) {
+    toast('Je kunt alleen je eigen advertenties bewerken'); return;
+  }
+  _editingSaleId = id;
+  document.getElementById('edit-title').value = s.title || '';
+  document.getElementById('edit-date').value = s.date || '';
+  document.getElementById('edit-from').value = s.from || '09:00';
+  document.getElementById('edit-till').value = s.till || '15:00';
+  document.getElementById('edit-status').value = s.status || 'active';
+  document.getElementById('edit-desc').value = s.desc || s.description || '';
+  document.getElementById('editSaleOv').classList.add('open');
+}
+function closeEditSale() {
+  document.getElementById('editSaleOv').classList.remove('open');
+  _editingSaleId = null;
+}
+async function saveEditSale() {
+  if (!_editingSaleId) return;
+  var id = _editingSaleId;
+  var upd = {
+    title: document.getElementById('edit-title').value.trim(),
+    date_start: document.getElementById('edit-date').value || null,
+    time_start: document.getElementById('edit-from').value,
+    time_end: document.getElementById('edit-till').value,
+    status: document.getElementById('edit-status').value,
+    description: document.getElementById('edit-desc').value
+  };
+  if (!upd.title) { toast('Vul een titel in'); return; }
+
+  if (sbClient && currentUser && currentUser.id) {
+    try {
+      var res = await sbClient.from('listings').update(upd).eq('id', id).eq('user_id', currentUser.id);
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+    } catch(e) { toast('❌ Opslaan mislukt'); console.error(e); return; }
+  }
+  // Update lokaal
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
+  if (s) {
+    s.title = upd.title; s.date = upd.date_start; s.from = upd.time_start;
+    s.till = upd.time_end; s.status = upd.status; s.desc = upd.description;
+    s.description = upd.description;
+  }
+  closeEditSale();
+  renderMySales(); renderList(); if (typeof renderMarkers === 'function') renderMarkers();
+  toast('✓ Advertentie bijgewerkt');
+}
+
+function confirmDeleteSale(id) {
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
+  if (!s) return;
+  if (isGuest || !currentUser || s.user_email !== currentUser.email) {
+    toast('Je kunt alleen je eigen advertenties verwijderen'); return;
+  }
+  _deletingSaleId = id;
+  document.getElementById('delSaleOv').classList.add('open');
+}
+function closeDeleteSale() {
+  document.getElementById('delSaleOv').classList.remove('open');
+  _deletingSaleId = null;
+}
+async function doDeleteSale() {
+  if (!_deletingSaleId) return;
+  var id = _deletingSaleId;
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
+
+  if (sbClient && currentUser && currentUser.id) {
+    // Verwijder eerst foto's uit storage
+    if (s && s.photos && s.photos.length) {
+      var paths = s.photos.map(function(url) {
+        var m = url.match(/\/storage\/v1\/object\/public\/listings\/(.+)$/);
+        return m ? m[1] : null;
+      }).filter(Boolean);
+      if (paths.length) {
+        try { await sbClient.storage.from('listings').remove(paths); } catch(e) {}
+      }
+    }
+    // Verwijder de listing zelf
+    try {
+      var res = await sbClient.from('listings').delete().eq('id', id).eq('user_id', currentUser.id);
+      if (res.error) { toast('❌ ' + res.error.message); return; }
+    } catch(e) { toast('❌ Verwijderen mislukt'); console.error(e); return; }
+  }
+  // Verwijder lokaal
+  sales = sales.filter(function(x) { return String(x.id) !== String(id); });
+  closeDeleteSale();
+  renderMySales(); renderList(); if (typeof renderMarkers === 'function') renderMarkers();
+  toast('🗑️ Advertentie verwijderd');
+}
 </script>
+<!-- Bewerk advertentie modal -->
+<div class="feedback-overlay" id="editSaleOv" onclick="if(event.target===this)closeEditSale()">
+  <div class="feedback-card" style="max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800">Advertentie bewerken</div>
+      <button onclick="closeEditSale()" style="background:var(--bg2);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Titel</div>
+        <input class="form-input" id="edit-title">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Datum</div>
+        <input class="form-input" id="edit-date" type="date">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Van</div>
+          <input class="form-input" id="edit-from" type="time">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Tot</div>
+          <input class="form-input" id="edit-till" type="time">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Status</div>
+        <select class="form-input" id="edit-status">
+          <option value="active">✓ Actief</option>
+          <option value="paused">⏸ Gepauzeerd</option>
+          <option value="sold">✓ Verkocht / afgelopen</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Omschrijving</div>
+        <textarea class="form-input" id="edit-desc" rows="3" style="resize:none"></textarea>
+      </div>
+      <button onclick="saveEditSale()" style="background:var(--terra);color:white;border:none;border-radius:10px;padding:12px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;margin-top:6px">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Verwijder bevestiging -->
+<div class="feedback-overlay" id="delSaleOv" onclick="if(event.target===this)closeDeleteSale()">
+  <div class="feedback-card">
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">Advertentie verwijderen?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Deze actie kan niet ongedaan worden gemaakt. De advertentie en bijbehorende foto's worden permanent verwijderd.</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeDeleteSale()" style="flex:1;background:var(--bg2);color:var(--text);border:none;border-radius:10px;padding:12px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer">Annuleren</button>
+      <button onclick="doDeleteSale()" style="flex:1;background:#d04545;color:white;border:none;border-radius:10px;padding:12px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer">🗑️ Verwijderen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Verkoper profiel sheet -->
 <div class="feedback-overlay" id="sellerProfileOv" onclick="if(event.target===this)closeSellerProfile()">
   <div class="feedback-card" style="max-height:80vh;overflow-y:auto">
