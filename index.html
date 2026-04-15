@@ -3003,18 +3003,17 @@ function openDetail(id) {
     } else if (s.user_id && sbClient) {
       // Tijdelijk verbergen tot naam geladen is
       sellerEl.style.display = 'none';
-      sbClient.from('profiles').select('display_name,email').eq('id', s.user_id).maybeSingle()
+      sbClient.from('profiles').select('display_name').eq('id', s.user_id).maybeSingle()
         .then(function(r) {
-          if (r && r.data) {
-            var nm = r.data.display_name
-              ? r.data.display_name.split(' ')[0]
-              : (r.data.email ? emailToName(r.data.email).split(' ')[0] : '');
-            // cache op het sale object zodat we niet opnieuw hoeven te fetchen
-            if (nm) { s.user_name = nm; if (r.data.email) s.user_email = r.data.email; }
+          if (r && r.data && r.data.display_name) {
+            var nm = r.data.display_name.split(' ')[0];
+            s.user_name = nm;
             renderSeller(nm);
+          } else {
+            renderSeller('Verkoper');
           }
         })
-        .catch(function(){});
+        .catch(function(){ renderSeller('Verkoper'); });
     } else {
       sellerEl.style.display = 'none';
     }
@@ -4599,7 +4598,7 @@ async function openSellerProfile(email, name, userId) {
   // Laad profieldata uit Supabase
   if (sbClient && userId) {
     try {
-      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,badges').eq('id', userId).maybeSingle();
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,admin_badges').eq('id', userId).maybeSingle();
       if (res.data) {
         var d = res.data;
         if (d.display_name) document.getElementById('sp-name').textContent = d.display_name.split(' ')[0];
@@ -4608,8 +4607,13 @@ async function openSellerProfile(email, name, userId) {
         if (d.avatar_url) {
           avatarEl.innerHTML = '<img src="' + d.avatar_url + '" style="width:100%;height:100%;object-fit:cover">';
         }
-        if (d.badges && d.badges.length) {
-          document.getElementById('sp-badges').innerHTML = d.badges.map(function(key) {
+        // Manual badges (admin_badges) + auto badges (op basis van listings van deze user)
+        var manual = Array.isArray(d.admin_badges) ? d.admin_badges : [];
+        var theirSales = sales.filter(function(x){ return x.user_id === userId && !x.is_sample; });
+        var autoKeys = (typeof computeAutoBadgeKeys === 'function') ? Object.keys(computeAutoBadgeKeys(theirSales)) : [];
+        var allKeys = manual.concat(autoKeys.filter(function(k){ return manual.indexOf(k) === -1; }));
+        if (allKeys.length) {
+          document.getElementById('sp-badges').innerHTML = allKeys.map(function(key) {
             var b = (APP_BADGES || []).find(function(x){return x.key===key;});
             return b ? '<span style="background:var(--bg2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600">' + b.emoji + ' ' + b.label + '</span>' : '';
           }).join('');
