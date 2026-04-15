@@ -1966,8 +1966,12 @@ function renderMySales() {
     if (si) si.textContent = '0';
     return;
   }
-  // Filter sales van de ingelogde gebruiker
-  var mine = sales.filter(function(s) { return s.user_email === currentUser.email; });
+  // Filter sales van de ingelogde gebruiker — prefer user_id (robuust na reload) met fallback op user_email
+  var mine = sales.filter(function(s) {
+    if (s.is_sample) return false;
+    if (currentUser.id && s.user_id) return s.user_id === currentUser.id;
+    return s.user_email && currentUser.email && s.user_email === currentUser.email;
+  });
   // Deduplicate buurtverkopen (toon per neighborhood_sale_id één keer)
   var seenBv = {};
   var display = mine.filter(function(s) {
@@ -2977,21 +2981,43 @@ function openDetail(id) {
   // Desc
   var dw = document.getElementById('det-desc-wrap'), de = document.getElementById('det-desc');
   if (s.desc && s.desc.trim()) { de.textContent = s.desc; dw.style.display = 'block'; } else { dw.style.display = 'none'; }
-  // Verkoper naam
+  // Verkoper naam (robuust: werkt ook na reload wanneer alleen user_id bekend is)
   var sellerEl = document.getElementById('det-seller');
   if (sellerEl) {
     var sellerName = s.user_name ? s.user_name.split(' ')[0] : '';
     if (!sellerName && s.user_email) {
       if (!isGuest && currentUser && s.user_email === currentUser.email) {
-        sellerName = currentUser.name.split(' ')[0];
+        sellerName = (currentUser.name || '').split(' ')[0];
       } else {
         sellerName = emailToName(s.user_email).split(' ')[0];
       }
     }
-    if (sellerName) {
-      sellerEl.innerHTML = '<span onclick="openSellerProfile(' + JSON.stringify(s.user_email) + ',' + JSON.stringify(sellerName) + ',' + JSON.stringify(s.user_id||'') + ')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">👤 ' + escapeHtml(sellerName) + ' <span style="font-size:10px;color:var(--terra)">›</span></span>';
+    // Render direct als we al een naam hebben, anders fetch profiel uit Supabase
+    var renderSeller = function(nameToShow) {
+      if (!nameToShow) { sellerEl.style.display = 'none'; return; }
+      sellerEl.innerHTML = '<span onclick="openSellerProfile(' + JSON.stringify(s.user_email || '') + ',' + JSON.stringify(nameToShow) + ',' + JSON.stringify(s.user_id||'') + ')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">👤 ' + escapeHtml(nameToShow) + ' <span style="font-size:10px;color:var(--terra)">›</span></span>';
       sellerEl.style.display = 'block';
-    } else { sellerEl.style.display = 'none'; }
+    };
+    if (sellerName) {
+      renderSeller(sellerName);
+    } else if (s.user_id && sbClient) {
+      // Tijdelijk verbergen tot naam geladen is
+      sellerEl.style.display = 'none';
+      sbClient.from('profiles').select('display_name,email').eq('id', s.user_id).maybeSingle()
+        .then(function(r) {
+          if (r && r.data) {
+            var nm = r.data.display_name
+              ? r.data.display_name.split(' ')[0]
+              : (r.data.email ? emailToName(r.data.email).split(' ')[0] : '');
+            // cache op het sale object zodat we niet opnieuw hoeven te fetchen
+            if (nm) { s.user_name = nm; if (r.data.email) s.user_email = r.data.email; }
+            renderSeller(nm);
+          }
+        })
+        .catch(function(){});
+    } else {
+      sellerEl.style.display = 'none';
+    }
   }
   // Interest
   document.getElementById('det-interest-num').textContent = s.interested || 0;
@@ -3433,7 +3459,13 @@ function buildAddPreview() {
   document.getElementById('prevBadge').textContent = t.icon + ' ' + t.label;
 }
 var lastPublishTime = 0; // rate limiting: minimaal 60s tussen publicaties
+var isPublishing = false; // anti-dubbelklik lock
 async function publishSale() {
+  // Anti-dubbelklik: als er al een publicatie bezig is, negeer verdere klikken
+  if (isPublishing) {
+    toast('⏳ Publicatie loopt al — even geduld...');
+    return;
+  }
   // Authenticatiecheck
   if (isGuest || !currentUser || !currentUser.email) { guestGate('listing plaatsen'); return; }
 
@@ -3448,6 +3480,11 @@ async function publishSale() {
   var title = document.getElementById('aTitle');
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
+
+  // Zet lock meteen + disable knop visueel
+  isPublishing = true;
+  var _pubBtn = document.getElementById('addPublish');
+  if (_pubBtn) { _pubBtn.disabled = true; _pubBtn.style.opacity = '0.6'; _pubBtn.style.cursor = 'wait'; }
 
   var isBuurt = selTypeVal === 'buurt';
   var addrEl  = document.getElementById('aAddr');
@@ -3608,9 +3645,16 @@ async function publishSale() {
     lastPublishTime = Date.now(); // rate limiting timestamp bijwerken
     renderMarkers(); renderList();
     renderMySales();
+    loadAndRenderUserBadges(); // badges herberekenen
     closeAdd(); hideL();
     toast('🎉 Verkoop geplaatst!');
   } catch(e) { console.error(e); hideL(); toast('❌ Publiceren mislukt'); }
+  finally {
+    // Lock altijd vrijgeven
+    isPublishing = false;
+    var _pb = document.getElementById('addPublish');
+    if (_pb) { _pb.disabled = false; _pb.style.opacity = ''; _pb.style.cursor = 'pointer'; }
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -3812,39 +3856,9 @@ async function doSearch() {
 async function handleProfilePhoto(input) {
   var file = input.files[0]; if (!file) return;
   if (file.size > 5*1024*1024) { toast('Max 5MB'); return; }
-  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); return; }
-  toast('⏳ Uploaden...');
-  try {
-    // Haal altijd de live user ID op uit de sessie (currentUser.id kan undefined zijn na page refresh)
-    var userId = currentUser.id;
-    if (!userId) {
-      var sessionRes = await sbClient.auth.getUser();
-      if (sessionRes.data && sessionRes.data.user) {
-        userId = sessionRes.data.user.id;
-        currentUser.id = userId;
-      }
-    }
-    if (!userId) { toast('Kon gebruiker niet verifiëren, log opnieuw in'); return; }
-    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    var path = userId + '/avatar.' + ext;
-    var up = await sbClient.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
-    if (up.error) throw up.error;
-    var urlData = sbClient.storage.from('avatars').getPublicUrl(path);
-    var avatarUrl = urlData.data.publicUrl + '?t=' + Date.now();
-    await sbClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
-    var emoji = document.getElementById('profile-avatar-emoji'), img = document.getElementById('profile-avatar-img');
-    if (emoji) emoji.style.display = 'none';
-    if (img) { img.src = avatarUrl; img.style.display = 'block'; }
-    // ook avatar in profielheader bijwerken
-    var ha = document.getElementById('profile-avatar-img');
-    if (ha) { ha.src = avatarUrl; ha.style.display = 'block'; }
-    var he = document.getElementById('profile-avatar-emoji');
-    if (he) he.style.display = 'none';
-    toast('✓ Profielfoto opgeslagen!');
-  } catch(e) {
-    console.error('avatar upload error', e);
-    toast('Fout bij uploaden: ' + (e.message || JSON.stringify(e)));
-  }
+  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); input.value=''; return; }
+  // Open crop/zoom modal i.p.v. direct te uploaden
+  openAvatarCrop(file);
 }
 
 // ══════════════════════════════════════════════════
@@ -3879,8 +3893,12 @@ async function loadAndRenderUserBadges() {
   var countEl = document.getElementById('badge-count');
   if (!grid) return;
 
-  var mine = (!isGuest && currentUser.email)
-    ? sales.filter(function(s){ return s.user_email === currentUser.email; })
+  var mine = (!isGuest && (currentUser.id || currentUser.email))
+    ? sales.filter(function(s){
+        if (s.is_sample) return false;
+        if (currentUser.id && s.user_id) return s.user_id === currentUser.id;
+        return s.user_email && currentUser.email && s.user_email === currentUser.email;
+      })
     : [];
 
   var autoEarned = computeAutoBadgeKeys(mine);
@@ -4629,7 +4647,9 @@ var _deletingSaleId = null;
 function openEditSale(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) { toast('Advertentie niet gevonden'); return; }
-  if (isGuest || !currentUser || s.user_email !== currentUser.email) {
+  var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
+              : (s.user_email && currentUser.email && s.user_email === currentUser.email);
+  if (isGuest || !currentUser || !isOwner) {
     toast('Je kunt alleen je eigen advertenties bewerken'); return;
   }
   _editingSaleId = id;
@@ -4679,7 +4699,9 @@ async function saveEditSale() {
 function confirmDeleteSale(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
-  if (isGuest || !currentUser || s.user_email !== currentUser.email) {
+  var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
+              : (s.user_email && currentUser.email && s.user_email === currentUser.email);
+  if (isGuest || !currentUser || !isOwner) {
     toast('Je kunt alleen je eigen advertenties verwijderen'); return;
   }
   _deletingSaleId = id;
@@ -4797,5 +4819,219 @@ async function doDeleteSale() {
     </div>
   </div>
 </div>
+
+<!-- Profielfoto crop modal -->
+<div class="feedback-overlay" id="avatarCropOv" onclick="if(event.target===this)closeAvatarCrop()">
+  <div class="feedback-card" style="max-width:360px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:800">Profielfoto bewerken</div>
+      <button onclick="closeAvatarCrop()" style="background:var(--bg2);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Sleep om te centreren, gebruik de slider om in te zoomen.</div>
+    <div id="avatarCropStage" style="position:relative;width:280px;height:280px;margin:0 auto;background:#000;border-radius:12px;overflow:hidden;touch-action:none;cursor:move">
+      <canvas id="avatarCropCanvas" width="280" height="280" style="display:block;width:100%;height:100%"></canvas>
+      <!-- Cirkel-mask overlay -->
+      <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at center, transparent 0, transparent 139px, rgba(0,0,0,0.55) 140px)"></div>
+      <div style="position:absolute;inset:0;pointer-events:none;border-radius:12px;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.08)"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:4px">
+        <span>🔍</span>
+        <span>Zoom</span>
+      </div>
+      <input type="range" id="avatarZoom" min="1" max="4" step="0.01" value="1" style="width:100%">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="closeAvatarCrop()" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--bg2);background:white;color:var(--text);font-family:'Poppins',sans-serif;font-weight:700;cursor:pointer">Annuleer</button>
+      <button onclick="saveCroppedAvatar()" id="avatarSaveBtn" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-weight:700;cursor:pointer">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// AVATAR CROP / ZOOM
+// ══════════════════════════════════════════════════
+var _avatarCrop = { img: null, scale: 1, minScale: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0, file: null };
+
+function openAvatarCrop(file) {
+  _avatarCrop.file = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      _avatarCrop.img = img;
+      var stageSize = 280;
+      // minScale: zorg dat het beeld de cirkel volledig dekt
+      var minScale = Math.max(stageSize / img.width, stageSize / img.height);
+      _avatarCrop.minScale = minScale;
+      _avatarCrop.scale = minScale;
+      // center
+      _avatarCrop.offsetX = (stageSize - img.width * minScale) / 2;
+      _avatarCrop.offsetY = (stageSize - img.height * minScale) / 2;
+      var slider = document.getElementById('avatarZoom');
+      slider.min = minScale.toFixed(3);
+      slider.max = (minScale * 4).toFixed(3);
+      slider.value = minScale.toFixed(3);
+      drawAvatarCrop();
+      document.getElementById('avatarCropOv').classList.add('open');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeAvatarCrop() {
+  document.getElementById('avatarCropOv').classList.remove('open');
+  var input = document.getElementById('profilePhotoInput');
+  if (input) input.value = '';
+  _avatarCrop.img = null;
+  _avatarCrop.file = null;
+}
+
+function drawAvatarCrop() {
+  var c = document.getElementById('avatarCropCanvas');
+  if (!c || !_avatarCrop.img) return;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, c.width, c.height);
+  var img = _avatarCrop.img;
+  var s = _avatarCrop.scale;
+  ctx.drawImage(img, _avatarCrop.offsetX, _avatarCrop.offsetY, img.width * s, img.height * s);
+}
+
+function clampAvatarOffset() {
+  var stageSize = 280;
+  var img = _avatarCrop.img; if (!img) return;
+  var s = _avatarCrop.scale;
+  var w = img.width * s, h = img.height * s;
+  // zorg dat de cirkel (centraal, radius 140) altijd gedekt is
+  var minX = stageSize - w, maxX = 0;
+  var minY = stageSize - h, maxY = 0;
+  if (_avatarCrop.offsetX > maxX) _avatarCrop.offsetX = maxX;
+  if (_avatarCrop.offsetX < minX) _avatarCrop.offsetX = minX;
+  if (_avatarCrop.offsetY > maxY) _avatarCrop.offsetY = maxY;
+  if (_avatarCrop.offsetY < minY) _avatarCrop.offsetY = minY;
+}
+
+(function setupAvatarCropEvents() {
+  // Zoom slider
+  document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'avatarZoom' && _avatarCrop.img) {
+      var newScale = parseFloat(e.target.value);
+      // zoom naar het midden van het frame
+      var stageSize = 280;
+      var cx = stageSize / 2, cy = stageSize / 2;
+      var oldScale = _avatarCrop.scale;
+      // wereld-coord onder center voor oude scale
+      var wx = (cx - _avatarCrop.offsetX) / oldScale;
+      var wy = (cy - _avatarCrop.offsetY) / oldScale;
+      _avatarCrop.scale = newScale;
+      _avatarCrop.offsetX = cx - wx * newScale;
+      _avatarCrop.offsetY = cy - wy * newScale;
+      clampAvatarOffset();
+      drawAvatarCrop();
+    }
+  });
+
+  // Drag to pan
+  var stage = null;
+  function getStage() { if (!stage) stage = document.getElementById('avatarCropStage'); return stage; }
+  function onDown(e) {
+    if (!_avatarCrop.img) return;
+    var t = getStage();
+    if (!t) return;
+    // zorg dat event binnen stage is
+    if (!t.contains(e.target) && e.target !== t) return;
+    _avatarCrop.dragging = true;
+    var pt = e.touches ? e.touches[0] : e;
+    _avatarCrop.lastX = pt.clientX;
+    _avatarCrop.lastY = pt.clientY;
+    e.preventDefault();
+  }
+  function onMove(e) {
+    if (!_avatarCrop.dragging || !_avatarCrop.img) return;
+    var pt = e.touches ? e.touches[0] : e;
+    var dx = pt.clientX - _avatarCrop.lastX;
+    var dy = pt.clientY - _avatarCrop.lastY;
+    _avatarCrop.lastX = pt.clientX;
+    _avatarCrop.lastY = pt.clientY;
+    _avatarCrop.offsetX += dx;
+    _avatarCrop.offsetY += dy;
+    clampAvatarOffset();
+    drawAvatarCrop();
+    e.preventDefault();
+  }
+  function onUp() { _avatarCrop.dragging = false; }
+
+  document.addEventListener('mousedown', onDown);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+  document.addEventListener('touchstart', onDown, { passive: false });
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('touchend', onUp);
+})();
+
+async function saveCroppedAvatar() {
+  if (!_avatarCrop.img || !_avatarCrop.file) return;
+  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); return; }
+  var btn = document.getElementById('avatarSaveBtn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Uploaden...'; }
+  try {
+    // Render cirkel-crop naar een 400x400 output canvas
+    var outSize = 400;
+    var out = document.createElement('canvas');
+    out.width = outSize; out.height = outSize;
+    var octx = out.getContext('2d');
+    var stageSize = 280;
+    var ratio = outSize / stageSize;
+    var img = _avatarCrop.img;
+    var s = _avatarCrop.scale;
+    // Masker: cirkel
+    octx.save();
+    octx.beginPath();
+    octx.arc(outSize/2, outSize/2, outSize/2, 0, Math.PI*2);
+    octx.closePath();
+    octx.clip();
+    octx.drawImage(img,
+      _avatarCrop.offsetX * ratio,
+      _avatarCrop.offsetY * ratio,
+      img.width * s * ratio,
+      img.height * s * ratio
+    );
+    octx.restore();
+    // naar blob
+    var blob = await new Promise(function(res){ out.toBlob(res, 'image/jpeg', 0.9); });
+    if (!blob) throw new Error('Kon afbeelding niet genereren');
+
+    var userId = currentUser.id;
+    if (!userId) {
+      var sr = await sbClient.auth.getUser();
+      if (sr.data && sr.data.user) { userId = sr.data.user.id; currentUser.id = userId; }
+    }
+    if (!userId) { toast('Kon gebruiker niet verifiëren, log opnieuw in'); return; }
+
+    var path = userId + '/avatar.jpg';
+    var up = await sbClient.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (up.error) throw up.error;
+    var urlData = sbClient.storage.from('avatars').getPublicUrl(path);
+    var avatarUrl = urlData.data.publicUrl + '?t=' + Date.now();
+    await sbClient.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId);
+
+    var emoji = document.getElementById('profile-avatar-emoji');
+    var imgEl = document.getElementById('profile-avatar-img');
+    if (emoji) emoji.style.display = 'none';
+    if (imgEl) { imgEl.src = avatarUrl; imgEl.style.display = 'block'; }
+    toast('✓ Profielfoto opgeslagen!');
+    closeAvatarCrop();
+  } catch(e) {
+    console.error('avatar save error', e);
+    toast('Fout bij opslaan: ' + (e.message || 'onbekend'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = 'Opslaan'; }
+  }
+}
+</script>
+
 </body>
 </html>
