@@ -3428,22 +3428,92 @@ function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label) {
     if (aAddr) aAddr.value = label;
   }
 }
-function handleAddPhotos(input) {
-  Array.from(input.files).forEach(function(file) {
-    if (uploadedPhotos.length >= 10) return;
+// Herrender de foto-grid (na toevoegen/verwijderen)
+function renderPhotoGrid() {
+  var grid = document.getElementById('photoGrid');
+  if (grid) {
+    grid.innerHTML = uploadedPhotos.map(function(src, i) {
+      return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);renderPhotoGrid()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
+    }).join('');
+  }
+  var pc = document.getElementById('photoCount');
+  if (pc) pc.innerHTML = uploadedPhotos.length === 0
+    ? '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10'
+    : '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max 10';
+}
+
+// Client-side beeldcompressie: resize + JPEG-encode.
+// Grote telefoonfoto's (5-15 MB) worden teruggebracht naar ~200-600 KB
+// zonder zichtbaar kwaliteitsverlies, zodat uploads snel en betrouwbaar gaan
+// ook op zwakke verbindingen.
+function compressImage(file, maxDim, quality) {
+  return new Promise(function(resolve, reject) {
+    if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+      reject(new Error('Bestand is geen afbeelding'));
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(e) {
-      uploadedPhotos.push(e.target.result);
-      document.getElementById('photoGrid').innerHTML = uploadedPhotos.map(function(src, i) {
-        return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1"><img src="' + src + '" style="width:100%;height:100%;object-fit:cover"><button onclick="uploadedPhotos.splice(' + i + ',1);handleAddPhotos({files:[]})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer">✕</button></div>';
-      }).join('');
-      var pc = document.getElementById('photoCount');
-      if (pc) pc.innerHTML = uploadedPhotos.length === 0
-        ? '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10'
-        : '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max 10';
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        // Schaal naar binnen een vierkant van maxDim x maxDim met behoud van aspect-ratio
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else        { w = Math.round(w * (maxDim / h)); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          // Altijd als JPEG exporteren voor consistente kleine file-size
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch(err) {
+          reject(err);
+        }
+      };
+      img.onerror = function() { reject(new Error('Kan afbeelding niet laden')); };
+      img.src = e.target.result;
     };
+    reader.onerror = function() { reject(new Error('Kan bestand niet lezen')); };
     reader.readAsDataURL(file);
   });
+}
+
+function handleAddPhotos(input) {
+  var files = Array.from(input.files || []);
+  if (files.length === 0) { renderPhotoGrid(); return; }
+  var pc = document.getElementById('photoCount');
+  if (pc) pc.innerHTML = '<span style="color:#888">⏳ Foto\'s voorbereiden...</span>';
+  // Verwerk files sequentieel zodat de volgorde behouden blijft
+  (async function() {
+    for (var i = 0; i < files.length; i++) {
+      if (uploadedPhotos.length >= 10) break;
+      var file = files[i];
+      try {
+        var dataUrl = await compressImage(file, 1600, 0.85);
+        uploadedPhotos.push(dataUrl);
+      } catch(err) {
+        console.warn('Compressie faalde voor', file.name || '(onbekend)', '— gebruik origineel:', err);
+        // Fallback: gebruik origineel bestand als dataURL
+        try {
+          var dataUrl2 = await new Promise(function(resolve, reject) {
+            var r = new FileReader();
+            r.onload = function(e) { resolve(e.target.result); };
+            r.onerror = function() { reject(new Error('read-fail')); };
+            r.readAsDataURL(file);
+          });
+          uploadedPhotos.push(dataUrl2);
+        } catch(e) {
+          toast('⚠️ Eén foto kon niet worden verwerkt');
+        }
+      }
+      renderPhotoGrid();
+    }
+    renderPhotoGrid();
+  })();
 }
 function toggleAddTag(el) { el.classList.toggle('sel'); if (el.classList.contains('sel')) addTagsSelected.add(el.dataset.tag); else addTagsSelected.delete(el.dataset.tag); }
 function validateDesc(v) {
@@ -3466,8 +3536,31 @@ async function publishSale() {
     toast('⏳ Publicatie loopt al — even geduld...');
     return;
   }
-  // Authenticatiecheck
+  // Authenticatiecheck (lokale state)
   if (isGuest || !currentUser || !currentUser.email) { guestGate('listing plaatsen'); return; }
+
+  // Harde auth-guard: controleer of de Supabase-sessie nog écht geldig is.
+  // Voorkomt situatie waarin lokale currentUser bestaat maar JWT is verlopen
+  // — dat leverde eerder de misleidende RLS-foutmelding op bij foto-upload.
+  if (sbClient) {
+    try {
+      var _sessCheck = await sbClient.auth.getSession();
+      var _validSession = _sessCheck && _sessCheck.data && _sessCheck.data.session && _sessCheck.data.session.user && _sessCheck.data.session.user.id;
+      if (!_validSession) {
+        try { await sbClient.auth.signOut(); } catch(e) {}
+        currentUser = {};
+        isGuest = true;
+        toast('❌ Je sessie is verlopen. Log opnieuw in om te publiceren.');
+        // Trigger login-flow zodat gebruiker meteen opnieuw kan inloggen
+        try { guestGate('listing plaatsen'); } catch(e) {}
+        return;
+      }
+    } catch(e) {
+      console.warn('Session-check faalde:', e);
+      toast('❌ Kan niet verifiëren of je ingelogd bent. Probeer opnieuw.');
+      return;
+    }
+  }
 
   // Frontend rate limiting: max 1 publicatie per 60 seconden
   var now = Date.now();
@@ -3505,17 +3598,9 @@ async function publishSale() {
 
     // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
     async function uploadPhotosToStorage(dataUrls, userId) {
-      console.log('[UPLOAD] Start met userId:', userId, 'typeof:', typeof userId, 'aantal foto\'s:', dataUrls ? dataUrls.length : 0);
-      // Verifieer session net voordat we uploaden
-      try {
-        var _s = await sbClient.auth.getSession();
-        console.log('[UPLOAD] getSession UID:', _s && _s.data && _s.data.session && _s.data.session.user && _s.data.session.user.id);
-        console.log('[UPLOAD] UID match?', _s && _s.data && _s.data.session && _s.data.session.user && _s.data.session.user.id === userId);
-      } catch(e) { console.error('[UPLOAD] getSession check faalde:', e); }
       if (!sbClient || !dataUrls || dataUrls.length === 0) return { urls: [], errors: [] };
       if (!userId || typeof userId !== 'string') {
-        console.error('[UPLOAD] Ongeldige userId — abort');
-        return { urls: [], errors: ['Ongeldige userId: ' + userId] };
+        return { urls: [], errors: ['Niet ingelogd — log opnieuw in'] };
       }
       var publicUrls = [];
       var errors = [];
@@ -3528,27 +3613,23 @@ async function publishSale() {
           var blob = await resp.blob();
           var contentType = blob.type || 'image/jpeg';
           var ext = (contentType.split('/')[1] || 'jpg').replace('jpeg','jpg');
-          // Gebruik random suffix + index om collisions uit te sluiten (bijv. bij retry na mislukte publicatie)
+          // Random suffix + index om collisions uit te sluiten (bijv. bij retry na mislukte publicatie)
           var rand = Math.random().toString(36).substring(2, 8);
           var path = userId + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
-          console.log('[UPLOAD] Foto', i, 'pad:', path, 'blob size:', blob.size, 'type:', contentType);
           // upsert:true zodat hergebruik van pad niet crasht
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
           if (up.error) {
-            console.error('[UPLOAD] Foto', i, 'mislukt — full error:', up.error);
-            console.error('[UPLOAD] Error JSON:', JSON.stringify(up.error, Object.getOwnPropertyNames(up.error)));
+            console.error('Foto upload mislukt:', up.error);
             errors.push(up.error.message || String(up.error));
             continue;
           }
-          console.log('[UPLOAD] Foto', i, 'OK:', up.data);
           var url = sbClient.storage.from('listings').getPublicUrl(path);
           if (url.data && url.data.publicUrl) publicUrls.push(url.data.publicUrl);
         } catch(e) {
-          console.error('[UPLOAD] Foto', i, 'exception:', e);
+          console.error('Foto upload exception:', e);
           errors.push(e.message || String(e));
         }
       }
-      console.log('[UPLOAD] Klaar — urls:', publicUrls.length, 'errors:', errors.length);
       return { urls: publicUrls, errors: errors };
     }
 
