@@ -3681,6 +3681,19 @@ async function publishSale() {
       if (!currentUserId) { hideL(); toast('❌ Je bent niet meer ingelogd. Log opnieuw in.'); return; }
     }
 
+    // Safety net: zorg dat er een profiles-rij bestaat vóór we de listing inserten.
+    // Zonder deze rij faalt de listing-insert op listings_user_id_fkey (FK-violation).
+    // Dit is vooral een vangnet voor accounts die via OTP of een oudere flow zijn
+    // aangemaakt zonder dat ensureProfile succesvol was.
+    if (sbClient && currentUserId) {
+      var profRes = await ensureProfile(currentUserId, currentUser && currentUser.name, currentUser && currentUser.email);
+      if (!profRes.ok) {
+        hideL();
+        toast('❌ Profiel kon niet worden aangemaakt: ' + (profRes.error || 'onbekende fout'));
+        return;
+      }
+    }
+
     // Upload foto's naar publieke storage en gebruik de URL's i.p.v. base64
     var uploadResult = await uploadPhotosToStorage(uploadedPhotos, currentUserId);
     var publicPhotoUrls = uploadResult.urls;
@@ -4187,15 +4200,29 @@ function saveNotifSettings() {
 // SETTINGS — PROFIEL, VOORKEUREN, PRIVACY
 // ══════════════════════════════════════════════════
 
-// Zorg dat er een profiles-rij bestaat voor de ingelogde gebruiker
+// Zorg dat er een profiles-rij bestaat voor de ingelogde gebruiker.
+// NB: de profiles-tabel heeft géén `email` kolom — die zit in auth.users.
+// Als we die hier toch meegeven krijgen we 400 Bad Request van PostgREST
+// en wordt het profiel niet aangemaakt → vervolgens faalt elke listing-insert
+// op de foreign-key `listings_user_id_fkey`.
 async function ensureProfile(userId, name, email) {
-  if (!sbClient || !userId) return;
+  if (!sbClient || !userId) return { ok: false, error: 'no userId' };
   try {
-    await sbClient.from('profiles').upsert(
-      { id: userId, display_name: name, email: email },
-      { onConflict: 'id', ignoreDuplicates: true }
-    );
-  } catch(e) {}
+    var payload = { id: userId };
+    if (name) payload.display_name = name;
+    var res = await sbClient.from('profiles').upsert(
+      payload,
+      { onConflict: 'id', ignoreDuplicates: false }
+    ).select('id').maybeSingle();
+    if (res && res.error) {
+      console.error('ensureProfile upsert error:', res.error);
+      return { ok: false, error: res.error.message || String(res.error) };
+    }
+    return { ok: true };
+  } catch(e) {
+    console.error('ensureProfile exception:', e);
+    return { ok: false, error: e.message || String(e) };
+  }
 }
 
 // Laad profielfoto bij opstarten
