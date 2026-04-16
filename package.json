@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Nederlandse garage sale & rommelmarkt discovery app.",
   "scripts": {
-    "sync": "cp yardigo-v20.html www/yardigo-v20.html && npx cap sync ios",
+    "sync": "cp index.html www/yardigo-v21.html && cp sw.js www/sw.js && cp manifest.json www/manifest.json && npx cap sync ios",
     "open": "npx cap open ios",
-    "build": "cp yardigo-v20.html www/yardigo-v20.html && npx cap sync ios && npx cap open ios"
+    "build": "npm run sync && npx cap open ios"
   },
   "repository": {
     "type": "git",

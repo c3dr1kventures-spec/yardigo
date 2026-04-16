@@ -40,7 +40,7 @@ npm run sync
 ```
 
 Dit doet automatisch:
-1. Kopieert `yardigo-v20.html` naar `www/`
+1. Kopieert `yardigo-v21.html` naar `www/`
 2. Synchroniseert alle bestanden naar het Xcode project
 
 Daarna open je Xcode met:
@@ -101,7 +101,7 @@ In Xcode → **App** → **General**
 ### Kleine wijziging (HTML/CSS/JS)
 ```bash
 cd ~/YardiGo
-# pas yardigo-v20.html aan
+# pas yardigo-v21.html aan
 npm run sync
 npm run open
 # Build + Archive + Upload in Xcode

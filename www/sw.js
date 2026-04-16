@@ -1,9 +1,9 @@
 // ══════════════════════════════════════════════════════
-// YardiGo Service Worker v1.0
+// YardiGo Service Worker v2.0
 // Strategie: Cache First voor assets, Network First voor data
 // ══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'yardigo-v1';
+const CACHE_NAME = 'yardigo-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Bestanden die altijd gecached worden bij installatie
