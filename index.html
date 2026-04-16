@@ -1797,6 +1797,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let sbClient = null;
 try {
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.sbClient = sbClient; // Debug-hook voor console-diagnostics
 } catch(e) {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
 }
