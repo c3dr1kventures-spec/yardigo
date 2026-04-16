@@ -3505,7 +3505,18 @@ async function publishSale() {
 
     // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
     async function uploadPhotosToStorage(dataUrls, userId) {
+      console.log('[UPLOAD] Start met userId:', userId, 'typeof:', typeof userId, 'aantal foto\'s:', dataUrls ? dataUrls.length : 0);
+      // Verifieer session net voordat we uploaden
+      try {
+        var _s = await sbClient.auth.getSession();
+        console.log('[UPLOAD] getSession UID:', _s && _s.data && _s.data.session && _s.data.session.user && _s.data.session.user.id);
+        console.log('[UPLOAD] UID match?', _s && _s.data && _s.data.session && _s.data.session.user && _s.data.session.user.id === userId);
+      } catch(e) { console.error('[UPLOAD] getSession check faalde:', e); }
       if (!sbClient || !dataUrls || dataUrls.length === 0) return { urls: [], errors: [] };
+      if (!userId || typeof userId !== 'string') {
+        console.error('[UPLOAD] Ongeldige userId — abort');
+        return { urls: [], errors: ['Ongeldige userId: ' + userId] };
+      }
       var publicUrls = [];
       var errors = [];
       for (var i = 0; i < dataUrls.length; i++) {
@@ -3520,16 +3531,24 @@ async function publishSale() {
           // Gebruik random suffix + index om collisions uit te sluiten (bijv. bij retry na mislukte publicatie)
           var rand = Math.random().toString(36).substring(2, 8);
           var path = userId + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
+          console.log('[UPLOAD] Foto', i, 'pad:', path, 'blob size:', blob.size, 'type:', contentType);
           // upsert:true zodat hergebruik van pad niet crasht
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
-          if (up.error) { console.error('Foto upload mislukt:', up.error); errors.push(up.error.message || up.error); continue; }
+          if (up.error) {
+            console.error('[UPLOAD] Foto', i, 'mislukt — full error:', up.error);
+            console.error('[UPLOAD] Error JSON:', JSON.stringify(up.error, Object.getOwnPropertyNames(up.error)));
+            errors.push(up.error.message || String(up.error));
+            continue;
+          }
+          console.log('[UPLOAD] Foto', i, 'OK:', up.data);
           var url = sbClient.storage.from('listings').getPublicUrl(path);
           if (url.data && url.data.publicUrl) publicUrls.push(url.data.publicUrl);
         } catch(e) {
-          console.error('Foto upload exception:', e);
+          console.error('[UPLOAD] Foto', i, 'exception:', e);
           errors.push(e.message || String(e));
         }
       }
+      console.log('[UPLOAD] Klaar — urls:', publicUrls.length, 'errors:', errors.length);
       return { urls: publicUrls, errors: errors };
     }
 
