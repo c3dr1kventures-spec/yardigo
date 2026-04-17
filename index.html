@@ -1972,8 +1972,8 @@ let sales = [
 ];
 
 let map, markers = [], routeLine = null;
-let favorites = new Set();
-let goingSet = new Set();
+let favorites = new Set(JSON.parse(localStorage.getItem('yg-favorites') || '[]'));
+let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let advTagFilters = new Set();
@@ -2516,7 +2516,7 @@ function groupByNeighborhoodSale(listings) {
     if (l.neighborhood_sale_id) {
       if (!groups[l.neighborhood_sale_id]) {
         groups[l.neighborhood_sale_id] = {
-          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: l.address.split(',').slice(-1)[0].trim(), date: l.date },
+          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: (l.address || '').split(',').slice(-1)[0].trim() || 'Onbekend', date: l.date },
           listings: []
         };
       }
@@ -2773,7 +2773,7 @@ function renderList() {
   // Buurtverkopen als uitklapbare kaart
   Object.values(bvGroups).forEach(function(bv) {
     var bvDate = fmtDate(bv.info.date);
-    var bvId = bv.info.id;
+    var bvId = escapeHtml(bv.info.id);
     html += '<div class="card bv-list-card">'
       // Klik-header (toggle)
       + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
@@ -2799,8 +2799,8 @@ function renderList() {
       + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
       + bv.listings.map(function(listing) {
           var fav = favorites.has(listing.id);
-          var idAttr = typeof listing.id === 'string' ? "'" + listing.id + "'" : listing.id;
-          var addrShort = escapeHtml(listing.address.split(',')[0] || listing.address);
+          var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
+          var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
           var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
             return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
           }).join('');
@@ -2854,7 +2854,7 @@ function createListingCard(s, i) {
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
     + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(t.label) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
-    + '<div class="card-addr">' + addr + ' · ' + fmtDate(s.date) + '</div>'
+    + '<div class="card-addr">' + addr + (s.date ? ' · ' + fmtDate(s.date) : '') + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
     + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
     + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
@@ -2878,6 +2878,7 @@ function zoomToListing(listingId) {
 function toggleFav(id) {
   if (isGuest) { guestGate('favoriet'); return; }
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  localStorage.setItem('yg-favorites', JSON.stringify(Array.from(favorites)));
   renderMarkers(); renderList(); updateFavProfile();
 }
 function updateFavProfile() {
@@ -3212,6 +3213,7 @@ function toggleInterest() {
   if (!s) return;
   if (goingSet.has(s.id)) { goingSet.delete(s.id); s.interested = Math.max(0, s.interested - 1); }
   else { goingSet.add(s.id); s.interested++; }
+  localStorage.setItem('yg-going', JSON.stringify(Array.from(goingSet)));
   updateInterestUI(s); renderList();
 }
 function updateInterestUI(s) {
@@ -4833,7 +4835,7 @@ async function openSellerProfile(email, name, userId) {
           avatarEl.innerHTML = '<img src="' + d.avatar_url + '" style="width:100%;height:100%;object-fit:cover">';
         }
         // Manual badges (admin_badges) + auto badges (op basis van listings van deze user)
-        var manual = Array.isArray(d.admin_badges) ? d.admin_badges : [];
+        var manual = Array.isArray(d.admin_badges) ? d.admin_badges : (typeof d.admin_badges === 'string' ? (function(){ try { return JSON.parse(d.admin_badges); } catch(e) { return []; } })() : []);
         var theirSales = sales.filter(function(x){ return x.user_id === userId && !x.is_sample; });
         var autoKeys = (typeof computeAutoBadgeKeys === 'function') ? Object.keys(computeAutoBadgeKeys(theirSales)) : [];
         var allKeys = manual.concat(autoKeys.filter(function(k){ return manual.indexOf(k) === -1; }));
