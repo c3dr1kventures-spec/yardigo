@@ -1802,6 +1802,45 @@ try {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
 }
 
+// ══════════════════════════════════════════════════
+// Foutenmonitoring — logt JS-errors naar error_logs tabel in Supabase
+// zodat je als admin kunt zien welke fouten gebruikers tegenkomen.
+// ══════════════════════════════════════════════════
+var _errorLogQueue = [];
+var _errorLogBusy = false;
+async function logError(err, context) {
+  if (!sbClient) return;
+  var msg = (err && err.message) ? err.message : String(err || 'Onbekende fout');
+  var stack = (err && err.stack) ? err.stack.substring(0, 2000) : null;
+  var userId = null;
+  try { userId = (currentUser && currentUser.id) || null; } catch(e) {}
+  var entry = {
+    message: msg,
+    stack: stack,
+    url: window.location.href,
+    user_id: userId,
+    user_agent: (navigator.userAgent || '').substring(0, 500),
+    context: context || {}
+  };
+  _errorLogQueue.push(entry);
+  if (_errorLogBusy) return; // wordt al verwerkt
+  _errorLogBusy = true;
+  while (_errorLogQueue.length > 0) {
+    var batch = _errorLogQueue.splice(0, 5);
+    try { await sbClient.from('error_logs').insert(batch); } catch(e) { /* stille fallback */ }
+  }
+  _errorLogBusy = false;
+}
+
+// Globale catchers — vangt ALLE onafgehandelde JS-errors op
+window.addEventListener('error', function(ev) {
+  logError(ev.error || ev.message, { type: 'uncaught', filename: ev.filename, lineno: ev.lineno, colno: ev.colno });
+});
+window.addEventListener('unhandledrejection', function(ev) {
+  var reason = ev.reason || 'Unhandled promise rejection';
+  logError(reason, { type: 'unhandledrejection' });
+});
+
 async function fetchListings() {
   if (!sbClient || SUPABASE_URL.includes('JOUW-PROJECT')) {
     console.log('Supabase niet geconfigureerd, gebruik demo-data');
@@ -2092,7 +2131,7 @@ async function doMainLogin() {
   if (sbClient) {
     try {
       var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
-      if (res.error) { toast('❌ ' + res.error.message); return; }
+      if (res.error) { logError(res.error.message, { action: 'login', email: email.substring(0,3) + '***' }); toast('❌ ' + res.error.message); return; }
       var u = res.data.user;
       var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
       isGuest = false;
@@ -2103,7 +2142,7 @@ async function doMainLogin() {
       closeLogin(); updateUserUI();
       if (map) renderMarkers(); renderList();
       toast('Welkom, ' + name.split(' ')[0] + '! 🎉'); return;
-    } catch(e) { toast('❌ Inloggen mislukt'); return; }
+    } catch(e) { logError(e, { action: 'login_exception' }); toast('❌ Inloggen mislukt'); return; }
   }
   // Fallback
   var name = emailToName(email);
@@ -3620,6 +3659,7 @@ async function publishSale() {
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
           if (up.error) {
             console.error('Foto upload mislukt:', up.error);
+            logError(up.error.message || 'foto upload failed', { action: 'photo_upload', index: i, blobSize: blob.size });
             errors.push(up.error.message || String(up.error));
             continue;
           }
@@ -3689,6 +3729,7 @@ async function publishSale() {
       var profRes = await ensureProfile(currentUserId, currentUser && currentUser.name, currentUser && currentUser.email);
       if (!profRes.ok) {
         hideL();
+        logError(profRes.error || 'ensureProfile failed', { action: 'ensureProfile' });
         toast('❌ Profiel kon niet worden aangemaakt: ' + (profRes.error || 'onbekende fout'));
         return;
       }
@@ -3752,6 +3793,7 @@ async function publishSale() {
           });
           if (insRes && insRes.error) {
             console.error('Listing insert mislukt:', insRes.error);
+            logError(insRes.error.message, { action: 'listing_insert_buurt', code: insRes.error.code });
             toast('❌ ' + insRes.error.message);
           }
         }
@@ -3779,6 +3821,7 @@ async function publishSale() {
         });
         if (insRes && insRes.error) {
           console.error('Listing insert mislukt:', insRes.error);
+          logError(insRes.error.message || 'listing insert failed', { action: 'listing_insert', code: insRes.error.code });
           toast('❌ ' + (insRes.error.message || 'Publiceren mislukt'));
           hideL(); return;
         }
@@ -3791,7 +3834,7 @@ async function publishSale() {
     loadAndRenderUserBadges(); // badges herberekenen
     closeAdd(); hideL();
     toast('🎉 Verkoop geplaatst!');
-  } catch(e) { console.error(e); hideL(); toast('❌ Publiceren mislukt'); }
+  } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast('❌ Publiceren mislukt'); }
   finally {
     // Lock altijd vrijgeven
     isPublishing = false;
