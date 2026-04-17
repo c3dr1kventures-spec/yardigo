@@ -8,99 +8,204 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; color: #2C2416; background: #F9F5EF; line-height: 1.7; }
     h1 { font-size: 28px; color: #E07B39; margin-bottom: 4px; }
     h2 { font-size: 18px; margin-top: 36px; color: #3A6B4A; }
+    h3 { font-size: 15px; margin-top: 24px; color: #3A6B4A; }
     p, li { font-size: 15px; color: #4A3E32; }
     ul { padding-left: 20px; }
     a { color: #E07B39; }
     .last-updated { font-size: 13px; color: #7A6E62; margin-bottom: 32px; }
     footer { margin-top: 48px; font-size: 13px; color: #7A6E62; border-top: 1px solid #EDE8DF; padding-top: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #EDE8DF; vertical-align: top; }
+    th { background: #F2EADD; color: #2C2416; font-weight: 700; }
+    .note { font-size: 13px; color: #7A6E62; background: #F2EADD; border-left: 3px solid #E07B39; padding: 10px 12px; border-radius: 6px; margin: 12px 0; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #3A6B4A; text-decoration: none; margin-bottom: 28px; }
+    .back:hover { opacity: .75; }
   </style>
 </head>
 <body>
 
+  <a class="back" href="/">← Terug naar YardiGo</a>
+
   <h1>Privacyverklaring</h1>
-  <p class="last-updated">Laatst bijgewerkt: april 2026</p>
+  <p class="last-updated">Versie 2.0 · Laatst bijgewerkt: 17 april 2026</p>
 
-  <p>YardiGo is een Nederlandse app waarmee je garagesales, buurtverkopen, kofferbakverkopen en rommelmarkten bij jou in de buurt kunt vinden en plaatsen. Deze privacyverklaring legt uit welke persoonsgegevens wij verwerken, waarom, en welke rechten jij hebt.</p>
+  <p>YardiGo is een Nederlandse app en website waarmee je garagesales, buurtverkopen, kofferbakverkopen en rommelmarkten bij jou in de buurt kunt vinden en plaatsen. In deze privacyverklaring leggen we uit welke persoonsgegevens wij verwerken, waarom, hoe lang en op welke rechtsgrond, en welke rechten jij hebt onder de Algemene Verordening Gegevensbescherming (AVG / GDPR).</p>
 
-  <h2>1. Wie is verantwoordelijk?</h2>
+  <h2>1. Verwerkingsverantwoordelijke</h2>
   <p>
-    <strong>Verwerkingsverantwoordelijke:</strong><br>
-    Christian Koops (handelend onder c3dr1kventures)<br>
-    Seringenstraat 12, 9421 SJ Bovensmilde<br>
-    Nederland<br>
-    E-mail: <a href="mailto:yardigo.app@gmail.com">yardigo.app@gmail.com</a>
+    <strong>Christian Koops</strong>, handelend onder de naam <strong>YardiGo</strong> (c3dr1kventures, eenmanszaak in oprichting).<br>
+    Seringenstraat 12, 9421 SJ Bovensmilde, Nederland<br>
+    KvK-nummer: <em>in aanvraag — wordt hier vermeld zodra ingeschreven</em><br>
+    E-mail privacyverzoeken: <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a><br>
+    Algemene e-mail: <a href="mailto:yardigo.app@gmail.com">yardigo.app@gmail.com</a>
   </p>
+  <p>YardiGo heeft geen Functionaris voor Gegevensbescherming aangesteld; dit is niet verplicht voor een organisatie van deze omvang.</p>
 
-  <h2>2. Welke gegevens verzamelen we?</h2>
-  <p>We verzamelen alleen de gegevens die nodig zijn om de app te laten werken:</p>
+  <h2>2. Welke gegevens verwerken we?</h2>
+  <p>We verwerken uitsluitend de gegevens die nodig zijn om de dienst te kunnen leveren (dataminimalisatie, art. 5 lid 1 sub c AVG):</p>
   <ul>
-    <li><strong>Naam</strong> – bij het aanmaken van een account.</li>
-    <li><strong>E-mailadres</strong> – bij registratie en voor communicatie over je account.</li>
+    <li><strong>Naam</strong> – bij het aanmaken van een account, als weergavenaam in de app.</li>
+    <li><strong>E-mailadres</strong> – voor registratie, inloggen en communicatie over je account.</li>
+    <li><strong>Gehasht wachtwoord</strong> – via Supabase Auth; wachtwoorden worden nooit in leesbare vorm opgeslagen.</li>
     <li><strong>Gebruikers-ID</strong> – een interne identificatiecode gekoppeld aan jouw account.</li>
-    <li><strong>Nauwkeurige locatie</strong> – om garagesales bij jou in de buurt te tonen op de kaart. Dit gebeurt alleen met jouw toestemming en de locatie wordt niet permanent opgeslagen.</li>
-    <li><strong>Foto's en video's</strong> – die jij uploadt bij het plaatsen van een advertentie.</li>
-    <li><strong>Advertentiegegevens</strong> – adres, datum, beschrijving en type verkoop die jij zelf invoert.</li>
+    <li><strong>Nauwkeurige locatie (GPS)</strong> – om garagesales in de buurt te tonen en je eigen advertentie op de kaart te plaatsen. Alleen na expliciete toestemming via je apparaat. Deze locatie wordt niet persistent in onze database opgeslagen; we gebruiken hem real-time om de kaart te renderen.</li>
+    <li><strong>Advertentie-inhoud</strong> – foto's, adres, datum/tijd, categorieën en beschrijving die jij zelf invoert bij het plaatsen van een verkoop.</li>
+    <li><strong>Technische logs</strong> – IP-adres, browsertype, besturingssysteem en tijdstempels; automatisch geregistreerd door Supabase en Vercel voor beveiliging en foutdiagnose.</li>
   </ul>
 
-  <h2>3. Waarvoor gebruiken we jouw gegevens?</h2>
+  <h2>3. Doelen, rechtsgronden en bewaartermijnen</h2>
+  <p>Onder de AVG moeten we per verwerking benoemen wát we doen, wáárom, op welke <strong>rechtsgrond</strong> (art. 6 lid 1 AVG) en hoe <strong>lang</strong> we het bewaren:</p>
+
+  <table>
+    <thead>
+      <tr><th>Gegevens</th><th>Doel</th><th>Rechtsgrond</th><th>Bewaartermijn</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Naam, e-mail, gehasht wachtwoord, gebruikers-ID</td>
+        <td>Account aanmaken, authenticatie, dienstverlening</td>
+        <td>art. 6.1.b – uitvoering overeenkomst</td>
+        <td>Tot verwijdering van je account, plus maximaal 30 dagen in back-ups</td>
+      </tr>
+      <tr>
+        <td>GPS-locatie (real-time)</td>
+        <td>Nabije verkopen tonen, eigen advertentie op de kaart plaatsen</td>
+        <td>art. 6.1.a – toestemming (via iOS/Android locatie-prompt)</td>
+        <td>Niet persistent opgeslagen; alleen in geheugen tijdens gebruik</td>
+      </tr>
+      <tr>
+        <td>Advertentie-inhoud (foto's, adres, datum, beschrijving)</td>
+        <td>Tonen van jouw verkoop aan andere gebruikers</td>
+        <td>art. 6.1.b – uitvoering overeenkomst</td>
+        <td>Tot jij de advertentie verwijdert, of automatisch verwijderd binnen 30 dagen na eventdatum</td>
+      </tr>
+      <tr>
+        <td>Technische logs (IP, device, errors)</td>
+        <td>Beveiliging, fraudedetectie, foutdiagnose, rate-limiting</td>
+        <td>art. 6.1.f – gerechtvaardigd belang</td>
+        <td>Maximaal 90 dagen in logs</td>
+      </tr>
+      <tr>
+        <td>Service-e-mails (wachtwoord reset, accountnotificaties)</td>
+        <td>Transactionele communicatie over je account</td>
+        <td>art. 6.1.b – uitvoering overeenkomst</td>
+        <td>Duur van de accountrelatie</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>YardiGo gebruikt op dit moment <strong>geen</strong> marketing-mailing en <strong>geen</strong> nieuwsbrief. Mocht dat in de toekomst veranderen, dan gebeurt dat uitsluitend op basis van een aparte, niet-vooraangevinkte opt-in (art. 6.1.a AVG).</p>
+
+  <h2>4. Gevolgen als je gegevens niet verstrekt</h2>
   <ul>
-    <li>Om advertenties te tonen, te plaatsen en te beheren.</li>
-    <li>Om je account te beveiligen en het inloggen mogelijk te maken.</li>
-    <li>Om garagesales bij jou in de buurt te tonen op de kaart.</li>
-    <li>Om te reageren op vragen of verzoeken die je stuurt.</li>
+    <li>Zonder e-mailadres en wachtwoord kun je geen account aanmaken; je kunt YardiGo dan wel <strong>als gast</strong> gebruiken om verkopen te bekijken.</li>
+    <li>Zonder locatietoestemming kun je niet automatisch verkopen in jouw buurt zien; handmatig zoeken op plaats of postcode blijft wel mogelijk.</li>
+    <li>Zonder advertentiegegevens (adres, datum) kun je geen verkoop plaatsen; bekijken van andermans verkopen blijft mogelijk.</li>
   </ul>
 
-  <h2>4. Rechtsgrond voor verwerking</h2>
+  <h2>5. Ontvangers en verwerkers</h2>
+  <p>We verkopen je gegevens nooit en delen ze niet met adverteerders. We maken uitsluitend gebruik van de volgende verwerkers, die allen een verwerkersovereenkomst met ons hebben (of daarvoor standaard voorwaarden toepassen):</p>
+
+  <table>
+    <thead>
+      <tr><th>Partij</th><th>Doel</th><th>Locatie verwerking</th><th>Waarborg doorgifte</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Supabase Inc.</strong> (VS)</td>
+        <td>Database, authenticatie en bestandsopslag (foto's)</td>
+        <td>EU-regio (Frankfurt)</td>
+        <td>EU-US Data Privacy Framework + SCC's</td>
+      </tr>
+      <tr>
+        <td><strong>Vercel Inc.</strong> (VS)</td>
+        <td>Hosting van de website en edge-delivery</td>
+        <td>Globaal CDN; primaire regio EU</td>
+        <td>EU-US Data Privacy Framework + SCC's</td>
+      </tr>
+      <tr>
+        <td><strong>Apple Inc.</strong> (VS)</td>
+        <td>Distributie van de iOS-app, push-notificaties, App-Store-authenticatie</td>
+        <td>Wereldwijd</td>
+        <td>EU-US Data Privacy Framework + SCC's</td>
+      </tr>
+      <tr>
+        <td><strong>OpenStreetMap Foundation</strong> (VK)</td>
+        <td>Kaarttegels die bij het openen van de kaart worden geladen; ontvangt daarbij je IP-adres</td>
+        <td>Verenigd Koninkrijk</td>
+        <td>Adequaatheidsbesluit Europese Commissie (VK)</td>
+      </tr>
+      <tr>
+        <td><strong>Porkbun LLC</strong> (VS)</td>
+        <td>Domeinregistratie en e-mailforwarding voor privacy@yardigo.nl</td>
+        <td>VS</td>
+        <td>EU-US Data Privacy Framework + SCC's</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Publiek gemaakte advertentiegegevens (adres, beschrijving, foto's en de door jou opgegeven weergavenaam) zijn zichtbaar voor alle bezoekers van YardiGo. Plaats daarom geen gegevens die je niet openbaar wilt maken.</p>
+
+  <h2>6. Cookies en lokale opslag</h2>
+  <p>YardiGo gebruikt <strong>geen</strong> tracking-cookies, <strong>geen</strong> analytics-diensten met persoonsgegevens (zoals Google Analytics of Meta Pixel) en <strong>geen</strong> advertentiepixels. Wij plaatsen uitsluitend:</p>
   <ul>
-    <li><strong>Uitvoering van een overeenkomst</strong> (art. 6 lid 1 sub b AVG) – voor naam, e-mail, gebruikers-ID, foto's en advertentiegegevens: noodzakelijk om de dienst te leveren.</li>
-    <li><strong>Toestemming</strong> (art. 6 lid 1 sub a AVG) – voor locatiegegevens. Je kunt deze toestemming op elk moment intrekken via de instellingen van je telefoon. Dit heeft geen gevolgen voor de verwerking vóór de intrekking.</li>
+    <li><strong>Technische localStorage</strong> – om je inlogstatus en voorkeuren (zoals geselecteerde categorieën) op jouw apparaat op te slaan. Dit zijn geen cookies en de gegevens verlaten je apparaat niet.</li>
+    <li><strong>Functionele sessiecookies van Supabase Auth</strong> – strikt noodzakelijk om je ingelogd te houden. Voor strikt noodzakelijke cookies is op grond van artikel 11.7a Telecommunicatiewet geen toestemming vereist.</li>
   </ul>
+  <p>Omdat we geen analytische of marketing-scripts laden, tonen we bewust geen cookiebanner. Mocht YardiGo in de toekomst analytics of andere niet-noodzakelijke cookies gebruiken, dan plaatsen we op dat moment een consent-banner met gelijkwaardige 'Accepteer'- en 'Weiger'-opties, en zullen die scripts pas laden ná toestemming.</p>
 
-  <h2>5. Delen we jouw gegevens?</h2>
-  <p>We verkopen je gegevens nooit. We delen gegevens uitsluitend met de volgende verwerkers:</p>
+  <h2>7. Beveiliging</h2>
   <ul>
-    <li><strong>Supabase</strong> (Supabase Inc.) – voor opslag van accountgegevens, advertenties en foto's, in de EU. Zie <a href="https://supabase.com/privacy" target="_blank">supabase.com/privacy</a>.</li>
-    <li><strong>Vercel</strong> (Vercel Inc.) – voor hosting van de website. Zie <a href="https://vercel.com/legal/privacy-policy" target="_blank">vercel.com/legal/privacy-policy</a>.</li>
+    <li>Alle communicatie met onze server verloopt via HTTPS (TLS).</li>
+    <li>Wachtwoorden worden nooit in leesbare vorm opgeslagen — we gebruiken de hashing-implementatie van Supabase Auth.</li>
+    <li>Databasetoegang is beperkt via Row Level Security (RLS) op Supabase: je kunt alleen je eigen advertenties en profielgegevens wijzigen.</li>
+    <li>Rate-limiting staat actief op login- en registratie-endpoints om brute-force-pogingen te beperken.</li>
   </ul>
-  <p>Gegevens die jij publiceert in een advertentie (adres, omschrijving, foto's) zijn zichtbaar voor alle bezoekers van YardiGo.</p>
 
-  <h2>6. Hoe lang bewaren we jouw gegevens?</h2>
-  <p>Je accountgegevens en advertenties bewaren we zolang je account actief is. Verwijder je je account, dan worden al je gegevens permanent gewist binnen 30 dagen.</p>
-
-  <h2>7. Cookies en lokale opslag</h2>
-  <p>De YardiGo app gebruikt geen tracking-cookies. We gebruiken alleen technische opslag (localStorage) om je inlogstatus en voorkeuren lokaal op jouw apparaat op te slaan.</p>
-
-  <h2>8. Beveiliging</h2>
-  <p>Alle communicatie verloopt via HTTPS. Wachtwoorden worden nooit opgeslagen – we gebruiken beveiligde authenticatie via Supabase Auth. Toegang tot gegevens is beperkt via Row Level Security op databaseniveau.</p>
+  <h2>8. Geautomatiseerde besluitvorming en profilering</h2>
+  <p>YardiGo past <strong>geen</strong> geautomatiseerde besluitvorming of profilering toe in de zin van artikel 22 AVG. Er worden dus geen besluiten over jou genomen door algoritmes met rechtsgevolgen of aanmerkelijke gevolgen voor jou.</p>
 
   <h2>9. Jouw rechten</h2>
-  <p>Op grond van de AVG (GDPR) heb je de volgende rechten:</p>
+  <p>Onder de AVG heb je de volgende rechten:</p>
   <ul>
-    <li><strong>Inzage</strong> – opvragen welke gegevens wij van je hebben.</li>
-    <li><strong>Rectificatie</strong> – onjuiste gegevens laten corrigeren.</li>
-    <li><strong>Verwijdering</strong> – je account en gegevens verwijderen via de app (Mijn → Instellingen → Account verwijderen), of door een verzoek te sturen.</li>
-    <li><strong>Beperking</strong> – ons vragen de verwerking tijdelijk te beperken.</li>
-    <li><strong>Gegevensoverdraagbaarheid</strong> – je gegevens in een gestructureerde vorm opvragen.</li>
-    <li><strong>Bezwaar</strong> – bezwaar maken tegen bepaalde verwerkingen.</li>
-    <li><strong>Toestemming intrekken</strong> – toestemming voor locatiegegevens intrekken via je telefooninstellingen.</li>
+    <li><strong>Inzage</strong> (art. 15) – opvragen welke gegevens wij van je hebben.</li>
+    <li><strong>Rectificatie</strong> (art. 16) – onjuiste gegevens laten corrigeren.</li>
+    <li><strong>Verwijdering / vergetelheid</strong> (art. 17) – je account en bijbehorende gegevens laten wissen. Dit kan zelf via <em>Mijn → Instellingen → Account verwijderen</em> in de app, of via een verzoek aan <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>.</li>
+    <li><strong>Beperking</strong> (art. 18) – ons vragen de verwerking tijdelijk te beperken, bijvoorbeeld tijdens een geschil over juistheid.</li>
+    <li><strong>Dataportabiliteit</strong> (art. 20) – je accountgegevens en advertenties in een gestructureerd, machineleesbaar formaat opvragen.</li>
+    <li><strong>Bezwaar</strong> (art. 21) – bezwaar maken tegen verwerkingen op basis van gerechtvaardigd belang (met name de logs).</li>
+    <li><strong>Toestemming intrekken</strong> (art. 7 lid 3) – GPS-toestemming kun je op elk moment intrekken via je apparaatinstellingen. Dit heeft geen gevolgen voor de verwerking die vóór de intrekking al plaatsvond.</li>
   </ul>
-  <p>Stuur een verzoek naar <a href="mailto:yardigo.app@gmail.com">yardigo.app@gmail.com</a>. Wij reageren binnen 30 dagen.</p>
+  <p>Stuur een verzoek naar <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Wij reageren binnen één maand (art. 12 lid 3 AVG). Om je identiteit vast te stellen vragen we je het verzoek te sturen vanaf het bij jouw account geregistreerde e-mailadres; een kopie van een identiteitsbewijs hebben we daarvoor niet nodig.</p>
 
-  <h2>10. Klacht indienen</h2>
-  <p>Ben je niet tevreden met hoe wij met je gegevens omgaan? Je kunt een klacht indienen bij de Nederlandse toezichthouder:</p>
+  <h2>10. Klachtrecht bij de Autoriteit Persoonsgegevens</h2>
+  <p>Ben je van mening dat wij niet zorgvuldig met je gegevens omgaan, dan kun je een klacht indienen bij de Nederlandse toezichthouder:</p>
   <p>
     <strong>Autoriteit Persoonsgegevens</strong><br>
-    <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank">www.autoriteitpersoonsgegevens.nl</a>
+    Postbus 93374, 2509 AJ Den Haag<br>
+    <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener">autoriteitpersoonsgegevens.nl</a>
   </p>
 
-  <h2>11. Wijzigingen</h2>
-  <p>We kunnen deze privacyverklaring aanpassen. De meest actuele versie staat altijd op <a href="https://www.yardigo.nl/privacy">www.yardigo.nl/privacy</a>. Bij ingrijpende wijzigingen informeren we je via de app of per e-mail.</p>
+  <h2>11. Gebruikers jonger dan 16 jaar</h2>
+  <p>YardiGo is bedoeld voor gebruikers vanaf 16 jaar. Gebruikers onder de 16 hebben op grond van artikel 8 AVG toestemming van een ouder of voogd nodig. Als je vermoedt dat wij gegevens van een minderjarige zonder toestemming verwerken, neem dan contact op via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>; we verwijderen die gegevens dan zo snel mogelijk.</p>
 
-  <h2>12. Contact</h2>
-  <p>Vragen over je privacy? Neem contact op via <a href="mailto:yardigo.app@gmail.com">yardigo.app@gmail.com</a>.</p>
+  <h2>12. Datalekken</h2>
+  <p>Wij nemen onze meldplicht bij datalekken serieus. Als er een datalek optreedt dat een risico inhoudt voor jouw rechten en vrijheden, melden we dit binnen <strong>72 uur</strong> na ontdekking bij de Autoriteit Persoonsgegevens (art. 33 AVG). Bij een hoog risico informeren we jou rechtstreeks (art. 34 AVG).</p>
+
+  <h2>13. Wijzigingen van deze verklaring</h2>
+  <p>We kunnen deze privacyverklaring aanpassen. De meest actuele versie staat altijd op <a href="https://www.yardigo.nl/privacy">www.yardigo.nl/privacy</a>. Bij ingrijpende wijzigingen informeren we je via een in-app melding of per e-mail, ten minste 30 dagen vóór inwerkingtreding.</p>
+
+  <h3>Versiehistorie</h3>
+  <ul>
+    <li><strong>v2.0 — 17 april 2026</strong>: volledige herziening conform AVG-audit; verwerkerslijst uitgebreid (Apple, OSM, Porkbun), doorgifte naar derde landen expliciet gemaakt, concrete bewaartermijnen, rechtsgrond f voor logs, art. 22 clausule, datalekparagraaf, gevolgen niet-verstrekken toegevoegd.</li>
+    <li><strong>v1.0 — april 2026</strong>: eerste versie bij launch.</li>
+  </ul>
+
+  <h2>14. Contact</h2>
+  <p>Vragen over privacy? Mail <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Andere vragen over de app: <a href="mailto:yardigo.app@gmail.com">yardigo.app@gmail.com</a>.</p>
 
   <footer>
-    © 2026 YardiGo · <a href="/">Terug naar YardiGo</a>
+    &copy; 2026 YardiGo · <a href="/voorwaarden">Gebruiksvoorwaarden</a> · <a href="/">Terug naar YardiGo</a>
   </footer>
 
 </body>
