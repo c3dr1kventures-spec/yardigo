@@ -5,7 +5,28 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>YardiGo</title>
+<title>YardiGo — Ontdek garagesales bij jou in de buurt</title>
+<meta name="description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.">
+<meta name="theme-color" content="#E07B39">
+<link rel="canonical" href="https://www.yardigo.nl/">
+
+<!-- Open Graph (WhatsApp, Facebook, LinkedIn, Slack) -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.yardigo.nl/">
+<meta property="og:title" content="YardiGo — Ontdek garagesales bij jou in de buurt">
+<meta property="og:description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.">
+<meta property="og:image" content="https://www.yardigo.nl/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="nl_NL">
+<meta property="og:site_name" content="YardiGo">
+
+<!-- Twitter/X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="YardiGo — Ontdek garagesales bij jou in de buurt">
+<meta name="twitter:description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart.">
+<meta name="twitter:image" content="https://www.yardigo.nl/og-image.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -837,13 +858,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- Filter bar -->
 <div class="filter-bar">
   <div style="position:relative">
-    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')">📍 Afstand: <span id="lbl-afstand">5 km</span> ▾</button>
+    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')">📍 Afstand: <span id="lbl-afstand">Overal</span> ▾</button>
     <div class="fdd-menu" id="dd-afstand">
-      <div class="fdd-opt sel" onclick="pickR(5)">5 km</div>
+      <div class="fdd-opt" onclick="pickR(5)">5 km</div>
       <div class="fdd-opt" onclick="pickR(10)">10 km</div>
       <div class="fdd-opt" onclick="pickR(25)">25 km</div>
       <div class="fdd-opt" onclick="pickR(50)">50 km</div>
-      <div class="fdd-opt" onclick="pickR(9999)">Overal</div>
+      <div class="fdd-opt sel" onclick="pickR(9999)">Overal</div>
     </div>
   </div>
   <div style="position:relative">
@@ -1802,6 +1823,45 @@ try {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
 }
 
+// ══════════════════════════════════════════════════
+// Foutenmonitoring — logt JS-errors naar error_logs tabel in Supabase
+// zodat je als admin kunt zien welke fouten gebruikers tegenkomen.
+// ══════════════════════════════════════════════════
+var _errorLogQueue = [];
+var _errorLogBusy = false;
+async function logError(err, context) {
+  if (!sbClient) return;
+  var msg = (err && err.message) ? err.message : String(err || 'Onbekende fout');
+  var stack = (err && err.stack) ? err.stack.substring(0, 2000) : null;
+  var userId = null;
+  try { userId = (currentUser && currentUser.id) || null; } catch(e) {}
+  var entry = {
+    message: msg,
+    stack: stack,
+    url: window.location.href,
+    user_id: userId,
+    user_agent: (navigator.userAgent || '').substring(0, 500),
+    context: context || {}
+  };
+  _errorLogQueue.push(entry);
+  if (_errorLogBusy) return; // wordt al verwerkt
+  _errorLogBusy = true;
+  while (_errorLogQueue.length > 0) {
+    var batch = _errorLogQueue.splice(0, 5);
+    try { await sbClient.from('error_logs').insert(batch); } catch(e) { /* stille fallback */ }
+  }
+  _errorLogBusy = false;
+}
+
+// Globale catchers — vangt ALLE onafgehandelde JS-errors op
+window.addEventListener('error', function(ev) {
+  logError(ev.error || ev.message, { type: 'uncaught', filename: ev.filename, lineno: ev.lineno, colno: ev.colno });
+});
+window.addEventListener('unhandledrejection', function(ev) {
+  var reason = ev.reason || 'Unhandled promise rejection';
+  logError(reason, { type: 'unhandledrejection' });
+});
+
 async function fetchListings() {
   if (!sbClient || SUPABASE_URL.includes('JOUW-PROJECT')) {
     console.log('Supabase niet geconfigureerd, gebruik demo-data');
@@ -1912,10 +1972,11 @@ let sales = [
 ];
 
 let map, markers = [], routeLine = null;
-let favorites = new Set();
-let goingSet = new Set();
+let favorites = new Set(JSON.parse(localStorage.getItem('yg-favorites') || '[]'));
+let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
+let activeRadiusKm = 9999;
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
@@ -2092,7 +2153,7 @@ async function doMainLogin() {
   if (sbClient) {
     try {
       var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
-      if (res.error) { toast('❌ ' + res.error.message); return; }
+      if (res.error) { logError(res.error.message, { action: 'login', email: email.substring(0,3) + '***' }); toast('❌ ' + res.error.message); return; }
       var u = res.data.user;
       var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(email);
       isGuest = false;
@@ -2103,7 +2164,7 @@ async function doMainLogin() {
       closeLogin(); updateUserUI();
       if (map) renderMarkers(); renderList();
       toast('Welkom, ' + name.split(' ')[0] + '! 🎉'); return;
-    } catch(e) { toast('❌ Inloggen mislukt'); return; }
+    } catch(e) { logError(e, { action: 'login_exception' }); toast('❌ Inloggen mislukt'); return; }
   }
   // Fallback
   var name = emailToName(email);
@@ -2456,7 +2517,7 @@ function groupByNeighborhoodSale(listings) {
     if (l.neighborhood_sale_id) {
       if (!groups[l.neighborhood_sale_id]) {
         groups[l.neighborhood_sale_id] = {
-          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: l.address.split(',').slice(-1)[0].trim(), date: l.date },
+          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: (l.address || '').split(',').slice(-1)[0].trim() || 'Onbekend', date: l.date },
           listings: []
         };
       }
@@ -2576,6 +2637,10 @@ function saleMatchesFilters(s) {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
     if (range && (sd < range[0] || sd > range[1])) return false;
   }
+  // Afstandsfilter: alleen als radius ingesteld en locatie beschikbaar
+  if (activeRadiusKm < 9999 && userLocation && s.lat && s.lng) {
+    if (dist(userLocation, s) > activeRadiusKm) return false;
+  }
   return true;
 }
 function getDateRange(key) {
@@ -2635,10 +2700,24 @@ function openDD(e, name) {
   }, 10);
 }
 function pickR(km) {
+  activeRadiusKm = km;
   var lbl = km === 9999 ? 'Overal' : km + ' km';
   document.getElementById('lbl-afstand').textContent = lbl;
   document.getElementById('dd-afstand').style.display = 'none';
-  applyFilters();
+  // Als er een afstandsfilter is én we nog geen locatie hebben, vraag locatie op
+  if (km < 9999 && !userLocation && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      applyFilters();
+    }, function() {
+      toast('📍 Locatie niet beschikbaar — afstandsfilter werkt zonder locatie niet');
+      activeRadiusKm = 9999;
+      document.getElementById('lbl-afstand').textContent = 'Overal';
+      applyFilters();
+    });
+  } else {
+    applyFilters();
+  }
 }
 function pickD(key, lbl) {
   activeDateFilter = key;
@@ -2683,6 +2762,7 @@ function renderList() {
       return TYPES[t] ? TYPES[t].icon + ' ' + TYPES[t].label : t;
     });
     var hasDateFilter = activeDateFilter !== 'all';
+    var hasDistFilter = activeRadiusKm < 9999;
     var filterHtml = '';
     activeFilterNames.forEach(function(f) {
       filterHtml += '<span class="empty-filter-tag">' + f + ' <span class="clr-type" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
@@ -2690,6 +2770,9 @@ function renderList() {
     if (hasDateFilter) {
       var dateLbl = document.getElementById('lbl-datum') ? document.getElementById('lbl-datum').textContent : '';
       filterHtml += '<span class="empty-filter-tag">\u{1F4C5} ' + dateLbl + ' <span class="clr-date" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
+    }
+    if (hasDistFilter) {
+      filterHtml += '<span class="empty-filter-tag">\u{1F4CD} ' + activeRadiusKm + ' km <span class="clr-dist" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
     }
     list.innerHTML = '<div class="empty-state">'
       + '<div class="empty-icon">\u{1F50D}</div>'
@@ -2699,9 +2782,10 @@ function renderList() {
       + '<button id="list-clear-btn" class="empty-btn primary">Alle filters wissen</button>'
       + '</div>';
     var clearBtn = document.getElementById('list-clear-btn');
-    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); });
+    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); pickR(9999); });
     list.querySelectorAll('.clr-type').forEach(function(el) { el.addEventListener('click', function() { filterType('all'); }); });
     list.querySelectorAll('.clr-date').forEach(function(el) { el.addEventListener('click', function() { pickD('all','Alle'); }); });
+    list.querySelectorAll('.clr-dist').forEach(function(el) { el.addEventListener('click', function() { pickR(9999); }); });
     return;
   }
   // Groepeer per buurtverkoop
@@ -2713,7 +2797,7 @@ function renderList() {
   // Buurtverkopen als uitklapbare kaart
   Object.values(bvGroups).forEach(function(bv) {
     var bvDate = fmtDate(bv.info.date);
-    var bvId = bv.info.id;
+    var bvId = escapeHtml(bv.info.id);
     html += '<div class="card bv-list-card">'
       // Klik-header (toggle)
       + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
@@ -2739,8 +2823,8 @@ function renderList() {
       + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
       + bv.listings.map(function(listing) {
           var fav = favorites.has(listing.id);
-          var idAttr = typeof listing.id === 'string' ? "'" + listing.id + "'" : listing.id;
-          var addrShort = escapeHtml(listing.address.split(',')[0] || listing.address);
+          var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
+          var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
           var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
             return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
           }).join('');
@@ -2794,7 +2878,7 @@ function createListingCard(s, i) {
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
     + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(t.label) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
-    + '<div class="card-addr">' + addr + ' · ' + fmtDate(s.date) + '</div>'
+    + '<div class="card-addr">' + addr + (s.date ? ' · ' + fmtDate(s.date) : '') + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
     + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
     + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
@@ -2818,6 +2902,7 @@ function zoomToListing(listingId) {
 function toggleFav(id) {
   if (isGuest) { guestGate('favoriet'); return; }
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  localStorage.setItem('yg-favorites', JSON.stringify(Array.from(favorites)));
   renderMarkers(); renderList(); updateFavProfile();
 }
 function updateFavProfile() {
@@ -3152,6 +3237,7 @@ function toggleInterest() {
   if (!s) return;
   if (goingSet.has(s.id)) { goingSet.delete(s.id); s.interested = Math.max(0, s.interested - 1); }
   else { goingSet.add(s.id); s.interested++; }
+  localStorage.setItem('yg-going', JSON.stringify(Array.from(goingSet)));
   updateInterestUI(s); renderList();
 }
 function updateInterestUI(s) {
@@ -3620,6 +3706,7 @@ async function publishSale() {
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
           if (up.error) {
             console.error('Foto upload mislukt:', up.error);
+            logError(up.error.message || 'foto upload failed', { action: 'photo_upload', index: i, blobSize: blob.size });
             errors.push(up.error.message || String(up.error));
             continue;
           }
@@ -3689,6 +3776,7 @@ async function publishSale() {
       var profRes = await ensureProfile(currentUserId, currentUser && currentUser.name, currentUser && currentUser.email);
       if (!profRes.ok) {
         hideL();
+        logError(profRes.error || 'ensureProfile failed', { action: 'ensureProfile' });
         toast('❌ Profiel kon niet worden aangemaakt: ' + (profRes.error || 'onbekende fout'));
         return;
       }
@@ -3752,6 +3840,7 @@ async function publishSale() {
           });
           if (insRes && insRes.error) {
             console.error('Listing insert mislukt:', insRes.error);
+            logError(insRes.error.message, { action: 'listing_insert_buurt', code: insRes.error.code });
             toast('❌ ' + insRes.error.message);
           }
         }
@@ -3779,6 +3868,7 @@ async function publishSale() {
         });
         if (insRes && insRes.error) {
           console.error('Listing insert mislukt:', insRes.error);
+          logError(insRes.error.message || 'listing insert failed', { action: 'listing_insert', code: insRes.error.code });
           toast('❌ ' + (insRes.error.message || 'Publiceren mislukt'));
           hideL(); return;
         }
@@ -3791,7 +3881,7 @@ async function publishSale() {
     loadAndRenderUserBadges(); // badges herberekenen
     closeAdd(); hideL();
     toast('🎉 Verkoop geplaatst!');
-  } catch(e) { console.error(e); hideL(); toast('❌ Publiceren mislukt'); }
+  } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast('❌ Publiceren mislukt'); }
   finally {
     // Lock altijd vrijgeven
     isPublishing = false;
@@ -4769,7 +4859,7 @@ async function openSellerProfile(email, name, userId) {
           avatarEl.innerHTML = '<img src="' + d.avatar_url + '" style="width:100%;height:100%;object-fit:cover">';
         }
         // Manual badges (admin_badges) + auto badges (op basis van listings van deze user)
-        var manual = Array.isArray(d.admin_badges) ? d.admin_badges : [];
+        var manual = Array.isArray(d.admin_badges) ? d.admin_badges : (typeof d.admin_badges === 'string' ? (function(){ try { return JSON.parse(d.admin_badges); } catch(e) { return []; } })() : []);
         var theirSales = sales.filter(function(x){ return x.user_id === userId && !x.is_sample; });
         var autoKeys = (typeof computeAutoBadgeKeys === 'function') ? Object.keys(computeAutoBadgeKeys(theirSales)) : [];
         var allKeys = manual.concat(autoKeys.filter(function(k){ return manual.indexOf(k) === -1; }));

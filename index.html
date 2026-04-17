@@ -858,13 +858,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- Filter bar -->
 <div class="filter-bar">
   <div style="position:relative">
-    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')">📍 Afstand: <span id="lbl-afstand">5 km</span> ▾</button>
+    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')">📍 Afstand: <span id="lbl-afstand">Overal</span> ▾</button>
     <div class="fdd-menu" id="dd-afstand">
-      <div class="fdd-opt sel" onclick="pickR(5)">5 km</div>
+      <div class="fdd-opt" onclick="pickR(5)">5 km</div>
       <div class="fdd-opt" onclick="pickR(10)">10 km</div>
       <div class="fdd-opt" onclick="pickR(25)">25 km</div>
       <div class="fdd-opt" onclick="pickR(50)">50 km</div>
-      <div class="fdd-opt" onclick="pickR(9999)">Overal</div>
+      <div class="fdd-opt sel" onclick="pickR(9999)">Overal</div>
     </div>
   </div>
   <div style="position:relative">
@@ -1976,6 +1976,7 @@ let favorites = new Set(JSON.parse(localStorage.getItem('yg-favorites') || '[]')
 let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
+let activeRadiusKm = 9999;
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
@@ -2636,6 +2637,10 @@ function saleMatchesFilters(s) {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
     if (range && (sd < range[0] || sd > range[1])) return false;
   }
+  // Afstandsfilter: alleen als radius ingesteld en locatie beschikbaar
+  if (activeRadiusKm < 9999 && userLocation && s.lat && s.lng) {
+    if (dist(userLocation, s) > activeRadiusKm) return false;
+  }
   return true;
 }
 function getDateRange(key) {
@@ -2695,10 +2700,24 @@ function openDD(e, name) {
   }, 10);
 }
 function pickR(km) {
+  activeRadiusKm = km;
   var lbl = km === 9999 ? 'Overal' : km + ' km';
   document.getElementById('lbl-afstand').textContent = lbl;
   document.getElementById('dd-afstand').style.display = 'none';
-  applyFilters();
+  // Als er een afstandsfilter is én we nog geen locatie hebben, vraag locatie op
+  if (km < 9999 && !userLocation && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      applyFilters();
+    }, function() {
+      toast('📍 Locatie niet beschikbaar — afstandsfilter werkt zonder locatie niet');
+      activeRadiusKm = 9999;
+      document.getElementById('lbl-afstand').textContent = 'Overal';
+      applyFilters();
+    });
+  } else {
+    applyFilters();
+  }
 }
 function pickD(key, lbl) {
   activeDateFilter = key;
@@ -2743,6 +2762,7 @@ function renderList() {
       return TYPES[t] ? TYPES[t].icon + ' ' + TYPES[t].label : t;
     });
     var hasDateFilter = activeDateFilter !== 'all';
+    var hasDistFilter = activeRadiusKm < 9999;
     var filterHtml = '';
     activeFilterNames.forEach(function(f) {
       filterHtml += '<span class="empty-filter-tag">' + f + ' <span class="clr-type" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
@@ -2750,6 +2770,9 @@ function renderList() {
     if (hasDateFilter) {
       var dateLbl = document.getElementById('lbl-datum') ? document.getElementById('lbl-datum').textContent : '';
       filterHtml += '<span class="empty-filter-tag">\u{1F4C5} ' + dateLbl + ' <span class="clr-date" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
+    }
+    if (hasDistFilter) {
+      filterHtml += '<span class="empty-filter-tag">\u{1F4CD} ' + activeRadiusKm + ' km <span class="clr-dist" style="cursor:pointer;margin-left:2px;opacity:.7">x</span></span>';
     }
     list.innerHTML = '<div class="empty-state">'
       + '<div class="empty-icon">\u{1F50D}</div>'
@@ -2759,9 +2782,10 @@ function renderList() {
       + '<button id="list-clear-btn" class="empty-btn primary">Alle filters wissen</button>'
       + '</div>';
     var clearBtn = document.getElementById('list-clear-btn');
-    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); });
+    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); pickR(9999); });
     list.querySelectorAll('.clr-type').forEach(function(el) { el.addEventListener('click', function() { filterType('all'); }); });
     list.querySelectorAll('.clr-date').forEach(function(el) { el.addEventListener('click', function() { pickD('all','Alle'); }); });
+    list.querySelectorAll('.clr-dist').forEach(function(el) { el.addEventListener('click', function() { pickR(9999); }); });
     return;
   }
   // Groepeer per buurtverkoop
