@@ -1861,6 +1861,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </div>
 
+<!-- Buurtverkoop: bevestigingslinks delen na publiceren -->
+<div class="overlay" id="shareBuurtLinksOv" onclick="if(event.target===this)closeShareBuurtLinks()">
+  <div class="sheet" style="max-height:90vh;overflow-y:auto">
+    <div class="sheet-handle"></div>
+    <div style="padding:18px 22px 24px">
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px">📨 Stuur deze links naar je buren</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner — dat is verplicht volgens de AVG. Stuur elke buur z'n eigen link via WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
+      <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:12px;color:#7A4A2A;margin-bottom:16px">
+        ⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.
+      </div>
+      <div id="shareBuurtLinksList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px"></div>
+      <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Klaar — sluiten</button>
+    </div>
+  </div>
+</div>
+
 <!-- Login overlay -->
 <div class="overlay" id="loginOv" onclick="if(event.target===this)closeLogin()">
   <div class="sheet" style="max-height:60vh">
@@ -2003,7 +2019,9 @@ function mapSupabaseToSale(item) {
     // ── Adres-onthulling (Optie C) ──
     address_reveal_mode: item.address_reveal_mode || 'day_before',
     address_visible_at: item.address_visible_at || null, // ISO-string of null
-    address_hidden: _addrHidden                           // true = adres server-side verborgen
+    address_hidden: _addrHidden,                          // true = adres server-side verborgen
+    // ── Buurt-bevestiging ──
+    confirmation_status: item.confirmation_status || 'confirmed'
   };
 }
 
@@ -2148,11 +2166,28 @@ function renderMySales() {
     var icon = s.neighborhood_sale_id ? '🏘️' : TYPES[s.type] ? TYPES[s.type].icon : '🏠';
     var label = s.neighborhood_sale_id ? 'Buurtverkoop' : (TYPES[s.type] ? TYPES[s.type].label : s.type);
     var addrShort = (s.address || '').split(',').slice(-1)[0].trim();
+    // Voor buurtverkoop: tel statussen van alle adressen in deze groep
+    var bvStatusBadge = '';
+    if (s.neighborhood_sale_id) {
+      var grp = mine.filter(function(x) { return x.neighborhood_sale_id === s.neighborhood_sale_id; });
+      var nPending = grp.filter(function(x) { return x.confirmation_status === 'pending'; }).length;
+      var nConfirmed = grp.filter(function(x) { return x.confirmation_status === 'confirmed'; }).length;
+      var nDeclined = grp.filter(function(x) { return x.confirmation_status === 'declined' || x.confirmation_status === 'expired'; }).length;
+      var total = grp.length;
+      if (nPending > 0 || nDeclined > 0) {
+        bvStatusBadge = '<div style="font-size:10px;margin-top:4px">'
+          + '<span style="background:#FFF4E6;color:#A04A18;padding:2px 6px;border-radius:4px;font-weight:700">⏳ ' + nPending + ' wacht op toestemming</span>'
+          + (nDeclined > 0 ? ' <span style="background:#FBEEEE;color:#7A2222;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px">❌ ' + nDeclined + ' geweigerd</span>' : '')
+          + ' <span style="color:var(--muted)">· ' + nConfirmed + '/' + total + ' online</span>'
+          + '</div>';
+      }
+    }
     return '<div class="my-sale-card">'
       + '<div style="font-size:28px">' + icon + '</div>'
       + '<div style="flex:1">'
       + '<div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
       + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + ' · ' + escapeHtml(addrShort) + '</div>'
+      + bvStatusBadge
       + '<div style="display:flex;gap:10px;margin-top:5px">'
       + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
       + '</div></div>'
@@ -2832,6 +2867,9 @@ function renderMarkers() {
 // FILTERS
 // ══════════════════════════════════════════════════
 function saleMatchesFilters(s) {
+  // Pending/declined/expired buurt-adressen verbergen op publieke views
+  // (organisator ziet ze wel in "Mijn verkopen")
+  if (s.confirmation_status && s.confirmation_status !== 'confirmed') return false;
   if (activeFilters.size > 0 && !activeFilters.has(s.type)) return false;
   if (activeDateFilter !== 'all') {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
@@ -3649,6 +3687,81 @@ function openAdd() {
 }
 function closeAdd() { document.getElementById('addOv').classList.remove('open'); document.body.style.overflow = ''; }
 
+// ══════════════════════════════════════════════════
+// BUURTVERKOOP — BEVESTIGINGSLINKS (AVG art. 6a)
+// ══════════════════════════════════════════════════
+function generateConfirmationToken() {
+  try {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+  } catch (e) {}
+  // RFC4122 v4-ish fallback
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = (Math.random() * 16) | 0;
+    var v = c === 'x' ? r : ((r & 0x3) | 0x8);
+    return v.toString(16);
+  });
+}
+
+function buildConfirmationUrl(token) {
+  var base = window.location.origin || '';
+  return base + '/bevestig?token=' + encodeURIComponent(token);
+}
+
+function showBuurtSharesModal(items) {
+  var list = document.getElementById('shareBuurtLinksList');
+  var ov = document.getElementById('shareBuurtLinksOv');
+  if (!list || !ov || !items || !items.length) return;
+  list.innerHTML = '';
+  items.forEach(function(item, i) {
+    var url = buildConfirmationUrl(item.token);
+    var msg = 'Hoi! Ik organiseer een buurtverkoop via YardiGo op ' + (item.date || 'binnenkort') + '. '
+            + 'Jouw adres (' + (item.address || '') + ') staat nu als "aanmelding" in het systeem. '
+            + 'Klik op deze link om te bevestigen of juist te weigeren: ' + url;
+    var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    var smsUrl = 'sms:?&body=' + encodeURIComponent(msg);
+    var mailUrl = 'mailto:?subject=' + encodeURIComponent('Buurtverkoop — bevestig je adres') + '&body=' + encodeURIComponent(msg);
+    var row = document.createElement('div');
+    row.style.cssText = 'background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px';
+    row.innerHTML =
+      '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">👤 BUUR ' + (i + 1) + '</div>'
+      + '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + escapeHtml(item.address || '—') + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;word-break:break-all">' + escapeHtml(url) + '</div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        + '<button type="button" data-copy-url="' + escapeHtml(url) + '" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">📋 Kopieer</button>'
+        + '<a href="' + escapeHtml(waUrl) + '" target="_blank" rel="noopener" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid #25D366;background:#25D366;color:white;font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">💬 WhatsApp</a>'
+        + '<a href="' + escapeHtml(smsUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">✉️ SMS</a>'
+        + '<a href="' + escapeHtml(mailUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">📧 E-mail</a>'
+      + '</div>';
+    var copyBtn = row.querySelector('[data-copy-url]');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        var u = copyBtn.getAttribute('data-copy-url') || url;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(u).then(function() { toast('✅ Link gekopieerd'); }, function() { toast('Kopiëren mislukt'); });
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = u; document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+            toast('✅ Link gekopieerd');
+          }
+        } catch (e) { toast('Kopiëren mislukt'); }
+      });
+    }
+    list.appendChild(row);
+  });
+  ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShareBuurtLinks() {
+  var ov = document.getElementById('shareBuurtLinksOv');
+  if (ov) ov.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function resetAddForm() {
   addStep = 0;
   selTypeVal = 'particulier';
@@ -3778,10 +3891,17 @@ function addBuurtAdres() {
   var row = document.createElement('div');
   row.id = 'bv-row-' + idx;
   row.style.cssText = 'display:flex;flex-direction:column;gap:6px;background:var(--bg2);border-radius:10px;padding:10px;position:relative;border:1.5px solid var(--border)';
+  var isOwn = (idx === 0);
+  var label = isOwn ? '🏠 JOUW EIGEN ADRES' : '👤 ADRES BUUR ' + idx;
+  var removeBtn = isOwn ? '' : '<button type="button" onclick="removeBuurtAdres(' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted)">✕</button>';
+  var helper = isOwn
+    ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">Gaat direct online — dit is jouw eigen toestemming.</div>'
+    : '<div style="font-size:10px;color:#A04A18;margin-bottom:4px">Na publiceren krijg je een bevestigingslink om naar deze buur te sturen. Adres staat pas online na hun "ja".</div>';
   row.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
-    + '<span style="font-size:11px;font-weight:700;color:var(--muted)">ADRES ' + (idx + 1) + '</span>'
-    + '<button type="button" onclick="removeBuurtAdres(' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted)">✕</button>'
+    + '<span style="font-size:11px;font-weight:700;color:var(--muted)">' + label + '</span>'
+    + removeBtn
     + '</div>'
+    + helper
     + '<div style="position:relative">'
     + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
@@ -4146,7 +4266,11 @@ async function publishSale() {
 
     if (isBuurt) {
       // ── Buurtverkoop: sla op als neighbourhood_sale + meerdere listings ──
+      // AVG: alleen het eerste adres (organisator) gaat direct live.
+      // Overige adressen = adressen van buren → confirmation_token + status='pending'.
+      // Pas na bevestiging via bevestig.html worden ze zichtbaar.
       var bvId = 'bv-' + Date.now();
+      var pendingShares = []; // {address, token, date} per buur — voor share-modal
 
       // Sla per adres een listing op
       var addrsToGeo = buurtAdressen.slice(1); // al geocoded hoofd; rest geocoden
@@ -4163,6 +4287,9 @@ async function publishSale() {
       for (var bi = 0; bi < buurtAdressen.length; bi++) {
         var a = buurtAdressen[bi];
         var coords = allCoords[bi] || { lat: lat, lng: lng };
+        var isOwnAddr = (bi === 0);
+        var confToken = isOwnAddr ? null : generateConfirmationToken();
+        var confStatus = isOwnAddr ? 'confirmed' : 'pending';
         var newSale = {
           id: nextId++, type: 'buurt', title: title.value.trim(),
           emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
@@ -4172,11 +4299,15 @@ async function publishSale() {
           neighborhood_sale_id: bvId,
           neighborhood_sale: { id: bvId, title: title.value.trim(), date: dateVal },
           desc: descVal,
-          user_email: currentUser.email
+          user_email: currentUser.email,
+          confirmation_status: confStatus
         };
+        // Alleen eigen adres direct publiek; pending buren zijn alleen zichtbaar voor
+        // de organisator zelf (via RLS/RPC), dus toevoegen aan lokale state is veilig
+        // en zorgt ervoor dat "Mijn verkopen" direct de juiste pending-badge toont.
         sales.unshift(newSale);
         if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
-          var insRes = await sbClient.from('listings').insert({
+          var insertPayload = {
             title: newSale.title, category: 'buurtverkoop',
             user_id: currentUserId,
             address: newSale.address, city: cityName || 'Onbekend',
@@ -4185,14 +4316,36 @@ async function publishSale() {
             tags: tagList, status: 'active', description: descVal,
             images: publicPhotoUrls.slice(),
             neighborhood_group_id: bvId,
-            address_reveal_mode: revealMode
-          });
+            address_reveal_mode: revealMode,
+            confirmation_status: confStatus
+          };
+          if (confToken) insertPayload.confirmation_token = confToken;
+          var insRes = await sbClient.from('listings').insert(insertPayload);
           if (insRes && insRes.error) {
             console.error('Listing insert mislukt:', insRes.error);
             logError(insRes.error.message, { action: 'listing_insert_buurt', code: insRes.error.code });
             toast('❌ ' + insRes.error.message);
+          } else if (confToken) {
+            pendingShares.push({
+              address: newSale.address,
+              token: confToken,
+              date: dateVal || ''
+            });
           }
+        } else if (confToken) {
+          // Demo-modus zonder Supabase: toch share-modal tonen met dummy-link
+          pendingShares.push({
+            address: newSale.address,
+            token: confToken,
+            date: dateVal || ''
+          });
         }
+      }
+
+      // Toon share-modal met bevestigingslinks voor alle buren
+      if (pendingShares.length > 0) {
+        // Wacht heel even zodat loader sluit en toast zichtbaar wordt
+        setTimeout(function() { showBuurtSharesModal(pendingShares); }, 300);
       }
 
     } else {

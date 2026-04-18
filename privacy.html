@@ -27,7 +27,7 @@
   <a class="back" href="/">← Terug naar YardiGo</a>
 
   <h1>Privacyverklaring</h1>
-  <p class="last-updated">Versie 2.0 · Laatst bijgewerkt: 17 april 2026</p>
+  <p class="last-updated">Versie 2.1 · Laatst bijgewerkt: 18 april 2026</p>
 
   <p>YardiGo is een Nederlandse app en website waarmee je garagesales, buurtverkopen, kofferbakverkopen en rommelmarkten bij jou in de buurt kunt vinden en plaatsen. In deze privacyverklaring leggen we uit welke persoonsgegevens wij verwerken, waarom, hoe lang en op welke rechtsgrond, en welke rechten jij hebt onder de Algemene Verordening Gegevensbescherming (AVG / GDPR).</p>
 
@@ -146,6 +146,21 @@
 
   <p>Publiek gemaakte advertentiegegevens (adres, beschrijving, foto's en de door jou opgegeven weergavenaam) zijn zichtbaar voor alle bezoekers van YardiGo. Plaats daarom geen gegevens die je niet openbaar wilt maken.</p>
 
+  <h2>5a. Buurtverkopen: adressen van andere bewoners</h2>
+  <p>Bij een <strong>buurtverkoop</strong> kan de organisator in het publicatieformulier meerdere adressen opgeven. Een adres van een ander huishouden is ook een persoonsgegeven van die bewoner(s). Voor die verwerking is een afzonderlijke grondslag nodig. YardiGo werkt daarom met een <strong>verplichte bevestigingslink</strong>:</p>
+  <ul>
+    <li>Het eigen adres van de organisator gaat direct online — daarvoor geeft de organisator bij het publiceren expliciet toestemming voor zichzelf (art. 6 lid 1 sub a AVG).</li>
+    <li>Voor elk ander adres maakt YardiGo een unieke, willekeurige link aan (<code>/bevestig?token=…</code>) en stuurt die <strong>niet</strong> zelf naar de bewoner. De organisator deelt de link handmatig via WhatsApp, sms of e-mail met de betreffende bewoner.</li>
+    <li>Zolang de bewoner de link niet aanklikt, is het adres <strong>niet</strong> zichtbaar voor andere gebruikers — ook niet voor ingelogde bezoekers. De listing blijft in status <em>pending</em>.</li>
+    <li>De bewoner kan via de link klikken op "Ja, bevestig mijn adres" (toestemming; status <em>confirmed</em>) of "Nee, halen weg" (weigering; status <em>declined</em>). Bij weigering worden straat, postcode en coördinaten <strong>direct</strong> uit onze database verwijderd.</li>
+    <li>Blijft een bevestigingslink <strong>7 dagen</strong> onbeantwoord, dan zet YardiGo de status automatisch op <em>expired</em> en worden straat, postcode en coördinaten alsnog gewist. De bewoner hoeft niets te doen.</li>
+    <li>Optioneel kan de bewoner een weergavenaam opgeven (bv. "Fam. de Vries"); dit is nooit verplicht.</li>
+    <li>Als je als bewoner vindt dat jouw adres zonder jouw medeweten is ingevoerd, mail dan <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. We verwijderen het op eerste verzoek, ongeacht de status.</li>
+  </ul>
+  <p>Wij verwerken in deze flow de volgende gegevens van de bewoner: straatnaam + huisnummer, postcode, geografische coördinaten en (optioneel) de opgegeven weergavenaam. Wij verwerken <strong>geen</strong> telefoonnummer of e-mailadres van de bewoner — de communicatie met de bewoner verloopt volledig buiten YardiGo om, via de organisator.</p>
+  <p><strong>Rechtsgrond:</strong> uitdrukkelijke toestemming via de bevestigingslink (art. 6 lid 1 sub a AVG). De toestemming kan op elk moment worden ingetrokken via diezelfde link (zolang de verkoop nog niet geweest is) of via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Intrekking heeft geen terugwerkende kracht op verwerking die vóór intrekking heeft plaatsgevonden.</p>
+  <p><strong>Bewaartermijn:</strong> actief tot en met de datum van de buurtverkoop; daarna worden adres-, postcode- en coördinaatgegevens van bevestigde bewoners binnen 30 dagen gewist. Pending of geweigerde entries worden direct of na 7 dagen gewist, zoals hierboven beschreven.</p>
+
   <h2>6. Cookies en lokale opslag</h2>
   <p>YardiGo gebruikt <strong>geen</strong> tracking-cookies, <strong>geen</strong> analytics-diensten met persoonsgegevens (zoals Google Analytics of Meta Pixel) en <strong>geen</strong> advertentiepixels. Wij plaatsen uitsluitend:</p>
   <ul>
@@ -197,6 +212,7 @@
 
   <h3>Versiehistorie</h3>
   <ul>
+    <li><strong>v2.1 — 18 april 2026</strong>: nieuwe §5a over buurtverkopen met verplichte bevestigingslink voor adressen van andere bewoners (AVG art. 6a); pending-entries worden na 7 dagen automatisch gewist.</li>
     <li><strong>v2.0 — 17 april 2026</strong>: volledige herziening conform AVG-audit; verwerkerslijst uitgebreid (Apple, OSM, Porkbun), doorgifte naar derde landen expliciet gemaakt, concrete bewaartermijnen, rechtsgrond f voor logs, art. 22 clausule, datalekparagraaf, gevolgen niet-verstrekken toegevoegd.</li>
     <li><strong>v1.0 — april 2026</strong>: eerste versie bij launch.</li>
   </ul>

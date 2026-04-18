@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Adres bevestigen – YardiGo</title>
+  <style>
+    :root {
+      --terra: #E07B39;
+      --forest: #3A6B4A;
+      --bark: #2C2416;
+      --muted: #7A6E62;
+      --bg: #F9F5EF;
+      --bg2: #F2EADD;
+      --border: #EDE8DF;
+      --danger: #C44;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 20px 64px; color: var(--bark); background: var(--bg); line-height: 1.6; }
+    h1 { font-size: 24px; color: var(--terra); margin: 0 0 4px; }
+    h2 { font-size: 16px; color: var(--forest); margin-top: 28px; }
+    p, li { font-size: 15px; color: #4A3E32; }
+    .lede { font-size: 14px; color: var(--muted); margin: 0 0 24px; }
+    .card { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px 18px 16px; margin: 18px 0; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+    .label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+    .val { font-size: 15px; font-weight: 600; color: var(--bark); margin-bottom: 12px; word-wrap: break-word; }
+    .val:last-child { margin-bottom: 0; }
+    button { font-family: inherit; font-size: 15px; font-weight: 700; border-radius: 12px; padding: 14px; cursor: pointer; border: none; width: 100%; }
+    .btn-primary { background: var(--forest); color: white; margin-bottom: 10px; }
+    .btn-primary:hover { background: #2D5639; }
+    .btn-secondary { background: white; color: var(--danger); border: 1.5px solid #E5C8C8; }
+    .btn-secondary:hover { background: #FBF4F4; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    input[type="text"], textarea { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: white; }
+    textarea { min-height: 70px; resize: vertical; }
+    label { font-size: 13px; color: var(--muted); display: block; margin-top: 10px; margin-bottom: 4px; font-weight: 600; }
+    .info { background: var(--bg2); border-left: 3px solid var(--terra); padding: 12px 14px; border-radius: 8px; font-size: 13px; color: #4A3E32; margin: 14px 0; }
+    .ok { background: #EAF5EE; border-left: 3px solid var(--forest); color: #1F4A2D; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin: 18px 0; font-weight: 600; }
+    .err { background: #FBEEEE; border-left: 3px solid var(--danger); color: #7A2222; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin: 18px 0; font-weight: 600; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--forest); text-decoration: none; margin-top: 24px; }
+    footer { margin-top: 48px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; }
+    footer a { color: var(--terra); }
+    .logo { font-size: 26px; font-weight: 800; color: var(--terra); margin-bottom: 24px; letter-spacing: -.5px; }
+    .skeleton { color: transparent; background: linear-gradient(90deg, #eee, #f5f5f5, #eee); background-size: 200% 100%; animation: skel 1.4s infinite; border-radius: 4px; display: inline-block; min-width: 120px; }
+    @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+  </style>
+</head>
+<body>
+
+  <div class="logo">🏘️ YardiGo</div>
+
+  <h1>Adres bevestigen</h1>
+  <p class="lede">De organisator van een buurtverkoop heeft jouw adres ingevoerd.<br>Bevestig hieronder of dat in orde is.</p>
+
+  <!-- Loading state -->
+  <div id="loading" class="card">
+    <div class="label">Even geduld</div>
+    <div class="val"><span class="skeleton">Bezig met laden…</span></div>
+  </div>
+
+  <!-- Error state (token ongeldig, etc.) -->
+  <div id="error-block" style="display:none">
+    <div class="err" id="error-msg">Er is iets misgegaan.</div>
+    <a class="back" href="/">← Terug naar YardiGo</a>
+  </div>
+
+  <!-- Already responded state -->
+  <div id="already-block" style="display:none">
+    <div class="ok" id="already-msg">Je hebt al gereageerd op deze link.</div>
+    <a class="back" href="/">← Naar YardiGo</a>
+  </div>
+
+  <!-- Decision form -->
+  <div id="decide-block" style="display:none">
+    <div class="card">
+      <div class="label">Buurtverkoop</div>
+      <div class="val" id="ctx-title">—</div>
+
+      <div class="label">Datum &amp; tijd</div>
+      <div class="val" id="ctx-when">—</div>
+
+      <div class="label">Jouw adres dat is opgegeven</div>
+      <div class="val" id="ctx-address">—</div>
+
+      <div class="label">Georganiseerd door</div>
+      <div class="val" id="ctx-organizer">—</div>
+    </div>
+
+    <div class="info">
+      <strong>Wat gebeurt er?</strong><br>
+      Als je bevestigt, verschijnt jouw adres als onderdeel van deze buurtverkoop op de YardiGo-kaart op de gekozen datum. Bezoekers zien het adres pas <strong>24 uur vóór</strong> de verkoop start. Foto's en details staan op naam van de organisator.<br><br>
+      <strong>Liever niet?</strong> Klik op "Nee, halen weg" — dan wordt jouw adres direct uit onze database verwijderd. Je hoeft geen reden te geven.
+    </div>
+
+    <label for="display-name">Hoe mag je adres worden aangeduid? (optioneel)</label>
+    <input type="text" id="display-name" placeholder="bv. Fam. de Vries — laat leeg als je dit niet wilt" maxlength="60">
+
+    <div style="margin-top:18px">
+      <button class="btn-primary" id="btn-confirm" onclick="doConfirm()">✅ Ja, bevestig mijn adres</button>
+      <button class="btn-secondary" id="btn-decline" onclick="showDecline()">❌ Nee, halen weg</button>
+    </div>
+  </div>
+
+  <!-- Decline reason form -->
+  <div id="decline-block" style="display:none">
+    <div class="card">
+      <p style="margin:0 0 8px;font-weight:600">Je staat op het punt je adres te verwijderen.</p>
+      <p style="margin:0;color:var(--muted);font-size:13px">Dit kan niet ongedaan worden gemaakt via deze link. Je hoeft geen reden te geven, maar het helpt de organisator als je dat wel doet.</p>
+
+      <label for="decline-reason">Reden (optioneel)</label>
+      <textarea id="decline-reason" placeholder="Bijvoorbeeld: ik doe niet mee, of: gebruik a.u.b. een ander adres" maxlength="280"></textarea>
+
+      <div style="margin-top:14px">
+        <button class="btn-secondary" id="btn-decline-confirm" onclick="doDecline()">❌ Definitief verwijderen</button>
+        <button class="btn-primary" style="background:var(--muted);margin-top:10px" onclick="cancelDecline()">← Terug</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result (success) -->
+  <div id="result-block" style="display:none">
+    <div class="ok" id="result-msg">Bedankt!</div>
+    <a class="back" href="/">← Naar YardiGo</a>
+  </div>
+
+  <footer>
+    Vragen of klachten? Mail <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>.<br>
+    Lees ook onze <a href="/privacy">privacyverklaring</a>.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ── Config (zelfde als index.html) ──────────────────────
+    const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+    var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ── Token uit query string ──────────────────────────────
+    function getToken() {
+      var p = new URLSearchParams(window.location.search);
+      var t = (p.get('token') || '').trim();
+      // Basale UUID-check
+      if (!/^[0-9a-fA-F-]{32,40}$/.test(t)) return null;
+      return t;
+    }
+
+    var token = getToken();
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function showError(msg) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('decide-block').style.display = 'none';
+      document.getElementById('decline-block').style.display = 'none';
+      document.getElementById('error-block').style.display = 'block';
+      document.getElementById('error-msg').textContent = msg;
+    }
+
+    function showAlready(msg) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('decide-block').style.display = 'none';
+      document.getElementById('decline-block').style.display = 'none';
+      document.getElementById('already-block').style.display = 'block';
+      document.getElementById('already-msg').textContent = msg;
+    }
+
+    function showResult(msg) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('decide-block').style.display = 'none';
+      document.getElementById('decline-block').style.display = 'none';
+      document.getElementById('result-block').style.display = 'block';
+      document.getElementById('result-msg').textContent = msg;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      try {
+        var d = new Date(iso + 'T00:00:00');
+        return d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      } catch(e) { return iso; }
+    }
+
+    function formatTime(t) {
+      if (!t) return '';
+      return t.substring(0, 5);
+    }
+
+    async function loadContext() {
+      if (!token) {
+        showError('Ongeldige of ontbrekende link. Vraag de organisator om een nieuwe bevestigingslink.');
+        return;
+      }
+      try {
+        var res = await sb.rpc('get_confirmation_context', { p_token: token });
+        if (res.error) {
+          console.error(res.error);
+          showError('Kan de gegevens niet ophalen: ' + res.error.message);
+          return;
+        }
+        var rows = res.data || [];
+        if (!rows.length) {
+          showError('Deze link is niet (meer) geldig. Mogelijk is hij al ingetrokken of vervallen.');
+          return;
+        }
+        var ctx = rows[0];
+
+        // Al gereageerd?
+        if (ctx.current_status === 'confirmed') {
+          showAlready('Je hebt dit adres al bevestigd. Dank je wel!');
+          return;
+        }
+        if (ctx.current_status === 'declined') {
+          showAlready('Je adres is al verwijderd uit deze buurtverkoop.');
+          return;
+        }
+        if (ctx.current_status === 'expired') {
+          showAlready('Deze bevestigingslink is verlopen (na 7 dagen). Het adres is automatisch verwijderd.');
+          return;
+        }
+
+        // Pending → toon beslissingsformulier
+        document.getElementById('ctx-title').textContent = ctx.title || '—';
+        var when = formatDate(ctx.date_start);
+        if (ctx.time_start) when += ' van ' + formatTime(ctx.time_start);
+        if (ctx.time_end) when += ' tot ' + formatTime(ctx.time_end);
+        document.getElementById('ctx-when').textContent = when;
+        document.getElementById('ctx-address').textContent = (ctx.address || '—') + (ctx.city ? ', ' + ctx.city : '');
+        document.getElementById('ctx-organizer').textContent = ctx.organizer_name || 'De organisator';
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('decide-block').style.display = 'block';
+      } catch (e) {
+        console.error(e);
+        showError('Onverwachte fout. Probeer de pagina opnieuw te laden.');
+      }
+    }
+
+    async function doConfirm() {
+      var btn = document.getElementById('btn-confirm');
+      var btn2 = document.getElementById('btn-decline');
+      btn.disabled = true; btn2.disabled = true;
+      btn.textContent = 'Bezig…';
+      var name = (document.getElementById('display-name').value || '').trim();
+      try {
+        var res = await sb.rpc('confirm_buurt_listing', {
+          p_token: token,
+          p_display_name: name || null
+        });
+        if (res.error) {
+          alert('Bevestigen mislukt: ' + res.error.message);
+          btn.disabled = false; btn2.disabled = false;
+          btn.textContent = '✅ Ja, bevestig mijn adres';
+          return;
+        }
+        var row = (res.data && res.data[0]) || {};
+        if (!row.success) {
+          showError(row.message || 'Kon niet bevestigen.');
+          return;
+        }
+        showResult(row.message || 'Bedankt! Je adres staat nu online.');
+      } catch (e) {
+        console.error(e);
+        alert('Onverwachte fout. Probeer het opnieuw.');
+        btn.disabled = false; btn2.disabled = false;
+        btn.textContent = '✅ Ja, bevestig mijn adres';
+      }
+    }
+
+    function showDecline() {
+      document.getElementById('decide-block').style.display = 'none';
+      document.getElementById('decline-block').style.display = 'block';
+    }
+
+    function cancelDecline() {
+      document.getElementById('decline-block').style.display = 'none';
+      document.getElementById('decide-block').style.display = 'block';
+    }
+
+    async function doDecline() {
+      var btn = document.getElementById('btn-decline-confirm');
+      btn.disabled = true;
+      btn.textContent = 'Bezig…';
+      var reason = (document.getElementById('decline-reason').value || '').trim();
+      try {
+        var res = await sb.rpc('decline_buurt_listing', {
+          p_token: token,
+          p_reason: reason || null
+        });
+        if (res.error) {
+          alert('Verwijderen mislukt: ' + res.error.message);
+          btn.disabled = false;
+          btn.textContent = '❌ Definitief verwijderen';
+          return;
+        }
+        var row = (res.data && res.data[0]) || {};
+        if (!row.success) {
+          showError(row.message || 'Kon niet verwijderen.');
+          return;
+        }
+        showResult(row.message || 'Je adres is verwijderd.');
+      } catch (e) {
+        console.error(e);
+        alert('Onverwachte fout. Probeer het opnieuw.');
+        btn.disabled = false;
+        btn.textContent = '❌ Definitief verwijderen';
+      }
+    }
+
+    // Start
+    loadContext();
+  </script>
+
+</body>
+</html>
