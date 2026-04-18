@@ -3295,10 +3295,41 @@ function openDetail(id) {
         sellerName = emailToName(s.user_email).split(' ')[0];
       }
     }
-    // Render direct als we al een naam hebben, anders fetch profiel uit Supabase
+    // Zonder user_id én user_email kunnen we geen profiel openen (bijv. demo-data) — chip verbergen
+    var _hasSellerLink = !!(s.user_id || s.user_email);
+    // Render direct als we al een naam hebben, anders fetch profiel uit Supabase.
+    // We gebruiken data-attributes + een handler zodat er geen quote-escaping-risico is,
+    // en voegen een duidelijke "Bekijk profiel →" label toe zodat het chipje onmiskenbaar tap-baar is.
     var renderSeller = function(nameToShow) {
-      if (!nameToShow) { sellerEl.style.display = 'none'; return; }
-      sellerEl.innerHTML = '<span onclick="openSellerProfile(' + JSON.stringify(s.user_email || '') + ',' + JSON.stringify(nameToShow) + ',' + JSON.stringify(s.user_id||'') + ')" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--text)">👤 ' + escapeHtml(nameToShow) + ' <span style="font-size:10px;color:var(--terra)">›</span></span>';
+      if (!nameToShow || !_hasSellerLink) { sellerEl.style.display = 'none'; return; }
+      sellerEl.innerHTML = ''; // schoon
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('data-seller-email', s.user_email || '');
+      btn.setAttribute('data-seller-name', nameToShow);
+      btn.setAttribute('data-seller-id', s.user_id || '');
+      btn.setAttribute('aria-label', 'Bekijk profiel van ' + nameToShow);
+      btn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;background:white;border:1.5px solid var(--border);border-radius:22px;padding:7px 14px 7px 10px;font-family:"Poppins",sans-serif;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:background .15s,border-color .15s';
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--bg2);font-size:12px">👤</span>'
+        + '<span>' + escapeHtml(nameToShow) + '</span>'
+        + '<span style="font-size:11px;color:var(--muted);font-weight:500">· Bekijk profiel</span>'
+        + '<span style="font-size:12px;color:var(--terra);font-weight:700">›</span>';
+      btn.addEventListener('mouseenter', function(){ btn.style.background = 'var(--bg2)'; btn.style.borderColor = 'var(--terra)'; });
+      btn.addEventListener('mouseleave', function(){ btn.style.background = 'white';       btn.style.borderColor = 'var(--border)'; });
+      btn.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        try {
+          openSellerProfile(
+            btn.getAttribute('data-seller-email') || '',
+            btn.getAttribute('data-seller-name') || nameToShow,
+            btn.getAttribute('data-seller-id') || ''
+          );
+        } catch (e) {
+          console.error('openSellerProfile faalde:', e);
+          toast('❌ Profiel kon niet geopend worden');
+        }
+      });
+      sellerEl.appendChild(btn);
       sellerEl.style.display = 'block';
     };
     if (sellerName) {
@@ -5158,14 +5189,17 @@ function sendFeedback() {
 // ══════════════════════════════════════════════════
 async function openSellerProfile(email, name, userId) {
   var ov = document.getElementById('sellerProfileOv');
-  document.getElementById('sellerProfileTitle').textContent = name + '\'s profiel';
-  document.getElementById('sp-name').textContent = name;
-  document.getElementById('sp-city').textContent = '';
-  document.getElementById('sp-bio').style.display = 'none';
-  document.getElementById('sp-badges').innerHTML = '';
-  document.getElementById('sp-listings-wrap').style.display = 'none';
+  if (!ov) { console.error('sellerProfileOv ontbreekt in DOM'); toast('❌ Profiel kon niet geopend worden'); return; }
+  var displayName = (name && String(name).trim()) ? String(name).trim() : 'Verkoper';
+  var titleEl = document.getElementById('sellerProfileTitle');
+  if (titleEl) titleEl.textContent = displayName + "'s profiel";
+  var nameEl = document.getElementById('sp-name'); if (nameEl) nameEl.textContent = displayName;
+  var cityEl = document.getElementById('sp-city'); if (cityEl) cityEl.textContent = '';
+  var bioEl  = document.getElementById('sp-bio');  if (bioEl)  bioEl.style.display = 'none';
+  var badgesEl = document.getElementById('sp-badges'); if (badgesEl) badgesEl.innerHTML = '';
+  var lwEl = document.getElementById('sp-listings-wrap'); if (lwEl) lwEl.style.display = 'none';
   var avatarEl = document.getElementById('sp-avatar');
-  avatarEl.innerHTML = '😊';
+  if (avatarEl) avatarEl.innerHTML = '😊';
   ov.classList.add('open');
 
   // Laad profieldata uit Supabase
