@@ -315,6 +315,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
 
   <div class="nav">
     <div class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-tab" onclick="switchTab('analytics',this)">📈 Analytics</div>
     <div class="nav-tab" id="nav-moderation" onclick="switchTab('moderation',this)">🔔 Moderatie <span class="tab-badge" id="pending-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('listings',this)">📋 Advertenties</div>
     <div class="nav-tab" onclick="switchTab('users',this)">👥 Gebruikers</div>
@@ -335,6 +336,50 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel"><div class="panel-title">Top steden <span>op basis van adres</span></div><div id="city-chart"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Gezondheidscheck</div><div id="health-list"><div class="spinner"></div></div></div>
         <div class="panel" style="grid-column:1/-1"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ════ ANALYTICS ════ -->
+    <div class="tab-pane" id="tab-analytics">
+      <div class="section-header">
+        <span class="section-title">📈 Bezoekers &amp; groei</span>
+        <div class="section-actions">
+          <select class="filter-sel" id="an-range" onchange="loadAnalytics()">
+            <option value="7">Laatste 7 dagen</option>
+            <option value="30" selected>Laatste 30 dagen</option>
+            <option value="90">Laatste 90 dagen</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadAnalytics()">🔄 Vernieuw</button>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:14px">
+        Bezoekersdata wordt verzameld via een anonieme sessie-UUID (localStorage) en – indien ingelogd – de gekoppelde user-id. Géén raw IP-adressen worden opgeslagen. Data ouder dan 180 dagen wordt automatisch opgeschoond. Zorg dat je <code>analytics-schema.sql</code> hebt uitgevoerd én dat jouw profiel <code>is_admin = true</code> heeft.
+      </div>
+
+      <!-- KPI-grid -->
+      <div class="stat-grid" id="an-stat-grid">
+        <div class="stat-card"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Grafieken -->
+      <div class="dash-grid">
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-title">Bezoekers per dag <span id="an-daily-range">laatste 30 dagen</span></div>
+          <div class="bar-chart" id="an-daily-chart" style="height:140px"><div class="spinner"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Top bezochte pagina's <span>unieke sessies</span></div>
+          <div id="an-top-paths"><div class="spinner"></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Nieuwe advertenties per dag <span id="an-listings-range">laatste 30 dagen</span></div>
+          <div class="bar-chart" id="an-listings-chart" style="height:140px"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;font-size:11px;color:var(--muted);text-align:center">
+        Tip: plan <code>SELECT public.cleanup_old_page_views();</code> dagelijks in pg_cron om de tabel klein te houden.
       </div>
     </div>
 
@@ -860,6 +905,128 @@ function switchTab(name,el){
   if(name==='log') renderLog();
   if(name==='moderation') renderModerationTable();
   if(name==='errors') loadErrors();
+  if(name==='analytics') loadAnalytics();
+}
+
+// ══════════════════════════════════════════════════
+// ANALYTICS (bezoekers + groei)
+// ══════════════════════════════════════════════════
+async function loadAnalytics(){
+  var rangeSel = document.getElementById('an-range');
+  var days = parseInt(rangeSel && rangeSel.value || '30', 10) || 30;
+  document.getElementById('an-daily-range').textContent    = 'laatste ' + days + ' dagen';
+  document.getElementById('an-listings-range').textContent = 'laatste ' + days + ' dagen';
+
+  // 1) Samenvatting (KPI's)
+  try{
+    var s = await sb.rpc('analytics_summary');
+    if (s.error) throw s.error;
+    var row = Array.isArray(s.data) ? s.data[0] : s.data;
+    renderAnalyticsSummary(row || {});
+  } catch(e){
+    document.getElementById('an-stat-grid').innerHTML =
+      '<div class="info-box warn" style="grid-column:1/-1">Kon analytics-samenvatting niet laden: ' +
+      (e.message||e) + '<br><small>Controleer of <code>analytics-schema.sql</code> is uitgevoerd en je profiel <code>is_admin=true</code> heeft.</small></div>';
+  }
+
+  // 2) Bezoekers per dag
+  try{
+    var d = await sb.rpc('analytics_daily', { p_days: days });
+    if (d.error) throw d.error;
+    renderAnalyticsDaily(d.data || []);
+  } catch(e){
+    document.getElementById('an-daily-chart').innerHTML =
+      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon dagtellingen niet laden.</div>';
+  }
+
+  // 3) Top paden
+  try{
+    var t = await sb.rpc('analytics_top_paths', { p_limit: 8, p_days: days });
+    if (t.error) throw t.error;
+    renderAnalyticsTopPaths(t.data || []);
+  } catch(e){
+    document.getElementById('an-top-paths').innerHTML =
+      '<div style="color:var(--muted);font-size:11px">Geen data — of RPC mist.</div>';
+  }
+
+  // 4) Listings per dag (groei-indicator)
+  try{
+    var lg = await sb.rpc('analytics_listings_daily', { p_days: days });
+    if (lg.error) throw lg.error;
+    renderAnalyticsListings(lg.data || []);
+  } catch(e){
+    document.getElementById('an-listings-chart').innerHTML =
+      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon advertentietellingen niet laden.</div>';
+  }
+}
+
+function renderAnalyticsSummary(r){
+  function fmt(n){ if(n==null) return '—'; return String(n); }
+  function pct(p){ if(p==null) return 'n.v.t.'; var pre = p>=0 ? '▲ +' : '▼ '; return pre + p + '%'; }
+  var cls = (r.growth_wow_pct==null) ? '' : (r.growth_wow_pct >= 0 ? 'green' : 'warn');
+  document.getElementById('an-stat-grid').innerHTML =
+    statCard('Bezoeken vandaag',     fmt(r.views_today),       'gisteren: ' + fmt(r.views_yesterday), 'accent') +
+    statCard('Bezoeken 7 dagen',     fmt(r.views_7d),          'groei w/w: ' + pct(r.growth_wow_pct), cls) +
+    statCard('Bezoeken 30 dagen',    fmt(r.views_30d),         'incl. gast + ingelogd', '') +
+    statCard('Unieke sessies 7d',    fmt(r.unique_sessions_7d),'30d: ' + fmt(r.unique_sessions_30d), '') +
+    statCard('Nieuwe gebruikers 7d', fmt(r.new_users_7d),      '30d: ' + fmt(r.new_users_30d), 'green');
+}
+
+function renderAnalyticsDaily(rows){
+  var el = document.getElementById('an-daily-chart');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen bezoekersdata.</div>'; return; }
+  var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.views)||0; }));
+  // Toon max 30 labels; bij meer dagen elk 2e
+  var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
+  el.innerHTML = rows.map(function(r, i){
+    var v = Number(r.views)||0;
+    var u = Number(r.unique_sessions)||0;
+    var h = Math.max(2, Math.round((v/maxV)*110));
+    var day = new Date(r.day);
+    var short = (day.getDate()) + '/' + (day.getMonth()+1);
+    var lbl = (i % showEvery === 0) ? short : '';
+    return '<div class="bar-col" title="' + short + ': ' + v + ' views · ' + u + ' uniek">' +
+             '<div class="bar-val">' + (v||'') + '</div>' +
+             '<div class="bar ' + (i===rows.length-1?'primary':'secondary') + '" style="height:' + h + 'px"></div>' +
+             '<div class="bar-label">' + lbl + '</div>' +
+           '</div>';
+  }).join('');
+}
+
+function renderAnalyticsTopPaths(rows){
+  var el = document.getElementById('an-top-paths');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px">Nog geen data.</div>'; return; }
+  var mx = Math.max(1, ...rows.map(function(r){ return Number(r.views)||0; }));
+  el.innerHTML = rows.map(function(r){
+    var v = Number(r.views)||0;
+    var u = Number(r.unique_sessions)||0;
+    var pct = Math.round((v/mx)*100);
+    var path = (r.path||'').length > 30 ? (r.path||'').slice(0,28) + '…' : (r.path||'/');
+    return '<div class="city-row" title="' + (r.path||'') + '">' +
+             '<div class="city-name" style="min-width:120px">' + path + '</div>' +
+             '<div class="city-bar-wrap"><div class="city-bar-fill" style="width:' + pct + '%"></div></div>' +
+             '<div class="city-count">' + v + '<div style="font-size:9px;color:var(--muted);font-weight:500">' + u + ' uniek</div></div>' +
+           '</div>';
+  }).join('');
+}
+
+function renderAnalyticsListings(rows){
+  var el = document.getElementById('an-listings-chart');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen data.</div>'; return; }
+  var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.count)||0; }));
+  var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
+  el.innerHTML = rows.map(function(r, i){
+    var c = Number(r.count)||0;
+    var h = Math.max(2, Math.round((c/maxV)*110));
+    var day = new Date(r.day);
+    var short = (day.getDate()) + '/' + (day.getMonth()+1);
+    var lbl = (i % showEvery === 0) ? short : '';
+    return '<div class="bar-col" title="' + short + ': ' + c + ' nieuwe advertenties">' +
+             '<div class="bar-val">' + (c||'') + '</div>' +
+             '<div class="bar ' + (i===rows.length-1?'green':'secondary') + '" style="height:' + h + 'px"></div>' +
+             '<div class="bar-label">' + lbl + '</div>' +
+           '</div>';
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════

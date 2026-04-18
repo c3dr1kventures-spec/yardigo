@@ -253,6 +253,23 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 .dm-ball{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:11px;transition:left .2s;}
 body.dark .dm-ball{left:21px;}
 
+/* taal toggle (NL/EN) – zelfde look & feel als dm-toggle */
+.lang-toggle{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);cursor:pointer;position:relative;flex-shrink:0;border:none;padding:0;}
+.lang-ball{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A6B4A;transition:left .2s;letter-spacing:.3px;}
+body.lang-en .lang-ball{left:21px;}
+
+/* Alleen-voor-leden elementen: verbergen als body.is-guest */
+body.is-guest .members-only{display:none !important;}
+
+/* YardiGo footer (website/app-bottom) */
+.yg-footer{margin:24px -4px 0;padding:18px 16px 22px;border-top:1px solid var(--border);text-align:center;color:var(--muted);font-size:11px;line-height:1.55;}
+.yg-footer .yg-footer-appstore{display:inline-flex;align-items:center;gap:8px;background:#000;color:white;border-radius:10px;padding:9px 14px;text-decoration:none;font-weight:600;font-size:12px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+.yg-footer .yg-footer-appstore:hover{background:#111;}
+.yg-footer .yg-footer-links{margin-top:6px;font-size:11px;}
+.yg-footer .yg-footer-links a{color:var(--muted);text-decoration:none;margin:0 6px;}
+.yg-footer .yg-footer-links a:hover{color:var(--text);text-decoration:underline;}
+body.dark .yg-footer{border-top-color:var(--border);}
+
 /* ── FILTER ROW ── */
 .filter-bar{background:var(--forest);padding:0 14px 10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
 .fdd-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:white;cursor:pointer;white-space:nowrap;}
@@ -894,9 +911,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </div>
   <div class="header-right">
-    <button class="dm-toggle" onclick="toggleDark()"><div class="dm-ball" id="dmBall">☀️</div></button>
-    <button onclick="openLogin()" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" id="loginBtn">Inloggen</button>
-    <button onclick="isGuest ? guestGate('plaatsen') : openAdd()" style="background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Plaatsen</button>
+    <button class="lang-toggle" onclick="toggleLang()" id="langToggle" title="Nederlands / English" aria-label="Taal wisselen / Switch language"><div class="lang-ball" id="langBall">NL</div></button>
+    <button class="dm-toggle" onclick="toggleDark()" title="Licht / donker"><div class="dm-ball" id="dmBall">☀️</div></button>
+    <button onclick="openLogin()" data-i18n="header.login" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" id="loginBtn">Inloggen</button>
+    <button onclick="isGuest ? guestGate('plaatsen') : openAdd()" data-i18n="header.publish" style="background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Plaatsen</button>
   </div>
 </header>
 
@@ -904,7 +922,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <div style="background:var(--forest);padding:0 14px 10px;">
   <div class="s-wrap" style="max-width:100%;width:100%;">
     <span class="s-ico">📍</span>
-    <input type="text" id="pcInput" placeholder="Zoek op postcode of plaats…" autocomplete="off"
+    <input type="text" id="pcInput" placeholder="Zoek op postcode of plaats…" data-i18n-placeholder="header.search_placeholder" autocomplete="off"
       oninput="searchSuggest(this.value)"
       onkeydown="handleSearchKey(event)">
     <button class="s-search-btn" onclick="doSearch()">
@@ -1151,12 +1169,23 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <!-- ── APP-VOORKEUREN ── -->
       <div class="settings-section">
-        <div class="settings-section-header">App-voorkeuren</div>
+        <div class="settings-section-header" data-i18n="settings.header_app">App-voorkeuren</div>
         <div class="settings-card">
+          <!-- Taal -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F4ED;">🌐</div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.language.title">Taal</div><div class="srow-sub" data-i18n="settings.language.sub">Nederlands of Engels</div></div>
+            <div class="srow-right">
+              <div class="seg-ctrl" style="min-width:auto">
+                <button class="seg-opt" data-lang="nl" onclick="if(currentLang!=='nl')toggleLang()">NL</button>
+                <button class="seg-opt" data-lang="en" onclick="if(currentLang!=='en')toggleLang()">EN</button>
+              </div>
+            </div>
+          </div>
           <!-- Donkere modus -->
           <div class="srow">
             <div class="srow-icon" style="background:#1A1A2E;">🌙</div>
-            <div class="srow-body"><div class="srow-title">Donkere modus</div><div class="srow-sub">Schakel tussen licht en donker thema</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.darkmode.title">Donkere modus</div><div class="srow-sub" data-i18n="settings.darkmode.sub">Schakel tussen licht en donker thema</div></div>
             <div class="srow-right">
               <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
             </div>
@@ -1207,7 +1236,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <!-- ── PRIVACY ── -->
       <div class="settings-section">
-        <div class="settings-section-header">Privacy</div>
+        <div class="settings-section-header" data-i18n="settings.header_privacy">Privacy</div>
         <div class="settings-card">
           <!-- Adres zichtbaarheid -->
           <div class="srow" style="flex-wrap:wrap;gap:8px;">
@@ -1486,40 +1515,60 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <!-- ── APP INFO ── -->
       <div class="settings-section">
-        <div class="settings-section-header">Over YardiGo</div>
+        <div class="settings-section-header" data-i18n="settings.header_about">Over YardiGo</div>
         <div class="settings-card">
           <!-- Feedback -->
           <div class="srow tappable" onclick="openFeedback()">
             <div class="srow-icon" style="background:#FFF0E8;">💌</div>
-            <div class="srow-body"><div class="srow-title">Feedback geven</div><div class="srow-sub">Ideeën of verbeterpunten sturen</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.feedback.title">Feedback geven</div><div class="srow-sub" data-i18n="settings.feedback.sub">Ideeën of verbeterpunten sturen</div></div>
             <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
-          <!-- Probleem melden -->
-          <div class="srow tappable" onclick="openReport()">
+          <!-- Probleem melden (alleen leden) -->
+          <div class="srow tappable members-only" id="srow-report" onclick="openReport()">
             <div class="srow-icon" style="background:#FDE8E8;">🚨</div>
-            <div class="srow-body"><div class="srow-title">Probleem melden</div><div class="srow-sub">Fout of misbruik rapporteren</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.report.title">Probleem melden</div><div class="srow-sub" data-i18n="settings.report.sub">Fout of misbruik rapporteren</div></div>
             <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
           <!-- Privacy beleid -->
           <div class="srow tappable" onclick="window.open('https://yardigo.nl/privacy','_blank')">
             <div class="srow-icon" style="background:#E8F4ED;">🔒</div>
-            <div class="srow-body"><div class="srow-title">Privacybeleid</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy">Privacybeleid</div></div>
             <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
           <!-- Gebruiksvoorwaarden -->
           <div class="srow tappable" onclick="window.open('https://yardigo.nl/voorwaarden','_blank')">
             <div class="srow-icon" style="background:#E8F0F8;">📋</div>
-            <div class="srow-body"><div class="srow-title">Gebruiksvoorwaarden</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.terms">Gebruiksvoorwaarden</div></div>
+            <div class="srow-right"><span class="srow-chevron">›</span></div>
+          </div>
+          <!-- iPhone app (App Store) -->
+          <div class="srow tappable" onclick="window.open('https://apps.apple.com/us/app/yardigo/id6761503009','_blank')">
+            <div class="srow-icon" style="background:#000;color:white;">🍎</div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.ios.title">Download de iPhone-app</div><div class="srow-sub" data-i18n="settings.ios.sub">YardiGo voor iOS in de App Store</div></div>
             <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
           <!-- Versie -->
           <div class="srow">
             <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
-            <div class="srow-body"><div class="srow-title">Versie</div></div>
-            <div class="srow-right"><span class="srow-value">1.0.0</span></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.version">Versie</div></div>
+            <div class="srow-right"><span class="srow-value">1.1.0</span></div>
           </div>
         </div>
       </div>
+
+      <!-- ═══════════ YardiGo FOOTER ═══════════ -->
+      <footer class="yg-footer">
+        <a class="yg-footer-appstore" href="https://apps.apple.com/us/app/yardigo/id6761503009" target="_blank" rel="noopener" aria-label="Download YardiGo in de App Store">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.564 12.742c.016-1.93 1.58-2.85 1.65-2.895-.9-1.315-2.3-1.495-2.797-1.518-1.19-.12-2.326.7-2.932.7-.618 0-1.548-.682-2.546-.664-1.31.02-2.515.762-3.19 1.935-1.363 2.36-.348 5.847.974 7.76.645.94 1.41 1.99 2.41 1.95.97-.04 1.34-.625 2.517-.625 1.17 0 1.51.625 2.55.604 1.055-.018 1.72-.95 2.36-1.895.745-1.086 1.05-2.14 1.068-2.197-.024-.01-2.046-.786-2.063-3.155zM15.63 6.75c.534-.653.894-1.553.795-2.456-.77.033-1.71.517-2.263 1.16-.497.573-.93 1.494-.815 2.38.86.068 1.745-.436 2.282-1.084z"/></svg>
+          <span data-i18n="footer.appstore">Download in de App Store</span>
+        </a>
+        <div class="yg-footer-links">
+          <a href="https://yardigo.nl/privacy" target="_blank" rel="noopener" data-i18n="footer.privacy">Privacy</a>·
+          <a href="https://yardigo.nl/voorwaarden" target="_blank" rel="noopener" data-i18n="footer.terms">Voorwaarden</a>·
+          <a href="#" onclick="event.preventDefault();openFeedback();" data-i18n="footer.feedback">Feedback</a>
+        </div>
+        <div style="margin-top:8px;opacity:.8;">© 2026 YardiGo · <span data-i18n="footer.tagline">Find · Sell · Go</span></div>
+      </footer>
 
       <div style="height:16px;"></div>
 
@@ -1531,42 +1580,42 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <nav class="bnav">
   <div class="bni active" id="bni-kaart" onclick="sv('kaart',document.querySelector('.tab'));this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-    Kaart
+    <span data-i18n="nav.map">Kaart</span>
   </div>
   <div class="bni" id="bni-lijst" onclick="sv('lijst',document.querySelectorAll('.tab')[1]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-    Lijst
+    <span data-i18n="nav.list">Lijst</span>
   </div>
   <div class="bni" id="bni-route" onclick="sv('route',document.querySelectorAll('.tab')[2]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4M8 12h8"/></svg>
-    Route
+    <span data-i18n="nav.route">Route</span>
   </div>
   <div class="bni" id="bni-mijn" onclick="sv('mijn',document.querySelectorAll('.tab')[3]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-    Mijn
+    <span data-i18n="nav.mine">Mijn</span>
   </div>
 </nav>
 <div class="fab-row" id="fab-row">
   <button class="fab-feedback" onclick="openFeedback()" title="Feedback geven">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
-  <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()">＋ Verkoop plaatsen</button>
+  <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()" data-i18n="publish.title">＋ Verkoop plaatsen</button>
 </div>
 
 <!-- ═══════════ FEEDBACK MODAL ═══════════ -->
 <div class="feedback-overlay" id="feedbackOv" onclick="if(event.target===this)closeFeedback()">
   <div class="feedback-card">
-    <h3>📬 Stuur feedback</h3>
-    <p>Meld een bug, doe een suggestie, of neem contact op.</p>
+    <h3 data-i18n="feedback.title">📬 Stuur feedback</h3>
+    <p data-i18n="feedback.sub">Meld een bug, doe een suggestie, of neem contact op.</p>
     <div class="feedback-types">
       <button class="ftype active" onclick="selectFtype(this,'Bug')">🐛 Bug</button>
       <button class="ftype" onclick="selectFtype(this,'Suggestie')">💡 Suggestie</button>
       <button class="ftype" onclick="selectFtype(this,'Contact')">✉️ Contact</button>
     </div>
-    <textarea id="feedbackMsg" placeholder="Beschrijf het probleem of je idee..."></textarea>
+    <textarea id="feedbackMsg" placeholder="Beschrijf het probleem of je idee..." data-i18n-placeholder="feedback.placeholder"></textarea>
     <div class="feedback-actions">
-      <button class="btn-feedback-cancel" onclick="closeFeedback()">Annuleer</button>
-      <button class="btn-feedback-send" onclick="sendFeedback()">📧 Verstuur</button>
+      <button class="btn-feedback-cancel" data-i18n="feedback.cancel" onclick="closeFeedback()">Annuleer</button>
+      <button class="btn-feedback-send" data-i18n="feedback.send" onclick="sendFeedback()">📧 Verstuur</button>
     </div>
   </div>
 </div>
@@ -1574,7 +1623,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- ═══════════ MELD MODAL ═══════════ -->
 <div class="feedback-overlay" id="reportOv" onclick="if(event.target===this)closeReport()">
   <div class="feedback-card">
-    <h3>🚩 Advertentie melden</h3>
+    <h3 data-i18n="report.title">🚩 Advertentie melden</h3>
     <p>Wat klopt er niet aan deze advertentie?</p>
     <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px" id="report-options">
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
@@ -1595,8 +1644,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
     <textarea class="feedback-card textarea" id="report-extra" placeholder="Optioneel: toelichting…" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;resize:none;height:70px;background:var(--bg);color:var(--text);outline:none"></textarea>
     <div class="feedback-actions">
-      <button class="btn-feedback-cancel" onclick="closeReport()">Annuleer</button>
-      <button class="btn-feedback-send" style="background:var(--red)" onclick="sendReport()">🚩 Verstuur melding</button>
+      <button class="btn-feedback-cancel" data-i18n="feedback.cancel" onclick="closeReport()">Annuleer</button>
+      <button class="btn-feedback-send" data-i18n="report.send" style="background:var(--red)" onclick="sendReport()">🚩 Verstuur melding</button>
     </div>
   </div>
 </div>
@@ -1657,9 +1706,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <button id="det-cta" onclick="toggleInterest()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(224,123,57,.35)">
         <span id="det-cta-icon">🎉</span><span id="det-cta-text">Ik ga erheen!</span>
       </button>
-      <!-- Melden knop -->
-      <div style="text-align:center;margin-top:12px">
-        <button onclick="openReport()" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px 8px">🚩 Advertentie melden</button>
+      <!-- Melden knop (alleen ingelogde leden) -->
+      <div class="members-only" id="det-report-wrap" style="text-align:center;margin-top:12px">
+        <button onclick="openReport()" data-i18n="detail.report_btn" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px 8px">🚩 Advertentie melden</button>
       </div>
     </div>
   </div>
@@ -2050,6 +2099,282 @@ function extractCoords(location) {
 }
 
 // ══════════════════════════════════════════════════
+// i18n — Nederlands (default) / English
+// ══════════════════════════════════════════════════
+var currentLang = (function(){
+  try { var s = localStorage.getItem('yg-lang'); if (s === 'nl' || s === 'en') return s; } catch(e){}
+  // heuristiek: browser-taal
+  try { var bl = (navigator.language || navigator.userLanguage || 'nl').toLowerCase(); if (bl.indexOf('nl') === 0) return 'nl'; if (bl.indexOf('en') === 0) return 'en'; } catch(e){}
+  return 'nl';
+})();
+
+var I18N = {
+  nl: {
+    // Header
+    'header.login': 'Inloggen',
+    'header.publish': '+ Plaatsen',
+    'header.search_placeholder': 'Zoek op postcode of plaats…',
+    // Filter bar
+    'filter.type': 'Type',
+    'filter.radius': 'Afstand',
+    'filter.date': 'Datum',
+    'filter.sort': 'Sorteer',
+    'filter.all': 'Alles',
+    // Bottom nav
+    'nav.map': 'Kaart',
+    'nav.list': 'Lijst',
+    'nav.route': 'Route',
+    'nav.mine': 'Mijn',
+    // Types
+    'type.particulier': 'Particulier',
+    'type.buurt': 'Buurtverkoop',
+    'type.evenement': 'Evenement',
+    // Detail view
+    'detail.route': '🧭 Route',
+    'detail.fav': '☆ Favoriet',
+    'detail.share': '↑ Delen',
+    'detail.cta_going': 'Ik ga erheen!',
+    'detail.cta_not_going': 'Toch niet',
+    'detail.report_btn': '🚩 Advertentie melden',
+    'detail.guest_title': 'Maak gratis account aan',
+    'detail.guest_sub': 'Zie adressen · Navigeer · Sla op',
+    // Profile
+    'profile.guest': 'Gast',
+    'profile.guest_sub': 'Maak een account aan voor meer',
+    'profile.tab_stats': 'Statistieken',
+    'profile.tab_sales': 'Mijn verkopen',
+    'profile.tab_settings': 'Instellingen',
+    // Settings section headers
+    'settings.header_app': 'App-voorkeuren',
+    'settings.header_privacy': 'Privacy',
+    'settings.header_profile': 'Profiel',
+    'settings.header_about': 'Over YardiGo',
+    'settings.feedback.title': 'Feedback geven',
+    'settings.feedback.sub': 'Ideeën of verbeterpunten sturen',
+    'settings.report.title': 'Probleem melden',
+    'settings.report.sub': 'Fout of misbruik rapporteren',
+    'settings.privacy': 'Privacybeleid',
+    'settings.terms': 'Gebruiksvoorwaarden',
+    'settings.ios.title': 'Download de iPhone-app',
+    'settings.ios.sub': 'YardiGo voor iOS in de App Store',
+    'settings.version': 'Versie',
+    'settings.darkmode.title': 'Donkere modus',
+    'settings.darkmode.sub': 'Schakel tussen licht en donker thema',
+    'settings.language.title': 'Taal',
+    'settings.language.sub': 'Nederlands of Engels',
+    // Feedback modal
+    'feedback.title': '📬 Stuur feedback',
+    'feedback.sub': 'Help ons YardiGo beter te maken.',
+    'feedback.placeholder': 'Beschrijf het probleem of je idee…',
+    'feedback.send': '📧 Verstuur',
+    'feedback.cancel': 'Annuleer',
+    'feedback.thanks': 'Bedankt voor je feedback! 🙏',
+    'feedback.empty': 'Schrijf eerst een bericht 😊',
+    'feedback.error': 'Er ging iets mis, probeer opnieuw.',
+    'feedback.offline': 'Geen verbinding, probeer opnieuw.',
+    // Report modal
+    'report.title': '🚩 Advertentie melden',
+    'report.send': '🚩 Verstuur melding',
+    'report.pick_reason': 'Selecteer eerst een reden 🙏',
+    'report.guest_blocked': 'Alleen ingelogde leden kunnen melden.',
+    'report.thanks': 'Melding ontvangen, bedankt! 🙏',
+    // Footer
+    'footer.appstore': 'Download in de App Store',
+    'footer.privacy': 'Privacy',
+    'footer.terms': 'Voorwaarden',
+    'footer.feedback': 'Feedback',
+    'footer.tagline': 'Find · Sell · Go',
+    // Publiceer
+    'publish.title': 'Verkoop plaatsen',
+    'publish.step_type': 'Wat voor verkoop?',
+    'publish.step_details': 'Vertel meer',
+    'publish.step_address': 'Adres',
+    'publish.publish_btn': '🚀 Publiceren',
+    // Toasts algemeen
+    'toast.welcome_guest': 'Je bekijkt YardiGo als gast 👁️',
+    'toast.logged_out': 'Je bent uitgelogd',
+    // Taal-switch toast
+    'lang.switched_nl': '🇳🇱 Nederlands',
+    'lang.switched_en': '🇬🇧 English'
+  },
+  en: {
+    // Header
+    'header.login': 'Sign in',
+    'header.publish': '+ Post sale',
+    'header.search_placeholder': 'Search by postcode or city…',
+    // Filter bar
+    'filter.type': 'Type',
+    'filter.radius': 'Distance',
+    'filter.date': 'Date',
+    'filter.sort': 'Sort',
+    'filter.all': 'All',
+    // Bottom nav
+    'nav.map': 'Map',
+    'nav.list': 'List',
+    'nav.route': 'Route',
+    'nav.mine': 'My',
+    // Types
+    'type.particulier': 'Private',
+    'type.buurt': 'Neighborhood',
+    'type.evenement': 'Event',
+    // Detail view
+    'detail.route': '🧭 Route',
+    'detail.fav': '☆ Favorite',
+    'detail.share': '↑ Share',
+    'detail.cta_going': 'I\'ll be there!',
+    'detail.cta_not_going': 'Change of plans',
+    'detail.report_btn': '🚩 Report listing',
+    'detail.guest_title': 'Create a free account',
+    'detail.guest_sub': 'See addresses · Navigate · Save',
+    // Profile
+    'profile.guest': 'Guest',
+    'profile.guest_sub': 'Create an account for full access',
+    'profile.tab_stats': 'Stats',
+    'profile.tab_sales': 'My sales',
+    'profile.tab_settings': 'Settings',
+    // Settings
+    'settings.header_app': 'App preferences',
+    'settings.header_privacy': 'Privacy',
+    'settings.header_profile': 'Profile',
+    'settings.header_about': 'About YardiGo',
+    'settings.feedback.title': 'Send feedback',
+    'settings.feedback.sub': 'Share ideas or improvements',
+    'settings.report.title': 'Report a problem',
+    'settings.report.sub': 'Report a bug or abuse',
+    'settings.privacy': 'Privacy policy',
+    'settings.terms': 'Terms of use',
+    'settings.ios.title': 'Download the iPhone app',
+    'settings.ios.sub': 'YardiGo for iOS on the App Store',
+    'settings.version': 'Version',
+    'settings.darkmode.title': 'Dark mode',
+    'settings.darkmode.sub': 'Switch between light and dark theme',
+    'settings.language.title': 'Language',
+    'settings.language.sub': 'Dutch or English',
+    // Feedback modal
+    'feedback.title': '📬 Send feedback',
+    'feedback.sub': 'Help us improve YardiGo.',
+    'feedback.placeholder': 'Describe the problem or your idea…',
+    'feedback.send': '📧 Send',
+    'feedback.cancel': 'Cancel',
+    'feedback.thanks': 'Thanks for your feedback! 🙏',
+    'feedback.empty': 'Please write a message first 😊',
+    'feedback.error': 'Something went wrong, try again.',
+    'feedback.offline': 'No connection, try again.',
+    // Report modal
+    'report.title': '🚩 Report listing',
+    'report.send': '🚩 Submit report',
+    'report.pick_reason': 'Please pick a reason 🙏',
+    'report.guest_blocked': 'Only signed-in members can report.',
+    'report.thanks': 'Report received, thank you! 🙏',
+    // Footer
+    'footer.appstore': 'Download on the App Store',
+    'footer.privacy': 'Privacy',
+    'footer.terms': 'Terms',
+    'footer.feedback': 'Feedback',
+    'footer.tagline': 'Find · Sell · Go',
+    // Publiceer
+    'publish.title': 'Post a sale',
+    'publish.step_type': 'What kind of sale?',
+    'publish.step_details': 'Tell us more',
+    'publish.step_address': 'Address',
+    'publish.publish_btn': '🚀 Publish',
+    // Toasts
+    'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
+    'toast.logged_out': 'You have been signed out',
+    // Taal-switch toast
+    'lang.switched_nl': '🇳🇱 Nederlands',
+    'lang.switched_en': '🇬🇧 English'
+  }
+};
+
+function i18n(key, fallback) {
+  try {
+    var v = I18N[currentLang] && I18N[currentLang][key];
+    if (v !== undefined && v !== null) return v;
+  } catch(e){}
+  return (fallback !== undefined ? fallback : key);
+}
+
+function applyLang() {
+  try {
+    // data-i18n → tekstknoop
+    var nodes = document.querySelectorAll('[data-i18n]');
+    nodes.forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      var t = i18n(k, null);
+      if (t == null) return;
+      if (el.children.length === 0) {
+        el.textContent = t;
+      } else {
+        // vervang eerste niet-lege textnode, anders aria-label
+        var replaced = false;
+        for (var i=0;i<el.childNodes.length;i++) {
+          var n = el.childNodes[i];
+          if (n.nodeType === 3 && n.textContent.trim()) { n.textContent = t; replaced = true; break; }
+        }
+        if (!replaced) el.setAttribute('aria-label', t);
+      }
+    });
+    // data-i18n-placeholder → placeholder-attribuut
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
+      var t = i18n(el.getAttribute('data-i18n-placeholder'), null);
+      if (t != null) el.placeholder = t;
+    });
+    // data-i18n-title → title-attribuut
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el){
+      var t = i18n(el.getAttribute('data-i18n-title'), null);
+      if (t != null) el.title = t;
+    });
+    document.documentElement.lang = currentLang;
+    document.body.classList.toggle('lang-en', currentLang === 'en');
+    var ball = document.getElementById('langBall');
+    if (ball) ball.textContent = currentLang.toUpperCase();
+    // Synchroniseer seg-ctrl in Instellingen (taal-rij)
+    document.querySelectorAll('[data-lang]').forEach(function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
+    });
+  } catch(e) { console.warn('applyLang error', e); }
+}
+
+// Lightweight tracking stub — wordt via RPC 'track_page_view' gevuurd
+// Gebruikt een sessie-id (anoniem) in localStorage. Dedup: max 1x per 30 min per (path,session).
+async function trackPageView() {
+  try {
+    if (!window.sbClient) return;
+    var path = (location.pathname || '/') + (location.hash || '');
+    var sid = localStorage.getItem('yg-sid');
+    if (!sid) {
+      sid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+      localStorage.setItem('yg-sid', sid);
+    }
+    // Client-side dedup: sla tijdstempel per path op
+    var key = 'yg-pv:' + path;
+    var last = parseInt(localStorage.getItem(key) || '0', 10);
+    if (Date.now() - last < 30 * 60 * 1000) return; // minder dan 30 min geleden — skip
+    localStorage.setItem(key, String(Date.now()));
+    var uid = (currentUser && currentUser.id) ? currentUser.id : null;
+    var lang = (typeof currentLang !== 'undefined') ? currentLang : 'nl';
+    var ref = (document.referrer || '').slice(0, 180);
+    // RPC (fire-and-forget)
+    sbClient.rpc('track_page_view', {
+      p_path: path, p_session_id: sid, p_user_id: uid, p_referrer: ref, p_lang: lang
+    }).then(function(){}, function(){}); // negeer fouten stilletjes
+  } catch(e) { /* stil */ }
+}
+
+function toggleLang() {
+  currentLang = (currentLang === 'nl') ? 'en' : 'nl';
+  try { localStorage.setItem('yg-lang', currentLang); } catch(e){}
+  applyLang();
+  // Re-render dynamische UI (kaartjes/lijsten bouwen zelf tekst)
+  try { if (typeof renderList === 'function') renderList(); } catch(e){}
+  try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) renderMarkers(); } catch(e){}
+  try { if (typeof renderMySales === 'function') renderMySales(); } catch(e){}
+  try { if (typeof updateUserUI === 'function') updateUserUI(); } catch(e){}
+  toast(i18n(currentLang === 'en' ? 'lang.switched_en' : 'lang.switched_nl'));
+}
+
+// ══════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════
 const TYPES = {
@@ -2118,14 +2443,21 @@ function updateUserUI() {
     if (profileSub)  profileSub.textContent  = currentUser.email || '';
   } else {
     if (btn) {
-      btn.textContent = 'Inloggen';
+      btn.textContent = i18n('header.login','Inloggen');
       btn.setAttribute('onclick', 'openLogin()');
     }
-    if (profileName) profileName.textContent = 'Gast';
-    if (profileSub)  profileSub.textContent  = 'Maak een account aan voor meer';
+    if (profileName) profileName.textContent = i18n('profile.guest','Gast');
+    if (profileSub)  profileSub.textContent  = i18n('profile.guest_sub','Maak een account aan voor meer');
   }
+  applyAuthVisibility();
   renderMySales();
   loadAndRenderUserBadges();
+}
+
+// Zet body.is-guest klasse zodat leden-only UI (meld-knoppen) kan verbergen
+function applyAuthVisibility() {
+  var guest = (typeof isGuest !== 'undefined' && isGuest) || !currentUser || !currentUser.email;
+  document.body.classList.toggle('is-guest', !!guest);
 }
 
 // ── Mijn verkopen in profiel ──
@@ -5193,6 +5525,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (row) row.classList.add('off');
   }
 
+  // i18n: pas opgeslagen taal toe op alle data-i18n elementen
+  try { applyLang(); } catch(e) { console.warn('applyLang init', e); }
+  // Zichtbaarheid gast/lid instellen (verbergt meld-knoppen voor gasten)
+  try { applyAuthVisibility(); } catch(e) {}
+  // Analytics: vuur page-view af (non-blocking)
+  try { trackPageView(); } catch(e) {}
+
   // Probeer data uit Supabase te laden, anders gebruik demo-data
   try {
     var supabaseData = await fetchListings();
@@ -5259,8 +5598,15 @@ function closeReport() {
   document.getElementById('reportOv').classList.remove('open');
 }
 function sendReport() {
+  // Extra drempel: alleen ingelogde leden mogen meldingen maken
+  if (isGuest || !currentUser || !currentUser.email) {
+    toast(i18n('report.guest_blocked','Alleen ingelogde leden kunnen melden.'));
+    closeReport();
+    setTimeout(openLogin, 250);
+    return;
+  }
   var chosen = document.querySelector('input[name="report-reason"]:checked');
-  if (!chosen) { toast('Selecteer eerst een reden 🙏'); return; }
+  if (!chosen) { toast(i18n('report.pick_reason','Selecteer eerst een reden 🙏')); return; }
   var reason = chosen.value;
   var extra = document.getElementById('report-extra').value.trim();
   var btn = document.querySelector('#reportOv .btn-feedback-send');
@@ -5271,14 +5617,24 @@ function sendReport() {
     var s = sales.find(function(x){ return String(x.id) === String(detailSaleId); });
     if (s) saleInfo = '\n\nAdvertentie: ' + s.title + ' (ID: ' + detailSaleId + ')';
   }
+  // Afzender-info
+  var senderName  = (currentUser && currentUser.name)  ? currentUser.name  : 'Onbekend';
+  var senderEmail = (currentUser && currentUser.email) ? currentUser.email : '';
+  var senderId    = (currentUser && currentUser.id)    ? currentUser.id    : '';
+  var senderBlock = '\n\n─────────────\nAfzender: ' + senderName +
+                    '\nE-mail: '  + (senderEmail || '(geen)') +
+                    '\nUser-id: ' + (senderId    || '(onbekend)') +
+                    '\nPagina: '  + (location.pathname || '/');
   fetch('https://api.web3forms.com/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({
       access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
-      subject: '[YardiGo Melding] ' + reason,
-      message: reason + (extra ? '\n\nToelichting: ' + extra : '') + saleInfo,
-      from_name: 'YardiGo App – Meldingssysteem'
+      subject: '[YardiGo Melding] ' + reason + ' — ' + senderName,
+      message: reason + (extra ? '\n\nToelichting: ' + extra : '') + saleInfo + senderBlock,
+      from_name: 'YardiGo Melding – ' + senderName,
+      email:   senderEmail || undefined,
+      replyto: senderEmail || undefined
     })
   })
   .then(function(r){ return r.json(); })
@@ -5318,18 +5674,30 @@ function selectFtype(btn, type) {
 }
 function sendFeedback() {
   var msg = document.getElementById('feedbackMsg').value.trim();
-  if (!msg) { toast('Schrijf eerst een bericht 😊'); return; }
+  if (!msg) { toast(i18n('feedback.empty','Schrijf eerst een bericht 😊')); return; }
   var btn = document.querySelector('.btn-feedback-send');
   btn.textContent = '⏳ Versturen...';
   btn.disabled = true;
+  // Afzender-info – zodat we weten wie meldt
+  var senderName  = (currentUser && currentUser.name)  ? currentUser.name  : (isGuest ? 'Gast (niet ingelogd)' : 'Onbekend');
+  var senderEmail = (currentUser && currentUser.email) ? currentUser.email : '';
+  var senderId    = (currentUser && currentUser.id)    ? currentUser.id    : '';
+  var senderBlock = '\n\n─────────────\nAfzender: ' + senderName +
+                    '\nE-mail: '   + (senderEmail || '(geen – gast)') +
+                    '\nUser-id: '  + (senderId    || '(gast)') +
+                    '\nTaal: '     + (typeof currentLang !== 'undefined' ? currentLang : 'nl') +
+                    '\nPagina: '   + (location.pathname || '/') + (location.hash || '') +
+                    '\nBrowser: '  + (navigator.userAgent || '').slice(0,160);
   fetch('https://api.web3forms.com/submit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({
       access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
-      subject: '[YardiGo ' + currentFtype + '] Feedback',
-      message: msg,
-      from_name: 'YardiGo App'
+      subject: '[YardiGo ' + currentFtype + '] ' + senderName + (senderEmail ? ' <' + senderEmail + '>' : ''),
+      message: msg + senderBlock,
+      from_name: 'YardiGo App – ' + senderName,
+      email:   senderEmail || undefined,
+      replyto: senderEmail || undefined
     })
   })
   .then(function(r){ return r.json(); })
