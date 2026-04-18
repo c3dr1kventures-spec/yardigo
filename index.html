@@ -1805,8 +1805,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </div>
         <!-- Multi-adres (buurtverkoop) -->
         <div id="add-s2-buurt" style="display:none;margin-bottom:16px">
+          <!-- AVG-uitleg: wat betekent buurtverkoop voor de organisator -->
+          <div style="margin-bottom:14px;padding:12px 14px;background:#FDF0E7;border:1.5px solid #F4D7B0;border-left:3px solid var(--terra);border-radius:10px">
+            <div style="font-size:13px;font-weight:700;color:#A04A18;margin-bottom:6px">🏘️ Zo werkt een buurtverkoop</div>
+            <div style="font-size:11.5px;color:#7A4A2A;line-height:1.55">Je plaatst één buurtverkoop met jouw eigen adres én de adressen van meedoende buren. Omdat het adres van een buur een persoonsgegeven is, vraagt YardiGo eerst <strong>hun toestemming</strong> — dat is verplicht volgens de AVG.</div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #F4D7B0;font-size:11px;color:#7A4A2A;line-height:1.55">
+              <div style="margin-bottom:3px">✅ <strong>Jouw eigen adres</strong> gaat direct online.</div>
+              <div style="margin-bottom:3px">📨 Voor elke buur krijg je <strong>na publiceren</strong> een bevestigingslink om zelf te delen (WhatsApp/SMS/e-mail).</div>
+              <div style="margin-bottom:3px">⏳ Pas na "ja" van de buur verschijnt hun adres op de kaart.</div>
+              <div>🗑️ Niet bevestigd binnen <strong>7 dagen</strong>? Adres wordt automatisch gewist.</div>
+            </div>
+            <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.5">Tip: vraag buren bij voorkeur <em>vóór</em> je publiceert of ze mee willen doen — dan weet je zeker dat ze de link verwachten.</div>
+          </div>
           <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">DEELNEMENDE ADRESSEN</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Voeg alle adressen toe die meedoen aan de buurtverkoop.</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Voeg alle adressen toe die meedoen. Eerste adres = jijzelf; daarna 1 regel per buur.</div>
           <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <button type="button" onclick="addBuurtAdres()" style="width:100%;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
         </div>
