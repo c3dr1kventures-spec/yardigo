@@ -824,10 +824,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="font-size:18px;font-weight:800;color:#2C2416;text-align:center;margin-bottom:6px">Nog één check voor je publiceert</div>
     <div style="font-size:13px;color:#7A6E62;text-align:center;margin-bottom:16px;line-height:1.55">Deze advertentie wordt zichtbaar op de kaart voor alle (ingelogde) bezoekers van YardiGo.</div>
 
-    <div style="background:white;border:1.5px solid #EDE8DF;border-radius:12px;padding:12px 14px;margin-bottom:16px">
+    <div style="background:white;border:1.5px solid #EDE8DF;border-radius:12px;padding:12px 14px;margin-bottom:12px">
       <div style="font-size:10px;font-weight:700;color:#9A8E82;letter-spacing:.5px;margin-bottom:6px">HET ADRES DAT JE HEBT INGEVULD</div>
       <div id="yg-publish-confirm-addr" style="font-size:14px;font-weight:700;color:#2C2416;word-break:break-word">—</div>
     </div>
+    <div id="yg-publish-confirm-reveal" style="background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:10px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:#2C4A36;line-height:1.5">—</div>
 
     <label for="yg-pc-own" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;font-size:13px;color:#2C2416;line-height:1.55">
       <input type="checkbox" id="yg-pc-own" style="margin-top:3px;accent-color:#E07B39;flex-shrink:0;width:16px;height:16px">
@@ -1623,6 +1624,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="det-addr-guest" style="display:none;font-size:12px;color:var(--muted);margin-bottom:4px;cursor:pointer;border:1.5px dashed #F2C89A;border-radius:8px;padding:6px 10px" onclick="guestGate('adres')">
         <span id="det-addr-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒
       </div>
+      <div id="det-addr-pending" style="display:none;font-size:12px;color:#2C4A36;margin-bottom:4px;border:1.5px solid #C7DFCF;background:#F0F6F2;border-radius:8px;padding:8px 10px;line-height:1.45">
+        <div><span id="det-addr-pending-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒</div>
+        <div style="margin-top:4px;font-size:11px;color:#3A6B4A;font-weight:600">⏳ Volledig adres zichtbaar over <span id="det-addr-countdown">—</span></div>
+      </div>
       <div id="det-interest-wrap" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:4px 8px;border-radius:8px">
         <span style="font-size:16px;font-weight:800;color:var(--terra)" id="det-interest-num">0</span>
         <span style="font-size:11px;color:var(--muted)" id="det-interest-label">gaan erheen</span>
@@ -1805,6 +1810,21 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <button type="button" onclick="addBuurtAdres()" style="width:100%;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
         </div>
+        <!-- Adres-zichtbaarheid (AVG-gevoelig) -->
+        <div style="margin-bottom:16px;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">🔒 Wanneer mag je adres zichtbaar zijn?</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.45">Gasten zien nooit je adres — alleen de plaats. Hieronder kies je wanneer ingelogde bezoekers je volledige adres mogen zien.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:white" id="aReveal-day-before-lbl">
+              <input type="radio" name="aReveal" value="day_before" id="aReveal-day-before" checked style="margin-top:2px;accent-color:#2D6A4F;flex-shrink:0">
+              <span style="font-size:12px;line-height:1.45"><strong style="color:var(--forest)">Pas 24 uur vooraf</strong> <span style="color:var(--muted);font-weight:600">(aanbevolen)</span><br><span style="color:var(--muted)">Bezoekers zien een aftelklok. Het exacte adres en de routeknop worden automatisch 24 uur vóór de sale zichtbaar.</span></span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:white">
+              <input type="radio" name="aReveal" value="instant" id="aReveal-instant" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
+              <span style="font-size:12px;line-height:1.45"><strong style="color:var(--terra)">Direct zichtbaar</strong><br><span style="color:var(--muted)">Ingelogde bezoekers zien je adres zodra je publiceert.</span></span>
+            </label>
+          </div>
+        </div>
         <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px" id="add-tags-label">CATEGORIEËN</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="add-tags-grid">
           <!-- Wordt dynamisch gevuld door updateTagsForType() -->
@@ -1956,6 +1976,7 @@ function mapSupabaseToSale(item) {
   var mappedType = typeMap[item.category] || typeMap[item.type] || 'particulier';
   var lat = item.latitude || (item.location ? extractCoords(item.location).lat : 52.3);
   var lng = item.longitude || (item.location ? extractCoords(item.location).lng : 5.3);
+  var _addrHidden = (item.address === null || typeof item.address === 'undefined' || item.address === '');
   return {
     id: item.id,
     type: mappedType,
@@ -1978,7 +1999,11 @@ function mapSupabaseToSale(item) {
     user_email: item.user_email || '',
     user_id: item.user_id || '',
     created_at: item.created_at || null,
-    status: item.status || 'active'
+    status: item.status || 'active',
+    // ── Adres-onthulling (Optie C) ──
+    address_reveal_mode: item.address_reveal_mode || 'day_before',
+    address_visible_at: item.address_visible_at || null, // ISO-string of null
+    address_hidden: _addrHidden                           // true = adres server-side verborgen
   };
 }
 
@@ -2431,13 +2456,33 @@ function dismissCookieNotice() {
 function showPublishConfirm(addr) {
   var modal = document.getElementById('yg-publish-confirm');
   var addrEl = document.getElementById('yg-publish-confirm-addr');
+  var revEl = document.getElementById('yg-publish-confirm-reveal');
   var own = document.getElementById('yg-pc-own');
   var pub = document.getElementById('yg-pc-public');
   if (!modal) return;
   if (addrEl) addrEl.textContent = addr || '—';
+  if (revEl) {
+    var mode = getSelectedRevealMode();
+    if (mode === 'instant') {
+      revEl.style.background = '#FFF4E6';
+      revEl.style.borderColor = '#F4D7B0';
+      revEl.style.color = '#7A5A2E';
+      revEl.innerHTML = '⚠️ <strong>Adres direct zichtbaar</strong> — elke ingelogde bezoeker ziet je volledige adres zodra je publiceert.';
+    } else {
+      revEl.style.background = '#F0F6F2';
+      revEl.style.borderColor = '#C7DFCF';
+      revEl.style.color = '#2C4A36';
+      revEl.innerHTML = '🔒 <strong>Adres pas 24 uur vooraf zichtbaar</strong> — bezoekers zien een aftelklok tot het moment dat je sale start.';
+    }
+  }
   if (own) own.checked = false;
   if (pub) pub.checked = false;
   modal.style.display = 'flex';
+}
+function getSelectedRevealMode() {
+  var r = document.querySelector('input[name="aReveal"]:checked');
+  var v = r ? r.value : 'day_before';
+  return (v === 'instant') ? 'instant' : 'day_before';
 }
 function cancelPublishConfirm() {
   var modal = document.getElementById('yg-publish-confirm');
@@ -2597,9 +2642,16 @@ function createListingPopup(sale) {
   var tagsHtml = (sale.tags || []).map(function(tg) {
     return '<span class="pop-tag ' + sale.type + '">' + tg + '</span>';
   }).join('');
-  var addrHtml = isGuest
-    ? '📍 ' + sale.address.split(',').slice(-1)[0].trim() + ' <span style="filter:blur(3px)">••••••</span> 🔒'
-    : '📍 ' + sale.address;
+  var _popCity = (sale.address || '').split(',').slice(-1)[0].trim();
+  var addrHtml;
+  if (isGuest) {
+    addrHtml = '📍 ' + _popCity + ' <span style="filter:blur(3px)">••••••</span> 🔒';
+  } else if (sale.address_hidden && sale.address_reveal_mode === 'day_before') {
+    var _popCd = formatCountdownDetail(sale.address_visible_at);
+    addrHtml = '📍 ' + _popCity + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_popCd ? 'over ' + _popCd : '24u vooraf') + '</span>';
+  } else {
+    addrHtml = '📍 ' + sale.address;
+  }
   var photoHtml = '';
   if (sale.photos && sale.photos.length) {
     var photoCount = sale.photos.length;
@@ -3012,11 +3064,18 @@ function createListingCard(s, i) {
   var t = TYPES[s.type], fav = favorites.has(s.id);
   var d2 = (Math.random() * 8 + 0.5).toFixed(1);
   var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + escapeHtml(tg) + '</span>'; }).join('');
-  // Adres is server-side al verborgen (NULL) voor gasten via get_listings_for_user()
+  // Adres is server-side al verborgen (NULL) voor gasten via get_listings_for_user(),
+  // én voor ingelogde bezoekers wanneer de verkoper voor 'pas 24u vooraf' koos en het venster nog niet is geopend.
   var city = escapeHtml((s.city || (s.address || '').split(',').slice(-1)[0]).trim());
-  var addr = s.address
-    ? '📍 ' + escapeHtml(s.address)
-    : '📍 ' + city + ' · <span style="opacity:0.5">Adres zichtbaar na inloggen</span> 🔒';
+  var addr;
+  if (s.address_hidden && !isGuest && s.address_reveal_mode === 'day_before') {
+    var _cd = formatCountdownDetail(s.address_visible_at);
+    addr = '📍 ' + city + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_cd ? 'over ' + escapeHtml(_cd) : '24u vooraf') + '</span>';
+  } else if (s.address) {
+    addr = '📍 ' + escapeHtml(s.address);
+  } else {
+    addr = '📍 ' + city + ' · <span style="opacity:0.5">Adres zichtbaar na inloggen</span> 🔒';
+  }
   var going = goingSet.has(s.id);
   var idAttr = typeof s.id === 'string' ? "'" + escapeHtml(s.id) + "'" : s.id;
   return '<div class="card" style="animation:fadeUp .4s ' + ((i || 0) * 0.06) + 's both">'
@@ -3100,9 +3159,19 @@ function updateRouteView() {
   if (tm) tm.textContent = Math.round(totalDist / 30 * 60) + ' min';
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   list.innerHTML = opt.map(function(s, i) {
+    var _cityFallback = (s.city || (s.address || '').split(',').slice(-1)[0] || '').trim();
+    var _addrLine;
+    if (s.address_hidden && !isGuest && s.address_reveal_mode === 'day_before') {
+      var _cd = formatCountdownDetail(s.address_visible_at);
+      _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' · 🔒 ' + (_cd ? 'adres over ' + escapeHtml(_cd) : 'adres 24u vooraf');
+    } else if (s.address) {
+      _addrLine = '📍 ' + escapeHtml(s.address);
+    } else {
+      _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' (adres zichtbaar na inloggen)';
+    }
     return '<div class="my-sale-card"><div style="width:28px;height:28px;border-radius:50%;background:' + colors[s.type] + ';color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">' + (i+1) + '</div>'
       + '<div style="flex:1"><div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
-      + '<div style="font-size:11px;color:var(--muted)">📍 ' + (s.address ? escapeHtml(s.address) : escapeHtml(s.city || '') + ' (adres zichtbaar na inloggen)') + '</div></div>'
+      + '<div style="font-size:11px;color:var(--muted)">' + _addrLine + '</div></div>'
       + '<button onclick="toggleFav(\'' + escapeHtml(s.id) + '\')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
@@ -3257,26 +3326,53 @@ function openDetail(id) {
   // Fav btn
   var fb = document.getElementById('det-fav-btn');
   if (fb) { fb.textContent = fav ? '⭐' : '☆'; }
+  // Stop eerdere countdown-timer (indien actief)
+  stopDetailCountdown();
   // Guest mode
   if (isGuest) {
     document.getElementById('det-addr').style.display = 'none';
     document.getElementById('det-addr-guest').style.display = 'flex';
+    document.getElementById('det-addr-pending').style.display = 'none';
     var city = s.address.split(',').slice(-1)[0].trim();
     document.getElementById('det-addr-city').textContent = '📍 ' + city + ' · ';
     document.getElementById('det-route-btn').onclick = function() { guestGate('route'); };
     document.getElementById('det-route-btn').style.opacity = '0.5';
+    document.getElementById('det-route-btn').textContent = '🧭 Route';
     document.getElementById('det-fav-btn').onclick = function() { guestGate('favoriet'); };
     document.getElementById('det-fav-btn').style.opacity = '0.5';
     document.getElementById('det-minimap-wrap').style.display = 'none';
     document.getElementById('det-guest-banner').style.display = 'flex';
+  } else if (s.address_hidden) {
+    // Ingelogd, maar de verkoper heeft voor 'pas 24u vooraf' gekozen en we zijn nog niet binnen dat venster.
+    document.getElementById('det-addr').style.display = 'none';
+    document.getElementById('det-addr-guest').style.display = 'none';
+    document.getElementById('det-addr-pending').style.display = 'block';
+    var _pcity = (s.address || '').split(',').slice(-1)[0].trim();
+    document.getElementById('det-addr-pending-city').textContent = '📍 ' + _pcity + ' · ';
+    startDetailCountdown(s.address_visible_at);
+    var _rb = document.getElementById('det-route-btn');
+    _rb.onclick = function() { toast('🔒 Volledig adres zichtbaar ' + (formatCountdownDetail(s.address_visible_at) || 'binnenkort')); };
+    _rb.style.opacity = '0.55';
+    _rb.style.cursor = 'not-allowed';
+    _rb.textContent = '🔒 Route';
+    document.getElementById('det-fav-btn').onclick = detailFav;
+    document.getElementById('det-fav-btn').style.opacity = '1';
+    document.getElementById('det-fav-btn').style.cursor = 'pointer';
+    document.getElementById('det-minimap-wrap').style.display = 'block';
+    document.getElementById('det-guest-banner').style.display = 'none';
   } else {
     document.getElementById('det-addr').style.display = 'block';
     document.getElementById('det-addr').textContent = '📍 ' + s.address;
     document.getElementById('det-addr-guest').style.display = 'none';
-    document.getElementById('det-route-btn').onclick = detailRoute;
-    document.getElementById('det-route-btn').style.opacity = '1';
+    document.getElementById('det-addr-pending').style.display = 'none';
+    var _rb2 = document.getElementById('det-route-btn');
+    _rb2.onclick = detailRoute;
+    _rb2.style.opacity = '1';
+    _rb2.style.cursor = 'pointer';
+    _rb2.textContent = '🧭 Route';
     document.getElementById('det-fav-btn').onclick = detailFav;
     document.getElementById('det-fav-btn').style.opacity = '1';
+    document.getElementById('det-fav-btn').style.cursor = 'pointer';
     document.getElementById('det-minimap-wrap').style.display = 'block';
     document.getElementById('det-guest-banner').style.display = 'none';
   }
@@ -3300,6 +3396,57 @@ function openDetail(id) {
 function closeDetail() {
   document.getElementById('detailOv').classList.remove('open');
   var zc = document.querySelector('.leaflet-control-zoom'); if (zc) zc.style.display = '';
+  stopDetailCountdown();
+}
+
+// ── Adres-onthulling countdown (Optie C) ───────────────────────
+// Formatteer ms → "1d 4u 30m" / "3u 12m" / "45m" / "nu"
+function formatCountdownDetail(visibleAtIso) {
+  if (!visibleAtIso) return '';
+  var target = new Date(visibleAtIso).getTime();
+  if (isNaN(target)) return '';
+  var diff = target - Date.now();
+  if (diff <= 0) return 'nu beschikbaar';
+  var mins = Math.floor(diff / 60000);
+  var days = Math.floor(mins / (60 * 24)); mins -= days * 60 * 24;
+  var hrs  = Math.floor(mins / 60);        mins -= hrs * 60;
+  if (days > 0) return days + 'd ' + hrs + 'u ' + mins + 'm';
+  if (hrs  > 0) return hrs + 'u ' + mins + 'm';
+  return mins + 'm';
+}
+var _ygDetailCountdownTimer = null;
+function startDetailCountdown(visibleAtIso) {
+  stopDetailCountdown();
+  var el = document.getElementById('det-addr-countdown');
+  if (!el || !visibleAtIso) return;
+  var tick = function() {
+    var txt = formatCountdownDetail(visibleAtIso);
+    el.textContent = txt || '—';
+    // Wanneer de tijd voorbij is: herlaad listings zodat het adres nu binnenkomt
+    var target = new Date(visibleAtIso).getTime();
+    if (!isNaN(target) && Date.now() >= target) {
+      stopDetailCountdown();
+      try {
+        if (typeof fetchListings === 'function') {
+          fetchListings().then(function(d) {
+            if (d && d.length) {
+              sales = d.map(mapSupabaseToSale);
+              if (typeof renderMarkers === 'function') renderMarkers();
+              if (typeof renderList === 'function') renderList();
+              // Open detail opnieuw zodat het nu-zichtbare adres getoond wordt
+              var current = sales.find(function(x) { return String(x.id) === String(detailSaleId); });
+              if (current && typeof openDetail === 'function') openDetail(current.id);
+            }
+          }).catch(function(){});
+        }
+      } catch(e) {}
+    }
+  };
+  tick();
+  _ygDetailCountdownTimer = setInterval(tick, 30000); // elke 30s bijwerken
+}
+function stopDetailCountdown() {
+  if (_ygDetailCountdownTimer) { clearInterval(_ygDetailCountdownTimer); _ygDetailCountdownTimer = null; }
 }
 function carouselStep(dir) {
   var s = sales.find(function(x) { return String(x.id) === String(detailSaleId); });
@@ -3500,6 +3647,9 @@ function resetAddForm() {
   var evSel = document.getElementById('aEventType'); if (evSel) evSel.value = '';
   var evAnd = document.getElementById('aEventAnders'); if (evAnd) evAnd.value = '';
   var evAndWrap = document.getElementById('evenement-anders-wrap'); if (evAndWrap) evAndWrap.style.display = 'none';
+  // Reset adres-zichtbaarheid (default: pas 24u vooraf)
+  var rDay = document.getElementById('aReveal-day-before'); if (rDay) rDay.checked = true;
+  var rIns = document.getElementById('aReveal-instant');     if (rIns) rIns.checked = false;
   // Stap-navigatie
   ['add-s0','add-s1','add-s2','add-s3'].forEach(function(id, i) {
     var el = document.getElementById(id); if (el) el.style.display = i === 0 ? 'block' : 'none';
@@ -3834,6 +3984,7 @@ async function publishSale() {
   var isBuurt = selTypeVal === 'buurt';
   var addrEl  = document.getElementById('aAddr');
   var mainAddr = isBuurt ? (buurtAdressen.length > 0 ? buurtAdressen[0].addr : '') : (addrEl ? addrEl.value.trim() : '');
+  var revealMode = (typeof getSelectedRevealMode === 'function') ? getSelectedRevealMode() : 'day_before';
 
   if (!isBuurt && !mainAddr) { toast('Vul een adres in'); return; }
   if (isBuurt && buurtAdressen.length === 0) { toast('Voeg minimaal 1 adres toe'); return; }
@@ -4002,7 +4153,8 @@ async function publishSale() {
             date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
             tags: tagList, status: 'active', description: descVal,
             images: publicPhotoUrls.slice(),
-            neighborhood_group_id: bvId
+            neighborhood_group_id: bvId,
+            address_reveal_mode: revealMode
           });
           if (insRes && insRes.error) {
             console.error('Listing insert mislukt:', insRes.error);
@@ -4030,7 +4182,8 @@ async function publishSale() {
           latitude: lat, longitude: lng,
           date_start: dateVal || null, time_start: fromVal, time_end: tillVal,
           tags: tagList, status: 'active', description: descVal,
-          images: publicPhotoUrls.slice()
+          images: publicPhotoUrls.slice(),
+          address_reveal_mode: revealMode
         });
         if (insRes && insRes.error) {
           console.error('Listing insert mislukt:', insRes.error);
