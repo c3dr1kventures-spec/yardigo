@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voor organisatoren – YardiGo</title>
+  <meta name="description" content="Zet je rommelmarkt, garagesale of buurtverkoop op de kaart van Nederland. Gratis, in 2 minuten, zichtbaar tot de dag zelf.">
+  <meta property="og:title" content="Voor organisatoren – YardiGo">
+  <meta property="og:description" content="Zet je rommelmarkt, garagesale of buurtverkoop op de kaart van Nederland. Gratis, in 2 minuten, zichtbaar tot de dag zelf.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.yardigo.nl/organisatoren">
+  <meta property="og:image" content="https://www.yardigo.nl/og-image.png">
+  <link rel="icon" href="/icon-192.png">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+      color: #2C2416;
+      background: #F9F5EF;
+      line-height: 1.6;
+    }
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #3A6B4A;
+      text-decoration: none;
+      margin-bottom: 24px;
+    }
+    .back:hover { opacity: .75; }
+
+    /* HERO */
+    .hero { padding: 24px 0 32px; border-bottom: 1px solid #EDE8DF; margin-bottom: 32px; }
+    .hero h1 {
+      font-size: 32px;
+      line-height: 1.2;
+      color: #E07B39;
+      margin: 0 0 12px;
+    }
+    .hero .sub {
+      font-size: 17px;
+      color: #4A3E32;
+      margin: 0 0 24px;
+      max-width: 580px;
+    }
+    .cta {
+      display: inline-block;
+      background: #E07B39;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px 22px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(224, 123, 57, 0.25);
+      transition: transform .1s ease, box-shadow .1s ease;
+    }
+    .cta:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(224, 123, 57, 0.35); }
+    .cta-note { display: block; margin-top: 10px; font-size: 13px; color: #7A6E62; }
+
+    /* SECTIONS */
+    h2 {
+      font-size: 20px;
+      color: #3A6B4A;
+      margin: 40px 0 16px;
+    }
+    p, li { font-size: 15px; color: #4A3E32; }
+
+    /* GRID 3-cols */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 16px 0 8px;
+    }
+    @media (min-width: 600px) {
+      .grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #EDE8DF;
+      border-radius: 12px;
+      padding: 18px 16px;
+    }
+    .card .icon { font-size: 24px; line-height: 1; margin-bottom: 10px; }
+    .card h3 { font-size: 15px; margin: 0 0 6px; color: #2C2416; }
+    .card p { font-size: 14px; margin: 0; color: #4A3E32; }
+
+    /* STEPS */
+    .steps { counter-reset: step; padding: 0; list-style: none; margin: 16px 0 8px; }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 12px 0 12px 44px;
+      font-size: 15px;
+      border-bottom: 1px solid #EDE8DF;
+    }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #3A6B4A;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* TRUST */
+    .trust {
+      background: #F2EADD;
+      border-left: 3px solid #E07B39;
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+    .trust p { margin: 0; font-size: 14px; }
+
+    /* FAQ */
+    details {
+      border-bottom: 1px solid #EDE8DF;
+      padding: 14px 0;
+    }
+    details:last-of-type { border-bottom: none; }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      color: #2C2416;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+';
+      font-size: 20px;
+      color: #E07B39;
+      font-weight: 400;
+      margin-left: 12px;
+    }
+    details[open] summary::after { content: '–'; }
+    details p { margin: 10px 0 0; font-size: 14px; color: #4A3E32; }
+
+    /* CTA herhaling onderaan */
+    .cta-bottom {
+      text-align: center;
+      margin: 48px 0 16px;
+      padding: 28px 20px;
+      background: #fff;
+      border: 1px solid #EDE8DF;
+      border-radius: 14px;
+    }
+    .cta-bottom h2 { margin: 0 0 12px; color: #3A6B4A; }
+    .cta-bottom p { margin: 0 0 18px; }
+
+    footer {
+      margin-top: 48px;
+      font-size: 13px;
+      color: #7A6E62;
+      border-top: 1px solid #EDE8DF;
+      padding-top: 16px;
+      text-align: center;
+    }
+    footer a { color: #3A6B4A; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <a class="back" href="/">← Naar YardiGo</a>
+
+  <section class="hero">
+    <h1>Zet je rommelmarkt op de kaart van Nederland</h1>
+    <p class="sub">Gratis, in 2 minuten. Geen Facebook-algoritme dat je post begraaft — bezoekers in jouw buurt zien jouw verkoop zolang hij actueel is.</p>
+    <a class="cta" href="/">Plaats je verkoop gratis</a>
+    <span class="cta-note">Open YardiGo en tik op de oranje <strong>+ Plaatsen</strong>-knop bovenaan.</span>
+  </section>
+
+  <h2>Waarom YardiGo?</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="icon">🗺️</div>
+      <h3>Op de kaart, niet in een tijdlijn</h3>
+      <p>Bezoekers vinden je op afstand, niet op populariteit van je post.</p>
+    </div>
+    <div class="card">
+      <div class="icon">📅</div>
+      <h3>Zichtbaar tot de dag zelf</h3>
+      <p>Je advertentie zakt niet weg onder nieuwere posts. Hij blijft staan tot de verkoopdatum voorbij is.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🏷️</div>
+      <h3>Gefilterd op wat bezoekers zoeken</h3>
+      <p>Vintage, kinderkleding, boeken, gereedschap — jouw verkoop komt bovendrijven bij de juiste mensen.</p>
+    </div>
+  </div>
+
+  <h2>Voor wie?</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="icon">🏠</div>
+      <h3>Garagesale thuis</h3>
+      <p>Eenmalige verkoop bij jou op de stoep of oprit.</p>
+    </div>
+    <div class="card">
+      <div class="icon">🏘️</div>
+      <h3>Buurtverkoop</h3>
+      <p>Meerdere huishoudens in één straat of wijk. Elk adres krijgt een eigen bevestigingslink (AVG-proof).</p>
+    </div>
+    <div class="card">
+      <div class="icon">🎪</div>
+      <h3>Rommelmarkt of vereniging</h3>
+      <p>Georganiseerd evenement op één locatie — kofferbak, school, sportclub, kerk.</p>
+    </div>
+  </div>
+
+  <h2>Hoe werkt het?</h2>
+  <ol class="steps">
+    <li>Open <a href="/">yardigo.nl</a> en tik op de oranje <strong>+ Plaatsen</strong>-knop. (Account maken kost ~30 seconden.)</li>
+    <li>Vul datum, tijd, adres en categorieën in. Voeg eventueel foto's toe.</li>
+    <li>Klaar — je verkoop staat op de kaart en bezoekers in de buurt zien 'm automatisch. Deel 'm eventueel zelf nog via WhatsApp of social om extra mensen te trekken.</li>
+  </ol>
+
+  <h2>Wat YardiGo is — en wat niet</h2>
+  <div class="trust">
+    <p>YardiGo is een Nederlandse app, gemaakt door één persoon. Volledig gratis voor organisatoren en bezoekers, AVG-proof, geen tracking-cookies. Je adres en datum zijn zichtbaar voor bezoekers — dat is precies de bedoeling. Persoonlijke contactgegevens worden nergens gevraagd of getoond. Lees meer in onze <a href="/privacy">privacyverklaring</a> en <a href="/voorwaarden">gebruiksvoorwaarden</a>.</p>
+  </div>
+
+  <h2>Veelgestelde vragen</h2>
+
+  <details>
+    <summary>Wat kost het?</summary>
+    <p>Niks. Voor organisatoren blijft plaatsen gratis. Mocht er ooit betaalde functionaliteit komen (bijvoorbeeld een boost), dan wordt dat altijd vooraf duidelijk en optioneel.</p>
+  </details>
+
+  <details>
+    <summary>Moet ik een account maken?</summary>
+    <p>Ja, alleen voor het plaatsen van een verkoop. Bezoekers kunnen zonder account rondkijken op de kaart. Een account aanmaken kost ongeveer 30 seconden — alleen e-mailadres en wachtwoord.</p>
+  </details>
+
+  <details>
+    <summary>Kan ik mijn advertentie later aanpassen of verwijderen?</summary>
+    <p>Ja, via je profiel → Mijn verkopen kun je tekst, datum, foto's en locatie wijzigen of de hele advertentie offline halen.</p>
+  </details>
+
+  <details>
+    <summary>Hoe werkt een buurtverkoop met meerdere adressen?</summary>
+    <p>Je geeft je eigen adres direct op (toestemming voor jezelf). Voor elk ander adres genereert YardiGo een unieke bevestigingslink die je deelt met die bewoner — bijvoorbeeld via WhatsApp. Pas als de bewoner klikt op "Ja, bevestig mijn adres", komt dat adres op de kaart. Wordt er niet gereageerd binnen 7 dagen, dan wordt het adres automatisch gewist. Zo blijft de verkoop AVG-proof.</p>
+  </details>
+
+  <details>
+    <summary>Wat als mijn verkoop niet doorgaat?</summary>
+    <p>Haal 'm zelf offline via Mijn verkopen, of mail <a href="mailto:info@yardigo.nl">info@yardigo.nl</a>. We halen 'm dan dezelfde dag eraf.</p>
+  </details>
+
+  <details>
+    <summary>Hoe vinden bezoekers mijn verkoop?</summary>
+    <p>YardiGo toont alle actuele verkopen op een kaart. Bezoekers filteren op afstand (bijvoorbeeld "binnen 10 km"), op datum (vandaag, dit weekend, deze maand) en op categorieën (vintage, kinderspullen, boeken, etc.). Jouw verkoop verschijnt automatisch zodra je 'm plaatst.</p>
+  </details>
+
+  <div class="cta-bottom">
+    <h2>Klaar om je eerste verkoop te plaatsen?</h2>
+    <p>Open YardiGo, tik op <strong>+ Plaatsen</strong> en vul de details in. Vragen? Mail <a href="mailto:info@yardigo.nl">info@yardigo.nl</a>.</p>
+    <a class="cta" href="/">Plaats je verkoop gratis</a>
+  </div>
+
+  <footer>
+    &copy; 2026 YardiGo · <a href="/privacy">Privacyverklaring</a> · <a href="/voorwaarden">Voorwaarden</a> · <a href="/">Naar de app</a>
+  </footer>
+
+</body>
+</html>
