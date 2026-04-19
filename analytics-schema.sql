@@ -28,8 +28,11 @@ CREATE TABLE IF NOT EXISTS public.page_views (
 );
 
 CREATE INDEX IF NOT EXISTS idx_pv_created_at     ON public.page_views (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pv_session_day    ON public.page_views (session_id, (created_at::date));
-CREATE INDEX IF NOT EXISTS idx_pv_path_day       ON public.page_views (path, (created_at::date));
+-- NB: géén date-cast in index-expressies — Postgres eist IMMUTABLE en
+-- timestamptz->date is dat niet. Gewoon op created_at indexeren is genoeg;
+-- Postgres gebruikt die index ook voor "created_at::date = current_date" queries.
+CREATE INDEX IF NOT EXISTS idx_pv_session_day    ON public.page_views (session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_pv_path_day       ON public.page_views (path, created_at);
 CREATE INDEX IF NOT EXISTS idx_pv_user_id        ON public.page_views (user_id) WHERE user_id IS NOT NULL;
 
 COMMENT ON TABLE public.page_views IS
