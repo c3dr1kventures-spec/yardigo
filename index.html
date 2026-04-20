@@ -1924,17 +1924,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </div>
 
 <!-- Buurtverkoop: bevestigingslinks delen na publiceren -->
-<div class="overlay" id="shareBuurtLinksOv" onclick="if(event.target===this)closeShareBuurtLinks()">
-  <div class="sheet" style="max-height:90vh;overflow-y:auto">
+<!-- Click-outside expres UIT: de links zijn na publiceren belangrijk en mogen
+     niet per ongeluk verdwijnen. Gebruiker sluit via de "Klaar"-knop. -->
+<div class="overlay" id="shareBuurtLinksOv">
+  <div class="sheet" style="max-height:92vh;overflow-y:auto">
     <div class="sheet-handle"></div>
     <div style="padding:18px 22px 24px">
       <div style="font-size:20px;font-weight:800;margin-bottom:6px">📨 Stuur deze links naar je buren</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner — dat is verplicht volgens de AVG. Stuur elke buur z'n eigen link via WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
-      <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:12px;color:#7A4A2A;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Stuur elke buur z'n eigen link via WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
+      <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:12px;color:#7A4A2A;margin-bottom:10px">
         ⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.
       </div>
+      <div style="background:#EAF2EC;border-left:3px solid var(--forest);padding:10px 12px;border-radius:8px;font-size:12px;color:#2C4A36;margin-bottom:16px">
+        💾 Geen haast? Je kunt deze links later ook terugvinden onder <strong>Mijn verkopen</strong> → klik op je buurtverkoop.
+      </div>
       <div id="shareBuurtLinksList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px"></div>
-      <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Klaar — sluiten</button>
+      <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Klaar, sluiten</button>
     </div>
   </div>
 </div>
@@ -2083,7 +2088,9 @@ function mapSupabaseToSale(item) {
     address_visible_at: item.address_visible_at || null, // ISO-string of null
     address_hidden: _addrHidden,                          // true = adres server-side verborgen
     // ── Buurt-bevestiging ──
-    confirmation_status: item.confirmation_status || 'confirmed'
+    confirmation_status: item.confirmation_status || 'confirmed',
+    confirmation_token: item.confirmation_token || null,
+    confirmation_address_label: item.confirmation_address_label || null
   };
 }
 
@@ -2513,6 +2520,7 @@ function renderMySales() {
     var addrShort = (s.address || '').split(',').slice(-1)[0].trim();
     // Voor buurtverkoop: tel statussen van alle adressen in deze groep
     var bvStatusBadge = '';
+    var bvAddressesHtml = '';
     if (s.neighborhood_sale_id) {
       var grp = mine.filter(function(x) { return x.neighborhood_sale_id === s.neighborhood_sale_id; });
       var nPending = grp.filter(function(x) { return x.confirmation_status === 'pending'; }).length;
@@ -2526,22 +2534,93 @@ function renderMySales() {
           + ' <span style="color:var(--muted)">· ' + nConfirmed + '/' + total + ' online</span>'
           + '</div>';
       }
+      // Uitklapbaar adressenblok: altijd beschikbaar bij een buurtverkoop met > 1 adres
+      if (grp.length > 1) {
+        // Sorteer zodat eigen/organisator-rij bovenaan staat
+        var sorted = grp.slice().sort(function(a, b) {
+          var aOwn = !a.confirmation_token ? 0 : 1;
+          var bOwn = !b.confirmation_token ? 0 : 1;
+          return aOwn - bOwn;
+        });
+        var rowsHtml = sorted.map(function(row) {
+          var status = row.confirmation_status || 'confirmed';
+          var isOwnRow = !row.confirmation_token;
+          var addrShortR = (row.address || '').split(',')[0].trim();
+          var rowLabel = row.confirmation_address_label || (isOwnRow ? '🏠 Jouw eigen adres' : '👤 Buur');
+          var badge;
+          if (isOwnRow) {
+            badge = '<span style="background:#EAF2EC;color:#2C4A36;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">🏠 Jij</span>';
+          } else if (status === 'confirmed') {
+            badge = '<span style="background:#EAF2EC;color:#2C4A36;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">✅ Bevestigd</span>';
+          } else if (status === 'pending') {
+            badge = '<span style="background:#FFF4E6;color:#A04A18;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">⏳ Wacht op toestemming</span>';
+          } else if (status === 'declined') {
+            badge = '<span style="background:#FBEEEE;color:#7A2222;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">❌ Geweigerd</span>';
+          } else if (status === 'expired') {
+            badge = '<span style="background:#F2EADD;color:#7A6E62;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">⌛ Vervallen</span>';
+          } else {
+            badge = '<span style="background:#F2EADD;color:#7A6E62;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">' + escapeHtml(status) + '</span>';
+          }
+          var actions = '';
+          if (!isOwnRow && status === 'pending' && row.confirmation_token) {
+            // Herdeel-knop: open share-modal met alleen deze ene
+            actions = '<button type="button" onclick="reshareOneBuurtLink(\'' + escapeHtml(row.id) + '\')" '
+              + 'style="margin-top:6px;padding:6px 10px;border-radius:7px;border:1.5px solid var(--terra);background:var(--terra);color:white;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">📨 Link opnieuw delen</button>';
+          }
+          return '<div style="padding:8px 10px;border-top:1px solid var(--border)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+              + '<div style="flex:1;min-width:0">'
+                + '<div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(rowLabel) + '</div>'
+                + '<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(addrShortR) + '</div>'
+              + '</div>'
+              + badge
+            + '</div>'
+            + actions
+          + '</div>';
+        }).join('');
+        bvAddressesHtml = '<details style="margin-top:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">'
+          + '<summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:700;color:var(--bark);list-style:none;display:flex;justify-content:space-between;align-items:center">'
+            + '<span>📋 Adressen van buren (' + grp.length + ')</span>'
+            + '<span style="color:var(--muted);font-size:10px;font-weight:500">tik om uit te klappen</span>'
+          + '</summary>'
+          + rowsHtml
+        + '</details>';
+      }
     }
-    return '<div class="my-sale-card">'
-      + '<div style="font-size:28px">' + icon + '</div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
-      + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + ' · ' + escapeHtml(addrShort) + '</div>'
-      + bvStatusBadge
-      + '<div style="display:flex;gap:10px;margin-top:5px">'
-      + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
-      + '</div></div>'
-      + '<div style="display:flex;flex-direction:column;gap:4px">'
-      + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
-      + '<button onclick="openEditSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--terra);color:white">✏️ Bewerk</button>'
-      + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
-      + '</div></div>';
+    return '<div class="my-sale-card" style="display:block">'
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+        + '<div style="font-size:28px">' + icon + '</div>'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:14px;font-weight:700">' + escapeHtml(s.title) + '</div>'
+          + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + ' · ' + escapeHtml(addrShort) + '</div>'
+          + bvStatusBadge
+          + '<div style="display:flex;gap:10px;margin-top:5px">'
+          + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:4px">'
+          + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
+          + '<button onclick="openEditSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--terra);color:white">✏️ Bewerk</button>'
+          + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
+        + '</div>'
+      + '</div>'
+      + bvAddressesHtml
+    + '</div>';
   }).join('');
+}
+
+// Open de share-modal met één specifieke link (gebruikt vanuit "Mijn verkopen")
+function reshareOneBuurtLink(saleId) {
+  var row = sales.filter(function(x) { return String(x.id) === String(saleId); })[0];
+  if (!row || !row.confirmation_token) { toast('Link niet gevonden'); return; }
+  var item = {
+    address: row.address || '',
+    token: row.confirmation_token,
+    date: row.date || '',
+    label: row.confirmation_address_label || '',
+    email: '' // email wordt niet bewaard in de DB
+  };
+  showBuurtSharesModal([item]);
 }
 
 // ── Uitloggen ──
@@ -4054,6 +4133,21 @@ function buildConfirmationUrl(token) {
   return base + '/bevestig?token=' + encodeURIComponent(token);
 }
 
+function buildBuurtShareMessage(item, url) {
+  // Aanhef: gebruik voornaam als label op een simpele naam lijkt.
+  // (Alleen letters/spaties, max 30 tekens → behandel als naam; anders "Hoi buur".)
+  var labelRaw = (item.label || '').trim();
+  var looksLikeName = labelRaw && labelRaw.length <= 30 && /^[A-Za-zÀ-ÿ' -]+$/.test(labelRaw);
+  var greeting = looksLikeName ? ('Hoi ' + labelRaw.split(/\s+/)[0]) : 'Hoi buur';
+  return greeting + '!\n\n'
+    + 'Ik organiseer een buurtverkoop via YardiGo op ' + (item.date || 'binnenkort') + '. '
+    + 'Jouw adres (' + (item.address || '') + ') staat nu als aanmelding in het systeem. '
+    + 'Wil jij bevestigen of juist weigeren? Klik op deze link:\n\n'
+    + url + '\n\n'
+    + 'Geen reactie binnen 7 dagen? Dan wordt het adres automatisch gewist.\n\n'
+    + 'Groet!';
+}
+
 function showBuurtSharesModal(items) {
   var list = document.getElementById('shareBuurtLinksList');
   var ov = document.getElementById('shareBuurtLinksOv');
@@ -4061,24 +4155,34 @@ function showBuurtSharesModal(items) {
   list.innerHTML = '';
   items.forEach(function(item, i) {
     var url = buildConfirmationUrl(item.token);
-    var msg = 'Hoi! Ik organiseer een buurtverkoop via YardiGo op ' + (item.date || 'binnenkort') + '. '
-            + 'Jouw adres (' + (item.address || '') + ') staat nu als "aanmelding" in het systeem. '
-            + 'Klik op deze link om te bevestigen of juist te weigeren: ' + url;
+    var msg = buildBuurtShareMessage(item, url);
     var waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
     var smsUrl = 'sms:?&body=' + encodeURIComponent(msg);
-    var mailUrl = 'mailto:?subject=' + encodeURIComponent('Buurtverkoop — bevestig je adres') + '&body=' + encodeURIComponent(msg);
+    // Mailto: als email bekend is, vullen we "To" voor; anders laat leeg zodat de gebruiker zelf kiest.
+    var mailTo = (item.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) ? encodeURIComponent(item.email) : '';
+    var mailUrl = 'mailto:' + mailTo
+      + '?subject=' + encodeURIComponent('Buurtverkoop: bevestig je adres')
+      + '&body=' + encodeURIComponent(msg);
+    var labelTxt = (item.label || '').trim();
+    var labelHtml = labelTxt
+      ? '<div style="font-size:11px;font-weight:700;color:var(--terra);margin-bottom:2px">👤 ' + escapeHtml(labelTxt) + '</div>'
+      : '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">👤 BUUR ' + (i + 1) + '</div>';
+    var emailPrefilledNote = mailTo
+      ? '<div style="font-size:10px;color:var(--forest);margin-top:6px">📧 E-mailadres is al ingevuld in je e-mailapp.</div>'
+      : '';
     var row = document.createElement('div');
     row.style.cssText = 'background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px';
     row.innerHTML =
-      '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">👤 BUUR ' + (i + 1) + '</div>'
-      + '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + escapeHtml(item.address || '—') + '</div>'
+        labelHtml
+      + '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + escapeHtml(item.address || '–') + '</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;word-break:break-all">' + escapeHtml(url) + '</div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
         + '<button type="button" data-copy-url="' + escapeHtml(url) + '" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">📋 Kopieer</button>'
         + '<a href="' + escapeHtml(waUrl) + '" target="_blank" rel="noopener" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid #25D366;background:#25D366;color:white;font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">💬 WhatsApp</a>'
         + '<a href="' + escapeHtml(smsUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">✉️ SMS</a>'
         + '<a href="' + escapeHtml(mailUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">📧 E-mail</a>'
-      + '</div>';
+      + '</div>'
+      + emailPrefilledNote;
     var copyBtn = row.querySelector('[data-copy-url]');
     if (copyBtn) {
       copyBtn.addEventListener('click', function() {
@@ -4229,9 +4333,14 @@ function addNav(dir) {
 }
 
 // ── Buurtverkoop multi-adres ──
+// Datastructuur per item: { addr, pc, label, email }
+//   addr  = straat + huisnummer (verplicht voor publiceren)
+//   pc    = postcode (verplicht voor publiceren)
+//   label = optioneel herkenningslabel (naam buur of bv. "nr. 14"), alleen voor organisator
+//   email = optioneel e-mailadres van buur voor mailto-prefill, alleen in geheugen, niet in DB
 function addBuurtAdres() {
   var idx = buurtAdressen.length;
-  buurtAdressen.push({ addr: '', pc: '' });
+  buurtAdressen.push({ addr: '', pc: '', label: '', email: '' });
   var list = document.getElementById('buurt-adressen-list');
   var row = document.createElement('div');
   row.id = 'bv-row-' + idx;
@@ -4240,8 +4349,12 @@ function addBuurtAdres() {
   var label = isOwn ? '🏠 JOUW EIGEN ADRES' : '👤 ADRES BUUR ' + idx;
   var removeBtn = isOwn ? '' : '<button type="button" onclick="removeBuurtAdres(' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted)">✕</button>';
   var helper = isOwn
-    ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">Gaat direct online — dit is jouw eigen toestemming.</div>'
+    ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">Gaat direct online, dit is jouw eigen toestemming.</div>'
     : '<div style="font-size:10px;color:#A04A18;margin-bottom:4px">Na publiceren krijg je een bevestigingslink om naar deze buur te sturen. Adres staat pas online na hun "ja".</div>';
+  var extraFields = isOwn ? '' :
+      '<input class="form-input" id="bv-label-' + idx + '" placeholder="Naam of herkenning (optioneel, bv. Marieke of nr. 14)" style="margin:0" maxlength="60" oninput="buurtAdressen[' + idx + '].label=this.value">'
+    + '<input class="form-input" id="bv-email-' + idx + '" type="email" placeholder="E-mailadres (optioneel, voor voorgevulde mail)" style="margin:0" maxlength="120" oninput="buurtAdressen[' + idx + '].email=this.value" autocomplete="off">'
+    + '<div style="font-size:10px;color:var(--muted);margin-top:-2px">E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.</div>';
   row.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
     + '<span style="font-size:11px;font-weight:700;color:var(--muted)">' + label + '</span>'
     + removeBtn
@@ -4251,7 +4364,8 @@ function addBuurtAdres() {
     + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
-    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="Postcode bijv. 9741 AB" maxlength="7" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">';
+    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="Postcode bijv. 9741 AB" maxlength="7" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
+    + extraFields;
   if (list) list.appendChild(row);
 }
 function removeBuurtAdres(idx) {
@@ -4267,8 +4381,12 @@ function removeBuurtAdres(idx) {
     buurtAdressen[newIdx] = a;
     var ai = document.getElementById('bv-addr-' + newIdx);
     var pi = document.getElementById('bv-pc-' + newIdx);
-    if (ai) ai.value = a.addr;
-    if (pi) pi.value = a.pc;
+    var li = document.getElementById('bv-label-' + newIdx);
+    var ei = document.getElementById('bv-email-' + newIdx);
+    if (ai) ai.value = a.addr || '';
+    if (pi) pi.value = a.pc || '';
+    if (li) li.value = a.label || '';
+    if (ei) ei.value = a.email || '';
   });
 }
 
@@ -4635,6 +4753,7 @@ async function publishSale() {
         var isOwnAddr = (bi === 0);
         var confToken = isOwnAddr ? null : generateConfirmationToken();
         var confStatus = isOwnAddr ? 'confirmed' : 'pending';
+        var addrLabelLocal = (!isOwnAddr && a.label) ? String(a.label).trim().substring(0, 60) : '';
         var newSale = {
           id: nextId++, type: 'buurt', title: title.value.trim(),
           emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
@@ -4645,12 +4764,18 @@ async function publishSale() {
           neighborhood_sale: { id: bvId, title: title.value.trim(), date: dateVal },
           desc: descVal,
           user_email: currentUser.email,
-          confirmation_status: confStatus
+          user_id: currentUserId || '',
+          confirmation_status: confStatus,
+          confirmation_token: confToken || null,
+          confirmation_address_label: addrLabelLocal || null
         };
         // Alleen eigen adres direct publiek; pending buren zijn alleen zichtbaar voor
         // de organisator zelf (via RLS/RPC), dus toevoegen aan lokale state is veilig
         // en zorgt ervoor dat "Mijn verkopen" direct de juiste pending-badge toont.
         sales.unshift(newSale);
+        // Optioneel label en email per buuradres (niet voor eigen adres)
+        var addrLabel = (!isOwnAddr && a.label) ? String(a.label).trim().substring(0, 60) : '';
+        var addrEmail = (!isOwnAddr && a.email) ? String(a.email).trim() : '';
         if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
           var insertPayload = {
             title: newSale.title, category: 'buurtverkoop',
@@ -4665,6 +4790,8 @@ async function publishSale() {
             confirmation_status: confStatus
           };
           if (confToken) insertPayload.confirmation_token = confToken;
+          // Alleen label naar DB, nooit email (dataminimalisatie AVG art. 5.1.c)
+          if (addrLabel) insertPayload.confirmation_address_label = addrLabel;
           var insRes = await sbClient.from('listings').insert(insertPayload);
           if (insRes && insRes.error) {
             console.error('Listing insert mislukt:', insRes.error);
@@ -4674,7 +4801,9 @@ async function publishSale() {
             pendingShares.push({
               address: newSale.address,
               token: confToken,
-              date: dateVal || ''
+              date: dateVal || '',
+              label: addrLabel,
+              email: addrEmail
             });
           }
         } else if (confToken) {
@@ -4682,7 +4811,9 @@ async function publishSale() {
           pendingShares.push({
             address: newSale.address,
             token: confToken,
-            date: dateVal || ''
+            date: dateVal || '',
+            label: addrLabel,
+            email: addrEmail
           });
         }
       }
