@@ -3058,8 +3058,13 @@ function initMap() {
       scrollWheelZoom: true,
       dragging: true
     }).setView([52.3, 5.3], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>', maxZoom: 19
+    // CARTO Voyager tiles: gratis, geen API key, bedoeld voor productie.
+    // OSM's eigen tile-servers blokkeren third-party apps bij meer verkeer.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+      detectRetina: true
     }).addTo(map);
     renderMarkers();
 
@@ -3919,7 +3924,9 @@ function openDetail(id) {
     if (detailMiniMap) { try { detailMiniMap.remove(); } catch(e) {} detailMiniMap = null; }
     try {
       detailMiniMap = L.map('det-minimap', { zoomControl:false, dragging:false, scrollWheelZoom:false, touchZoom:false }).setView([s.lat, s.lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMiniMap);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', detectRetina: true
+      }).addTo(detailMiniMap);
       L.marker([s.lat, s.lng], { icon: makeMarkerIcon(s) }).addTo(detailMiniMap);
     } catch(e) {}
   }, 300);
@@ -5577,8 +5584,8 @@ function fbRenderTiles() {
       var py = (ty - cy) * tileSize + h/2;
       var img = document.createElement('img');
       var tmod = ((tx % n) + n) % n;
-      var sub = ['a','b','c'][Math.abs(tx + ty) % 3];
-      img.src = 'https://' + sub + '.tile.openstreetmap.org/' + zoom + '/' + tmod + '/' + ty + '.png';
+      var sub = ['a','b','c','d'][Math.abs(tx + ty) % 4];
+      img.src = 'https://' + sub + '.basemaps.cartocdn.com/rastertiles/voyager/' + zoom + '/' + tmod + '/' + ty + '.png';
       img.style.cssText = 'position:absolute;left:' + Math.round(px) + 'px;top:' + Math.round(py) + 'px;width:256px;height:256px;';
       wrap.appendChild(img);
     }
