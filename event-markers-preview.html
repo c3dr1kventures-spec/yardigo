@@ -59,16 +59,21 @@
   </section>
 
 <script>
-// Pin-generator identiek aan makeMarkerIcon() in index.html
-function pin(color, icon, circleR, fontSize) {
-  circleR = circleR || 8;
-  fontSize = fontSize || 12;
-  var yText = 16 + (fontSize * 0.34); // houdt emoji verticaal gecentreerd
-  return '<svg width="48" height="62" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg">'
+// Pin-generator identiek aan makeMarkerIcon() in index.html.
+// Emoji wordt als HTML overlay getekend bovenop de SVG voor goede
+// emoji-rendering op iOS Safari (SVG <text> rendert daar geen
+// kleuren-emoji).
+function pin(color, icon, scale) {
+  scale = scale || 1;
+  var w = 36 * scale, h = 46 * scale;
+  var emojiSize = Math.round(14 * scale);
+  return '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;display:inline-block">'
+    + '<svg width="' + w + '" height="' + h + '" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + color + '" stroke="white" stroke-width="2"/>'
-    + '<circle cx="18" cy="16" r="' + circleR + '" fill="white"/>'
-    + '<text x="18" y="' + yText + '" text-anchor="middle" font-size="' + fontSize + '" font-family="sans-serif">' + icon + '</text>'
-    + '</svg>';
+    + '<circle cx="18" cy="16" r="8" fill="white"/>'
+    + '</svg>'
+    + '<div style="position:absolute;top:0;left:0;width:' + w + 'px;height:' + (h * 32 / 46) + 'px;display:flex;align-items:center;justify-content:center;font-size:' + emojiSize + 'px;line-height:1;pointer-events:none;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif">' + icon + '</div>'
+    + '</div>';
 }
 
 var base = [
@@ -93,8 +98,10 @@ document.getElementById('subtypes').innerHTML = subtypes.map(function(s) {
   return '<div class="cell">' + pin('#3A6B4A', s.icon) + '<div class="lbl">' + s.name + '</div></div>';
 }).join('');
 
-document.getElementById('old-pin').innerHTML = pin('#3A6B4A', '🎪', 7, 9);
-document.getElementById('new-pin').innerHTML = pin('#3A6B4A', '🎪', 8, 12);
+// Oud: SVG text emoji (rendert niet goed op iOS Safari)
+document.getElementById('old-pin').innerHTML = '<svg width="48" height="62" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg"><path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="#3A6B4A" stroke="white" stroke-width="2"/><circle cx="18" cy="16" r="7" fill="white"/><text x="18" y="19" text-anchor="middle" font-size="9" font-family="sans-serif">🎪</text></svg>';
+// Nieuw: HTML emoji overlay (werkt overal)
+document.getElementById('new-pin').innerHTML = pin('#3A6B4A', '🎪', 1.3);
 
 document.getElementById('map-bg').innerHTML = subtypes.map(function(s) {
   return '<div class="cell">' + pin('#3A6B4A', s.icon) + '<div class="lbl">' + s.name + '</div></div>';

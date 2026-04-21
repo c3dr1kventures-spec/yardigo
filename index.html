@@ -3109,14 +3109,16 @@ function makeMarkerIcon(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type];
   var ic = getSaleIcon(sale);
-  // Grotere witte cirkel (r=8) en grotere emoji (12px) voor leesbaarheid,
-  // vooral belangrijk om subtype-emojis (🚗 🏪 🎄 enz.) duidelijk te tonen.
-  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
+  // SVG voor de pin-vorm en witte cirkel, maar de emoji tekenen we als
+  // HTML bovenop de SVG. SVG <text> rendert op iOS/Safari niet altijd
+  // kleuren-emoji, HTML wel (gebruikt system emoji font stack).
+  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" stroke="white" stroke-width="2"/>'
     + '<circle cx="18" cy="16" r="8" fill="white"/>'
-    + '<text x="18" y="20.5" text-anchor="middle" font-size="12" font-family="sans-serif">' + ic + '</text>'
     + '</svg>';
-  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  var emojiLayer = '<div style="position:absolute;top:0;left:0;width:36px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;pointer-events:none;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif">' + ic + '</div>';
+  var html = '<div style="position:relative;width:36px;height:46px">' + svg + emojiLayer + '</div>';
+  return L.divIcon({ className: '', html: html, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 function createListingPopup(sale) {
@@ -3188,13 +3190,14 @@ function createSmallPin(sale) {
   var c = colors[sale.type] || '#E07B39';
   var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
   var icon = getSaleIcon(sale);
-  // Iets grotere cirkel (r=5.5) en emoji (8) voor subtype-leesbaarheid
-  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
+  // Emoji als HTML bovenop de SVG om iOS/Safari emoji-rendering te garanderen
+  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0">'
     + '<path d="' + p + '" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
     + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
-    + '<text x="12" y="13.5" text-anchor="middle" font-size="8" font-family="sans-serif">' + icon + '</text>'
     + '</svg>';
-  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  var emojiLayer = '<div style="position:absolute;top:0;left:0;width:36px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;pointer-events:none;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif">' + icon + '</div>';
+  var html = '<div style="position:relative;width:36px;height:46px">' + svg + emojiLayer + '</div>';
+  return L.divIcon({ className: '', html: html, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 var clusterGroups = [];
