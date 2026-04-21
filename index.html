@@ -1870,7 +1870,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">DEELNEMENDE ADRESSEN</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Voeg alle adressen toe die meedoen. Eerste adres = jijzelf; daarna 1 regel per buur.</div>
           <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-          <button type="button" onclick="addBuurtAdres()" style="width:100%;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
+          <div style="display:flex;gap:8px">
+            <button type="button" onclick="addBuurtAdres()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
+            <button type="button" onclick="openBulkAdresModal()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📋 Meerdere tegelijk</button>
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.5">Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.</div>
         </div>
         <!-- Adres-zichtbaarheid (AVG-gevoelig) -->
         <div style="margin-bottom:16px;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px">
@@ -1931,7 +1935,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="sheet-handle"></div>
     <div style="padding:18px 22px 24px">
       <div style="font-size:20px;font-weight:800;margin-bottom:6px">📨 Stuur deze links naar je buren</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Stuur elke buur z'n eigen link via WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op "Kopieer tekst + link" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
       <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:12px;color:#7A4A2A;margin-bottom:10px">
         ⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.
       </div>
@@ -1940,6 +1944,39 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <div id="shareBuurtLinksList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px"></div>
       <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Klaar, sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- Buurtverkoop: bulk-import van meerdere adressen tegelijk -->
+<div class="overlay" id="bulkAdresOv" onclick="if(event.target===this)closeBulkAdresModal()">
+  <div class="sheet" style="max-height:92vh;overflow-y:auto">
+    <div class="sheet-handle"></div>
+    <div style="padding:18px 22px 24px">
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px">📋 Meerdere adressen tegelijk</div>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px">Plak je lijstje hieronder of upload een tekst- of CSV-bestand. 1 regel per buur. De site zet elk adres automatisch klaar en maakt na publiceren de bevestigingslinks aan.</div>
+
+      <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:11.5px;color:#7A4A2A;margin-bottom:14px;line-height:1.5">
+        <strong>Ondersteunde formaten per regel:</strong><br>
+        <span style="font-family:monospace;font-size:11px">Kerklaan 14, 9741 AB</span><br>
+        <span style="font-family:monospace;font-size:11px">Marieke | Kerklaan 14, 9741 AB</span><br>
+        <span style="font-family:monospace;font-size:11px">nr. 16 ; Kerklaan 16 ; 9741 AB</span><br>
+        Je mag ook komma's, tabs of puntkomma's gebruiken om label en adres te scheiden. Uploaden kan als <strong>.txt, .csv, .tsv, .xlsx of .xls</strong>.
+      </div>
+
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;background:var(--bg2)" id="bulkAdresFileLbl">
+        📁 Bestand kiezen (.xlsx, .csv, .txt)
+        <input type="file" accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="handleBulkAdresFile(this)">
+      </label>
+
+      <textarea id="bulkAdresText" placeholder="Plak hier je adreslijst, bijvoorbeeld:&#10;Marieke | Kerklaan 14, 9741 AB&#10;Jan | Kerklaan 16, 9741 AB&#10;Lotte | Kerklaan 18, 9741 AB" rows="8" style="width:100%;font-family:monospace;font-size:12.5px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;background:white;color:var(--text);resize:vertical;box-sizing:border-box;margin-bottom:12px" oninput="previewBulkAdres()"></textarea>
+
+      <div id="bulkAdresPreview" style="display:none;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:14px;max-height:200px;overflow-y:auto"></div>
+
+      <div style="display:flex;gap:8px">
+        <button type="button" onclick="closeBulkAdresModal()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
+        <button type="button" id="bulkAdresImportBtn" onclick="importBulkAdres()" disabled style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;opacity:.5">Eerst plakken of bestand kiezen</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3185,6 +3222,64 @@ function createListingPopup(sale) {
     + '</div></div></div>';
 }
 
+// Popup voor een buurtverkoop-cluster: toont naam, aantal huizen, datum en
+// tijden voordat de gebruiker inzoomt op de individuele markers.
+function buildBuurtClusterPopup(bv, cluster) {
+  var listings = bv.listings || [];
+  var count = cluster && cluster.getChildCount ? cluster.getChildCount() : listings.length;
+  var totalInBv = listings.length;
+  var confirmed = listings.filter(function(l) { return l.confirmation_status === 'confirmed'; }).length;
+  // Titel: gebruik info.title indien aanwezig, anders "Buurtverkoop {city}".
+  var city = (bv.info && bv.info.city) || (listings[0] && (listings[0].address || '').split(',').slice(-1)[0].trim()) || '';
+  var title = (bv.info && bv.info.title) ? bv.info.title : ('Buurtverkoop' + (city ? ' ' + city : ''));
+  // Datum: buurtverkopen delen meestal dezelfde datum, maar val terug op
+  // eerste listing als info.date ontbreekt.
+  var dateVal = (bv.info && bv.info.date) || (listings[0] && listings[0].date) || '';
+  var dateLabel = dateVal ? fmtDate(dateVal) : '';
+  // Tijdsrange: als alle listings dezelfde from/till hebben toon die, anders
+  // toon de ruimste range ("08:00–17:00") met kleine notitie.
+  var fromVals = listings.map(function(l) { return l.from || ''; }).filter(Boolean);
+  var tillVals = listings.map(function(l) { return l.till || ''; }).filter(Boolean);
+  var uniqFroms = fromVals.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  var uniqTills = tillVals.filter(function(v, i, a) { return a.indexOf(v) === i; });
+  var timeLabel = '';
+  if (fromVals.length && tillVals.length) {
+    var minFrom = fromVals.slice().sort()[0];
+    var maxTill = tillVals.slice().sort().pop();
+    var varies = (uniqFroms.length > 1 || uniqTills.length > 1);
+    timeLabel = minFrom + '–' + maxTill + (varies ? ' · wisselend per huis' : '');
+  }
+  // Als de buurtverkoop is opgesplitst over meerdere clusters (bij diep
+  // inzoomen), toon dan hoeveel er in totaal bij horen zodat duidelijk is
+  // dat dit niet alles is.
+  var otherInGroup = Math.max(0, totalInBv - count);
+  var head = '<div style="background:#E07B39;color:white;padding:14px 16px">'
+    + '<div style="font-size:11px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🏘️ Buurtverkoop</div>'
+    + '<div style="font-size:15px;font-weight:800;line-height:1.25;margin-bottom:6px">' + escapeHtml(title) + '</div>'
+    + '<div style="font-size:12px;opacity:.95">' + count + ' huis' + (count === 1 ? '' : 'jes') + ' in deze cluster'
+    + (otherInGroup > 0 ? ' <span style="opacity:.75">· totaal ' + totalInBv + '</span>' : '')
+    + '</div>'
+    + '</div>';
+  var metaRows = '';
+  if (dateLabel) {
+    metaRows += '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2C2416;padding:4px 0"><span>📅</span><span>' + escapeHtml(dateLabel) + '</span></div>';
+  }
+  if (timeLabel) {
+    metaRows += '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2C2416;padding:4px 0"><span>🕐</span><span>' + escapeHtml(timeLabel) + '</span></div>';
+  }
+  if (totalInBv > 0) {
+    var pendingCount = totalInBv - confirmed;
+    metaRows += '<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#2C2416;padding:4px 0"><span>✅</span><span>' + confirmed + ' bevestigd'
+      + (pendingCount > 0 ? ' · <span style="color:#7A6E62">' + pendingCount + ' wachten op bevestiging</span>' : '')
+      + '</span></div>';
+  }
+  var body = '<div style="padding:12px 16px 14px;font-family:Poppins,sans-serif">'
+    + metaRows
+    + '<button type="button" data-bv-zoom="1" style="margin-top:10px;width:100%;padding:11px;border-radius:10px;border:none;background:#E07B39;color:white;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer">Bekijk alle huizen →</button>'
+    + '</div>';
+  return '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:280px">' + head + body + '</div>';
+}
+
 function createDefaultPin(sale) {
   return makeMarkerIcon(sale);
 }
@@ -3240,6 +3335,10 @@ function renderMarkers() {
   Object.values(buurtverkopen).forEach(function(bv) {
     var group = L.markerClusterGroup({
       maxClusterRadius: 60,
+      // Eigen click-flow: eerst overzichts-popup tonen, dan optioneel inzoomen.
+      // Zo ziet de gebruiker direct hoeveel huizen er bij deze buurtverkoop horen.
+      zoomToBoundsOnClick: false,
+      showCoverageOnHover: false,
       iconCreateFunction: function(cluster) {
         var count = cluster.getChildCount();
         var c = '#E07B39';
@@ -3289,6 +3388,32 @@ function renderMarkers() {
       });
       marker.bindPopup(createListingPopup(listing), { maxWidth: 260 });
       group.addLayer(marker);
+    });
+
+    // ── Cluster click: toon overzichts-popup voor deze buurtverkoop ──
+    // De popup bevat naam, aantal huizen, datum en (indien uniform) tijden,
+    // plus een knop om alsnog in te zoomen naar de individuele markers.
+    group.on('clusterclick', function(ev) {
+      var cluster = ev.layer;
+      var html = buildBuurtClusterPopup(bv, cluster);
+      var popup = L.popup({
+        maxWidth: 280,
+        className: 'buurtverkoop-cluster-popup',
+        autoPanPadding: [20, 20]
+      })
+        .setLatLng(cluster.getLatLng())
+        .setContent(html)
+        .openOn(map);
+      // Bind zoom-action op de knop in de popup (na render)
+      setTimeout(function() {
+        var btn = document.querySelector('.buurtverkoop-cluster-popup [data-bv-zoom]');
+        if (btn) {
+          btn.addEventListener('click', function() {
+            map.closePopup(popup);
+            cluster.zoomToBounds({ padding: [40, 40] });
+          });
+        }
+      }, 0);
     });
 
     map.addLayer(group);
@@ -4217,31 +4342,62 @@ function showBuurtSharesModal(items) {
       : '';
     var row = document.createElement('div');
     row.style.cssText = 'background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px';
+    // Unieke id voor het preview-blok zodat toggle werkt bij meerdere rijen
+    var previewId = 'share-preview-' + i + '-' + Math.random().toString(36).slice(2, 8);
     row.innerHTML =
         labelHtml
       + '<div style="font-size:14px;font-weight:700;margin-bottom:8px">' + escapeHtml(item.address || '–') + '</div>'
-      + '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;word-break:break-all">' + escapeHtml(url) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;word-break:break-all">' + escapeHtml(url) + '</div>'
+      // Preview-toggle: "Bekijk voorbeeldtekst" — klein, subtiel, uitgeklapt op verzoek
+      + '<button type="button" data-toggle-preview="' + previewId + '" style="background:none;border:none;padding:0;margin:0 0 8px 0;color:var(--forest);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline">👁️ Bekijk voorbeeldtekst</button>'
+      + '<div id="' + previewId + '" style="display:none;background:#F7F3EA;border-left:3px solid var(--forest);border-radius:8px;padding:10px 12px;font-size:12px;color:#3A2E1E;white-space:pre-wrap;line-height:1.5;margin-bottom:10px">' + escapeHtml(msg) + '</div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
-        + '<button type="button" data-copy-url="' + escapeHtml(url) + '" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">📋 Kopieer</button>'
+        // "Kopieer tekst + link" is de default aanbevolen actie — krijgt primaire styling.
+        + '<button type="button" data-copy-msg="1" style="flex:1;min-width:130px;padding:9px;border-radius:9px;border:1.5px solid var(--terra);background:var(--terra);color:white;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">📋 Kopieer tekst + link</button>'
+        + '<button type="button" data-copy-url="' + escapeHtml(url) + '" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">🔗 Alleen link</button>'
         + '<a href="' + escapeHtml(waUrl) + '" target="_blank" rel="noopener" style="flex:1;min-width:90px;padding:9px;border-radius:9px;border:1.5px solid #25D366;background:#25D366;color:white;font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">💬 WhatsApp</a>'
         + '<a href="' + escapeHtml(smsUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">✉️ SMS</a>'
         + '<a href="' + escapeHtml(mailUrl) + '" style="flex:1;min-width:70px;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:white;color:var(--bark);font-family:inherit;font-size:12px;font-weight:600;text-align:center;text-decoration:none;line-height:1.2">📧 E-mail</a>'
       + '</div>'
       + emailPrefilledNote;
+    // Preview toggle
+    var toggleBtn = row.querySelector('[data-toggle-preview]');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function() {
+        var pv = document.getElementById(previewId);
+        if (!pv) return;
+        var open = pv.style.display === 'block';
+        pv.style.display = open ? 'none' : 'block';
+        toggleBtn.textContent = open ? '👁️ Bekijk voorbeeldtekst' : '🙈 Verberg voorbeeldtekst';
+      });
+    }
+    // Hulpfunctie: schrijf string naar clipboard met fallback voor oudere browsers
+    function writeClip(text, okMsg) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(
+            function() { toast(okMsg); },
+            function() { toast('Kopiëren mislukt'); }
+          );
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+          toast(okMsg);
+        }
+      } catch (e) { toast('Kopiëren mislukt'); }
+    }
+    var copyMsgBtn = row.querySelector('[data-copy-msg]');
+    if (copyMsgBtn) {
+      copyMsgBtn.addEventListener('click', function() {
+        writeClip(msg, '✅ Tekst + link gekopieerd');
+      });
+    }
     var copyBtn = row.querySelector('[data-copy-url]');
     if (copyBtn) {
       copyBtn.addEventListener('click', function() {
         var u = copyBtn.getAttribute('data-copy-url') || url;
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(u).then(function() { toast('✅ Link gekopieerd'); }, function() { toast('Kopiëren mislukt'); });
-          } else {
-            var ta = document.createElement('textarea');
-            ta.value = u; document.body.appendChild(ta); ta.select();
-            document.execCommand('copy'); document.body.removeChild(ta);
-            toast('✅ Link gekopieerd');
-          }
-        } catch (e) { toast('Kopiëren mislukt'); }
+        writeClip(u, '✅ Link gekopieerd');
       });
     }
     list.appendChild(row);
@@ -4433,6 +4589,328 @@ function removeBuurtAdres(idx) {
     if (li) li.value = a.label || '';
     if (ei) ei.value = a.email || '';
   });
+}
+
+// ══════════════════════════════════════════════════
+// BULK-IMPORT van meerdere adressen tegelijk
+// ──────────────────────────────────────────────────
+// Organisatoren hebben vaak al een lijstje met buren (bv. van een
+// buurtvereniging) in Excel, Word of een e-mail. Deze modal laat ze
+// dat lijstje plakken of als .txt/.csv uploaden. De parser is bewust
+// tolerant: accepteert pipe, tab, puntkomma of komma als scheiding en
+// herkent Nederlandse postcodes automatisch.
+// ══════════════════════════════════════════════════
+
+function openBulkAdresModal() {
+  var ov = document.getElementById('bulkAdresOv');
+  var ta = document.getElementById('bulkAdresText');
+  var prev = document.getElementById('bulkAdresPreview');
+  if (ta) ta.value = '';
+  if (prev) { prev.style.display = 'none'; prev.innerHTML = ''; }
+  var btn = document.getElementById('bulkAdresImportBtn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = 'Eerst plakken of bestand kiezen'; }
+  if (ov) ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBulkAdresModal() {
+  var ov = document.getElementById('bulkAdresOv');
+  if (ov) ov.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Lazy-loader voor SheetJS (xlsx.js). We halen de library pas van CDN
+// zodra iemand echt een .xlsx/.xls kiest, zodat gewone paste-flow geen
+// extra ~300 KB download kost. De Promise wordt gecached zodat een
+// tweede upload in dezelfde sessie geen nieuwe request doet.
+var _sheetJsPromise = null;
+function loadSheetJS() {
+  if (typeof window !== 'undefined' && window.XLSX) return Promise.resolve(window.XLSX);
+  if (_sheetJsPromise) return _sheetJsPromise;
+  _sheetJsPromise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.async = true;
+    s.onload = function() {
+      if (window.XLSX) resolve(window.XLSX);
+      else { _sheetJsPromise = null; reject(new Error('XLSX-library niet beschikbaar na laden')); }
+    };
+    s.onerror = function() {
+      _sheetJsPromise = null;
+      reject(new Error('Kan Excel-parser niet laden (CDN niet bereikbaar?)'));
+    };
+    document.head.appendChild(s);
+  });
+  return _sheetJsPromise;
+}
+
+// Converteer een xlsx/xls ArrayBuffer naar een pipe-gescheiden tekst-blob
+// die door de bestaande tekst-parser heen kan. Eerste werkblad telt;
+// lege regels worden weggegooid, cellen die leeg zijn worden als lege
+// velden tussen | geschreven (parser filtert ze daarna verder).
+function xlsxBufferToPipeText(arrayBuffer) {
+  return loadSheetJS().then(function(XLSX) {
+    var wb = XLSX.read(arrayBuffer, { type: 'array' });
+    if (!wb || !wb.SheetNames || !wb.SheetNames.length) return '';
+    var sheet = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '' });
+    return rows.map(function(row) {
+      if (!Array.isArray(row)) return '';
+      return row.map(function(cell) {
+        if (cell == null) return '';
+        return String(cell).trim();
+      }).join(' | ');
+    }).filter(function(line) {
+      // Lege regel (alleen | en spaties) overslaan
+      return line.replace(/[\s|]+/g, '').length > 0;
+    }).join('\n');
+  });
+}
+
+function handleBulkAdresFile(input) {
+  var files = (input && input.files) ? input.files : null;
+  if (!files || !files.length) return;
+  var file = files[0];
+  // Limiet: bescherm tegen per ongeluk een gigantisch bestand (> 2 MB is geen adreslijst meer)
+  if (file.size > 2 * 1024 * 1024) {
+    toast('❌ Bestand is te groot (max 2 MB)');
+    input.value = '';
+    return;
+  }
+
+  var name = (file.name || '').toLowerCase();
+  var isSpreadsheet = /\.(xlsx|xls|xlsm|ods)$/.test(name)
+    || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    || file.type === 'application/vnd.ms-excel';
+
+  var ta = document.getElementById('bulkAdresText');
+  var lbl = document.getElementById('bulkAdresFileLbl');
+
+  if (isSpreadsheet) {
+    // Laat even zien dat we iets doen, xlsx-laden duurt een paar honderd ms
+    var origLbl = lbl ? lbl.textContent : '';
+    if (lbl) lbl.textContent = '⏳ Excel-bestand lezen...';
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      xlsxBufferToPipeText(e.target.result)
+        .then(function(text) {
+          if (lbl) lbl.textContent = origLbl;
+          if (ta) {
+            ta.value = text;
+            previewBulkAdres();
+            if (!text) toast('⚠️ Geen rijen gevonden in het Excel-bestand');
+          }
+        })
+        .catch(function(err) {
+          if (lbl) lbl.textContent = origLbl;
+          toast('❌ ' + (err && err.message ? err.message : 'Kan Excel-bestand niet lezen'));
+        });
+    };
+    reader.onerror = function() {
+      if (lbl) lbl.textContent = origLbl;
+      toast('❌ Kan bestand niet lezen');
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // Platte tekst (txt/csv/tsv) gewoon als UTF-8 inlezen
+    var tReader = new FileReader();
+    tReader.onload = function(e) {
+      var text = String(e.target.result || '');
+      if (ta) {
+        ta.value = text;
+        previewBulkAdres();
+      }
+    };
+    tReader.onerror = function() { toast('❌ Kan bestand niet lezen'); };
+    tReader.readAsText(file);
+  }
+
+  // Reset input zodat dezelfde file opnieuw gekozen kan worden
+  input.value = '';
+}
+
+// Nederlandse postcode-regex: 4 cijfers + optionele spatie + 2 letters.
+// Retourneert { pc: '1234 AB', rest: 'adres zonder postcode' } of null.
+function extractDutchPostcode(raw) {
+  if (!raw) return null;
+  var m = raw.match(/\b(\d{4})\s*([A-Za-z]{2})\b/);
+  if (!m) return null;
+  var pc = m[1] + ' ' + m[2].toUpperCase();
+  var rest = (raw.slice(0, m.index) + raw.slice(m.index + m[0].length))
+    .replace(/^[\s,;|]+|[\s,;|]+$/g, '')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return { pc: pc, rest: rest };
+}
+
+// Parseer 1 regel naar { label, addr, pc } of null als de regel leeg is.
+// Separator-detectie per regel: eerst pipe (|), dan tab, dan puntkomma (;).
+// Als geen van die scheidingstekens voorkomt, valt hij terug op alles-als-adres
+// en probeert hij een postcode uit de string te halen.
+function parseBulkAdresLine(line) {
+  var trimmed = String(line || '').trim();
+  if (!trimmed) return null;
+  // Regels zonder enig cijfer zijn bijna zeker headers of losse opmerkingen.
+  // Een echt adres bevat minimaal een huisnummer (en meestal ook een postcode).
+  if (!/\d/.test(trimmed)) return null;
+  // Skip duidelijke headers (bv. uit een uit Excel geëxporteerde CSV)
+  var lower = trimmed.toLowerCase();
+  if (/^(adres|address|straat|naam|label|postcode|zipcode)[\s,;|\t]/.test(lower)
+      || /^(naam|label)[\s,;|\t]+(adres|address|straat)/.test(lower)) {
+    return null;
+  }
+
+  var parts;
+  if (trimmed.indexOf('|') >= 0) parts = trimmed.split('|');
+  else if (trimmed.indexOf('\t') >= 0) parts = trimmed.split('\t');
+  else if (trimmed.indexOf(';') >= 0) parts = trimmed.split(';');
+  else parts = [trimmed];
+
+  parts = parts.map(function(p) { return p.trim(); }).filter(function(p) { return p.length > 0; });
+  if (!parts.length) return null;
+
+  var label = '';
+  var addr = '';
+  var pc = '';
+  var pcRegex = /^\s*\d{4}\s*[A-Za-z]{2}\s*$/;
+
+  if (parts.length === 1) {
+    addr = parts[0];
+  } else if (parts.length === 2) {
+    // Speciaal geval: adres + postcode in aparte kolommen ("Kerklaan 14 | 9741 AB")
+    var isPc0 = pcRegex.test(parts[0]);
+    var isPc1 = pcRegex.test(parts[1]);
+    if (isPc1 && !isPc0) { addr = parts[0]; pc = parts[1]; }
+    else if (isPc0 && !isPc1) { addr = parts[1]; pc = parts[0]; }
+    else {
+      // Heuristiek: deel met cijfers = adres; anders = label
+      var hasDigit0 = /\d/.test(parts[0]);
+      var hasDigit1 = /\d/.test(parts[1]);
+      if (hasDigit0 && !hasDigit1) { addr = parts[0]; label = parts[1]; }
+      else if (!hasDigit0 && hasDigit1) { label = parts[0]; addr = parts[1]; }
+      else { label = parts[0]; addr = parts[1]; }
+    }
+  } else {
+    // 3+ delen: label | adres | postcode [| rest negeren]
+    label = parts[0];
+    addr = parts[1];
+    pc = parts[2];
+  }
+
+  // Als de "postcode"-kolom geen geldige NL postcode bevat, negeer hem.
+  // Zo voorkomen we dat extra CSV-kolommen (bv. "extra") als postcode worden gezien.
+  if (pc && !/\b\d{4}\s*[A-Za-z]{2}\b/.test(pc)) {
+    pc = '';
+  }
+
+  // Postcode uit adres halen als pc nog leeg is
+  if (!pc) {
+    var ext = extractDutchPostcode(addr);
+    if (ext) { pc = ext.pc; addr = ext.rest; }
+  } else {
+    // Normaliseer expliciete postcode ook
+    var extPc = extractDutchPostcode(pc);
+    if (extPc) pc = extPc.pc;
+    // Verwijder de postcode uit adres als die er nog dubbel in staat
+    var extAddr = extractDutchPostcode(addr);
+    if (extAddr) addr = extAddr.rest;
+  }
+
+  // Label mag max 60 tekens (zelfde limiet als handmatige input)
+  if (label.length > 60) label = label.substring(0, 60);
+
+  addr = addr.replace(/^[\s,;|]+|[\s,;|]+$/g, '').trim();
+
+  if (!addr) return null;
+  return { label: label, addr: addr, pc: pc };
+}
+
+function parseBulkAdresText(text) {
+  if (!text) return [];
+  var lines = String(text).split(/\r?\n/);
+  var out = [];
+  for (var i = 0; i < lines.length; i++) {
+    var p = parseBulkAdresLine(lines[i]);
+    if (p) out.push(p);
+  }
+  return out;
+}
+
+function previewBulkAdres() {
+  var ta = document.getElementById('bulkAdresText');
+  var prev = document.getElementById('bulkAdresPreview');
+  var btn = document.getElementById('bulkAdresImportBtn');
+  if (!ta || !prev || !btn) return;
+  var parsed = parseBulkAdresText(ta.value);
+  if (!parsed.length) {
+    prev.style.display = 'none';
+    prev.innerHTML = '';
+    btn.disabled = true;
+    btn.style.opacity = '.5';
+    btn.textContent = 'Eerst plakken of bestand kiezen';
+    return;
+  }
+
+  // Toon per regel wat we eruit gehaald hebben. Groen = postcode gevonden,
+  // geel = alleen adres (kan nog steeds geocoded worden, maar minder precies).
+  var rowsHtml = parsed.map(function(p, i) {
+    var ok = !!p.pc;
+    var dot = ok
+      ? '<span style="color:#2D6A4F;font-weight:700">✓</span>'
+      : '<span style="color:#C5612A;font-weight:700">⚠</span>';
+    var labelTxt = p.label ? escapeHtml(p.label) : '<span style="color:var(--muted)">(geen label)</span>';
+    var pcTxt = p.pc ? escapeHtml(p.pc) : '<span style="color:#C5612A">geen postcode</span>';
+    return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.45;align-items:flex-start">'
+      + '<div style="width:18px;flex-shrink:0;text-align:center">' + dot + '</div>'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-weight:600;color:var(--text)">' + labelTxt + '</div>'
+      +   '<div style="color:var(--muted);word-break:break-word">' + escapeHtml(p.addr) + ' &middot; ' + pcTxt + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+
+  var missing = parsed.filter(function(p) { return !p.pc; }).length;
+  var warn = missing > 0
+    ? '<div style="font-size:11px;color:#C5612A;margin-bottom:6px;line-height:1.5"><strong>⚠ ' + missing + ' regel' + (missing === 1 ? '' : 's') + '</strong> zonder duidelijke postcode. Je kunt ze toch importeren, maar controleer ze daarna per rij.</div>'
+    : '<div style="font-size:11px;color:#2D6A4F;margin-bottom:6px;font-weight:600">✓ Alle ' + parsed.length + ' regels zien er goed uit.</div>';
+
+  prev.innerHTML = warn + rowsHtml;
+  prev.style.display = 'block';
+
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.textContent = parsed.length === 1
+    ? '1 adres importeren'
+    : parsed.length + ' adressen importeren';
+}
+
+function importBulkAdres() {
+  var ta = document.getElementById('bulkAdresText');
+  if (!ta) return;
+  var parsed = parseBulkAdresText(ta.value);
+  if (!parsed.length) { toast('Niks te importeren'); return; }
+
+  // Als alleen de lege placeholder-rij van buurtAdressen[0] bestaat en de
+  // gebruiker nog helemaal niks heeft ingevuld, laten we die rij staan
+  // (eigen adres). We voegen vanaf index 1 de geparste regels in.
+  // Als het eigen adres wél al is gevuld met een postcode, gewoon eraan plakken.
+  parsed.forEach(function(p) {
+    addBuurtAdres();
+    var idx = buurtAdressen.length - 1;
+    buurtAdressen[idx].addr = p.addr;
+    buurtAdressen[idx].pc = p.pc;
+    buurtAdressen[idx].label = p.label;
+    var ai = document.getElementById('bv-addr-' + idx);
+    var pi = document.getElementById('bv-pc-' + idx);
+    var li = document.getElementById('bv-label-' + idx);
+    if (ai) ai.value = p.addr;
+    if (pi) pi.value = p.pc;
+    if (li) li.value = p.label;
+  });
+
+  closeBulkAdresModal();
+  toast('✓ ' + parsed.length + ' adres' + (parsed.length === 1 ? '' : 'sen') + ' toegevoegd');
 }
 
 // ── Adres autocomplete via PDOK Locatieserver ──
