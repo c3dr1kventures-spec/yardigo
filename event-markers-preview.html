@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>YardiGo · Marker preview (event subtypes)</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Poppins, sans-serif;
+         background: #F7F3EA; margin: 0; padding: 24px; color: #2C2416; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color: #7A6B52; font-size: 13px; margin: 0 0 20px; }
+  section { background: white; border-radius: 14px; padding: 20px; margin-bottom: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  h2 { font-size: 14px; margin: 0 0 14px; text-transform: uppercase; letter-spacing: .5px;
+       color: #7A6B52; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 90px; }
+  .lbl { font-size: 11px; color: #2C2416; font-weight: 600; text-align: center; }
+  .sub-lbl { font-size: 10px; color: #7A6B52; }
+  .bg-map { background: linear-gradient(135deg, #E8EDE4, #D8E3D0); padding: 14px 18px;
+            border-radius: 10px; display: inline-block; }
+  .compare { display: flex; gap: 32px; align-items: flex-end; flex-wrap: wrap; }
+  .compare-col { text-align: center; }
+  .note { font-size: 12px; color: #7A6B52; padding: 10px 14px; background: #FDF7E8;
+          border-radius: 10px; border-left: 3px solid #F2A830; }
+</style>
+</head>
+<body>
+  <h1>Marker preview · event subtypes</h1>
+  <p class="sub">Visuele check voor Optie 1: groene pin blijft het herkenningspunt voor evenement, alleen de emoji in de cirkel varieert per subtype.</p>
+
+  <section>
+    <h2>Hoofdcategorieen (ongewijzigd)</h2>
+    <div class="row" id="base"></div>
+  </section>
+
+  <section>
+    <h2>Evenement subtypes</h2>
+    <div class="row" id="subtypes"></div>
+  </section>
+
+  <section>
+    <h2>Vergelijking: oud vs nieuw (evenement, vlooienmarkt)</h2>
+    <div class="compare">
+      <div class="compare-col">
+        <div class="bg-map" id="old-pin"></div>
+        <div class="sub-lbl" style="margin-top:6px">Oud: cirkel r=7, emoji 9px</div>
+      </div>
+      <div class="compare-col">
+        <div class="bg-map" id="new-pin"></div>
+        <div class="sub-lbl" style="margin-top:6px">Nieuw: cirkel r=8, emoji 12px</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Op een kaart-achtergrond (alle subtypes naast elkaar)</h2>
+    <div class="bg-map" id="map-bg" style="display:flex;gap:14px;padding:20px 24px"></div>
+    <div class="note" style="margin-top:12px">De groene tint blijft gelijk voor alle evenementen, zodat "groen = evenement" op afstand nog steeds leesbaar is. Het subtype wordt zichtbaar zodra je inzoomt of in de popup / detail-weergave kijkt.</div>
+  </section>
+
+<script>
+// Pin-generator identiek aan makeMarkerIcon() in index.html
+function pin(color, icon, circleR, fontSize) {
+  circleR = circleR || 8;
+  fontSize = fontSize || 12;
+  var yText = 16 + (fontSize * 0.34); // houdt emoji verticaal gecentreerd
+  return '<svg width="48" height="62" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + color + '" stroke="white" stroke-width="2"/>'
+    + '<circle cx="18" cy="16" r="' + circleR + '" fill="white"/>'
+    + '<text x="18" y="' + yText + '" text-anchor="middle" font-size="' + fontSize + '" font-family="sans-serif">' + icon + '</text>'
+    + '</svg>';
+}
+
+var base = [
+  { type: 'Particulier',  color: '#F2A830', icon: '🏠' },
+  { type: 'Buurtverkoop', color: '#E07B39', icon: '🏘️' },
+  { type: 'Evenement',    color: '#3A6B4A', icon: '🎪' }
+];
+document.getElementById('base').innerHTML = base.map(function(b) {
+  return '<div class="cell">' + pin(b.color, b.icon) + '<div class="lbl">' + b.type + '</div></div>';
+}).join('');
+
+var subtypes = [
+  { name: 'Vlooienmarkt',     icon: '🎪' },
+  { name: 'Rommelmarkt',      icon: '🛒' },
+  { name: 'Kofferbakverkoop', icon: '🚗' },
+  { name: 'Braderie',         icon: '🏪' },
+  { name: 'Kerstmarkt',       icon: '🎄' },
+  { name: 'Boekenmarkt',      icon: '📚' },
+  { name: 'Antiekmarkt',      icon: '🏺' }
+];
+document.getElementById('subtypes').innerHTML = subtypes.map(function(s) {
+  return '<div class="cell">' + pin('#3A6B4A', s.icon) + '<div class="lbl">' + s.name + '</div></div>';
+}).join('');
+
+document.getElementById('old-pin').innerHTML = pin('#3A6B4A', '🎪', 7, 9);
+document.getElementById('new-pin').innerHTML = pin('#3A6B4A', '🎪', 8, 12);
+
+document.getElementById('map-bg').innerHTML = subtypes.map(function(s) {
+  return '<div class="cell">' + pin('#3A6B4A', s.icon) + '<div class="lbl">' + s.name + '</div></div>';
+}).join('');
+</script>
+</body>
+</html>

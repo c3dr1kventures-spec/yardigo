@@ -2090,7 +2090,9 @@ function mapSupabaseToSale(item) {
     // ── Buurt-bevestiging ──
     confirmation_status: item.confirmation_status || 'confirmed',
     confirmation_token: item.confirmation_token || null,
-    confirmation_address_label: item.confirmation_address_label || null
+    confirmation_address_label: item.confirmation_address_label || null,
+    // ── Evenement subtype (voor marker differentiatie) ──
+    event_subtype: item.event_subtype || null
   };
 }
 
@@ -2390,6 +2392,26 @@ const TYPES = {
   buurt:       { label:'Buurtverkoop', icon:'🏘️', color:'#E07B39', textColor:'white' },
   evenement:   { label:'Evenement', icon:'🎪', color:'#3A6B4A', textColor:'white' }
 };
+
+// Emoji per evenement-subtype voor differentiatie op de kaart.
+// Subtype-waarden komen uit de dropdown bij het plaatsen (aEventType).
+// Onbekende of custom (Anders) waarden vallen terug op de tent-emoji.
+const EVENT_SUBTYPE_ICONS = {
+  Vlooienmarkt:     '🎪',
+  Rommelmarkt:      '🛒',
+  Kofferbakverkoop: '🚗',
+  Braderie:         '🏪',
+  Kerstmarkt:       '🎄',
+  Boekenmarkt:      '📚',
+  Antiekmarkt:      '🏺'
+};
+
+function getSaleIcon(sale) {
+  if (sale && sale.type === 'evenement' && sale.event_subtype) {
+    return EVENT_SUBTYPE_ICONS[sale.event_subtype] || TYPES.evenement.icon;
+  }
+  return TYPES[sale.type] ? TYPES[sale.type].icon : '📍';
+}
 
 let sales = [
   // ── Groningen regio ──
@@ -3084,19 +3106,25 @@ function initMap() {
 }
 
 function makeMarkerIcon(sale) {
-  var t = TYPES[sale.type];
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type];
+  var ic = getSaleIcon(sale);
+  // Grotere witte cirkel (r=8) en grotere emoji (12px) voor leesbaarheid,
+  // vooral belangrijk om subtype-emojis (🚗 🏪 🎄 enz.) duidelijk te tonen.
   var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" stroke="white" stroke-width="2"/>'
-    + '<circle cx="18" cy="16" r="7" fill="white"/>'
-    + '<text x="18" y="20" text-anchor="middle" font-size="9" font-family="sans-serif">' + t.icon + '</text>'
+    + '<circle cx="18" cy="16" r="8" fill="white"/>'
+    + '<text x="18" y="20.5" text-anchor="middle" font-size="12" font-family="sans-serif">' + ic + '</text>'
     + '</svg>';
   return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 function createListingPopup(sale) {
   var t = TYPES[sale.type];
+  // Voor evenementen: gebruik subtype-icoon + subtype-label in de header
+  // zodat het consistent is met de marker op de kaart.
+  var _headIcon = getSaleIcon(sale);
+  var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : t.label;
   var fav = favorites.has(sale.id);
   var tagsHtml = (sale.tags || []).map(function(tg) {
     return '<span class="pop-tag ' + sale.type + '">' + tg + '</span>';
@@ -3137,7 +3165,7 @@ function createListingPopup(sale) {
   return '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:260px">'
     + photoHtml
     + '<div class="pop-head ' + sale.type + '">'
-    + '<div class="pop-type">' + t.icon + ' ' + t.label + (sale.is_sample ? ' &nbsp;<span style="background:rgba(255,255,255,.25);color:inherit;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;vertical-align:middle;letter-spacing:.3px">Voorbeeld</span>' : '') + '</div>'
+    + '<div class="pop-type">' + _headIcon + ' ' + _headLabel + (sale.is_sample ? ' &nbsp;<span style="background:rgba(255,255,255,.25);color:inherit;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;vertical-align:middle;letter-spacing:.3px">Voorbeeld</span>' : '') + '</div>'
     + '<div class="pop-title">' + sale.title + '</div>'
     + '<div class="pop-meta">&#128197; ' + fmtDate(sale.date) + ' &middot; &#128336; ' + sale.from + '&ndash;' + sale.till + '</div>'
     + '</div>'
@@ -3159,11 +3187,12 @@ function createSmallPin(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type] || '#E07B39';
   var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
-  var icon = sale.type === 'buurt' ? '🏘️' : (sale.type === 'evenement' ? '🎪' : '🏠');
+  var icon = getSaleIcon(sale);
+  // Iets grotere cirkel (r=5.5) en emoji (8) voor subtype-leesbaarheid
   var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
     + '<path d="' + p + '" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
-    + '<circle cx="12" cy="10" r="5" fill="white"/>'
-    + '<text x="12" y="14" text-anchor="middle" font-size="7" font-family="sans-serif">' + icon + '</text>'
+    + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
+    + '<text x="12" y="13.5" text-anchor="middle" font-size="8" font-family="sans-serif">' + icon + '</text>'
     + '</svg>';
   return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
@@ -3524,6 +3553,10 @@ function toggleBvCard(bvId) {
 
 function createListingCard(s, i) {
   var t = TYPES[s.type], fav = favorites.has(s.id);
+  // Bij evenementen tonen we het subtype (bijv. "Braderie") in het chip-label
+  // en gebruiken we het subtype-icoon als thumb-emoji zodat de lijst aansluit op de kaart.
+  var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : t.label;
+  var _thumbIcon = getSaleIcon(s);
   var d2 = (Math.random() * 8 + 0.5).toFixed(1);
   var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + escapeHtml(tg) + '</span>'; }).join('');
   // Adres is server-side al verborgen (NULL) voor gasten via get_listings_for_user(),
@@ -3542,10 +3575,10 @@ function createListingCard(s, i) {
   var idAttr = typeof s.id === 'string' ? "'" + escapeHtml(s.id) + "'" : s.id;
   return '<div class="card" style="animation:fadeUp .4s ' + ((i || 0) * 0.06) + 's both">'
     + (s.photos && s.photos.length
-      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(s.emoji) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
-      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(s.emoji) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
+      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
+      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(_thumbIcon) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
-    + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(t.label) + '</span></div>'
+    + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
     + '<div class="card-addr">' + addr + (s.date ? ' · ' + fmtDate(s.date) : '') + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
@@ -3710,14 +3743,16 @@ function openDetail(id) {
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
   var badge = document.getElementById('det-type-badge');
-  if (badge) { badge.textContent = t.icon + ' ' + t.label; badge.style.background = colors[s.type]; badge.style.color = textColors[s.type]; }
+  var _detIcon = getSaleIcon(s);
+  var _detLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : t.label;
+  if (badge) { badge.textContent = _detIcon + ' ' + _detLabel; badge.style.background = colors[s.type]; badge.style.color = textColors[s.type]; }
   var sampleBadge = document.getElementById('det-sample-badge');
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
   document.getElementById('det-title').textContent = s.title;
   document.getElementById('det-meta').textContent = '📅 ' + fmtDate(s.date) + ' · 🕐 ' + s.from + '–' + s.till;
   // Photos
   var photos = document.getElementById('det-photos'), noPhoto = document.getElementById('det-no-photo');
-  noPhoto.textContent = t.icon; noPhoto.style.display = 'flex'; photos.innerHTML = '';
+  noPhoto.textContent = _detIcon; noPhoto.style.display = 'flex'; photos.innerHTML = '';
   document.getElementById('det-prev').style.display = 'none'; document.getElementById('det-next').style.display = 'none';
   var detDots = document.getElementById('det-dots');
   if (detDots) detDots.innerHTML = '';
@@ -4826,16 +4861,30 @@ async function publishSale() {
 
     } else {
       // ── Particulier / Evenement ──
+      // Lees evenement-subtype uit dropdown (alleen relevant bij type evenement)
+      var eventSubtype = null;
+      if (selTypeVal === 'evenement') {
+        var _evSel = document.getElementById('aEventType');
+        var _evVal = _evSel ? _evSel.value : '';
+        if (_evVal === 'Anders') {
+          var _evAnd = document.getElementById('aEventAnders');
+          var _evAndVal = _evAnd ? _evAnd.value.trim() : '';
+          eventSubtype = _evAndVal ? _evAndVal.substring(0, 60) : null;
+        } else if (_evVal) {
+          eventSubtype = _evVal;
+        }
+      }
       var newSale = {
         id: nextId++, type: selTypeVal, title: title.value.trim(),
         emoji: TYPES[selTypeVal].icon, address: mainAddr,
         lat: lat, lng: lng, date: dateVal, from: fromVal, till: tillVal,
         tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
-        desc: descVal, user_email: currentUser.email, user_name: currentUser.name
+        desc: descVal, user_email: currentUser.email, user_name: currentUser.name,
+        event_subtype: eventSubtype
       };
       sales.unshift(newSale);
       if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
-        var insRes = await sbClient.from('listings').insert({
+        var _insertPayload = {
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
           user_id: currentUserId,
           address: newSale.address, city: cityName || 'Onbekend',
@@ -4844,7 +4893,9 @@ async function publishSale() {
           tags: tagList, status: 'active', description: descVal,
           images: publicPhotoUrls.slice(),
           address_reveal_mode: revealMode
-        });
+        };
+        if (eventSubtype) _insertPayload.event_subtype = eventSubtype;
+        var insRes = await sbClient.from('listings').insert(_insertPayload);
         if (insRes && insRes.error) {
           console.error('Listing insert mislukt:', insRes.error);
           logError(insRes.error.message || 'listing insert failed', { action: 'listing_insert', code: insRes.error.code });
