@@ -1949,8 +1949,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </div>
 
 <!-- Buurtverkoop: bulk-import van meerdere adressen tegelijk -->
-<div class="overlay" id="bulkAdresOv" onclick="if(event.target===this)closeBulkAdresModal()">
-  <div class="sheet" style="max-height:92vh;overflow-y:auto">
+<!-- z-index 950/951: MOET hoger zijn dan .add-overlay (900) omdat deze
+     modal boven het open add-formulier opent. Zonder override verdwijnt
+     de modal achter het add-sheet en lijkt de knop niets te doen. -->
+<div class="overlay" id="bulkAdresOv" onclick="if(event.target===this)closeBulkAdresModal()" style="z-index:950">
+  <div class="sheet" style="max-height:92vh;overflow-y:auto;z-index:951">
     <div class="sheet-handle"></div>
     <div style="padding:18px 22px 24px">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px">📋 Meerdere adressen tegelijk</div>
