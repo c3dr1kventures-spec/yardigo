@@ -1840,15 +1840,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="font-size:17px;font-weight:800;margin-bottom:4px">Type verkoop</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Wat voor soort verkoop is dit?</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span>Particulier — eigen spullen</span></div>
-          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span>Buurtverkoop — meerdere huizen</span></div>
-          <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span>Evenement — vlooienmarkt</span></div>
+          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span>Particulier: eigen spullen</span></div>
+          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span>Buurtverkoop: meerdere huizen</span></div>
+          <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span>Evenement: kies een type</span></div>
         </div>
         <!-- Evenement subtype dropdown -->
         <div id="evenement-subtype-wrap" style="display:none;margin-top:14px">
           <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">WAT VOOR EVENEMENT?</div>
           <select id="aEventType" class="form-input" onchange="toggleEventAnders(this.value)" style="width:100%;cursor:pointer">
-            <option value="">— Kies een type —</option>
+            <option value="">Kies een type</option>
             <option value="Vlooienmarkt">🎪 Vlooienmarkt</option>
             <option value="Rommelmarkt">🛒 Rommelmarkt</option>
             <option value="Kofferbakverkoop">🚗 Kofferbakverkoop</option>
