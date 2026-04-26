@@ -5074,15 +5074,216 @@ function parseBulkAdresLine(line) {
   return { label: label, addr: addr, pc: pc };
 }
 
-function parseBulkAdresText(text) {
-  if (!text) return [];
-  var lines = String(text).split(/\r?\n/);
-  var out = [];
-  for (var i = 0; i < lines.length; i++) {
-    var p = parseBulkAdresLine(lines[i]);
-    if (p) out.push(p);
+// ══════════════════════════════════════════════════
+// SMARTE BULK-PARSER met kolom-detectie
+// ──────────────────────────────────────────────────
+// Een organisator levert een adressenlijst aan in willekeurige indeling:
+// soms 3 kolommen (label|adres|pc), soms 7 (rol|naam|straat|huisnr|pc|plaats|email),
+// met of zonder header-rij. Deze parser kijkt eerst naar alle rijen
+// tegelijk om de structuur te herkennen, dan bouwt hij per rij een
+// {label, addr, pc, email} object op. Organisator-rijen worden geskipt
+// omdat het eigen adres al apart in buurtAdressen[0] staat.
+// ══════════════════════════════════════════════════
+
+var BULK_HEADER_MAP = {
+  // rol
+  'rol': 'role', 'role': 'role', 'type': 'role', 'soort': 'role',
+  // naam / label
+  'naam': 'label', 'name': 'label', 'label': 'label',
+  'voornaam': 'label', 'achternaam': 'label', 'volledige naam': 'label',
+  // volledig adres (straat + huisnummer in een)
+  'adres': 'address', 'address': 'address', 'straat en huisnummer': 'address', 'straat + huisnummer': 'address',
+  // alleen straat
+  'straat': 'street', 'straatnaam': 'street', 'street': 'street',
+  // huisnummer
+  'huisnummer': 'housenum', 'huisnr': 'housenum', 'huis nr': 'housenum',
+  'nr': 'housenum', 'nummer': 'housenum', 'number': 'housenum', 'no': 'housenum',
+  // postcode
+  'postcode': 'pc', 'pc': 'pc', 'zipcode': 'pc', 'zip': 'pc', 'postal code': 'pc', 'post code': 'pc',
+  // plaats
+  'plaats': 'city', 'stad': 'city', 'woonplaats': 'city', 'city': 'city', 'gemeente': 'city',
+  // email
+  'email': 'email', 'e-mail': 'email', 'emailadres': 'email',
+  'email adres': 'email', 'e-mail adres': 'email', 'mail': 'email', 'mailadres': 'email'
+};
+
+function splitBulkRow(line) {
+  var s = String(line || '');
+  if (s.indexOf('|') >= 0) return s.split('|');
+  if (s.indexOf('\t') >= 0) return s.split('\t');
+  if (s.indexOf(';') >= 0) return s.split(';');
+  // Komma alleen als er minstens 2 voorkomen, anders splitst hij
+  // gewone "Kerklaan, 14" verkeerd.
+  if ((s.match(/,/g) || []).length >= 2) return s.split(',');
+  return [s];
+}
+
+function bulkHeaderKey(cell) {
+  return String(cell || '').toLowerCase().trim().replace(/[\s_-]+/g, ' ');
+}
+
+function detectBulkHeaderRow(parts) {
+  if (!parts || !parts.length) return false;
+  var matched = 0;
+  for (var i = 0; i < parts.length; i++) {
+    if (BULK_HEADER_MAP[bulkHeaderKey(parts[i])]) matched++;
   }
-  return out;
+  return matched >= 2;
+}
+
+function mapBulkHeader(parts) {
+  return parts.map(function(h) {
+    return BULK_HEADER_MAP[bulkHeaderKey(h)] || null;
+  });
+}
+
+function inferBulkColumnTypes(rows) {
+  if (!rows.length) return [];
+  var nCols = 0;
+  for (var i = 0; i < rows.length; i++) if (rows[i].length > nCols) nCols = rows[i].length;
+
+  var pcRe       = /^\s*\d{4}\s*[A-Za-z]{2}\s*$/;
+  var emailRe    = /@/;
+  var housenumRe = /^\s*\d+\s*[a-zA-Z]?\s*$/;
+  var roleRe     = /^(organisator|buurtadres|bewoner|buur|organizer|neighbor|deelnemer)$/i;
+  var streetSuffixRe = /(straat|laan|weg|gracht|plein|kade|dijk|park|hof|baan|pad|steeg|singel|dreef|boulevard)$/i;
+
+  var types = [];
+  for (var c = 0; c < nCols; c++) {
+    var cells = [];
+    for (var r = 0; r < rows.length; r++) {
+      var v = String(rows[r][c] || '').trim();
+      if (v) cells.push(v);
+    }
+    if (!cells.length) { types.push(null); continue; }
+
+    var n = cells.length;
+    var pcN       = cells.filter(function(v) { return pcRe.test(v); }).length;
+    var emailN    = cells.filter(function(v) { return emailRe.test(v); }).length;
+    var housenumN = cells.filter(function(v) { return housenumRe.test(v); }).length;
+    var roleN     = cells.filter(function(v) { return roleRe.test(v); }).length;
+    var streetN   = cells.filter(function(v) { return streetSuffixRe.test(v); }).length;
+    var hasDigitN = cells.filter(function(v) { return /\d/.test(v); }).length;
+
+    if (emailN / n >= 0.5)             types.push('email');
+    else if (pcN / n >= 0.5)           types.push('pc');
+    else if (roleN / n >= 0.5)         types.push('role');
+    else if (housenumN / n >= 0.5)     types.push('housenum');
+    else if (streetN / n >= 0.4)       types.push('street');
+    else if (hasDigitN === 0) {
+      // Geen cijfers: label of plaats. Plaats vereist herhaling EN
+      // genoeg rijen (anders denkt hij bij twee unieke namen ten onrechte
+      // dat het plaatsen zijn). Onder 4 rijen gaat het altijd naar label.
+      var distinct = {};
+      for (var k = 0; k < cells.length; k++) distinct[cells[k].toLowerCase()] = true;
+      var d = Object.keys(distinct).length;
+      if (n >= 4 && d <= Math.max(2, Math.floor(n / 3))) types.push('city');
+      else types.push('label');
+    } else {
+      // Cijfers maar geen postcode/email/huisnr → waarschijnlijk volledig adres
+      types.push('address');
+    }
+  }
+  return types;
+}
+
+function buildBulkRowFromTypes(parts, types) {
+  var data = { role: '', label: '', street: '', housenum: '', address: '', pc: '', city: '', email: '' };
+  for (var i = 0; i < parts.length && i < types.length; i++) {
+    var t = types[i];
+    if (!t) continue;
+    var v = String(parts[i] || '').trim();
+    if (!v) continue;
+    if (!data[t]) data[t] = v; // eerste niet-lege wint
+  }
+
+  // Skip organisator-rij: het eigen adres staat al in buurtAdressen[0].
+  if (data.role && /organisator|organizer/i.test(data.role)) {
+    return { _skip: 'organisator' };
+  }
+
+  // Bouw addr: full address > street + housenum > street alleen
+  var addr = data.address;
+  if (!addr) {
+    if (data.street && data.housenum) addr = data.street + ' ' + data.housenum;
+    else if (data.street) addr = data.street;
+    else if (data.housenum) addr = data.housenum;
+  }
+  if (!addr) return null;
+
+  // Postcode uit eigen kolom, anders uit adres
+  var pc = data.pc;
+  if (pc && !/\b\d{4}\s*[A-Za-z]{2}\b/.test(pc)) pc = '';
+  if (!pc) {
+    var ext = extractDutchPostcode(addr);
+    if (ext) { pc = ext.pc; addr = ext.rest; }
+  } else {
+    var extPc = extractDutchPostcode(pc);
+    if (extPc) pc = extPc.pc;
+  }
+
+  // Plaats achter het adres plakken (helpt bij geocoding)
+  if (data.city && addr.toLowerCase().indexOf(data.city.toLowerCase()) === -1) {
+    addr = addr + ', ' + data.city;
+  }
+
+  // Email valideren
+  var email = data.email;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) email = '';
+
+  // Label kort houden (zelfde limiet als handmatig)
+  var label = data.label || '';
+  if (label.length > 60) label = label.substring(0, 60);
+
+  addr = addr.replace(/^[\s,;|]+|[\s,;|]+$/g, '').trim();
+
+  return { label: label, addr: addr, pc: pc, email: email };
+}
+
+function parseBulkAdresText(text) {
+  if (!text) return { rows: [], skipped: 0 };
+  var lines = String(text).split(/\r?\n/)
+    .map(function(l) { return l.replace(/\s+$/, ''); })
+    .filter(function(l) { return l.trim().length > 0; });
+  if (!lines.length) return { rows: [], skipped: 0 };
+
+  // Split elke regel naar cellen
+  var rowSplits = lines.map(function(l) {
+    return splitBulkRow(l).map(function(p) { return String(p || '').trim(); });
+  });
+
+  // Header detectie op de eerste rij
+  var types = null;
+  if (detectBulkHeaderRow(rowSplits[0])) {
+    types = mapBulkHeader(rowSplits[0]);
+    rowSplits = rowSplits.slice(1);
+  } else {
+    types = inferBulkColumnTypes(rowSplits);
+  }
+
+  var usefulCols = types.filter(function(t) { return !!t; }).length;
+
+  // Te weinig herkende kolommen → terugvallen op de oude per-regel parser.
+  // Dit gebeurt bij vrije plak-input zoals "Kerklaan 14, 9741 AB Groningen".
+  if (usefulCols < 2) {
+    var out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var p = parseBulkAdresLine(lines[i]);
+      if (p) out.push({ label: p.label || '', addr: p.addr, pc: p.pc, email: '' });
+    }
+    return { rows: out, skipped: 0 };
+  }
+
+  // Smart pad: bouw rij voor rij op basis van kolomtypes
+  var rows = [];
+  var skipped = 0;
+  for (var j = 0; j < rowSplits.length; j++) {
+    var row = buildBulkRowFromTypes(rowSplits[j], types);
+    if (!row) continue;
+    if (row._skip) { skipped++; continue; }
+    rows.push(row);
+  }
+  return { rows: rows, skipped: skipped };
 }
 
 function previewBulkAdres() {
@@ -5091,7 +5292,9 @@ function previewBulkAdres() {
   var btn = document.getElementById('bulkAdresImportBtn');
   if (!ta || !prev || !btn) return;
   var parsed = parseBulkAdresText(ta.value);
-  if (!parsed.length) {
+  var rows = parsed.rows || [];
+  var skippedOrg = parsed.skipped || 0;
+  if (!rows.length) {
     prev.style.display = 'none';
     prev.innerHTML = '';
     btn.disabled = true;
@@ -5102,63 +5305,78 @@ function previewBulkAdres() {
 
   // Toon per regel wat we eruit gehaald hebben. Groen = postcode gevonden,
   // geel = alleen adres (kan nog steeds geocoded worden, maar minder precies).
-  var rowsHtml = parsed.map(function(p, i) {
+  var rowsHtml = rows.map(function(p, i) {
     var ok = !!p.pc;
     var dot = ok
       ? '<span style="color:#2D6A4F;font-weight:700">✓</span>'
       : '<span style="color:#C5612A;font-weight:700">⚠</span>';
     var labelTxt = p.label ? escapeHtml(p.label) : '<span style="color:var(--muted)">(geen label)</span>';
     var pcTxt = p.pc ? escapeHtml(p.pc) : '<span style="color:#C5612A">geen postcode</span>';
+    var emailLine = p.email
+      ? '<div style="color:var(--forest);word-break:break-word;font-size:11px">📧 ' + escapeHtml(p.email) + '</div>'
+      : '';
     return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.45;align-items:flex-start">'
       + '<div style="width:18px;flex-shrink:0;text-align:center">' + dot + '</div>'
       + '<div style="flex:1;min-width:0">'
       +   '<div style="font-weight:600;color:var(--text)">' + labelTxt + '</div>'
       +   '<div style="color:var(--muted);word-break:break-word">' + escapeHtml(p.addr) + ' &middot; ' + pcTxt + '</div>'
+      +   emailLine
       + '</div>'
       + '</div>';
   }).join('');
 
-  var missing = parsed.filter(function(p) { return !p.pc; }).length;
+  var missing = rows.filter(function(p) { return !p.pc; }).length;
   var warn = missing > 0
     ? '<div style="font-size:11px;color:#C5612A;margin-bottom:6px;line-height:1.5"><strong>⚠ ' + missing + ' regel' + (missing === 1 ? '' : 's') + '</strong> zonder duidelijke postcode. Je kunt ze toch importeren, maar controleer ze daarna per rij.</div>'
-    : '<div style="font-size:11px;color:#2D6A4F;margin-bottom:6px;font-weight:600">✓ Alle ' + parsed.length + ' regels zien er goed uit.</div>';
+    : '<div style="font-size:11px;color:#2D6A4F;margin-bottom:6px;font-weight:600">✓ Alle ' + rows.length + ' regels zien er goed uit.</div>';
 
-  prev.innerHTML = warn + rowsHtml;
+  var skippedNote = skippedOrg > 0
+    ? '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;line-height:1.5">ℹ️ ' + skippedOrg + ' organisator-rij' + (skippedOrg === 1 ? '' : 'en') + ' overgeslagen. Je eigen adres staat al apart in de lijst.</div>'
+    : '';
+
+  prev.innerHTML = warn + skippedNote + rowsHtml;
   prev.style.display = 'block';
 
   btn.disabled = false;
   btn.style.opacity = '1';
-  btn.textContent = parsed.length === 1
+  btn.textContent = rows.length === 1
     ? '1 adres importeren'
-    : parsed.length + ' adressen importeren';
+    : rows.length + ' adressen importeren';
 }
 
 function importBulkAdres() {
   var ta = document.getElementById('bulkAdresText');
   if (!ta) return;
   var parsed = parseBulkAdresText(ta.value);
-  if (!parsed.length) { toast('Niks te importeren'); return; }
+  var rows = parsed.rows || [];
+  var skippedOrg = parsed.skipped || 0;
+  if (!rows.length) { toast('Niks te importeren'); return; }
 
   // Als alleen de lege placeholder-rij van buurtAdressen[0] bestaat en de
   // gebruiker nog helemaal niks heeft ingevuld, laten we die rij staan
   // (eigen adres). We voegen vanaf index 1 de geparste regels in.
-  // Als het eigen adres wél al is gevuld met een postcode, gewoon eraan plakken.
-  parsed.forEach(function(p) {
+  // Als het eigen adres wel al is gevuld met een postcode, gewoon eraan plakken.
+  rows.forEach(function(p) {
     addBuurtAdres();
     var idx = buurtAdressen.length - 1;
     buurtAdressen[idx].addr = p.addr;
     buurtAdressen[idx].pc = p.pc;
     buurtAdressen[idx].label = p.label;
+    buurtAdressen[idx].email = p.email || '';
     var ai = document.getElementById('bv-addr-' + idx);
     var pi = document.getElementById('bv-pc-' + idx);
     var li = document.getElementById('bv-label-' + idx);
+    var ei = document.getElementById('bv-email-' + idx);
     if (ai) ai.value = p.addr;
     if (pi) pi.value = p.pc;
     if (li) li.value = p.label;
+    if (ei) ei.value = p.email || '';
   });
 
   closeBulkAdresModal();
-  toast('✓ ' + parsed.length + ' adres' + (parsed.length === 1 ? '' : 'sen') + ' toegevoegd');
+  var msg = '✓ ' + rows.length + ' adres' + (rows.length === 1 ? '' : 'sen') + ' toegevoegd';
+  if (skippedOrg > 0) msg += ' (' + skippedOrg + ' organisator-rij overgeslagen)';
+  toast(msg);
 }
 
 // ── Adres autocomplete via PDOK Locatieserver ──
