@@ -2081,9 +2081,68 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div id="bulkAdresPreview" style="display:none;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:14px;max-height:200px;overflow-y:auto"></div>
 
+      <!-- Bulk-toestemming optie: organisator kan verklaren dat alle bewoners
+           in de lijst persoonlijk toestemming hebben gegeven. Dit slaat de
+           bevestig-flow over, maar legt de aansprakelijkheid bij de organisator
+           en logt timestamp + user_id voor audit. -->
+      <div id="bulkConsentBlock" style="display:none;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:#FAFAF7">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12.5px;line-height:1.5" id="bulkConsentLabel">
+          <input type="checkbox" id="bulkConsentCheckbox" onclick="onBulkConsentToggle(event)" style="margin-top:2px;flex-shrink:0;width:18px;height:18px;cursor:pointer">
+          <span>
+            <strong style="color:var(--text)">Ik heb persoonlijk toestemming van alle bewoners hierboven.</strong>
+            <span style="display:block;color:var(--muted);font-size:11px;margin-top:3px">Adressen gaan dan direct online zonder per-buur bevestigingslink. Je leest hieronder wat dit precies betekent voor je verantwoordelijkheid.</span>
+          </span>
+        </label>
+        <div id="bulkConsentConfirmedNote" style="display:none;margin-top:10px;padding:8px 10px;background:#F0F6F2;border:1px solid #C7DFCF;border-radius:8px;font-size:11.5px;color:#2C4A36;line-height:1.5">
+          <strong>✅ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href="#" onclick="undoBulkConsent(event)" style="color:#3A6B4A;text-decoration:underline">Toch via bevestigingslink</a>.
+        </div>
+      </div>
+
       <div style="display:flex;gap:8px">
         <button type="button" onclick="closeBulkAdresModal()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
         <button type="button" id="bulkAdresImportBtn" onclick="importBulkAdres()" disabled style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;opacity:.5">Eerst plakken of bestand kiezen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────
+     AVG-waarschuwing voor bulk-toestemming
+     Pop-up die opent zodra de organisator op het toestemmings-vinkje
+     klikt. Vereist een actieve klik op "Ik begrijp en bevestig" voordat
+     het vinkje vast komt te staan. Tekst is bewust kort en zonder
+     juridisch jargon zodat de organisator daadwerkelijk leest wat hij
+     verklaart.
+─────────────────────────────────────────────────────────── -->
+<div id="bulkConsentWarnOv" style="display:none;position:fixed;inset:0;z-index:9997;background:rgba(44,36,22,.6);align-items:center;justify-content:center;padding:20px">
+  <div style="background:white;border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,.3)">
+    <div style="padding:22px 24px 18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="font-size:24px">🛡️</span>
+        <div style="font-size:18px;font-weight:800;color:var(--text)">Even checken: AVG-toestemming</div>
+      </div>
+
+      <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px">
+        Door dit aan te zetten verklaar je dat je van iedere bewoner in de lijst <strong>persoonlijk toestemming</strong> hebt om zijn of haar adres te tonen op YardiGo voor deze buurtverkoop.
+      </div>
+
+      <div style="background:#FFF8EC;border-left:3px solid #E0A458;border-radius:8px;padding:11px 13px;font-size:12px;color:#7A5A2A;line-height:1.55;margin-bottom:12px">
+        <strong>Waar moet je aan denken?</strong>
+        <ul style="margin:6px 0 0;padding-left:18px">
+          <li style="margin-bottom:4px">De toestemming moet aantoonbaar zijn (bijvoorbeeld een WhatsApp-bericht, mailtje of een getekend lijstje).</li>
+          <li style="margin-bottom:4px">Krijgt YardiGo een klacht van een bewoner, dan halen we het adres direct offline en kunnen we jou om bewijs vragen.</li>
+          <li style="margin-bottom:4px">Bewoners kunnen op elk moment hun adres laten verwijderen via een bericht aan info@yardigo.nl.</li>
+          <li>De toestemming geldt alleen voor déze buurtverkoop, niet voor toekomstige.</li>
+        </ul>
+      </div>
+
+      <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:18px">
+        Je verklaring wordt vastgelegd met datum, tijd en je account-ID. Dat dient als audit-spoor voor het geval er ooit gevraagd wordt hoe de toestemming is verkregen.
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button type="button" onclick="declineBulkConsent()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
+        <button type="button" onclick="acceptBulkConsent()" style="flex:1.4;padding:12px;border-radius:12px;border:none;background:#3A6B4A;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Ik begrijp en bevestig</button>
       </div>
     </div>
   </div>
@@ -2236,6 +2295,7 @@ function mapSupabaseToSale(item) {
     confirmation_status: item.confirmation_status || 'confirmed',
     confirmation_token: item.confirmation_token || null,
     confirmation_address_label: item.confirmation_address_label || null,
+    confirmation_method: item.confirmation_method || 'self_confirmed',
     // ── Evenement subtype (voor marker differentiatie) ──
     event_subtype: item.event_subtype || null,
     // ── Buurtverkoop plattegrond ──
@@ -2780,12 +2840,15 @@ function renderMySales() {
         });
         var rowsHtml = sorted.map(function(row) {
           var status = row.confirmation_status || 'confirmed';
-          var isOwnRow = !row.confirmation_token;
+          var method = row.confirmation_method || 'self_confirmed';
+          var isOwnRow = !row.confirmation_token && method !== 'organizer_declared';
           var addrShortR = (row.address || '').split(',')[0].trim();
           var rowLabel = row.confirmation_address_label || (isOwnRow ? '🏠 Jouw eigen adres' : '👤 Buur');
           var badge;
           if (isOwnRow) {
             badge = '<span style="background:#EAF2EC;color:#2C4A36;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">🏠 Jij</span>';
+          } else if (status === 'confirmed' && method === 'organizer_declared') {
+            badge = '<span style="background:#E5F0FB;color:#1F4A7A;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700" title="Toestemming verklaard door organisator (bulk-vinkje)">🛡️ Toestemming verklaard</span>';
           } else if (status === 'confirmed') {
             badge = '<span style="background:#EAF2EC;color:#2C4A36;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">✅ Bevestigd</span>';
           } else if (status === 'pending') {
@@ -4494,7 +4557,15 @@ function guestRegister() { closeGuestGate(); closeDetail(); document.getElementB
 // ══════════════════════════════════════════════════
 // ADD FORM
 // ══════════════════════════════════════════════════
-var buurtAdressen = []; // array of {addr, pc} for buurtverkoop
+var buurtAdressen = []; // array of {addr, pc, label, email, preconsent} for buurtverkoop
+
+// ── Bulk-toestemming state ─────────────────────────────────
+// bulkConsentDeclared = true zodra de organisator via de pop-up bevestigd heeft
+// dat hij van alle bulk-geïmporteerde buren persoonlijk toestemming heeft.
+// Geldt alleen voor de huidige aanmaak-sessie. Wordt gereset bij elke
+// nieuwe bulk-modal-opening en bij elke succesvolle publish.
+var bulkConsentDeclared = false;
+var bulkConsentDeclaredAt = null;
 
 function openAdd() {
   resetAddForm();
@@ -4789,7 +4860,7 @@ function addNav(dir) {
 //   email = optioneel e-mailadres van buur voor mailto-prefill, alleen in geheugen, niet in DB
 function addBuurtAdres() {
   var idx = buurtAdressen.length;
-  buurtAdressen.push({ addr: '', pc: '', label: '', email: '' });
+  buurtAdressen.push({ addr: '', pc: '', label: '', email: '', preconsent: false });
   var list = document.getElementById('buurt-adressen-list');
   var row = document.createElement('div');
   row.id = 'bv-row-' + idx;
@@ -4857,6 +4928,8 @@ function openBulkAdresModal() {
   if (prev) { prev.style.display = 'none'; prev.innerHTML = ''; }
   var btn = document.getElementById('bulkAdresImportBtn');
   if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = 'Eerst plakken of bestand kiezen'; }
+  // Reset consent-state bij openen van een nieuwe bulk-sessie.
+  resetBulkConsentUI();
   if (ov) ov.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -4865,6 +4938,82 @@ function closeBulkAdresModal() {
   var ov = document.getElementById('bulkAdresOv');
   if (ov) ov.classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ── Bulk-consent UI helpers ────────────────────────────────
+function resetBulkConsentUI() {
+  bulkConsentDeclared = false;
+  bulkConsentDeclaredAt = null;
+  var block = document.getElementById('bulkConsentBlock');
+  var cb = document.getElementById('bulkConsentCheckbox');
+  var note = document.getElementById('bulkConsentConfirmedNote');
+  if (block) block.style.display = 'none';
+  if (cb) cb.checked = false;
+  if (note) note.style.display = 'none';
+}
+
+function showBulkConsentBlock(show) {
+  var block = document.getElementById('bulkConsentBlock');
+  if (block) block.style.display = show ? 'block' : 'none';
+}
+
+function onBulkConsentToggle(ev) {
+  var cb = document.getElementById('bulkConsentCheckbox');
+  if (!cb) return;
+  if (cb.checked) {
+    // Voorkom dat het vinkje meteen vastzit; we wachten op bevestiging.
+    cb.checked = false;
+    if (ev) ev.preventDefault();
+    var ov = document.getElementById('bulkConsentWarnOv');
+    if (ov) ov.style.display = 'flex';
+  } else {
+    // Uitvinken kan zonder pop-up.
+    bulkConsentDeclared = false;
+    bulkConsentDeclaredAt = null;
+    var note = document.getElementById('bulkConsentConfirmedNote');
+    if (note) note.style.display = 'none';
+    refreshBulkImportButtonText();
+  }
+}
+
+function acceptBulkConsent() {
+  bulkConsentDeclared = true;
+  bulkConsentDeclaredAt = new Date().toISOString();
+  var cb = document.getElementById('bulkConsentCheckbox');
+  if (cb) cb.checked = true;
+  var note = document.getElementById('bulkConsentConfirmedNote');
+  if (note) note.style.display = 'block';
+  var ov = document.getElementById('bulkConsentWarnOv');
+  if (ov) ov.style.display = 'none';
+  refreshBulkImportButtonText();
+}
+
+function declineBulkConsent() {
+  var ov = document.getElementById('bulkConsentWarnOv');
+  if (ov) ov.style.display = 'none';
+  // checkbox blijft uit
+}
+
+function undoBulkConsent(ev) {
+  if (ev) ev.preventDefault();
+  bulkConsentDeclared = false;
+  bulkConsentDeclaredAt = null;
+  var cb = document.getElementById('bulkConsentCheckbox');
+  if (cb) cb.checked = false;
+  var note = document.getElementById('bulkConsentConfirmedNote');
+  if (note) note.style.display = 'none';
+  refreshBulkImportButtonText();
+}
+
+function refreshBulkImportButtonText() {
+  var btn = document.getElementById('bulkAdresImportBtn');
+  if (!btn || btn.disabled) return;
+  var ta = document.getElementById('bulkAdresText');
+  var parsed = parseBulkAdresText(ta ? ta.value : '');
+  var n = parsed.rows ? parsed.rows.length : 0;
+  if (!n) return;
+  var suffix = bulkConsentDeclared ? ' (direct online)' : '';
+  btn.textContent = (n === 1 ? '1 adres importeren' : n + ' adressen importeren') + suffix;
 }
 
 // Lazy-loader voor SheetJS (xlsx.js). We halen de library pas van CDN
@@ -5300,8 +5449,10 @@ function previewBulkAdres() {
     btn.disabled = true;
     btn.style.opacity = '.5';
     btn.textContent = 'Eerst plakken of bestand kiezen';
+    showBulkConsentBlock(false);
     return;
   }
+  showBulkConsentBlock(true);
 
   // Toon per regel wat we eruit gehaald hebben. Groen = postcode gevonden,
   // geel = alleen adres (kan nog steeds geocoded worden, maar minder precies).
@@ -5339,9 +5490,7 @@ function previewBulkAdres() {
 
   btn.disabled = false;
   btn.style.opacity = '1';
-  btn.textContent = rows.length === 1
-    ? '1 adres importeren'
-    : rows.length + ' adressen importeren';
+  refreshBulkImportButtonText();
 }
 
 function importBulkAdres() {
@@ -5356,6 +5505,10 @@ function importBulkAdres() {
   // gebruiker nog helemaal niks heeft ingevuld, laten we die rij staan
   // (eigen adres). We voegen vanaf index 1 de geparste regels in.
   // Als het eigen adres wel al is gevuld met een postcode, gewoon eraan plakken.
+  // Als de organisator de bulk-toestemming heeft verklaard, krijgen alleen
+  // deze geïmporteerde rijen preconsent=true. Handmatig later toegevoegde
+  // adressen blijven preconsent=false en doorlopen de bevestig-flow.
+  var preconsentForThisBatch = !!bulkConsentDeclared;
   rows.forEach(function(p) {
     addBuurtAdres();
     var idx = buurtAdressen.length - 1;
@@ -5363,6 +5516,7 @@ function importBulkAdres() {
     buurtAdressen[idx].pc = p.pc;
     buurtAdressen[idx].label = p.label;
     buurtAdressen[idx].email = p.email || '';
+    buurtAdressen[idx].preconsent = preconsentForThisBatch;
     var ai = document.getElementById('bv-addr-' + idx);
     var pi = document.getElementById('bv-pc-' + idx);
     var li = document.getElementById('bv-label-' + idx);
@@ -5371,11 +5525,25 @@ function importBulkAdres() {
     if (pi) pi.value = p.pc;
     if (li) li.value = p.label;
     if (ei) ei.value = p.email || '';
+    // Toon een subtiele indicator op de rij dat preconsent geldt voor deze buur
+    if (preconsentForThisBatch) {
+      var rowEl = document.getElementById('bv-row-' + idx);
+      if (rowEl) {
+        rowEl.style.borderColor = '#3A6B4A';
+        rowEl.style.background = '#F0F6F2';
+        var helperDiv = rowEl.querySelector('div[style*="color:#A04A18"]');
+        if (helperDiv) {
+          helperDiv.style.color = '#2C4A36';
+          helperDiv.innerHTML = '🛡️ Toestemming verklaard door organisator. Adres gaat direct online na publiceren.';
+        }
+      }
+    }
   });
 
   closeBulkAdresModal();
   var msg = '✓ ' + rows.length + ' adres' + (rows.length === 1 ? '' : 'sen') + ' toegevoegd';
-  if (skippedOrg > 0) msg += ' (' + skippedOrg + ' organisator-rij overgeslagen)';
+  if (preconsentForThisBatch) msg += ' (direct online na publiceren)';
+  if (skippedOrg > 0) msg += ' · ' + skippedOrg + ' organisator-rij overgeslagen';
   toast(msg);
 }
 
@@ -5764,14 +5932,22 @@ async function publishSale() {
       var allCoords = [{ lat: lat, lng: lng }].concat(extraCoords);
       var totalBuurtAddrs = buurtAdressen.length;
 
+      var preconsentDeclaredCount = 0;
+      var declaredAtTs = new Date().toISOString();
       for (var bi = 0; bi < buurtAdressen.length; bi++) {
         setPublishStatus('🏘️ Buurtverkoop aanmaken... (' + (bi + 1) + '/' + totalBuurtAddrs + ')');
         var a = buurtAdressen[bi];
         var coords = allCoords[bi] || { lat: lat, lng: lng };
         var isOwnAddr = (bi === 0);
-        var confToken = isOwnAddr ? null : generateConfirmationToken();
-        var confStatus = isOwnAddr ? 'confirmed' : 'pending';
+        // Preconsent: organisator heeft via bulk-vinkje verklaard toestemming
+        // te hebben. Dan geen token, status meteen confirmed, method
+        // 'organizer_declared'. Alleen geldig voor buur-rijen, niet eigen adres.
+        var hasPreconsent = !isOwnAddr && !!a.preconsent;
+        var confToken = (isOwnAddr || hasPreconsent) ? null : generateConfirmationToken();
+        var confStatus = (isOwnAddr || hasPreconsent) ? 'confirmed' : 'pending';
+        var confMethod = (!isOwnAddr && hasPreconsent) ? 'organizer_declared' : 'self_confirmed';
         var addrLabelLocal = (!isOwnAddr && a.label) ? String(a.label).trim().substring(0, 60) : '';
+        if (hasPreconsent) preconsentDeclaredCount++;
         var newSale = {
           id: nextId++, type: 'buurt', title: title.value.trim(),
           emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
@@ -5785,7 +5961,8 @@ async function publishSale() {
           user_id: currentUserId || '',
           confirmation_status: confStatus,
           confirmation_token: confToken || null,
-          confirmation_address_label: addrLabelLocal || null
+          confirmation_address_label: addrLabelLocal || null,
+          confirmation_method: confMethod
         };
         // Alleen eigen adres direct publiek; pending buren zijn alleen zichtbaar voor
         // de organisator zelf (via RLS/RPC), dus toevoegen aan lokale state is veilig
@@ -5805,9 +5982,11 @@ async function publishSale() {
             images: publicPhotoUrls.slice(),
             neighborhood_group_id: bvId,
             address_reveal_mode: revealMode,
-            confirmation_status: confStatus
+            confirmation_status: confStatus,
+            confirmation_method: confMethod
           };
           if (confToken) insertPayload.confirmation_token = confToken;
+          if (hasPreconsent) insertPayload.organizer_consent_declared_at = declaredAtTs;
           // Alleen label naar DB, nooit email (dataminimalisatie AVG art. 5.1.c)
           if (addrLabel) insertPayload.confirmation_address_label = addrLabel;
           var insRes = await sbClient.from('listings').insert(insertPayload);
@@ -5833,6 +6012,23 @@ async function publishSale() {
             label: addrLabel,
             email: addrEmail
           });
+        }
+      }
+
+      // Audit-log: één rij per buurtverkoop met aantal verklaarde adressen
+      // en user-agent. We hashen geen IP client-side; Supabase-logs houden
+      // request-IP zelf bij als dat nodig is. Mislukken van de insert mag
+      // de publish niet blokkeren, dus catchen we netjes.
+      if (preconsentDeclaredCount > 0 && sbClient && currentUserId && !SUPABASE_URL.includes('JOUW')) {
+        try {
+          await sbClient.from('consent_declarations').insert({
+            user_id: currentUserId,
+            neighborhood_group_id: bvId,
+            address_count: preconsentDeclaredCount,
+            user_agent: (navigator && navigator.userAgent) ? navigator.userAgent.substring(0, 200) : null
+          });
+        } catch (eAudit) {
+          console.warn('consent_declarations audit-insert faalde:', eAudit);
         }
       }
 
