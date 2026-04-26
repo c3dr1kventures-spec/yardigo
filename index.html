@@ -5379,7 +5379,8 @@ async function publishSale() {
   // Zet lock meteen + disable knop visueel
   isPublishing = true;
   var _pubBtn = document.getElementById('addPublish');
-  if (_pubBtn) { _pubBtn.disabled = true; _pubBtn.style.opacity = '0.6'; _pubBtn.style.cursor = 'wait'; }
+  if (_pubBtn) { _pubBtn.disabled = true; _pubBtn.style.opacity = '0.85'; _pubBtn.style.cursor = 'wait'; }
+  setPublishStatus('⏳ Bezig...');
 
   var isBuurt = selTypeVal === 'buurt';
   var addrEl  = document.getElementById('aAddr');
@@ -5407,7 +5408,9 @@ async function publishSale() {
       }
       var publicUrls = [];
       var errors = [];
+      var total = dataUrls.length;
       for (var i = 0; i < dataUrls.length; i++) {
+        setPublishStatus('📷 Foto\'s uploaden... (' + (i + 1) + '/' + total + ')');
         var d = dataUrls[i];
         // Sla http(s) URL's gewoon door — geen upload nodig
         if (typeof d === 'string' && /^https?:\/\//i.test(d)) { publicUrls.push(d); continue; }
@@ -5449,6 +5452,7 @@ async function publishSale() {
     }
 
     // Geocode hoofd-adres (met addressdetails voor city)
+    setPublishStatus('📍 Adres controleren...');
     var geoAddr = isBuurt ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', Nederland') : (mainAddr + ', Nederland');
     var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1');
     var geoData = await geoRes.json();
@@ -5500,6 +5504,7 @@ async function publishSale() {
     }
 
     // Upload foto's naar publieke storage en gebruik de URL's i.p.v. base64
+    setPublishStatus('📷 Foto\'s uploaden... (1/' + uploadedPhotos.length + ')');
     var uploadResult = await uploadPhotosToStorage(uploadedPhotos, currentUserId);
     var publicPhotoUrls = uploadResult.urls;
     if (publicPhotoUrls.length === 0 && uploadedPhotos.length > 0) {
@@ -5523,6 +5528,7 @@ async function publishSale() {
 
       // Sla per adres een listing op
       var addrsToGeo = buurtAdressen.slice(1); // al geocoded hoofd; rest geocoden
+      if (addrsToGeo.length > 0) setPublishStatus('📍 Adressen verifiëren... (' + buurtAdressen.length + ' adressen)');
       var geoPromises = addrsToGeo.map(function(a) {
         return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', Nederland') + '&format=json&limit=1')
           .then(function(r) { return r.json(); })
@@ -5532,8 +5538,10 @@ async function publishSale() {
       var extraCoords = await Promise.all(geoPromises);
 
       var allCoords = [{ lat: lat, lng: lng }].concat(extraCoords);
+      var totalBuurtAddrs = buurtAdressen.length;
 
       for (var bi = 0; bi < buurtAdressen.length; bi++) {
+        setPublishStatus('🏘️ Buurtverkoop aanmaken... (' + (bi + 1) + '/' + totalBuurtAddrs + ')');
         var a = buurtAdressen[bi];
         var coords = allCoords[bi] || { lat: lat, lng: lng };
         var isOwnAddr = (bi === 0);
@@ -5606,6 +5614,7 @@ async function publishSale() {
 
       // Upload plattegrond als organisator er een heeft geselecteerd
       if (addFloorplanFile && sbClient && currentUserId && !SUPABASE_URL.includes('JOUW')) {
+        setPublishStatus('🗺️ Plattegrond uploaden...');
         try {
           var fpExt = addFloorplanFile.name.split('.').pop().toLowerCase();
           var fpPath = bvId + '/plattegrond.' + fpExt;
@@ -5665,6 +5674,7 @@ async function publishSale() {
         event_subtype: eventSubtype
       };
       sales.unshift(newSale);
+      setPublishStatus('✅ Advertentie opslaan...');
       if (sbClient && !SUPABASE_URL.includes('JOUW') && currentUserId) {
         var _insertPayload = {
           title: newSale.title, category: catMap[selTypeVal] || 'garagesale',
@@ -5695,10 +5705,10 @@ async function publishSale() {
     toast('🎉 Verkoop geplaatst!');
   } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast('❌ Publiceren mislukt'); }
   finally {
-    // Lock altijd vrijgeven
+    // Lock altijd vrijgeven + knop herstellen
     isPublishing = false;
     var _pb = document.getElementById('addPublish');
-    if (_pb) { _pb.disabled = false; _pb.style.opacity = ''; _pb.style.cursor = 'pointer'; }
+    if (_pb) { _pb.disabled = false; _pb.style.opacity = ''; _pb.style.cursor = 'pointer'; clearPublishStatus(); }
   }
 }
 
@@ -6362,6 +6372,15 @@ function toast(msg) {
 }
 function showL() { var el = document.getElementById('lbar'); if (el) { el.style.width = '60%'; setTimeout(function(){el.style.width='100%';},400); } }
 function hideL() { var el = document.getElementById('lbar'); if (el) el.style.width = '0'; }
+// Publish-voortgang: update de publiceerknop met een statusbericht
+function setPublishStatus(msg) {
+  var btn = document.getElementById('addPublish');
+  if (btn) btn.textContent = msg;
+}
+function clearPublishStatus() {
+  var btn = document.getElementById('addPublish');
+  if (btn) btn.innerHTML = 'Publiceren &#127881;';
+}
 function openLogin()  { document.getElementById('loginOv').classList.add('open'); }
 function closeLogin() { document.getElementById('loginOv').classList.remove('open'); }
 
