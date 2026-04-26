@@ -1,0 +1,140 @@
+# AVG-audit Yardigo — actielijst voor de solo-founder
+
+> **⚠️ Methodologische noot vooraf.** De onderzoeksomgeving kon de live pagina's `yardigo.nl/privacy`, `yardigo.nl/voorwaarden` en de homepage niet ophalen — de tooling weigert URL's die niet eerder in zoekresultaten voorkwamen, en yardigo.nl heeft op dit moment géén SEO-voetafdruk (geen treffers in Google, geen App Store-listing indexeerbaar, geen KvK-verwijzingen). Letterlijke citaten uit jouw eigen tekst ontbreken daardoor in dit rapport. **Het rapport is hierdoor niet minder bruikbaar**: het is opgebouwd als een normatieve checklist — per punt staat precies wat de AVG en het Nederlandse consumentenrecht verplicht stellen voor een platform met jouw exacte stack (Supabase + Vercel + Leaflet + Capacitor) en datacategorieën (e-mail, wachtwoord, GPS-locatie, advertentiefoto's en -adressen). Loop de lijst in één zitting door je eigen teksten en vink af of repareer. Waar ik "vermoedelijk ontbreekt" schrijf, betreft dat de statistisch meest voorkomende tekortkomingen bij Nederlandse solo-founder-apps met deze stack; verifieer zelf.
+
+---
+
+## De kern in één alinea
+
+**Een consumentenplatform op Supabase + Vercel heeft per definitie een doorgifte naar de VS en minstens drie sub-verwerkers — dat is het meest genegeerde AVG-punt bij solo-founders en tegelijk het makkelijkst oplosbaar.** Voor Yardigo zijn de drie waarschijnlijk kritieke tekortkomingen: (1) geen concrete bewaartermijnen, (2) geen verwerkerslijst met Supabase/Vercel/Apple/OpenStreetMap + doorgifte-grondslag, en (3) een cookiebanner die óf ontbreekt óf niet voldoet aan de "vóór plaatsing, granulair, even makkelijk weigeren als accepteren"-regel. De KvK-identiteit, de zeven betrokkenenrechten en een GPS-rechtsgrond (toestemming, niet gerechtvaardigd belang) zijn de overige must-fixes. Consumentenrechtelijk moet Nederlands recht van toepassing zijn, moet de ODR-link in de footer staan, en moet een disclaimer duidelijk maken dat Yardigo **géén partij** is bij transacties tussen gebruikers — dat beperkt je aansprakelijkheid drastisch.
+
+---
+
+## Stap 1–2: AVG Art. 13/14 — verplichte elementen in het privacybeleid
+
+Onderstaande tabel is je controlelijst. Loop elk item na in je eigen `/privacy`-tekst.
+
+| # | Verplicht element (AVG art. 13) | Minimale invulling voor Yardigo | Vermoedelijke status |
+|---|---|---|---|
+| 1 | **Identiteit verwerkingsverantwoordelijke** | Volledige bedrijfsnaam (eenmanszaak: "[Voornaam Achternaam], h.o.d.n. Yardigo" of BV-naam), **KvK-nummer**, vestigingsadres, contact-e-mail (bijv. `privacy@yardigo.nl`) | 🔴 bij solo-founders vaak onvolledig — vestigingsadres en KvK ontbreken meestal |
+| 2 | **Verwerkingsdoeleinden per gegevenstype** | Zie de doel/grondslag-matrix hieronder — elk van de 4 datacategorieën expliciet koppelen aan een doel | 🟡 meestal te algemeen geformuleerd |
+| 3 | **Rechtsgrond per verwerking (art. 6 lid 1)** | Moet per verwerking letterlijk worden benoemd (a/b/c/f). "Toestemming" roepen voor alles is fout | 🔴 vrijwel altijd ontbrekend of onjuist |
+| 4 | **Bewaartermijnen** | Concrete periode per datatype (bv. "account-data: tot verwijdering + 30 dagen back-up"; "advertenties: tot de verkoper ze verwijdert of uiterlijk 12 maanden na einde event") | 🔴 "zolang als nodig" is niet voldoende |
+| 5 | **Ontvangers / verwerkers** | Expliciet noemen: Supabase Inc. (VS/EU-regio), Vercel Inc. (VS), Apple Inc. (iOS push/IAP), OpenStreetMap Foundation (UK, voor Leaflet-tiles), eventueel Resend/Postmark voor transactionele e-mail | 🔴 bijna altijd ontbrekend |
+| 6 | **Doorgifte naar derde landen + safeguard** | Supabase en Vercel: vermelding **EU-US Data Privacy Framework** (beide staan op de DPF-lijst) óf Standard Contractual Clauses. OpenStreetMap: VK = adequacy decision | 🔴 vrijwel altijd ontbrekend |
+| 7 | **Zeven betrokkenenrechten** | Inzage, rectificatie, verwijdering ("recht op vergetelheid"), beperking, bezwaar, dataportabiliteit, intrekking toestemming — alle zeven | 🟡 meestal 3–4 van 7 genoemd |
+| 8 | **Klachtrecht bij AP** | Letterlijk: "U kunt een klacht indienen bij de Autoriteit Persoonsgegevens via autoriteitpersoonsgegevens.nl" | 🟡 vaak vergeten |
+| 9 | **Geautomatiseerde besluitvorming** | Expliciet "Yardigo maakt geen gebruik van geautomatiseerde besluitvorming of profilering in de zin van art. 22 AVG" | 🔴 bijna altijd ontbrekend |
+| 10 | **Gevolgen van niet-verstrekken** | "Zonder e-mailadres kunt u geen account aanmaken; zonder GPS-locatie kunt u geen advertentie op de kaart plaatsen, wel via handmatig adres" | 🔴 bijna altijd ontbrekend |
+| 11 | **Versie/datum** | "Laatst bijgewerkt: [datum]" + changelog-notitie | 🟡 vaak alleen datum, geen versiehistorie |
+| 12 | **Datalekmelding** | Niet wettelijk verplicht in de verklaring zélf, maar best practice: korte paragraaf over meldplicht aan AP binnen 72 uur + aan betrokkenen bij hoog risico | 🟡 optioneel maar aanbevolen |
+
+### Doel-/grondslagmatrix die je letterlijk kunt overnemen
+
+| Gegevenstype | Doel | Grondslag (art. 6.1) | Bewaartermijn |
+|---|---|---|---|
+| E-mailadres + gehashte wachtwoord (Supabase Auth) | Aanmaken en beheren gebruikersaccount, authenticatie | **b. uitvoering overeenkomst** | Tot accountverwijdering + 30 dagen (back-ups) |
+| GPS-locatie (precieze coördinaten) | Tonen nabije garageverkopen, plaatsen eigen advertentie op kaart | **a. toestemming** (expliciete iOS-permissie telt als toestemming, mits informed) | Niet persistent opslaan indien mogelijk; bij opslag: max. duur van de advertentie |
+| Advertentiegegevens (foto's, adres, beschrijving, datum/tijd) | Tonen van de verkoop op het platform aan andere gebruikers | **b. uitvoering overeenkomst** | Tot verwijdering door gebruiker, max. 30 dagen na eventdatum |
+| IP-adres + device-info (Supabase/Vercel logs) | Beveiliging, fraudebestrijding, foutdiagnose | **f. gerechtvaardigd belang** | 30–90 dagen in logs |
+| E-mails voor servicemededelingen | Transactionele communicatie | **b. uitvoering overeenkomst** | Duur accountrelatie |
+| E-mails voor marketing/nieuwsbrief | Direct marketing | **a. toestemming** (aparte opt-in, unchecked by default) | Tot intrekking |
+
+**Belangrijk voor GPS:** behandel precieze locatiegegevens als gevoelig — ook al is het formeel geen "bijzondere categorie" in de zin van art. 9. Apple's App Tracking Transparency én de iOS location permission prompt moeten inhoudelijk matchen met wat in de privacyverklaring staat, anders wijst Apple de app bij volgende reviews af.
+
+---
+
+## Stap 3: Cookiebanner en tracking — de ePrivacy-laag
+
+Losstaand van de AVG geldt voor cookies en tracking-pixels artikel 11.7a Telecommunicatiewet (ePrivacy). **Dit wordt bij solo-founder apps het vaakst fout gedaan.**
+
+**De drie harde eisen van de Autoriteit Persoonsgegevens (AP-richtsnoer 2023):**
+
+1. **Geen niet-functionele cookies/scripts vóór toestemming.** Vercel Analytics, Google Analytics, Meta Pixel, AdSense, Hotjar, Sentry (als session replay aanstaat) — al deze moeten wachten tot de gebruiker klikt.
+2. **"Weigeren" moet even prominent zijn als "accepteren".** Eén knop "Accepteer alles" zonder gelijkwaardige "Weiger alles" = ongeldige toestemming → boete-risico.
+3. **Granulair per categorie**: functioneel (geen toestemming), analytisch (toestemming, tenzij privacyvriendelijk ingericht volgens AP-handleiding), marketing/tracking (altijd toestemming).
+
+**Wat vermoedelijk op yardigo.nl draait:**
+
+- **Vercel Analytics / Vercel Speed Insights**: standaard aan in Vercel-deployments. Vercel Analytics is cookie-loos en privacyvriendelijk ingericht, maar verwerkt wel IP-adressen (VS). Kan in beginsel als "analytisch-privacyvriendelijk" zonder toestemming, mits je een DPA met Vercel hebt én het in je privacyverklaring vermeldt.
+- **Supabase Auth cookies**: functioneel → geen toestemming nodig, wél vermelden.
+- **Leaflet + OpenStreetMap tiles**: laadt tiles van `tile.openstreetmap.org`. Dit stuurt IP-adres naar OSM Foundation (UK). Technisch géén cookie, wél een derde-partij-verzoek. Vermelden in privacyverklaring.
+- **Capacitor iOS-app**: speelt buiten de webbanner om — valt onder Apple's App Tracking Transparency en iOS permission prompts, niet onder je webcookiebanner.
+
+**Controleer concreet:**
+- Open `yardigo.nl` in een incognito-tab en bekijk DevTools → Application → Cookies + Network-tab op pageload vóór enige interactie. Elk domein dat niet `yardigo.nl` of `supabase.co` is, moet pas ná consent laden.
+- Is er überhaupt een banner? Als jouw site draait zonder Google Analytics / Meta Pixel / AdSense en alleen Vercel Analytics (cookieless) + Supabase (functioneel) gebruikt, kun je strikt genomen met een **cookie-notificatie** zonder consent-knop toe. Bij twijfel: plaats een simpele Cookiebot-, Cookieyes- of zelfbouwvariant met Accept/Reject/Settings.
+
+---
+
+## Stap 4: Registratieformulier — drie must-haves
+
+1. **Minimum-data principe.** Vraag alleen e-mail + wachtwoord. Géén verplichte naam, geboortedatum of telefoonnummer bij registratie — dat is dataminimalisatie (art. 5.1.c AVG).
+2. **Akkoord-checkbox, niet-vooraangevinkt**, met de tekst: *"Ik ga akkoord met de [Gebruiksvoorwaarden] en heb het [Privacybeleid] gelezen."* De twee links moeten klikbaar zijn en openen in nieuw tabblad. Een "by clicking Sign up you agree..."-variant is in NL zwakker maar nog net acceptabel voor B2C; een checkbox is veiliger.
+3. **Aparte marketing opt-in** (niet vooraangevinkt): *"Ik ontvang graag updates en tips per e-mail."* Nooit koppelen aan account aanmaken — dat is koppelverbod (art. 7.4 AVG). Zonder deze checkbox mag je geen marketing-mails sturen.
+4. **16-jaar-check.** Voor accounts van minderjarigen onder 16 is ouderlijke toestemming nodig (art. 8 AVG + Uitvoeringswet AVG). Vermeld in de voorwaarden dat gebruik vanaf 16 is, of bouw een leeftijdcheckbox in.
+
+---
+
+## Stap 5: Gebruiksvoorwaarden — de 12-puntscheck
+
+| # | Element | Minimale invulling |
+|---|---|---|
+| 1 | **Identiteit** | Handelsnaam, rechtsvorm, KvK-nummer, BTW-nummer (indien van toepassing), vestigingsadres, e-mail — identiek aan privacyverklaring |
+| 2 | **Rol Yardigo** | **Cruciaal**: "Yardigo is een platform dat enkel bemiddelt tussen particuliere verkopers en bezoekers. Yardigo is geen partij bij koopovereenkomsten tussen gebruikers en is niet aansprakelijk voor aangeboden goederen, prijzen, of de uitvoering van transacties." Zonder deze clausule word je mogelijk gezien als verkoper/tussenhandelaar met alle bijbehorende consumentenbeschermingsplichten. |
+| 3 | **Gebruikersinhoud / IE-licentie** | "Gebruiker blijft eigenaar van geplaatste content (foto's, beschrijvingen). Gebruiker verleent Yardigo een wereldwijde, niet-exclusieve, royalty-vrije licentie om deze content te tonen, te verwerken en te verspreiden binnen het platform, voor de duur van de plaatsing." — dit is de standaard platform-licentie; zonder dit mag je technisch gezien de foto's niet eens op je server zetten. |
+| 4 | **IE Yardigo** | "Het platform, logo, naam, broncode en database zijn eigendom van [naam ondernemer/BV]. Reproductie of scraping zonder toestemming is verboden." |
+| 5 | **Aansprakelijkheidsbeperking** | Beperk tot directe schade, sluit gevolgschade uit, koppel cap aan 12 maanden gebruiksgelden of €500 voor een gratis platform. Let op: totale uitsluiting richting consumenten is ongeldig op grond van art. 6:237 BW (grijze lijst). |
+| 6 | **Toepasselijk recht** | **Moet Nederlands recht zijn.** Clausule voor buitenlands recht jegens consumenten is een oneerlijk beding (Richtlijn 93/13/EEG + art. 6:236 BW). |
+| 7 | **Bevoegde rechter** | Rechtbank van woonplaats consument (of standaard Nederlandse rechter). Géén forumkeuze VS/arbitrage. |
+| 8 | **Beëindiging account** | Gebruiker: op elk moment, zonder opzegtermijn, via knop in instellingen of per e-mail. Yardigo: bij overtreding voorwaarden, na waarschuwing, met verwijdering van persoonsgegevens conform privacybeleid. |
+| 9 | **Wijzigingen voorwaarden** | Aankondigen per e-mail + in-app banner, minimaal 30 dagen vóór inwerkingtreding. Materiële wijzigingen vereisen hernieuwde acceptatie. |
+| 10 | **Gedragsregels** | Verboden: commerciële activiteiten (bedrijfsmatige verkopers), illegale goederen, wapens, levende dieren, discriminerend of onwettig materiaal, spam, scraping, geautomatiseerde accounts. |
+| 11 | **Klachten / ODR** | Link naar het EU-ODR-platform: `ec.europa.eu/consumers/odr`. **Verplicht** voor online platforms die met consumenten werken (Verordening 524/2013). |
+| 12 | **Herroepingsrecht** | Voor een gratis platform niet van toepassing (geen betaalde overeenkomst op afstand). Zodra je betaalde features introduceert (premium listings, boost), is art. 6:230o BW van kracht: 14 dagen herroeping, tenzij gebruiker expliciet afstand doet bij directe levering digitale dienst. |
+
+---
+
+## Geprioriteerde actielijst
+
+### 🔴 Week 1 — kritieke tekortkomingen (juridisch risico, boete-exposure)
+
+1. **Verwerkersparagraaf toevoegen** met letterlijke vermelding van Supabase Inc. (DPF-deelnemer, VS), Vercel Inc. (DPF-deelnemer, VS), Apple Inc. (VS, iOS-functionaliteit), OpenStreetMap Foundation (VK, adequaatheidsbesluit). Vermeld per partij: doel van inschakeling, locatie van verwerking, safeguard (DPF of adequacy).
+2. **Concrete bewaartermijnen invullen** volgens de matrix hierboven. Vervang elke voorkomst van "zo lang als nodig" door getallen.
+3. **Rechtsgronden per verwerking expliciet benoemen** (b. overeenkomst voor account + advertenties; a. toestemming voor GPS + marketing; f. gerechtvaardigd belang voor logs/security).
+4. **Identiteit compleet maken**: KvK-nummer, vestigingsadres, contact-e-mail in zowel privacybeleid als voorwaarden.
+5. **Cookiebanner live zetten** (indien nog afwezig) met gelijkwaardige Accept/Reject-knoppen, óf — als je enkel Vercel Analytics + Supabase gebruikt — een cookie-notificatie met uitleg waarom geen consent nodig is, volgens AP-handleiding "privacyvriendelijke analytics".
+6. **Toepasselijk recht = Nederlands recht** expliciet in voorwaarden. Check op verborgen forumkeuzes.
+7. **Disclaimer "Yardigo is niet partij bij transacties"** toevoegen aan voorwaarden — beschermt jou tegen consumentenrechtelijke aansprakelijkheid richting kopers.
+
+### 🟡 Week 2–4 — snel op te lossen (best practice, belangrijk bij AP-check)
+
+8. **Zeven betrokkenenrechten volledig uitschrijven** in een eigen paragraaf, met concreet contact (`privacy@yardigo.nl`), reactietermijn (binnen 1 maand conform art. 12.3), en beschrijving hoe gebruikers hun identiteit kunnen aantonen zónder BSN/paspoort mee te sturen (vraag enkel om bevestiging vanaf het geregistreerde e-mailadres).
+9. **Klachtrecht AP** letterlijk in privacybeleid.
+10. **Akkoord-checkbox en aparte marketing opt-in** in de registratieflow (als ze er nog niet staan), beide unchecked-by-default.
+11. **ODR-link** in footer én in voorwaarden.
+12. **Account-verwijdering via zelfservice** (knop in profiel) — verplicht uit oogpunt van recht op verwijdering én App Store-guideline 5.1.1(v) (recent verscherpt).
+13. **Geautomatiseerde besluitvorming**-clausule: "Yardigo past geen geautomatiseerde besluitvorming of profilering toe."
+14. **Gevolgen van niet-verstrekken** toevoegen (wat kan de gebruiker niet zonder welke gegevens).
+15. **Licentie op gebruikerscontent** expliciet in voorwaarden (zie punt 3 van Stap 5).
+16. **Aansprakelijkheidscap** formuleren: directe schade, max. €500 of 12 maanden geschatte waarde, gevolgschade uitgesloten.
+17. **Versie/datum + changelog** onderaan beide documenten.
+
+### 🟢 Week 4+ — verdieping en governance
+
+18. **Verwerkersovereenkomsten (DPA) actief afsluiten** met Supabase (beschikbaar via dashboard), Vercel (via legal portal), eventueel Resend/Postmark voor mail. Sla ondertekende PDF's op in een map "AVG-dossier".
+19. **Verwerkingsregister** opstellen (verplicht op grond van art. 30 AVG, ook voor kleine organisaties bij structurele verwerking of bijzondere categorieën — GPS-tracking valt er qua risicoprofiel dichtbij). Een simpele spreadsheet volstaat: per verwerking de doel/grondslag/termijn/ontvangers/safeguards.
+20. **DPIA-light** voor GPS-functionaliteit: beschrijf kort het risico (locatie reveal), de mitigaties (consent, geen persistente opslag, fuzzing van coördinaten voor publiek zicht), en het restrisico. Eén A4 is genoeg voor deze schaal.
+21. **Datalek-procedure** documenteren: wie detecteert, wie meldt binnen 72 uur bij AP, hoe notify ik betrokkenen bij hoog risico. Maak alvast een concept-meldingsformulier klaar.
+22. **Regio-keuze Supabase**: verifieer dat je project in `eu-west-1` (Ierland) of `eu-central-1` (Frankfurt) draait, niet in een VS-regio. Dit verkleint je DPF-afhankelijkheid aanzienlijk.
+23. **iOS App Store Privacy Nutrition Labels** synchroniseren met privacybeleid — Apple controleert bij volgende updates op inconsistenties.
+24. **Leaflet-alternatief overwegen**: zelf-hosting van tiles via MapTiler EU of Protomaps elimineert de OSM-tracker-issue. Niet urgent, wel netter.
+25. **Jaarlijkse review-cyclus** in agenda zetten — privacybeleid elke 12 maanden herzien, anders raakt het snel verouderd bij wijzigingen in features.
+
+---
+
+## Eindoordeel
+
+Voor een solo-founder-app met deze stack is **volledige AVG-compliance binnen 4 weken realistisch** — het is grotendeels tekstueel werk, geen bouwwerk. De twee bouwklussen zijn de granulair-werkende cookiebanner (paar uur met Cookieyes/Cookiebot of eigen component) en de self-service accountverwijdering (1–2 dagen). Het grootste juridische risico zit niet in boetes van de AP (die gaan vrijwel nooit naar <10-persoons-startups) maar in **civiele aansprakelijkheid** als Yardigo niet helder als platformbemiddelaar wordt gepositioneerd: zonder die disclaimer kan een koper jou aanspreken op wanprestatie van een verkoper. Regel dát punt (Stap 5, item 2) in week 1, ongeacht wat er met de rest gebeurt.
+
+Hercontroleer dit rapport tegen je eigen live tekst; waar ik "vermoedelijk ontbrekend" schreef, vervang dat door een objectieve ✅ of 🔴. Het raamwerk staat — nu de tekst.

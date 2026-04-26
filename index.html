@@ -1761,17 +1761,27 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="det-minimap-wrap" style="margin-bottom:14px">
         <div id="det-minimap" style="height:130px;border-radius:10px;overflow:hidden"></div>
       </div>
-      <!-- Plattegrond (alleen voor ingelogde bezoekers bij buurtverkoop) -->
+      <!-- Plattegrond (buurtverkoop) -->
       <div id="det-floorplan-wrap" style="display:none;margin-bottom:14px">
+        <!-- Ingelogde bezoeker: downloadlink -->
         <a id="det-floorplan-link" href="#" target="_blank" rel="noopener"
            style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:12px;text-decoration:none;color:#2C4A36">
           <span style="font-size:22px">🗺️</span>
           <div>
-            <div style="font-size:13px;font-weight:700">Plattegrond bekijken</div>
+            <div style="font-size:13px;font-weight:700">Plattegrond downloaden</div>
             <div style="font-size:11px;color:#3A6B4A">PDF of afbeelding · tik om te openen</div>
           </div>
-          <span style="margin-left:auto;font-size:18px;color:#3A6B4A">›</span>
+          <span style="margin-left:auto;font-size:18px;color:#3A6B4A">⬇️</span>
         </a>
+        <!-- Gast: vergrendeld teaser-banner -->
+        <div id="det-floorplan-guest" style="display:none;align-items:center;gap:10px;padding:12px 14px;background:#F3EDE7;border:1.5px solid #D8C9B5;border-radius:12px;cursor:pointer" onclick="guestGate('de plattegrond bekijken')">
+          <span style="font-size:22px">🗺️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#5A4A3A">Plattegrond beschikbaar</div>
+            <div style="font-size:11px;color:#8A7A65">Maak een gratis account aan om te downloaden</div>
+          </div>
+          <span style="margin-left:auto;font-size:18px;color:#8A7A65">🔒</span>
+        </div>
       </div>
       <!-- Bewerk-knop (alleen voor eigenaar) -->
       <div id="det-edit-wrap" style="display:none;margin-bottom:14px">
@@ -1990,27 +2000,28 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Wordt dynamisch gevuld door updateTagsForType() -->
         </div>
       </div>
-      <!-- Step 3: Photos + preview -->
+      <!-- Step 3: Photos + (buurtverkoop: plattegrond) -->
       <div id="add-s3" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:4px">Foto's & preview</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title">Foto's</div>
         <div style="font-size:12px;margin-bottom:14px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
           📷 Foto's toevoegen
           <input type="file" accept="image/*" multiple style="display:none" onchange="handleAddPhotos(this)">
         </label>
-        <div style="background:#FFF4E6;border:1px solid #F4D7B0;border-radius:10px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:#7A5A2E;line-height:1.5">
+        <div style="background:#FFF4E6;border:1px solid #F4D7B0;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A2E;line-height:1.5">
           <strong style="color:#C5612A">⚠️ Privacy-tip:</strong> zorg dat er géén gezichten van omstanders, kentekens, persoonlijke documenten of andere herleidbare details op je foto's staan. Je foto's worden openbaar zichtbaar.
         </div>
-        <div style="background:var(--bg2);border-radius:12px;padding:12px;border:1.5px solid var(--border)">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:8px">PREVIEW</div>
-          <div style="position:relative;height:100px;background:var(--amber-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:8px">
-            <div id="prevBadge" style="position:absolute;top:8px;left:8px;background:var(--amber);color:var(--bark);font-size:9px;font-weight:700;padding:3px 8px;border-radius:12px">Particulier</div>
-            🏠
-          </div>
-          <div style="font-size:13px;font-weight:700" id="prevTitle">Jouw titel</div>
-          <div style="font-size:11px;color:var(--muted)" id="prevMeta"></div>
-          <div style="font-size:11px;color:var(--muted)" id="prevAddr"></div>
+        <!-- Plattegrond sectie (alleen buurtverkoop) -->
+        <div id="add-floorplan-section" style="display:none">
+          <div style="height:1px;background:var(--border);margin:0 0 14px"></div>
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px">🗺️ Plattegrond</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Upload een plattegrond van de buurtverkoop (PDF, PNG of JPG, max 10 MB). Ingelogde bezoekers kunnen dit downloaden vanuit de advertentie.</div>
+          <label id="add-floorplan-label" style="display:flex;align-items:center;gap:10px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">
+            📎 Plattegrond uploaden (optioneel)
+            <input type="file" id="add-floorplan-file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" style="display:none" onchange="handleAddFloorplanSelect(this)">
+          </label>
+          <div id="add-floorplan-status" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
         </div>
       </div>
     </div>
@@ -2949,6 +2960,7 @@ async function doMainLogin() {
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
 let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
+var addFloorplanFile = null; // geselecteerde plattegrond voor buurtverkoop aanmaakflow
 let obStep = 0, obSelectedCats = ['Kleding'];
 let searchSuggestTimer = null;
 let attendanceData = { visited:4, total:5 };
@@ -4212,13 +4224,25 @@ function openDetail(id) {
     document.getElementById('det-minimap-wrap').style.display = 'block';
     document.getElementById('det-guest-banner').style.display = 'none';
   }
-  // Plattegrond: toon voor ingelogde bezoekers als buurtverkoop + floorplan aanwezig
-  var fpWrap = document.getElementById('det-floorplan-wrap');
+  // Plattegrond: toon downloadlink voor ingelogden, teaser voor gasten
+  var fpWrap   = document.getElementById('det-floorplan-wrap');
   var fpAnchor = document.getElementById('det-floorplan-link');
+  var fpGuest  = document.getElementById('det-floorplan-guest');
   if (fpWrap) {
-    var showFp = !isGuest && s.type === 'buurt' && s.floorplan_url;
-    fpWrap.style.display = showFp ? 'block' : 'none';
-    if (showFp && fpAnchor) fpAnchor.href = s.floorplan_url;
+    if (s.type === 'buurt' && s.floorplan_url) {
+      fpWrap.style.display = 'block';
+      if (!isGuest) {
+        // Ingelogd: toon download, verberg teaser
+        if (fpAnchor) { fpAnchor.style.display = 'flex'; fpAnchor.href = s.floorplan_url; }
+        if (fpGuest)  fpGuest.style.display = 'none';
+      } else {
+        // Gast: verberg download, toon vergrendeld teaser
+        if (fpAnchor) fpAnchor.style.display = 'none';
+        if (fpGuest)  fpGuest.style.display = 'flex';
+      }
+    } else {
+      fpWrap.style.display = 'none';
+    }
   }
   // Bewerk-knop: toon voor eigenaar
   var editWrap = document.getElementById('det-edit-wrap');
@@ -4626,6 +4650,13 @@ function resetAddForm() {
   if (pc) pc.innerHTML = '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10';
   // Reset buurt adressen list
   var bl = document.getElementById('buurt-adressen-list'); if (bl) bl.innerHTML = '';
+  // Reset plattegrond
+  addFloorplanFile = null;
+  var fpFile = document.getElementById('add-floorplan-file'); if (fpFile) fpFile.value = '';
+  var fpStatus = document.getElementById('add-floorplan-status'); if (fpStatus) fpStatus.textContent = '';
+  var fpLabel = document.getElementById('add-floorplan-label'); if (fpLabel) fpLabel.style.borderColor = '';
+  var fpSec = document.getElementById('add-floorplan-section'); if (fpSec) fpSec.style.display = 'none';
+  var s3title = document.getElementById('add-s3-title'); if (s3title) s3title.textContent = "Foto's";
   // Reset autocomplete dropdown
   var dd = document.getElementById('aAddr-dd'); if (dd) dd.style.display = 'none';
   // Reset naam-override
@@ -4735,7 +4766,13 @@ function addNav(dir) {
   document.getElementById('addNext').style.display = addStep === 3 ? 'none' : 'block';
   document.getElementById('addPublish').style.display = addStep === 3 ? 'block' : 'none';
   if (addStep === 1) updateAddNamePreview();
-  if (addStep === 3) buildAddPreview();
+  if (addStep === 3) {
+    var isBuurtNow = selTypeVal === 'buurt';
+    var fpSec = document.getElementById('add-floorplan-section');
+    if (fpSec) fpSec.style.display = isBuurtNow ? 'block' : 'none';
+    var s3t = document.getElementById('add-s3-title');
+    if (s3t) s3t.textContent = isBuurtNow ? "Foto's & plattegrond" : "Foto's";
+  }
 }
 
 // ── Buurtverkoop multi-adres ──
@@ -5565,6 +5602,32 @@ async function publishSale() {
             email: addrEmail
           });
         }
+      }
+
+      // Upload plattegrond als organisator er een heeft geselecteerd
+      if (addFloorplanFile && sbClient && currentUserId && !SUPABASE_URL.includes('JOUW')) {
+        try {
+          var fpExt = addFloorplanFile.name.split('.').pop().toLowerCase();
+          var fpPath = bvId + '/plattegrond.' + fpExt;
+          var fpUpRes = await sbClient.storage.from('plattegronden').upload(fpPath, addFloorplanFile, { contentType: addFloorplanFile.type, upsert: true });
+          if (!fpUpRes.error) {
+            var fpSignedRes = await sbClient.storage.from('plattegronden').createSignedUrl(fpPath, 31536000);
+            if (fpSignedRes.data && fpSignedRes.data.signedUrl) {
+              var fpUrl = fpSignedRes.data.signedUrl;
+              // Sla floorplan_url op bij het hoofd-listing (organisator, geen confirmation_token)
+              await sbClient.from('listings').update({ floorplan_url: fpUrl })
+                .eq('neighborhood_group_id', bvId)
+                .eq('user_id', currentUserId)
+                .is('confirmation_token', null);
+              // Update lokale state
+              var fpSale = sales.find(function(x) { return x.neighborhood_sale_id === bvId && !x.confirmation_token; });
+              if (fpSale) fpSale.floorplan_url = fpUrl;
+            }
+          } else {
+            toast('⚠️ Plattegrond upload mislukt: ' + (fpUpRes.error.message || ''));
+          }
+        } catch(eFp) { console.warn('Plattegrond upload exception:', eFp); }
+        addFloorplanFile = null;
       }
 
       // Toon share-modal met bevestigingslinks voor alle buren
@@ -6772,6 +6835,30 @@ function closeEditSale() {
   document.getElementById('editSaleOv').classList.remove('open');
   _editingSaleId = null;
 }
+function handleAddFloorplanSelect(input) {
+  var status = document.getElementById('add-floorplan-status');
+  var label  = document.getElementById('add-floorplan-label');
+  if (!input.files || !input.files[0]) { addFloorplanFile = null; return; }
+  var file = input.files[0];
+  var maxBytes = 10 * 1024 * 1024;
+  var allowed = ['application/pdf','image/png','image/jpeg'];
+  if (file.size > maxBytes) {
+    if (status) status.textContent = '⚠️ Bestand is groter dan 10 MB. Kies een kleiner bestand.';
+    addFloorplanFile = null;
+    input.value = '';
+    return;
+  }
+  if (!allowed.includes(file.type)) {
+    if (status) status.textContent = '⚠️ Alleen PDF, PNG of JPG toegestaan.';
+    addFloorplanFile = null;
+    input.value = '';
+    return;
+  }
+  addFloorplanFile = file;
+  if (status) status.textContent = '✓ "' + file.name + '" geselecteerd (' + (file.size / 1024).toFixed(0) + ' KB). Wordt geüpload bij publiceren.';
+  if (label) label.style.borderColor = '#3A6B4A';
+}
+
 function handleFloorplanSelect(input) {
   var status = document.getElementById('edit-floorplan-status');
   if (!input.files || !input.files[0]) return;
