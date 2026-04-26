@@ -1776,11 +1776,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Gast: vergrendeld teaser-banner -->
         <div id="det-floorplan-guest" style="display:none;align-items:center;gap:10px;padding:12px 14px;background:#F3EDE7;border:1.5px solid #D8C9B5;border-radius:12px;cursor:pointer" onclick="guestGate('de plattegrond bekijken')">
           <span style="font-size:22px">🗺️</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#5A4A3A">Plattegrond beschikbaar</div>
-            <div style="font-size:11px;color:#8A7A65">Maak een gratis account aan om te downloaden</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#5A4A3A">Plattegrond & adresgegevens</div>
+            <div id="det-floorplan-guest-sub" style="font-size:11px;color:#8A7A65">Maak een gratis account aan voor adresgegevens en eventuele plattegrond</div>
           </div>
-          <span style="margin-left:auto;font-size:18px;color:#8A7A65">🔒</span>
+          <span style="font-size:18px;color:#8A7A65">🔒</span>
         </div>
       </div>
       <!-- Bewerk-knop (alleen voor eigenaar) -->
@@ -4225,20 +4225,26 @@ function openDetail(id) {
     document.getElementById('det-guest-banner').style.display = 'none';
   }
   // Plattegrond: toon downloadlink voor ingelogden, teaser voor gasten
-  var fpWrap   = document.getElementById('det-floorplan-wrap');
-  var fpAnchor = document.getElementById('det-floorplan-link');
-  var fpGuest  = document.getElementById('det-floorplan-guest');
+  var fpWrap     = document.getElementById('det-floorplan-wrap');
+  var fpAnchor   = document.getElementById('det-floorplan-link');
+  var fpGuest    = document.getElementById('det-floorplan-guest');
+  var fpGuestSub = document.getElementById('det-floorplan-guest-sub');
   if (fpWrap) {
-    if (s.type === 'buurt' && s.floorplan_url) {
+    if (!isGuest && s.type === 'buurt' && s.floorplan_url) {
+      // Ingelogd + buurtverkoop + plattegrond aanwezig: toon downloadlink
       fpWrap.style.display = 'block';
-      if (!isGuest) {
-        // Ingelogd: toon download, verberg teaser
-        if (fpAnchor) { fpAnchor.style.display = 'flex'; fpAnchor.href = s.floorplan_url; }
-        if (fpGuest)  fpGuest.style.display = 'none';
-      } else {
-        // Gast: verberg download, toon vergrendeld teaser
-        if (fpAnchor) fpAnchor.style.display = 'none';
-        if (fpGuest)  fpGuest.style.display = 'flex';
+      if (fpAnchor) { fpAnchor.style.display = 'flex'; fpAnchor.href = s.floorplan_url; }
+      if (fpGuest)  fpGuest.style.display = 'none';
+    } else if (isGuest && s.type === 'buurt') {
+      // Gast + buurtverkoop: altijd teaser tonen (ook zonder geüploade plattegrond)
+      fpWrap.style.display = 'block';
+      if (fpAnchor) fpAnchor.style.display = 'none';
+      if (fpGuest)  fpGuest.style.display = 'flex';
+      // Subtekst aanpassen op basis of er een plattegrond is
+      if (fpGuestSub) {
+        fpGuestSub.textContent = s.floorplan_url
+          ? 'Maak een gratis account aan om de plattegrond te downloaden'
+          : 'Maak een gratis account aan voor adresgegevens en eventuele plattegrond';
       }
     } else {
       fpWrap.style.display = 'none';
