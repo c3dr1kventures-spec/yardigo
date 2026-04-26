@@ -1197,6 +1197,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
               <input class="srow-input" id="set-name" placeholder="Jouw naam" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
             </div>
           </div>
+          <!-- Naam weergeven als -->
+          <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px;width:100%">
+              <div class="srow-icon" style="background:#F0EBF8;">👤</div>
+              <div class="srow-body">
+                <div class="srow-title">Naam in advertenties</div>
+                <div class="srow-sub">Hoe verschijn je bij je verkopen</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;padding-left:44px;width:100%;box-sizing:border-box">
+              <button id="ndm-first" onclick="setNameDisplayMode('first')" style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">Voornaam</button>
+              <button id="ndm-full"  onclick="setNameDisplayMode('full')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--forest);background:#E8F4ED;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--forest)">Volledig</button>
+              <button id="ndm-last"  onclick="setNameDisplayMode('last')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">Achternaam</button>
+            </div>
+            <div id="ndm-preview" style="padding-left:44px;font-size:11px;color:var(--muted)"></div>
+          </div>
           <!-- Stad -->
           <div class="srow">
             <div class="srow-icon" style="background:#E8F4ED;">📍</div>
@@ -1868,6 +1884,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="font-size:17px;font-weight:800;margin-bottom:16px">Details</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'">
+          <!-- Naam-override per advertentie -->
+          <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text)">👤 Naam weergeven als</div>
+              <div id="aNamePreview" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <select id="aNameMode" onchange="updateAddNamePreview()" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:5px 8px;background:white;color:var(--text);cursor:pointer">
+              <option value="global">Gebruik instelling profiel</option>
+              <option value="first">Alleen voornaam</option>
+              <option value="full">Voor- en achternaam</option>
+              <option value="last">Alleen achternaam</option>
+            </select>
+          </div>
           <div style="background:var(--bg2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
             <div>
               <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">🕐 Tijden</div>
@@ -2591,6 +2620,17 @@ let activeRadiusKm = 9999;
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
+let currentNameDisplayMode = 'full'; // 'full' | 'first' | 'last'
+
+// ── Naam-weergave helper ──
+// Geeft de naam terug zoals die in een advertentie moet verschijnen.
+function getDisplayName(fullName, mode) {
+  var n = (fullName || '').trim();
+  if (!n) return n;
+  if (mode === 'first') return n.split(' ')[0];
+  if (mode === 'last')  return n.split(' ').pop();
+  return n; // 'full'
+}
 
 // ── Hulpfunctie: e-mail → weergave-naam ──
 function emailToName(email) {
@@ -4542,6 +4582,9 @@ function resetAddForm() {
   var bl = document.getElementById('buurt-adressen-list'); if (bl) bl.innerHTML = '';
   // Reset autocomplete dropdown
   var dd = document.getElementById('aAddr-dd'); if (dd) dd.style.display = 'none';
+  // Reset naam-override
+  var nmSel = document.getElementById('aNameMode'); if (nmSel) nmSel.value = 'global';
+  updateAddNamePreview();
   // Reset evenement subtype
   var evWrap = document.getElementById('evenement-subtype-wrap'); if (evWrap) evWrap.style.display = 'none';
   var evSel = document.getElementById('aEventType'); if (evSel) evSel.value = '';
@@ -4645,6 +4688,7 @@ function addNav(dir) {
   document.getElementById('addPrev').style.visibility = addStep === 0 ? 'hidden' : 'visible';
   document.getElementById('addNext').style.display = addStep === 3 ? 'none' : 'block';
   document.getElementById('addPublish').style.display = addStep === 3 ? 'block' : 'none';
+  if (addStep === 1) updateAddNamePreview();
   if (addStep === 3) buildAddPreview();
 }
 
@@ -5503,7 +5547,12 @@ async function publishSale() {
         emoji: TYPES[selTypeVal].icon, address: mainAddr,
         lat: lat, lng: lng, date: dateVal, from: fromVal, till: tillVal,
         tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
-        desc: descVal, user_email: currentUser.email, user_name: currentUser.name,
+        desc: descVal, user_email: currentUser.email, user_name: (function() {
+          var _nmSel = document.getElementById('aNameMode');
+          var _nmVal = _nmSel ? _nmSel.value : 'global';
+          var _nmMode = _nmVal === 'global' ? currentNameDisplayMode : _nmVal;
+          return getDisplayName(currentUser.name, _nmMode);
+        }()),
         event_subtype: eventSubtype
       };
       sales.unshift(newSale);
@@ -5993,7 +6042,7 @@ async function loadSettingsTab() {
   // Naam, stad, bio uit Supabase profiles
   if (!isGuest && sbClient && currentUser) {
     try {
-      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url').eq('id', currentUser.id).maybeSingle();
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,name_display_mode').eq('id', currentUser.id).maybeSingle();
       if (res.data) {
         var n = document.getElementById('set-name');
         var c = document.getElementById('set-city');
@@ -6004,6 +6053,12 @@ async function loadSettingsTab() {
           b.value = res.data.bio;
           var cnt = document.getElementById('bio-count');
           if (cnt) cnt.textContent = res.data.bio.length;
+        }
+        // Naam-weergave modus laden
+        if (res.data.name_display_mode) {
+          setNameDisplayMode(res.data.name_display_mode);
+        } else {
+          setNameDisplayMode('full');
         }
         // Profielfoto laden
         if (res.data.avatar_url) {
@@ -6017,6 +6072,46 @@ async function loadSettingsTab() {
   }
   // LocalStorage-voorkeuren
   loadPrefToggles();
+}
+
+// Preview in het plaatsformulier bijwerken
+function updateAddNamePreview() {
+  var sel = document.getElementById('aNameMode');
+  var prev = document.getElementById('aNamePreview');
+  if (!sel || !prev) return;
+  var mode = sel.value === 'global' ? currentNameDisplayMode : sel.value;
+  var fullName = currentUser.name || '';
+  if (fullName) {
+    var derived = getDisplayName(fullName, mode);
+    prev.textContent = 'Zichtbaar als: "' + derived + '"';
+  } else {
+    prev.textContent = 'Stel je naam in via je profiel';
+  }
+}
+
+// Naam-weergave modus instellen en opslaan
+function setNameDisplayMode(mode) {
+  currentNameDisplayMode = mode;
+  ['first','full','last'].forEach(function(m) {
+    var btn = document.getElementById('ndm-' + m);
+    if (!btn) return;
+    var active = m === mode;
+    btn.style.borderColor = active ? 'var(--forest)' : 'var(--border)';
+    btn.style.background  = active ? '#E8F4ED' : 'white';
+    btn.style.color       = active ? 'var(--forest)' : 'var(--muted)';
+  });
+  var prev = document.getElementById('ndm-preview');
+  var fullName = (document.getElementById('set-name') || {}).value || currentUser.name || '';
+  if (prev && fullName) {
+    var derived = getDisplayName(fullName, mode);
+    var label = mode === 'first' ? 'Voornaam' : mode === 'last' ? 'Achternaam' : 'Volledig';
+    prev.textContent = label + ': "' + derived + '"';
+  }
+  if (!isGuest && sbClient && currentUser && currentUser.id) {
+    sbClient.from('profiles').update({ name_display_mode: mode }).eq('id', currentUser.id)
+      .then(function() { toast('✓ Naam-voorkeur opgeslagen'); })
+      .catch(function() { toast('Fout bij opslaan'); });
+  }
 }
 
 // Sla één profielveld op in Supabase
