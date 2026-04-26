@@ -253,10 +253,52 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 .dm-ball{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:11px;transition:left .2s;}
 body.dark .dm-ball{left:21px;}
 
-/* taal toggle (NL/EN) – zelfde look & feel als dm-toggle */
+/* taal toggle (NL/EN) – zelfde look & feel als dm-toggle (legacy, behouden voor compatibiliteit) */
 .lang-toggle{width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.15);cursor:pointer;position:relative;flex-shrink:0;border:none;padding:0;}
 .lang-ball{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#3A6B4A;transition:left .2s;letter-spacing:.3px;}
 body.lang-en .lang-ball{left:21px;}
+
+/* Nieuwe taalkiezer: vlag-icoon met dropdown (NL/EN/DE/FR) */
+.lang-picker{position:relative;flex-shrink:0;}
+.lang-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;line-height:1;transition:background .15s,border-color .15s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5);}
+.lang-btn:focus-visible{outline:2px solid var(--terra);outline-offset:2px;}
+.lang-flag{display:inline-block;line-height:1;}
+.lang-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--bg);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);min-width:180px;padding:6px;z-index:600;}
+.lang-menu.open{display:block;}
+.lang-opt{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:transparent;border:none;border-radius:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);text-align:left;}
+.lang-opt:hover:not(:disabled){background:var(--bg2);}
+.lang-opt.active{background:var(--bg2);font-weight:700;}
+.lang-opt.active::after{content:'✓';margin-left:auto;color:var(--forest);font-weight:700;}
+.lang-opt:disabled{opacity:.5;cursor:not-allowed;}
+.lang-opt-flag{font-size:18px;line-height:1;}
+.lang-opt-name{flex:1;}
+.lang-opt-soon{font-size:10px;color:var(--muted);font-style:italic;margin-left:6px;}
+
+/* +Plaatsen knop met split tekst/icoon voor mobiele weergave */
+.btn-publish{background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.btn-publish-icon{font-weight:800;font-size:14px;line-height:1;}
+.btn-publish-text{display:inline;}
+
+/* Inloggen knop (zelfde basis als voorheen) */
+.btn-login{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
+.btn-login-icon{display:none;font-size:13px;line-height:1;}
+
+/* Mobiele header: tekst verbergen, icoon-alleen knoppen op smalle schermen */
+@media (max-width: 480px) {
+  .header{gap:6px;padding:10px 10px 8px;}
+  .header-right{gap:6px;}
+  .logo-text{font-size:16px;}
+  .logo-sub{font-size:6px;letter-spacing:1.2px;}
+  .btn-publish{padding:6px 9px;}
+  .btn-publish-text{display:none;}
+  .btn-login{padding:6px 9px;}
+  .btn-login-text{display:none;}
+  .btn-login-icon{display:inline;}
+}
+@media (max-width: 360px) {
+  .logo-sub{display:none;}
+}
 
 /* Alleen-voor-leden elementen: verbergen als body.is-guest */
 body.is-guest .members-only{display:none !important;}
@@ -911,10 +953,18 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </div>
   <div class="header-right">
-    <button class="lang-toggle" onclick="toggleLang()" id="langToggle" title="Nederlands / English" aria-label="Taal wisselen / Switch language"><div class="lang-ball" id="langBall">NL</div></button>
+    <div class="lang-picker" id="langPicker">
+      <button class="lang-btn" onclick="toggleLangMenu(event)" id="langBtn" aria-haspopup="menu" aria-expanded="false" title="Taal kiezen / Choose language" aria-label="Taal kiezen"><span class="lang-flag" id="langFlag">🇳🇱</span></button>
+      <div class="lang-menu" id="langMenu" role="menu">
+        <button class="lang-opt" data-lang="nl" role="menuitem" onclick="setLang('nl')"><span class="lang-opt-flag">🇳🇱</span><span class="lang-opt-name">Nederlands</span></button>
+        <button class="lang-opt" data-lang="en" role="menuitem" onclick="setLang('en')"><span class="lang-opt-flag">🇬🇧</span><span class="lang-opt-name">English</span></button>
+        <button class="lang-opt" data-lang="de" role="menuitem" disabled title="Binnenkort beschikbaar"><span class="lang-opt-flag">🇩🇪</span><span class="lang-opt-name">Deutsch<span class="lang-opt-soon">binnenkort</span></span></button>
+        <button class="lang-opt" data-lang="fr" role="menuitem" disabled title="Bientôt disponible"><span class="lang-opt-flag">🇫🇷</span><span class="lang-opt-name">Français<span class="lang-opt-soon">bientôt</span></span></button>
+      </div>
+    </div>
     <button class="dm-toggle" onclick="toggleDark()" title="Licht / donker"><div class="dm-ball" id="dmBall">☀️</div></button>
-    <button onclick="openLogin()" data-i18n="header.login" style="background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" id="loginBtn">Inloggen</button>
-    <button onclick="isGuest ? guestGate('plaatsen') : openAdd()" data-i18n="header.publish" style="background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Plaatsen</button>
+    <button class="btn-login" onclick="openLogin()" id="loginBtn" aria-label="Inloggen"><span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text" data-i18n="header.login">Inloggen</span></button>
+    <button class="btn-publish" onclick="isGuest ? guestGate('plaatsen') : openAdd()" aria-label="Plaatsen"><span class="btn-publish-icon" aria-hidden="true">+</span><span class="btn-publish-text" data-i18n="header.publish">Plaatsen</span></button>
   </div>
 </header>
 
@@ -2162,7 +2212,7 @@ var I18N = {
   nl: {
     // Header
     'header.login': 'Inloggen',
-    'header.publish': '+ Plaatsen',
+    'header.publish': 'Plaatsen',
     'header.search_placeholder': 'Zoek op postcode of plaats…',
     // Filter bar
     'filter.type': 'Type',
@@ -2211,7 +2261,7 @@ var I18N = {
     'settings.darkmode.title': 'Donkere modus',
     'settings.darkmode.sub': 'Schakel tussen licht en donker thema',
     'settings.language.title': 'Taal',
-    'settings.language.sub': 'Nederlands of Engels',
+    'settings.language.sub': 'Nederlands, Engels (Duits en Frans binnenkort)',
     // Feedback modal
     'feedback.title': '📬 Stuur feedback',
     'feedback.sub': 'Help ons YardiGo beter te maken.',
@@ -2250,7 +2300,7 @@ var I18N = {
   en: {
     // Header
     'header.login': 'Sign in',
-    'header.publish': '+ Post sale',
+    'header.publish': 'Post sale',
     'header.search_placeholder': 'Search by postcode or city…',
     // Filter bar
     'filter.type': 'Type',
@@ -2299,7 +2349,7 @@ var I18N = {
     'settings.darkmode.title': 'Dark mode',
     'settings.darkmode.sub': 'Switch between light and dark theme',
     'settings.language.title': 'Language',
-    'settings.language.sub': 'Dutch or English',
+    'settings.language.sub': 'Dutch, English (German and French coming soon)',
     // Feedback modal
     'feedback.title': '📬 Send feedback',
     'feedback.sub': 'Help us improve YardiGo.',
@@ -2377,14 +2427,23 @@ function applyLang() {
     });
     document.documentElement.lang = currentLang;
     document.body.classList.toggle('lang-en', currentLang === 'en');
+    document.body.classList.toggle('lang-de', currentLang === 'de');
+    document.body.classList.toggle('lang-fr', currentLang === 'fr');
+    // Legacy ball (oude taal-toggle, kan nog ergens hangen)
     var ball = document.getElementById('langBall');
-    if (ball) ball.textContent = currentLang.toUpperCase();
-    // Synchroniseer seg-ctrl in Instellingen (taal-rij)
+    if (ball) ball.textContent = (currentLang || 'nl').toUpperCase();
+    // Nieuwe vlag-knop in header
+    var flag = document.getElementById('langFlag');
+    if (flag) flag.textContent = LANG_FLAGS[currentLang] || LANG_FLAGS.nl;
+    // Synchroniseer alle elementen met data-lang (settings seg-ctrl, dropdown, etc.)
     document.querySelectorAll('[data-lang]').forEach(function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
     });
   } catch(e) { console.warn('applyLang error', e); }
 }
+
+// Vlag-mapping voor de nieuwe taalkiezer
+var LANG_FLAGS = { nl: '🇳🇱', en: '🇬🇧', de: '🇩🇪', fr: '🇫🇷' };
 
 // Lightweight tracking stub — wordt via RPC 'track_page_view' gevuurd
 // Gebruikt een sessie-id (anoniem) in localStorage. Dedup: max 1x per 30 min per (path,session).
@@ -2412,8 +2471,17 @@ async function trackPageView() {
   } catch(e) { /* stil */ }
 }
 
-function toggleLang() {
-  currentLang = (currentLang === 'nl') ? 'en' : 'nl';
+// Stel de taal expliciet in. Ondersteunde codes: 'nl', 'en', (later: 'de', 'fr')
+function setLang(code) {
+  if (!code || !I18N[code]) {
+    console.warn('setLang: onbekende taalcode', code);
+    return;
+  }
+  if (code === currentLang) {
+    closeLangMenu();
+    return;
+  }
+  currentLang = code;
   try { localStorage.setItem('yg-lang', currentLang); } catch(e){}
   applyLang();
   // Re-render dynamische UI (kaartjes/lijsten bouwen zelf tekst)
@@ -2421,8 +2489,40 @@ function toggleLang() {
   try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) renderMarkers(); } catch(e){}
   try { if (typeof renderMySales === 'function') renderMySales(); } catch(e){}
   try { if (typeof updateUserUI === 'function') updateUserUI(); } catch(e){}
-  toast(i18n(currentLang === 'en' ? 'lang.switched_en' : 'lang.switched_nl'));
+  closeLangMenu();
+  var msgKey = currentLang === 'en' ? 'lang.switched_en' : 'lang.switched_nl';
+  try { toast(i18n(msgKey)); } catch(e){}
 }
+
+// Backwards-compatibele wrapper: wisselt tussen NL en EN (voor settings seg-ctrl)
+function toggleLang() {
+  setLang(currentLang === 'nl' ? 'en' : 'nl');
+}
+
+// Open/sluit de taal-dropdown in de header
+function toggleLangMenu(ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  var menu = document.getElementById('langMenu');
+  var btn = document.getElementById('langBtn');
+  if (!menu || !btn) return;
+  var isOpen = menu.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+}
+function closeLangMenu() {
+  var menu = document.getElementById('langMenu');
+  var btn = document.getElementById('langBtn');
+  if (menu) menu.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+// Klik buiten het menu of Esc: sluit het
+document.addEventListener('click', function(e){
+  var picker = document.getElementById('langPicker');
+  if (!picker) return;
+  if (!picker.contains(e.target)) closeLangMenu();
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') closeLangMenu();
+});
 
 // ══════════════════════════════════════════════════
 // DATA
@@ -2506,14 +2606,17 @@ function updateUserUI() {
   if (!isGuest && currentUser.name) {
     var firstName = currentUser.name.split(' ')[0];
     if (btn) {
-      btn.textContent = '👤 ' + firstName;
+      btn.innerHTML = '<span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text">' + firstName + '</span>';
+      btn.setAttribute('aria-label', firstName);
       btn.setAttribute('onclick', "sv('mijn',document.querySelectorAll('.tab')[3]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-mijn').classList.add('active')");
     }
     if (profileName) profileName.textContent = currentUser.name;
     if (profileSub)  profileSub.textContent  = currentUser.email || '';
   } else {
     if (btn) {
-      btn.textContent = i18n('header.login','Inloggen');
+      var loginLabel = i18n('header.login','Inloggen');
+      btn.innerHTML = '<span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text" data-i18n="header.login">' + loginLabel + '</span>';
+      btn.setAttribute('aria-label', loginLabel);
       btn.setAttribute('onclick', 'openLogin()');
     }
     if (profileName) profileName.textContent = i18n('profile.guest','Gast');
