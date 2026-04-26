@@ -1761,6 +1761,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="det-minimap-wrap" style="margin-bottom:14px">
         <div id="det-minimap" style="height:130px;border-radius:10px;overflow:hidden"></div>
       </div>
+      <!-- Plattegrond (alleen voor ingelogde bezoekers bij buurtverkoop) -->
+      <div id="det-floorplan-wrap" style="display:none;margin-bottom:14px">
+        <a id="det-floorplan-link" href="#" target="_blank" rel="noopener"
+           style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:12px;text-decoration:none;color:#2C4A36">
+          <span style="font-size:22px">🗺️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700">Plattegrond bekijken</div>
+            <div style="font-size:11px;color:#3A6B4A">PDF of afbeelding · tik om te openen</div>
+          </div>
+          <span style="margin-left:auto;font-size:18px;color:#3A6B4A">›</span>
+        </a>
+      </div>
+      <!-- Bewerk-knop (alleen voor eigenaar) -->
+      <div id="det-edit-wrap" style="display:none;margin-bottom:14px">
+        <button id="det-edit-btn" onclick="openEditSaleFromDetail()" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--terra);background:white;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--terra)">✏️ Bewerk advertentie</button>
+      </div>
       <!-- Guest banner -->
       <div id="det-guest-banner" style="display:none;background:linear-gradient(135deg,#3A6B4A,#2A5038);border-radius:14px;padding:16px;cursor:pointer;align-items:center;gap:12px" onclick="guestRegister()">
         <div style="font-size:28px">🔓</div>
@@ -2210,7 +2226,9 @@ function mapSupabaseToSale(item) {
     confirmation_token: item.confirmation_token || null,
     confirmation_address_label: item.confirmation_address_label || null,
     // ── Evenement subtype (voor marker differentiatie) ──
-    event_subtype: item.event_subtype || null
+    event_subtype: item.event_subtype || null,
+    // ── Buurtverkoop plattegrond ──
+    floorplan_url: item.floorplan_url || null
   };
 }
 
@@ -4193,6 +4211,23 @@ function openDetail(id) {
     document.getElementById('det-fav-btn').style.cursor = 'pointer';
     document.getElementById('det-minimap-wrap').style.display = 'block';
     document.getElementById('det-guest-banner').style.display = 'none';
+  }
+  // Plattegrond: toon voor ingelogde bezoekers als buurtverkoop + floorplan aanwezig
+  var fpWrap = document.getElementById('det-floorplan-wrap');
+  var fpAnchor = document.getElementById('det-floorplan-link');
+  if (fpWrap) {
+    var showFp = !isGuest && s.type === 'buurt' && s.floorplan_url;
+    fpWrap.style.display = showFp ? 'block' : 'none';
+    if (showFp && fpAnchor) fpAnchor.href = s.floorplan_url;
+  }
+  // Bewerk-knop: toon voor eigenaar
+  var editWrap = document.getElementById('det-edit-wrap');
+  if (editWrap) {
+    var _isOwner = !isGuest && currentUser && (
+      (currentUser.id && s.user_id && s.user_id === currentUser.id) ||
+      (currentUser.email && s.user_email && s.user_email === currentUser.email)
+    );
+    editWrap.style.display = _isOwner ? 'block' : 'none';
   }
   updateInterestUI(s);
   // Open
@@ -6716,11 +6751,60 @@ function openEditSale(id) {
   document.getElementById('edit-till').value = s.till || '15:00';
   document.getElementById('edit-status').value = s.status || 'active';
   document.getElementById('edit-desc').value = s.desc || s.description || '';
+  // Plattegrond sectie: toon alleen voor buurtverkoop
+  var fpSection = document.getElementById('edit-floorplan-section');
+  var fpCurrent = document.getElementById('edit-floorplan-current');
+  var fpLink    = document.getElementById('edit-floorplan-link');
+  var fpStatus  = document.getElementById('edit-floorplan-status');
+  var fpFile    = document.getElementById('edit-floorplan-file');
+  if (fpSection) fpSection.style.display = (s.type === 'buurt') ? 'block' : 'none';
+  if (fpCurrent) fpCurrent.style.display = (s.floorplan_url) ? 'block' : 'none';
+  if (fpLink && s.floorplan_url) fpLink.href = s.floorplan_url;
+  if (fpStatus) fpStatus.textContent = '';
+  if (fpFile)   fpFile.value = '';
   document.getElementById('editSaleOv').classList.add('open');
+}
+function openEditSaleFromDetail() {
+  closeDetail();
+  setTimeout(function() { openEditSale(detailSaleId); }, 150);
 }
 function closeEditSale() {
   document.getElementById('editSaleOv').classList.remove('open');
   _editingSaleId = null;
+}
+function handleFloorplanSelect(input) {
+  var status = document.getElementById('edit-floorplan-status');
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  var maxBytes = 10 * 1024 * 1024;
+  var allowed = ['application/pdf','image/png','image/jpeg'];
+  if (file.size > maxBytes) {
+    if (status) status.textContent = '⚠️ Bestand is groter dan 10 MB. Kies een kleiner bestand.';
+    input.value = '';
+    return;
+  }
+  if (allowed.indexOf(file.type) === -1) {
+    if (status) status.textContent = '⚠️ Alleen PDF, PNG of JPG toegestaan.';
+    input.value = '';
+    return;
+  }
+  if (status) status.textContent = '✓ "' + file.name + '" geselecteerd (' + (file.size / 1024).toFixed(0) + ' KB). Sla op om te uploaden.';
+}
+async function removeFloorplan() {
+  if (!_editingSaleId || !sbClient || !currentUser || !currentUser.id) return;
+  var s = sales.find(function(x) { return String(x.id) === String(_editingSaleId); });
+  if (!s || !s.floorplan_url) return;
+  if (!confirm('Plattegrond verwijderen?')) return;
+  // Verwijder uit storage
+  var ext = s.floorplan_url.split('.').pop().split('?')[0];
+  var path = _editingSaleId + '/plattegrond.' + ext;
+  try { await sbClient.storage.from('plattegronden').remove([path]); } catch(e) {}
+  // Leeg de kolom in de DB
+  await sbClient.from('listings').update({ floorplan_url: null }).eq('id', _editingSaleId).eq('user_id', currentUser.id);
+  s.floorplan_url = null;
+  var fpCurrent = document.getElementById('edit-floorplan-current');
+  if (fpCurrent) fpCurrent.style.display = 'none';
+  toast('✓ Plattegrond verwijderd');
 }
 async function saveEditSale() {
   if (!_editingSaleId) return;
@@ -6734,6 +6818,31 @@ async function saveEditSale() {
     description: document.getElementById('edit-desc').value
   };
   if (!upd.title) { toast('Vul een titel in'); return; }
+
+  // Plattegrond uploaden als er een bestand geselecteerd is
+  var fpFile = document.getElementById('edit-floorplan-file');
+  var fpStatus = document.getElementById('edit-floorplan-status');
+  if (fpFile && fpFile.files && fpFile.files[0] && sbClient && currentUser && currentUser.id) {
+    var file = fpFile.files[0];
+    var ext = file.name.split('.').pop().toLowerCase();
+    var path = id + '/plattegrond.' + ext;
+    if (fpStatus) fpStatus.textContent = '⏳ Plattegrond uploaden...';
+    try {
+      var upRes = await sbClient.storage.from('plattegronden').upload(path, file, { contentType: file.type, upsert: true });
+      if (upRes.error) {
+        toast('⚠️ Plattegrond upload mislukt: ' + upRes.error.message);
+      } else {
+        // Haal signed URL op (private bucket, 1 jaar geldig)
+        var signedRes = await sbClient.storage.from('plattegronden').createSignedUrl(path, 31536000);
+        if (signedRes.data && signedRes.data.signedUrl) {
+          upd.floorplan_url = signedRes.data.signedUrl;
+          var s2 = sales.find(function(x) { return String(x.id) === String(id); });
+          if (s2) s2.floorplan_url = upd.floorplan_url;
+        }
+      }
+    } catch(e) { toast('⚠️ Plattegrond upload mislukt'); console.error(e); }
+    if (fpStatus) fpStatus.textContent = '';
+  }
 
   if (sbClient && currentUser && currentUser.id) {
     try {
@@ -6834,6 +6943,24 @@ async function doDeleteSale() {
       <div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Omschrijving</div>
         <textarea class="form-input" id="edit-desc" rows="3" style="resize:none"></textarea>
+      </div>
+      <!-- Plattegrond (alleen buurtverkoop) -->
+      <div id="edit-floorplan-section" style="display:none">
+        <div style="height:1px;background:var(--border);margin:4px 0 10px"></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700">PLATTEGROND</div>
+        <div id="edit-floorplan-current" style="display:none;margin-bottom:8px">
+          <a id="edit-floorplan-link" href="#" target="_blank" rel="noopener"
+             style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:10px;text-decoration:none;color:#2C4A36;font-size:12px;font-weight:600">
+            🗺️ Huidige plattegrond bekijken
+            <span style="margin-left:auto">›</span>
+          </a>
+          <button onclick="removeFloorplan()" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid #d04545;background:white;color:#d04545;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer">🗑️ Plattegrond verwijderen</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:10px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">
+          📎 Plattegrond uploaden (PDF, PNG of JPG · max 10 MB)
+          <input type="file" id="edit-floorplan-file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" style="display:none" onchange="handleFloorplanSelect(this)">
+        </label>
+        <div id="edit-floorplan-status" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
       </div>
       <button onclick="saveEditSale()" style="background:var(--terra);color:white;border:none;border-radius:10px;padding:12px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;margin-top:6px">Opslaan</button>
     </div>
