@@ -4614,7 +4614,16 @@ function selType(t) {
   document.getElementById('to-' + t).classList.add('active');
   // Toon evenement subtype dropdown alleen bij evenement
   var evWrap = document.getElementById('evenement-subtype-wrap');
-  if (evWrap) evWrap.style.display = (t === 'evenement') ? 'block' : 'none';
+  if (evWrap) {
+    evWrap.style.display = (t === 'evenement') ? 'block' : 'none';
+    if (t === 'evenement') {
+      setTimeout(function() {
+        evWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        var evSel = document.getElementById('aEventType');
+        if (evSel) evSel.focus();
+      }, 50);
+    }
+  }
   updateTagsForType(t);
   updateStep2View();
   // Voeg automatisch eerste adresrij toe bij buurtverkoop
@@ -5178,6 +5187,27 @@ async function publishSale() {
       ? (buurtAdressen && buurtAdressen.length ? buurtAdressen.map(function(a){return a.addr;}).filter(Boolean).join(' · ') : '')
       : (_addrEl ? _addrEl.value.trim() : '');
     if (!_previewAddr) { toast('Vul een adres in'); return; }
+    if (selTypeVal === 'evenement') {
+      var _evSelCheck = document.getElementById('aEventType');
+      var _evValCheck = _evSelCheck ? _evSelCheck.value : '';
+      if (!_evValCheck) {
+        toast('🎪 Kies een type evenement');
+        var evWrap = document.getElementById('evenement-subtype-wrap');
+        if (evWrap) {
+          evWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (_evSelCheck) _evSelCheck.focus();
+        }
+        return;
+      }
+      if (_evValCheck === 'Anders') {
+        var _evAndCheck = document.getElementById('aEventAnders');
+        if (!_evAndCheck || !_evAndCheck.value.trim()) {
+          toast('✏️ Omschrijf het type evenement');
+          if (_evAndCheck) _evAndCheck.focus();
+          return;
+        }
+      }
+    }
     showPublishConfirm(_previewAddr);
     return;
   }
