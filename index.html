@@ -274,6 +274,18 @@ body.lang-en .lang-ball{left:21px;}
 .lang-opt-flag{font-size:18px;line-height:1;}
 .lang-opt-name{flex:1;}
 .lang-opt-soon{font-size:10px;color:var(--muted);font-style:italic;margin-left:6px;}
+.lang-opt.lang-hidden{display:none;}
+/* BE first-visit keuzescherm: NL/FR overlay bij eerste bezoek aan yardigo.be */
+.lang-choice-ov{position:fixed;inset:0;z-index:9998;background:rgba(44,36,22,.92);display:flex;align-items:center;justify-content:center;padding:20px;}
+.lang-choice-card{background:white;border-radius:18px;max-width:380px;width:100%;padding:28px 26px 24px;box-shadow:0 24px 60px rgba(0,0,0,.4);text-align:center;font-family:'Poppins',sans-serif;}
+.lang-choice-card h2{font-size:20px;font-weight:800;color:#2C2416;margin:0 0 6px;}
+.lang-choice-card p{font-size:13px;color:#7A6E62;line-height:1.55;margin:0 0 22px;}
+.lang-choice-buttons{display:flex;flex-direction:column;gap:10px;}
+.lang-choice-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid #E5DCC9;border-radius:14px;background:#F9F5EF;cursor:pointer;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:#2C2416;text-align:left;transition:all .15s;}
+.lang-choice-btn:hover{border-color:#E07B39;background:#FDF0E7;}
+.lang-choice-btn .flag{font-size:28px;line-height:1;}
+.lang-choice-btn .label-wrap{display:flex;flex-direction:column;gap:2px;}
+.lang-choice-btn .label-sub{font-size:11px;color:#7A6E62;font-weight:500;}
 
 /* +Plaatsen knop met split tekst/icoon voor mobiele weergave */
 .btn-publish{background:var(--terra);border:none;color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
@@ -925,6 +937,33 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </div>
 
+<!-- ── BE first-visit keuzescherm: NL of FR ──
+     Wordt alleen getoond op yardigo.be bij het allereerste bezoek (geen
+     'yg-lang' in localStorage). Vlamingen kiezen NL, Walen kiezen FR,
+     Brusselaars kiezen wat ze verkiezen. Daarna nooit meer zichtbaar. -->
+<div id="lang-choice-ov" class="lang-choice-ov" style="display:none">
+  <div class="lang-choice-card">
+    <h2>Welkom · Bienvenue</h2>
+    <p>YardiGo is beschikbaar in het Nederlands en Frans. Kies je voorkeurstaal, je kunt 'm later altijd wisselen via de vlag rechtsboven.<br><br>YardiGo est disponible en néerlandais et en français. Choisissez votre langue préférée, vous pouvez la changer à tout moment via le drapeau en haut à droite.</p>
+    <div class="lang-choice-buttons">
+      <button class="lang-choice-btn" onclick="ygLangChoiceSelect('nl')">
+        <span class="flag">🇳🇱</span>
+        <span class="label-wrap">
+          <span>Nederlands</span>
+          <span class="label-sub">Vlaanderen / Brussel</span>
+        </span>
+      </button>
+      <button class="lang-choice-btn" onclick="ygLangChoiceSelect('fr')">
+        <span class="flag">🇫🇷</span>
+        <span class="label-wrap">
+          <span>Français</span>
+          <span class="label-sub">Wallonie / Bruxelles</span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Cookie / privacy-notificatie (alleen web, eenmalig) ── -->
 <div id="yg-cookie-notice" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:9997;background:#2C2416;color:#F9F5EF;border-radius:14px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-family:'Poppins',sans-serif;max-width:560px;margin:0 auto">
   <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#E07B39">🍪 Geen trackers op YardiGo</div>
@@ -957,10 +996,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="lang-picker" id="langPicker">
       <button class="lang-btn" onclick="toggleLangMenu(event)" id="langBtn" aria-haspopup="menu" aria-expanded="false" title="Taal kiezen / Choose language" aria-label="Taal kiezen"><span class="lang-flag" id="langFlag">🇳🇱</span></button>
       <div class="lang-menu" id="langMenu" role="menu">
+        <!-- Alle 4 talen renderen, JS verbergt de niet-relevante voor het huidige
+             land via applyCountryToLangMenu() bij boot. NL toont nl+en, BE toont
+             nl+fr, FR toont fr+en, DE toont de+en. -->
         <button class="lang-opt" data-lang="nl" role="menuitem" onclick="setLang('nl')"><span class="lang-opt-flag">🇳🇱</span><span class="lang-opt-name">Nederlands</span></button>
         <button class="lang-opt" data-lang="en" role="menuitem" onclick="setLang('en')"><span class="lang-opt-flag">🇬🇧</span><span class="lang-opt-name">English</span></button>
-        <button class="lang-opt" data-lang="de" role="menuitem" disabled title="Binnenkort beschikbaar"><span class="lang-opt-flag">🇩🇪</span><span class="lang-opt-name">Deutsch<span class="lang-opt-soon">binnenkort</span></span></button>
-        <button class="lang-opt" data-lang="fr" role="menuitem" disabled title="Bientôt disponible"><span class="lang-opt-flag">🇫🇷</span><span class="lang-opt-name">Français<span class="lang-opt-soon">bientôt</span></span></button>
+        <button class="lang-opt" data-lang="fr" role="menuitem" onclick="setLang('fr')"><span class="lang-opt-flag">🇫🇷</span><span class="lang-opt-name">Français</span></button>
+        <button class="lang-opt lang-todo" data-lang="de" role="menuitem" disabled title="Binnenkort beschikbaar"><span class="lang-opt-flag">🇩🇪</span><span class="lang-opt-name">Deutsch<span class="lang-opt-soon">binnenkort</span></span></button>
       </div>
     </div>
     <button class="dm-toggle" onclick="toggleDark()" title="Licht / donker"><div class="dm-ball" id="dmBall">☀️</div></button>
@@ -1038,11 +1080,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- Views -->
 <div class="view active" id="view-kaart">
   <div id="map" style="position:relative;overflow:hidden">
-  <!-- Two-finger gesture hint overlay (iOS) -->
-  <div id="map-gesture-hint" style="display:none;position:absolute;inset:0;background:rgba(44,36,22,.55);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:10px;pointer-events:none">
-    <div style="font-size:36px">✌️</div>
-    <div style="color:white;font-size:13px;font-weight:700;text-align:center;line-height:1.4">Gebruik twee vingers<br>om de kaart te bewegen</div>
-  </div>
+  <!-- Gesture-hint verwijderd 2026-04-27: de melding "twee vingers om de
+       kaart te bewegen" klopte niet voor de huidige fullscreen-map waar
+       single-finger panning prima werkt. Element bewust gehouden als
+       lege placeholder zodat de bestaande _hideHint logica geen TypeError
+       op een ontbrekende node geeft. -->
+  <div id="map-gesture-hint" style="display:none"></div>
   <div id="map-fallback" style="display:none;width:100%;height:100%;background:#e8f0e8;position:relative;overflow:hidden">
     <div id="fb-tiles" style="position:absolute;inset:0"></div>
     <div id="fb-markers" style="position:absolute;inset:0;pointer-events:none"></div>
@@ -2344,13 +2387,63 @@ function extractCoords(location) {
 }
 
 // ══════════════════════════════════════════════════
-// i18n — Nederlands (default) / English
+// i18n + country-detection (NL/EN/DE/FR met TLD-routing)
 // ══════════════════════════════════════════════════
+var I18N_LANGS = ['nl', 'en', 'de', 'fr'];
+
+// Land afgeleid van de TLD waar de site op draait. ?country=XX query
+// override is alleen voor lokaal testen, niet voor productie-routes.
+var YG_COUNTRY = (function() {
+  try {
+    var override = new URLSearchParams(location.search).get('country');
+    if (override) return override.toUpperCase();
+    var host = (location.hostname || '').toLowerCase();
+    if (host.endsWith('.be')) return 'BE';
+    if (host.endsWith('.fr')) return 'FR';
+    if (host.endsWith('.de')) return 'DE';
+  } catch(e) {}
+  return 'NL';
+})();
+
+// Per land: default-taal en relevante GDPR-toezichthouder voor de
+// privacy-pagina. Wordt later in fase 4 ingelezen voor conditional
+// rendering van privacy-tekst.
+var COUNTRY_DEFAULTS = {
+  NL: { lang: 'nl', dpaName: 'Autoriteit Persoonsgegevens', dpaUrl: 'https://autoriteitpersoonsgegevens.nl' },
+  BE: { lang: 'nl', dpaName: 'Gegevensbeschermingsautoriteit (APD/GBA)', dpaUrl: 'https://www.gegevensbeschermingsautoriteit.be' },
+  FR: { lang: 'fr', dpaName: 'CNIL', dpaUrl: 'https://www.cnil.fr' },
+  DE: { lang: 'de', dpaName: 'Bundesbeauftragte für den Datenschutz', dpaUrl: 'https://www.bfdi.bund.de' }
+};
+
+// Welke talen toon je in de header-dropdown per land. Voorkomt dat een
+// Belgische bezoeker EN als optie ziet, of een Nederlander DE/FR. Alle
+// talen in de array MOETEN ook in I18N_LANGS staan.
+var LANG_AVAILABILITY_BY_COUNTRY = {
+  NL: ['nl', 'en'],
+  BE: ['nl', 'fr'],
+  FR: ['fr', 'en'],
+  DE: ['de', 'en'],
+  default: ['nl', 'en']
+};
+
 var currentLang = (function(){
-  try { var s = localStorage.getItem('yg-lang'); if (s === 'nl' || s === 'en') return s; } catch(e){}
-  // heuristiek: browser-taal
-  try { var bl = (navigator.language || navigator.userLanguage || 'nl').toLowerCase(); if (bl.indexOf('nl') === 0) return 'nl'; if (bl.indexOf('en') === 0) return 'en'; } catch(e){}
-  return 'nl';
+  // 1. Expliciete keuze in localStorage wint altijd
+  try {
+    var s = localStorage.getItem('yg-lang');
+    if (s && I18N_LANGS.indexOf(s) !== -1) return s;
+  } catch(e){}
+
+  // 2. Browser-taal matchen tegen de talen die voor dit land beschikbaar zijn
+  var allowed = LANG_AVAILABILITY_BY_COUNTRY[YG_COUNTRY] || LANG_AVAILABILITY_BY_COUNTRY.default;
+  try {
+    var bl = (navigator.language || navigator.userLanguage || 'nl').toLowerCase();
+    for (var i = 0; i < allowed.length; i++) {
+      if (bl.indexOf(allowed[i]) === 0) return allowed[i];
+    }
+  } catch(e){}
+
+  // 3. Country-default als ultieme fallback
+  return (COUNTRY_DEFAULTS[YG_COUNTRY] && COUNTRY_DEFAULTS[YG_COUNTRY].lang) || 'nl';
 })();
 
 var I18N = {
@@ -2440,7 +2533,9 @@ var I18N = {
     'toast.logged_out': 'Je bent uitgelogd',
     // Taal-switch toast
     'lang.switched_nl': '🇳🇱 Nederlands',
-    'lang.switched_en': '🇬🇧 English'
+    'lang.switched_en': '🇬🇧 English',
+    'lang.switched_de': '🇩🇪 Deutsch',
+    'lang.switched_fr': '🇫🇷 Français'
   },
   en: {
     // Header
@@ -2528,14 +2623,198 @@ var I18N = {
     'toast.logged_out': 'You have been signed out',
     // Taal-switch toast
     'lang.switched_nl': '🇳🇱 Nederlands',
-    'lang.switched_en': '🇬🇧 English'
+    'lang.switched_en': '🇬🇧 English',
+    'lang.switched_de': '🇩🇪 Deutsch',
+    'lang.switched_fr': '🇫🇷 Français'
+  },
+  fr: {
+    // Header
+    'header.login': 'Connexion',
+    'header.publish': 'Publier',
+    'header.search_placeholder': 'Rechercher par code postal ou ville…',
+    // Filter bar
+    'filter.type': 'Type',
+    'filter.radius': 'Distance',
+    'filter.date': 'Date',
+    'filter.sort': 'Trier',
+    'filter.all': 'Tout',
+    // Bottom nav
+    'nav.map': 'Carte',
+    'nav.list': 'Liste',
+    'nav.route': 'Itinéraire',
+    'nav.mine': 'Mes ventes',
+    // Types
+    'type.particulier': 'Particulier',
+    'type.buurt': 'Vente de quartier',
+    'type.evenement': 'Événement',
+    // Detail view
+    'detail.route': '🧭 Itinéraire',
+    'detail.fav': '☆ Favori',
+    'detail.share': '↑ Partager',
+    'detail.cta_going': 'J\'y serai !',
+    'detail.cta_not_going': 'Finalement non',
+    'detail.report_btn': '🚩 Signaler l\'annonce',
+    'detail.guest_title': 'Créez un compte gratuit',
+    'detail.guest_sub': 'Voir les adresses · Naviguer · Sauvegarder',
+    // Profile
+    'profile.guest': 'Invité',
+    'profile.guest_sub': 'Créez un compte pour un accès complet',
+    'profile.tab_stats': 'Statistiques',
+    'profile.tab_sales': 'Mes ventes',
+    'profile.tab_settings': 'Paramètres',
+    // Settings
+    'settings.header_app': 'Préférences',
+    'settings.header_privacy': 'Confidentialité',
+    'settings.header_profile': 'Profil',
+    'settings.header_about': 'À propos de YardiGo',
+    'settings.feedback.title': 'Envoyer un avis',
+    'settings.feedback.sub': 'Partagez vos idées ou suggestions',
+    'settings.report.title': 'Signaler un problème',
+    'settings.report.sub': 'Signaler un bug ou un abus',
+    'settings.privacy': 'Politique de confidentialité',
+    'settings.terms': 'Conditions d\'utilisation',
+    'settings.ios.title': 'Téléchargez l\'app iPhone',
+    'settings.ios.sub': 'YardiGo pour iOS sur l\'App Store',
+    'settings.version': 'Version',
+    'settings.darkmode.title': 'Mode sombre',
+    'settings.darkmode.sub': 'Basculer entre thème clair et sombre',
+    'settings.language.title': 'Langue',
+    'settings.language.sub': 'Néerlandais, anglais, français (allemand bientôt)',
+    // Feedback modal
+    'feedback.title': '📬 Envoyer un avis',
+    'feedback.sub': 'Aidez-nous à améliorer YardiGo.',
+    'feedback.placeholder': 'Décrivez le problème ou votre idée…',
+    'feedback.send': '📧 Envoyer',
+    'feedback.cancel': 'Annuler',
+    'feedback.thanks': 'Merci pour votre retour ! 🙏',
+    'feedback.empty': 'Veuillez d\'abord écrire un message 😊',
+    'feedback.error': 'Une erreur est survenue, réessayez.',
+    'feedback.offline': 'Pas de connexion, réessayez.',
+    // Report modal
+    'report.title': '🚩 Signaler l\'annonce',
+    'report.send': '🚩 Envoyer le signalement',
+    'report.pick_reason': 'Veuillez choisir une raison 🙏',
+    'report.guest_blocked': 'Seuls les membres connectés peuvent signaler.',
+    'report.thanks': 'Signalement reçu, merci ! 🙏',
+    // Footer
+    'footer.appstore': 'Télécharger sur l\'App Store',
+    'footer.privacy': 'Confidentialité',
+    'footer.terms': 'Conditions',
+    'footer.feedback': 'Avis',
+    'footer.tagline': 'Find · Sell · Go',
+    // Publiceer
+    'publish.title': 'Publier une vente',
+    'publish.step_type': 'Quel type de vente ?',
+    'publish.step_details': 'Plus de détails',
+    'publish.step_address': 'Adresse',
+    'publish.publish_btn': '🚀 Publier',
+    // Toasts
+    'toast.welcome_guest': 'Vous parcourez YardiGo en tant qu\'invité 👁️',
+    'toast.logged_out': 'Vous avez été déconnecté',
+    // Taal-switch toast
+    'lang.switched_nl': '🇳🇱 Nederlands',
+    'lang.switched_en': '🇬🇧 English',
+    'lang.switched_de': '🇩🇪 Deutsch',
+    'lang.switched_fr': '🇫🇷 Français'
+  },
+  de: {
+    // PLACEHOLDER: DE-vertaling staat klaar als structuur, maar de waarden
+    // zijn voorlopig EN. Vul deze later met echte vertalingen voordat we
+    // yardigo.de lanceren of DE als optie tonen voor NL-bezoekers.
+    // Header
+    'header.login': 'Sign in',
+    'header.publish': 'Post sale',
+    'header.search_placeholder': 'Search by postcode or city…',
+    'filter.type': 'Type',
+    'filter.radius': 'Distance',
+    'filter.date': 'Date',
+    'filter.sort': 'Sort',
+    'filter.all': 'All',
+    'nav.map': 'Map',
+    'nav.list': 'List',
+    'nav.route': 'Route',
+    'nav.mine': 'My',
+    'type.particulier': 'Private',
+    'type.buurt': 'Neighborhood',
+    'type.evenement': 'Event',
+    'detail.route': '🧭 Route',
+    'detail.fav': '☆ Favorite',
+    'detail.share': '↑ Share',
+    'detail.cta_going': 'I\'ll be there!',
+    'detail.cta_not_going': 'Change of plans',
+    'detail.report_btn': '🚩 Report listing',
+    'detail.guest_title': 'Create a free account',
+    'detail.guest_sub': 'See addresses · Navigate · Save',
+    'profile.guest': 'Guest',
+    'profile.guest_sub': 'Create an account for full access',
+    'profile.tab_stats': 'Stats',
+    'profile.tab_sales': 'My sales',
+    'profile.tab_settings': 'Settings',
+    'settings.header_app': 'App preferences',
+    'settings.header_privacy': 'Privacy',
+    'settings.header_profile': 'Profile',
+    'settings.header_about': 'About YardiGo',
+    'settings.feedback.title': 'Send feedback',
+    'settings.feedback.sub': 'Share ideas or improvements',
+    'settings.report.title': 'Report a problem',
+    'settings.report.sub': 'Report a bug or abuse',
+    'settings.privacy': 'Privacy policy',
+    'settings.terms': 'Terms of use',
+    'settings.ios.title': 'Download the iPhone app',
+    'settings.ios.sub': 'YardiGo for iOS on the App Store',
+    'settings.version': 'Version',
+    'settings.darkmode.title': 'Dark mode',
+    'settings.darkmode.sub': 'Switch between light and dark theme',
+    'settings.language.title': 'Language',
+    'settings.language.sub': 'Dutch, English, French (German coming soon)',
+    'feedback.title': '📬 Send feedback',
+    'feedback.sub': 'Help us improve YardiGo.',
+    'feedback.placeholder': 'Describe the problem or your idea…',
+    'feedback.send': '📧 Send',
+    'feedback.cancel': 'Cancel',
+    'feedback.thanks': 'Thanks for your feedback! 🙏',
+    'feedback.empty': 'Please write a message first 😊',
+    'feedback.error': 'Something went wrong, try again.',
+    'feedback.offline': 'No connection, try again.',
+    'report.title': '🚩 Report listing',
+    'report.send': '🚩 Submit report',
+    'report.pick_reason': 'Please pick a reason 🙏',
+    'report.guest_blocked': 'Only signed-in members can report.',
+    'report.thanks': 'Report received, thank you! 🙏',
+    'footer.appstore': 'Download on the App Store',
+    'footer.privacy': 'Privacy',
+    'footer.terms': 'Terms',
+    'footer.feedback': 'Feedback',
+    'footer.tagline': 'Find · Sell · Go',
+    'publish.title': 'Post a sale',
+    'publish.step_type': 'What kind of sale?',
+    'publish.step_details': 'Tell us more',
+    'publish.step_address': 'Address',
+    'publish.publish_btn': '🚀 Publish',
+    'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
+    'toast.logged_out': 'You have been signed out',
+    'lang.switched_nl': '🇳🇱 Nederlands',
+    'lang.switched_en': '🇬🇧 English',
+    'lang.switched_de': '🇩🇪 Deutsch',
+    'lang.switched_fr': '🇫🇷 Français'
   }
 };
 
 function i18n(key, fallback) {
+  // Fallback-keten: huidige taal → en → nl → expliciete fallback → key.
+  // Voorkomt dat een ongelabelde of ontbrekende key in een nieuwe taal
+  // (bv. tijdens FR-uitrol) de letterlijke key-string toont.
   try {
     var v = I18N[currentLang] && I18N[currentLang][key];
     if (v !== undefined && v !== null) return v;
+    if (currentLang !== 'en') {
+      var ven = I18N.en && I18N.en[key];
+      if (ven !== undefined && ven !== null) return ven;
+    }
+    if (currentLang !== 'nl') {
+      var vnl = I18N.nl && I18N.nl[key];
+      if (vnl !== undefined && vnl !== null) return vnl;
+    }
   } catch(e){}
   return (fallback !== undefined ? fallback : key);
 }
@@ -2668,6 +2947,76 @@ document.addEventListener('click', function(e){
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape') closeLangMenu();
 });
+
+// ──────────────────────────────────────────────────────────────
+// Country-aware filtering van de header taal-dropdown.
+// Verbergt opties die niet bij YG_COUNTRY horen (zie LANG_AVAILABILITY_BY_COUNTRY).
+// Roep dit aan na DOM-ready en na elke setLang om de visuele state up-to-date
+// te houden.
+// ──────────────────────────────────────────────────────────────
+function applyCountryToLangMenu() {
+  try {
+    var allowed = LANG_AVAILABILITY_BY_COUNTRY[YG_COUNTRY] || LANG_AVAILABILITY_BY_COUNTRY.default;
+    document.querySelectorAll('.lang-opt[data-lang]').forEach(function(el) {
+      var code = el.dataset.lang;
+      if (allowed.indexOf(code) === -1) {
+        el.classList.add('lang-hidden');
+      } else {
+        el.classList.remove('lang-hidden');
+        // Als deze optie eerder als "todo" was gemarkeerd (bv. DE), maar nu
+        // wel toegelaten is in dit land, schakel de disabled-state uit.
+        if (el.classList.contains('lang-todo') && I18N[code]) {
+          // We laten 'm disabled tot er echte vertalingen zijn. Voor BE/NL
+          // staat DE niet in allowed dus dit pad is niet actief.
+        }
+      }
+      // Markeer de actieve optie zodat de :checkmark in CSS klopt
+      el.classList.toggle('active', code === currentLang);
+    });
+  } catch(e) { console.warn('applyCountryToLangMenu faalde:', e); }
+}
+
+// ──────────────────────────────────────────────────────────────
+// BE first-visit keuzescherm.
+// Toont alleen op yardigo.be wanneer er nog geen taalvoorkeur in
+// localStorage staat. Beïnvloedt currentLang en slaat keuze op.
+// ──────────────────────────────────────────────────────────────
+function ygLangChoiceSelect(code) {
+  if (code !== 'nl' && code !== 'fr') return;
+  try { localStorage.setItem('yg-lang', code); } catch(e) {}
+  currentLang = code;
+  if (typeof applyLang === 'function') applyLang();
+  if (typeof applyCountryToLangMenu === 'function') applyCountryToLangMenu();
+  var ov = document.getElementById('lang-choice-ov');
+  if (ov) ov.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function maybeShowBELangChoice() {
+  if (YG_COUNTRY !== 'BE') return;
+  try {
+    if (localStorage.getItem('yg-lang')) return; // gebruiker heeft al gekozen
+  } catch(e) { return; }
+  var ov = document.getElementById('lang-choice-ov');
+  if (!ov) return;
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+// Boot: filter dropdown + toon BE keuzescherm indien van toepassing.
+// DOM-ready check via document.readyState om robuust te zijn ongeacht
+// of dit script vroeg of laat in de page geladen wordt.
+(function() {
+  function _ygI18nBoot() {
+    applyCountryToLangMenu();
+    maybeShowBELangChoice();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _ygI18nBoot);
+  } else {
+    _ygI18nBoot();
+  }
+})();
 
 // ══════════════════════════════════════════════════
 // DATA
