@@ -2081,20 +2081,48 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div id="bulkAdresPreview" style="display:none;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:14px;max-height:200px;overflow-y:auto"></div>
 
-      <!-- Bulk-toestemming optie: organisator kan verklaren dat alle bewoners
-           in de lijst persoonlijk toestemming hebben gegeven. Dit slaat de
-           bevestig-flow over, maar legt de aansprakelijkheid bij de organisator
-           en logt timestamp + user_id voor audit. -->
-      <div id="bulkConsentBlock" style="display:none;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:#FAFAF7">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12.5px;line-height:1.5" id="bulkConsentLabel">
-          <input type="checkbox" id="bulkConsentCheckbox" onclick="onBulkConsentToggle(event)" style="margin-top:2px;flex-shrink:0;width:18px;height:18px;cursor:pointer">
-          <span>
-            <strong style="color:var(--text)">Ik heb persoonlijk toestemming van alle bewoners hierboven.</strong>
-            <span style="display:block;color:var(--muted);font-size:11px;margin-top:3px">Adressen gaan dan direct online zonder per-buur bevestigingslink. Je leest hieronder wat dit precies betekent voor je verantwoordelijkheid.</span>
-          </span>
-        </label>
-        <div id="bulkConsentConfirmedNote" style="display:none;margin-top:10px;padding:8px 10px;background:#F0F6F2;border:1px solid #C7DFCF;border-radius:8px;font-size:11.5px;color:#2C4A36;line-height:1.5">
-          <strong>✅ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href="#" onclick="undoBulkConsent(event)" style="color:#3A6B4A;text-decoration:underline">Toch via bevestigingslink</a>.
+      <!-- Bulk-toestemming keuze: twee gelijkwaardige opties als radio-kaarten.
+           Standaard staat 'Bevestigingslink per buur' (kaart 1) actief, dat is
+           het AVG-veilige pad zonder verklaring. Klik op kaart 2 opent de
+           waarschuwingsmodal; pas na bevestiging schuift de selectie naar
+           kaart 2 en gaan adressen direct online na publiceren. -->
+      <div id="bulkConsentBlock" style="display:none;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Hoe regel je de toestemming van de buren?</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+
+          <!-- Kaart 1: per-buur bevestigingslink (default) -->
+          <div id="bulkConsentCardLinks" onclick="selectConsentLinks()" style="border:1.5px solid #2D6A4F;border-radius:10px;padding:12px 14px;background:#F0F6F2;cursor:pointer;transition:all .15s">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <span style="font-size:18px;line-height:1.2;flex-shrink:0">📨</span>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+                  <strong style="color:var(--text);font-size:13px">Bevestigingslink per buur</strong>
+                  <span style="font-size:9.5px;font-weight:700;background:#2D6A4F;color:white;padding:2px 6px;border-radius:4px;letter-spacing:.3px">AANBEVOLEN</span>
+                </div>
+                <div style="color:var(--muted);font-size:11.5px;line-height:1.5">Elke buur krijgt na publiceren een persoonlijke link via WhatsApp, sms of e-mail en bevestigt zelf. Hun adres komt pas op de kaart na hun klik.</div>
+              </div>
+              <span id="bulkConsentCardLinksDot" style="font-size:18px;color:#2D6A4F;flex-shrink:0;line-height:1.2">●</span>
+            </div>
+          </div>
+
+          <!-- Kaart 2: organisator-verklaarde toestemming -->
+          <div id="bulkConsentCardDeclared" onclick="selectConsentDeclared()" style="border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;background:white;cursor:pointer;transition:all .15s">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <span style="font-size:18px;line-height:1.2;flex-shrink:0">🛡️</span>
+              <div style="flex:1;min-width:0">
+                <div style="margin-bottom:3px">
+                  <strong style="color:var(--text);font-size:13px">Ik heb al toestemming van alle buren</strong>
+                </div>
+                <div style="color:var(--muted);font-size:11.5px;line-height:1.5">Klik om te verklaren dat je van iedere bewoner persoonlijk toestemming hebt. Adressen komen direct online, jij bent dan aanspreekpunt bij vragen.</div>
+              </div>
+              <span id="bulkConsentCardDeclaredDot" style="font-size:18px;color:var(--border);flex-shrink:0;line-height:1.2">○</span>
+            </div>
+          </div>
+
+          <!-- Bevestigingsbandje: alleen zichtbaar zodra kaart 2 via de modal bevestigd is -->
+          <div id="bulkConsentConfirmedNote" style="display:none;padding:8px 10px;background:#E5F0FB;border:1px solid #B8D4E8;border-radius:8px;font-size:11.5px;color:#1F4A7A;line-height:1.5">
+            <strong>🛡️ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href="#" onclick="undoBulkConsent(event)" style="color:#1F4A7A;text-decoration:underline">Toch via bevestigingslink</a>.
+          </div>
         </div>
       </div>
 
@@ -4941,15 +4969,41 @@ function closeBulkAdresModal() {
 }
 
 // ── Bulk-consent UI helpers ────────────────────────────────
+// Twee-kaart radio-keuze in de bulk-import modal:
+//   kaart 'links'     = per-buur bevestigingslink (default, AVG-veilig)
+//   kaart 'declared'  = organisator verklaart toestemming (na modal-confirm)
+// State leeft in bulkConsentDeclared (boolean): true = declared, false = links.
+function setConsentCardActive(which) {
+  var cardLinks    = document.getElementById('bulkConsentCardLinks');
+  var cardDeclared = document.getElementById('bulkConsentCardDeclared');
+  var dotLinks     = document.getElementById('bulkConsentCardLinksDot');
+  var dotDeclared  = document.getElementById('bulkConsentCardDeclaredDot');
+  if (!cardLinks || !cardDeclared) return;
+  if (which === 'declared') {
+    cardLinks.style.border = '1.5px solid var(--border)';
+    cardLinks.style.background = 'white';
+    cardDeclared.style.border = '1.5px solid #1F4A7A';
+    cardDeclared.style.background = '#E5F0FB';
+    if (dotLinks)    { dotLinks.textContent = '○';    dotLinks.style.color = 'var(--border)'; }
+    if (dotDeclared) { dotDeclared.textContent = '●'; dotDeclared.style.color = '#1F4A7A'; }
+  } else {
+    cardLinks.style.border = '1.5px solid #2D6A4F';
+    cardLinks.style.background = '#F0F6F2';
+    cardDeclared.style.border = '1.5px solid var(--border)';
+    cardDeclared.style.background = 'white';
+    if (dotLinks)    { dotLinks.textContent = '●';    dotLinks.style.color = '#2D6A4F'; }
+    if (dotDeclared) { dotDeclared.textContent = '○'; dotDeclared.style.color = 'var(--border)'; }
+  }
+}
+
 function resetBulkConsentUI() {
   bulkConsentDeclared = false;
   bulkConsentDeclaredAt = null;
   var block = document.getElementById('bulkConsentBlock');
-  var cb = document.getElementById('bulkConsentCheckbox');
-  var note = document.getElementById('bulkConsentConfirmedNote');
+  var note  = document.getElementById('bulkConsentConfirmedNote');
   if (block) block.style.display = 'none';
-  if (cb) cb.checked = false;
-  if (note) note.style.display = 'none';
+  if (note)  note.style.display  = 'none';
+  setConsentCardActive('links');
 }
 
 function showBulkConsentBlock(show) {
@@ -4957,30 +5011,29 @@ function showBulkConsentBlock(show) {
   if (block) block.style.display = show ? 'block' : 'none';
 }
 
-function onBulkConsentToggle(ev) {
-  var cb = document.getElementById('bulkConsentCheckbox');
-  if (!cb) return;
-  if (cb.checked) {
-    // Voorkom dat het vinkje meteen vastzit; we wachten op bevestiging.
-    cb.checked = false;
-    if (ev) ev.preventDefault();
-    var ov = document.getElementById('bulkConsentWarnOv');
-    if (ov) ov.style.display = 'flex';
-  } else {
-    // Uitvinken kan zonder pop-up.
-    bulkConsentDeclared = false;
-    bulkConsentDeclaredAt = null;
-    var note = document.getElementById('bulkConsentConfirmedNote');
-    if (note) note.style.display = 'none';
-    refreshBulkImportButtonText();
-  }
+// Kaart 1 (default): geen verklaring, gewoon de bevestigingslink-flow.
+// Kan altijd zonder modal aangeklikt worden om terug te schakelen.
+function selectConsentLinks() {
+  bulkConsentDeclared = false;
+  bulkConsentDeclaredAt = null;
+  setConsentCardActive('links');
+  var note = document.getElementById('bulkConsentConfirmedNote');
+  if (note) note.style.display = 'none';
+  refreshBulkImportButtonText();
+}
+
+// Kaart 2: opent de AVG-waarschuwingsmodal. Selectie pas na bevestiging
+// (acceptBulkConsent). Klik op een al-actieve kaart 2 doet niks.
+function selectConsentDeclared() {
+  if (bulkConsentDeclared) return;
+  var ov = document.getElementById('bulkConsentWarnOv');
+  if (ov) ov.style.display = 'flex';
 }
 
 function acceptBulkConsent() {
   bulkConsentDeclared = true;
   bulkConsentDeclaredAt = new Date().toISOString();
-  var cb = document.getElementById('bulkConsentCheckbox');
-  if (cb) cb.checked = true;
+  setConsentCardActive('declared');
   var note = document.getElementById('bulkConsentConfirmedNote');
   if (note) note.style.display = 'block';
   var ov = document.getElementById('bulkConsentWarnOv');
@@ -4989,20 +5042,15 @@ function acceptBulkConsent() {
 }
 
 function declineBulkConsent() {
+  // Modal sluiten, niets verandert aan de selectie.
+  // De gebruiker had nog niet bevestigd, dus kaart 1 blijft actief.
   var ov = document.getElementById('bulkConsentWarnOv');
   if (ov) ov.style.display = 'none';
-  // checkbox blijft uit
 }
 
 function undoBulkConsent(ev) {
   if (ev) ev.preventDefault();
-  bulkConsentDeclared = false;
-  bulkConsentDeclaredAt = null;
-  var cb = document.getElementById('bulkConsentCheckbox');
-  if (cb) cb.checked = false;
-  var note = document.getElementById('bulkConsentConfirmedNote');
-  if (note) note.style.display = 'none';
-  refreshBulkImportButtonText();
+  selectConsentLinks();
 }
 
 function refreshBulkImportButtonText() {
