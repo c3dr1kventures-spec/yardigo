@@ -5816,12 +5816,9 @@ async function publishSale() {
   if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
   if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
 
-  // Zet lock meteen + disable knop visueel
-  isPublishing = true;
-  var _pubBtn = document.getElementById('addPublish');
-  if (_pubBtn) { _pubBtn.disabled = true; _pubBtn.style.opacity = '0.85'; _pubBtn.style.cursor = 'wait'; }
-  setPublishStatus('⏳ Bezig...');
-
+  // Adres-validatie LOS van button-state, anders blijft de knop op
+  // "Bezig..." hangen als de validatie faalt (en heeft `isPublishing` ook
+  // niet hoeven omhoog te gaan voor een lokale check).
   var isBuurt = selTypeVal === 'buurt';
   var addrEl  = document.getElementById('aAddr');
   var mainAddr = isBuurt ? (buurtAdressen.length > 0 ? buurtAdressen[0].addr : '') : (addrEl ? addrEl.value.trim() : '');
@@ -5829,7 +5826,29 @@ async function publishSale() {
 
   if (!isBuurt && !mainAddr) { toast('Vul een adres in'); return; }
   if (isBuurt && buurtAdressen.length === 0) { toast('Voeg minimaal 1 adres toe'); return; }
-  if (isBuurt && buurtAdressen.some(function(a) { return !a.addr.trim(); })) { toast('Vul alle adressen in'); return; }
+  if (isBuurt) {
+    var _emptyIdx = -1;
+    for (var _i = 0; _i < buurtAdressen.length; _i++) {
+      if (!buurtAdressen[_i].addr || !buurtAdressen[_i].addr.trim()) { _emptyIdx = _i; break; }
+    }
+    if (_emptyIdx !== -1) {
+      // Specifieke melding zodat de organisator weet waar het zit
+      // (eigen rij = index 0, anders een buur-rij).
+      var _which = _emptyIdx === 0
+        ? 'Vul je eigen adres ook in (eerste rij).'
+        : 'Adres-rij ' + (_emptyIdx + 1) + ' is leeg. Vul hem in of verwijder de rij.';
+      toast(_which);
+      var _focusEl = document.getElementById('bv-addr-' + _emptyIdx);
+      if (_focusEl) { try { _focusEl.focus(); _focusEl.scrollIntoView({block:'center', behavior:'smooth'}); } catch(e) {} }
+      return;
+    }
+  }
+
+  // Zet lock pas NA validatie + disable knop visueel
+  isPublishing = true;
+  var _pubBtn = document.getElementById('addPublish');
+  if (_pubBtn) { _pubBtn.disabled = true; _pubBtn.style.opacity = '0.85'; _pubBtn.style.cursor = 'wait'; }
+  setPublishStatus('⏳ Bezig...');
 
   showL();
   try {
