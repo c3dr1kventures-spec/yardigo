@@ -4627,12 +4627,269 @@ var buurtAdressen = []; // array of {addr, pc, label, email, preconsent} for buu
 var bulkConsentDeclared = false;
 var bulkConsentDeclaredAt = null;
 
-function openAdd() {
-  resetAddForm();
+// ──────────────────────────────────────────────────────────────
+// Draft auto-save voor concept-listings.
+// Doel: bij ongeplande sessie-verloop, accidentele sluit-actie of
+// browser-crash behoudt de gebruiker zijn ingevulde data. Foto's
+// worden bewust NIET in de draft opgenomen vanwege localStorage-
+// quota; alleen tekst-velden, type, tags en buurt-adressen.
+// ──────────────────────────────────────────────────────────────
+var YG_DRAFT_KEY = 'yg-draft-listing';
+var _draftAutosaveTimer = null;
+var _draftMaxAgeMs = 14 * 24 * 60 * 60 * 1000; // 14 dagen, daarna automatisch wegfilteren
+
+function _serializeAddDraft() {
+  var pickVal = function(id) { var el = document.getElementById(id); return el ? el.value : ''; };
+  var revealEl = document.querySelector('input[name="aReveal"]:checked');
+  return {
+    v: 1,
+    timestamp: Date.now(),
+    addStep: typeof addStep === 'number' ? addStep : 0,
+    selTypeVal: selTypeVal || 'particulier',
+    tagsSelected: Array.from(addTagsSelected || []),
+    buurtAdressen: (buurtAdressen || []).map(function(a) {
+      return {
+        addr: (a && a.addr) || '',
+        pc: (a && a.pc) || '',
+        label: (a && a.label) || '',
+        email: (a && a.email) || '',
+        preconsent: !!(a && a.preconsent)
+      };
+    }),
+    aTitle: pickVal('aTitle'),
+    aAddr: pickVal('aAddr'),
+    aDesc: pickVal('aDesc'),
+    aFrom: pickVal('aFrom'),
+    aTill: pickVal('aTill'),
+    aDate: pickVal('aDate'),
+    aEventType: pickVal('aEventType'),
+    aEventAnders: pickVal('aEventAnders'),
+    aNameMode: pickVal('aNameMode'),
+    aReveal: revealEl ? revealEl.value : 'day_before',
+    bulkConsentDeclared: !!bulkConsentDeclared,
+    bulkConsentDeclaredAt: typeof bulkConsentDeclaredAt !== 'undefined' ? bulkConsentDeclaredAt : null
+  };
+}
+
+function _draftHasContent(d) {
+  if (!d) return false;
+  if (d.aTitle && d.aTitle.trim()) return true;
+  if (d.aAddr && d.aAddr.trim()) return true;
+  if (d.aDesc && d.aDesc.trim()) return true;
+  if (d.aDate) return true;
+  if (d.tagsSelected && d.tagsSelected.length) return true;
+  if (d.buurtAdressen && d.buurtAdressen.some(function(a) { return a && a.addr && a.addr.trim(); })) return true;
+  return false;
+}
+
+function _saveAddDraft() {
+  try {
+    var d = _serializeAddDraft();
+    if (_draftHasContent(d)) {
+      localStorage.setItem(YG_DRAFT_KEY, JSON.stringify(d));
+    } else {
+      localStorage.removeItem(YG_DRAFT_KEY);
+    }
+  } catch(e) { /* localStorage vol of geblokkeerd, stil falen */ }
+}
+
+function _loadAddDraft() {
+  try {
+    var raw = localStorage.getItem(YG_DRAFT_KEY);
+    if (!raw) return null;
+    var d = JSON.parse(raw);
+    if (!d || d.v !== 1) return null;
+    if (!_draftHasContent(d)) return null;
+    if (Date.now() - (d.timestamp || 0) > _draftMaxAgeMs) {
+      localStorage.removeItem(YG_DRAFT_KEY);
+      return null;
+    }
+    return d;
+  } catch(e) { return null; }
+}
+
+function _clearAddDraft() {
+  try { localStorage.removeItem(YG_DRAFT_KEY); } catch(e) {}
+}
+
+function _applyAddDraft(d) {
+  if (!d) return;
+  // Type-selectie
+  selTypeVal = d.selTypeVal || 'particulier';
+  document.querySelectorAll('.type-opt').forEach(function(el) { el.classList.remove('active'); });
+  var toEl = document.getElementById('to-' + selTypeVal);
+  if (toEl) toEl.classList.add('active');
+  if (typeof updateTagsForType === 'function') updateTagsForType(selTypeVal);
+  if (typeof updateStep2View === 'function') updateStep2View();
+
+  // Text- en tijdvelden
+  var setVal = function(id, val) { var el = document.getElementById(id); if (el && val != null) el.value = val; };
+  setVal('aTitle', d.aTitle);
+  setVal('aAddr', d.aAddr);
+  setVal('aDesc', d.aDesc);
+  setVal('aFrom', d.aFrom);
+  setVal('aTill', d.aTill);
+  setVal('aDate', d.aDate);
+  setVal('aEventType', d.aEventType);
+  setVal('aEventAnders', d.aEventAnders);
+  setVal('aNameMode', d.aNameMode);
+
+  // Tags via data-tag matching
+  addTagsSelected.clear();
+  (d.tagsSelected || []).forEach(function(t) { addTagsSelected.add(t); });
+  document.querySelectorAll('.atag').forEach(function(el) {
+    var tg = el.dataset.tag || el.textContent.trim();
+    el.classList.toggle('sel', addTagsSelected.has(tg));
+  });
+
+  // Buurt adressen: rijen opnieuw aanmaken via addBuurtAdres en velden vullen
+  buurtAdressen = [];
+  var bl = document.getElementById('buurt-adressen-list');
+  if (bl) bl.innerHTML = '';
+  if (d.buurtAdressen && d.buurtAdressen.length && typeof addBuurtAdres === 'function') {
+    d.buurtAdressen.forEach(function(a) {
+      addBuurtAdres();
+      var idx = buurtAdressen.length - 1;
+      buurtAdressen[idx].addr = a.addr || '';
+      buurtAdressen[idx].pc = a.pc || '';
+      buurtAdressen[idx].label = a.label || '';
+      buurtAdressen[idx].email = a.email || '';
+      buurtAdressen[idx].preconsent = !!a.preconsent;
+      var ai = document.getElementById('bv-addr-' + idx);
+      var pi = document.getElementById('bv-pc-' + idx);
+      var li = document.getElementById('bv-label-' + idx);
+      var ei = document.getElementById('bv-email-' + idx);
+      if (ai) ai.value = a.addr || '';
+      if (pi) pi.value = a.pc || '';
+      if (li) li.value = a.label || '';
+      if (ei) ei.value = a.email || '';
+      // Visuele indicator voor preconsent-rijen consistent met importBulkAdres
+      if (a.preconsent) {
+        var rowEl = document.getElementById('bv-row-' + idx);
+        if (rowEl) {
+          rowEl.style.borderColor = '#3A6B4A';
+          rowEl.style.background = '#F0F6F2';
+          var helperDiv = rowEl.querySelector('div[style*="color:#A04A18"]');
+          if (helperDiv) {
+            helperDiv.style.color = '#2C4A36';
+            helperDiv.innerHTML = '🛡️ Toestemming verklaard door organisator. Adres gaat direct online na publiceren.';
+          }
+        }
+      }
+    });
+  }
+
+  // Adres-zichtbaarheid radio
+  if (d.aReveal === 'instant') {
+    var rIns = document.getElementById('aReveal-instant'); if (rIns) rIns.checked = true;
+    var rDayU = document.getElementById('aReveal-day-before'); if (rDayU) rDayU.checked = false;
+  } else {
+    var rDay = document.getElementById('aReveal-day-before'); if (rDay) rDay.checked = true;
+    var rInsU = document.getElementById('aReveal-instant'); if (rInsU) rInsU.checked = false;
+  }
+
+  // Bulk-consent state
+  bulkConsentDeclared = !!d.bulkConsentDeclared;
+  bulkConsentDeclaredAt = d.bulkConsentDeclaredAt || null;
+
+  // Naam-preview en evenement-subtype zichtbaarheid
+  if (typeof updateAddNamePreview === 'function') updateAddNamePreview();
+  if (selTypeVal === 'evenement') {
+    var evWrap = document.getElementById('evenement-subtype-wrap');
+    if (evWrap) evWrap.style.display = 'block';
+    if (d.aEventType === 'Anders') {
+      var evAndWrap = document.getElementById('evenement-anders-wrap');
+      if (evAndWrap) evAndWrap.style.display = 'block';
+    }
+  }
+
+  // Stap-navigatie: ga naar de stap waar de gebruiker stond, behalve stap 3
+  // (foto's). Foto's komen niet uit de draft, dus stuur 'm naar stap 2 zodat
+  // hij eerst tekst kan controleren en daarna foto's opnieuw kiest.
+  var targetStep = Math.min(Math.max(d.addStep || 0, 0), 3);
+  if (targetStep === 3) targetStep = 2;
+  addStep = targetStep;
+  ['add-s0','add-s1','add-s2','add-s3'].forEach(function(id, i) {
+    var el = document.getElementById(id); if (el) el.style.display = i === addStep ? 'block' : 'none';
+  });
+  document.querySelectorAll('.step-dot').forEach(function(dot, i) { dot.classList.toggle('active', i === addStep); });
+  var prev = document.getElementById('addPrev'), next = document.getElementById('addNext'), pub = document.getElementById('addPublish');
+  if (prev) prev.style.visibility = addStep === 0 ? 'hidden' : 'visible';
+  if (next) next.style.display = addStep === 3 ? 'none' : 'block';
+  if (pub) pub.style.display = addStep === 3 ? 'block' : 'none';
+}
+
+function _startDraftAutosave() {
+  if (_draftAutosaveTimer) return;
+  _draftAutosaveTimer = setInterval(_saveAddDraft, 2000);
+}
+
+function _stopDraftAutosave() {
+  if (_draftAutosaveTimer) {
+    clearInterval(_draftAutosaveTimer);
+    _draftAutosaveTimer = null;
+  }
+  _saveAddDraft(); // Final save bij sluiten zodat we de allerlaatste state hebben
+}
+
+async function openAdd() {
+  // Auth-guard verplaatst van publishSale naar hier: voorkomt dat de
+  // gebruiker een formulier vult dat hij vervolgens niet kan publiceren
+  // omdat zijn JWT al verlopen blijkt. Soft-fail bij netwerkproblemen,
+  // publishSale doet alsnog een eindcheck als vangnet.
+  if (typeof sbClient !== 'undefined' && sbClient && sbClient.auth) {
+    try {
+      var sess = await sbClient.auth.getSession();
+      var valid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
+      if (!valid) {
+        try { await sbClient.auth.signOut(); } catch(e) {}
+        currentUser = {};
+        isGuest = true;
+        toast('Je sessie is verlopen, log opnieuw in om een verkoop te plaatsen.');
+        try { guestGate('listing plaatsen'); } catch(e) {}
+        return;
+      }
+    } catch(e) {
+      console.warn('openAdd session-check faalde:', e);
+      // Soft-fail: laat de flow doorgaan, publishSale heeft een eigen guard
+    }
+  }
+
+  // Kijken of er een onafgemaakte draft ligt om te restoren
+  var draft = _loadAddDraft();
+  if (draft) {
+    var lastEdit;
+    try {
+      lastEdit = new Date(draft.timestamp).toLocaleString('nl-NL', {
+        weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      });
+    } catch(e) { lastEdit = 'onlangs'; }
+    var typeLabel = ({ particulier:'particuliere verkoop', buurt:'buurtverkoop', evenement:'evenement' })[draft.selTypeVal] || 'verkoop';
+    var msg = 'Je had nog een onafgemaakte ' + typeLabel + ' (laatst opgeslagen ' + lastEdit + ').\n\n'
+      + 'Klik OK om verder te gaan waar je gebleven was, of Annuleren om opnieuw te beginnen.\n\n'
+      + 'Let op: foto\'s moet je opnieuw kiezen, die worden niet bewaard.';
+    var resume = window.confirm(msg);
+    resetAddForm();
+    if (resume) {
+      _applyAddDraft(draft);
+      toast('Concept hersteld. Foto\'s opnieuw toevoegen.');
+    } else {
+      _clearAddDraft();
+    }
+  } else {
+    resetAddForm();
+  }
+
   document.getElementById('addOv').classList.add('open');
   document.body.style.overflow = 'hidden';
+  _startDraftAutosave();
 }
-function closeAdd() { document.getElementById('addOv').classList.remove('open'); document.body.style.overflow = ''; }
+
+function closeAdd() {
+  _stopDraftAutosave();
+  document.getElementById('addOv').classList.remove('open');
+  document.body.style.overflow = '';
+}
 
 // ══════════════════════════════════════════════════
 // BUURTVERKOOP — BEVESTIGINGSLINKS (AVG art. 6a)
@@ -6220,6 +6477,7 @@ async function publishSale() {
     renderMarkers(); renderList();
     renderMySales();
     loadAndRenderUserBadges(); // badges herberekenen
+    _clearAddDraft();           // succesvol geplaatst, draft niet meer nodig
     closeAdd(); hideL();
     toast('🎉 Verkoop geplaatst!');
   } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast('❌ Publiceren mislukt'); }
