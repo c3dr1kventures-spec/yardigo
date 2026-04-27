@@ -3378,38 +3378,60 @@ function initMap() {
     map.on('popupopen', function(e) { if (typeof attachPopupSwipe === 'function') attachPopupSwipe(e.popup); });
 
     // iOS two-finger gesture hint
+    // De hint legt een donker waas over de kaart zodra een single-finger
+    // touch te lang duurt. Dat moet NIET triggeren bij taps op markers,
+    // clusters of popups, anders lijkt de popup na ~1s te 'verdwijnen'
+    // (hij wordt visueel afgedekt door het waas, niet echt gesloten).
     var hintTimer = null;
     var mapEl = document.getElementById('map');
     var hint = document.getElementById('map-gesture-hint');
 
+    function _hideHint() {
+      clearTimeout(hintTimer);
+      hintTimer = null;
+      if (hint) hint.style.display = 'none';
+    }
+
+    function _isMarkerLikeTarget(target) {
+      if (!target || !target.closest) return false;
+      // Alle Leaflet-elementen die als "klikbaar" tellen — markers, clusters,
+      // popups, controls. Tap op deze elementen mag NOOIT de hint triggeren.
+      return !!target.closest(
+        '.leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-popup, ' +
+        '.leaflet-popup-pane, .leaflet-control, .marker-cluster, ' +
+        '.buurtverkoop-cluster'
+      );
+    }
+
     mapEl.addEventListener('touchstart', function(e) {
+      // Skip hint-logica als de tap op een marker/popup/control begint
+      if (_isMarkerLikeTarget(e.target)) { _hideHint(); return; }
       if (e.touches.length === 1) {
-        // Single finger on map — show hint after 600ms if still one finger
+        // Single finger op de tile-laag — toon hint na 600ms als de finger
+        // er nog steeds is (en dus geen tap maar een drag-poging).
         hintTimer = setTimeout(function() {
           if (hint) { hint.style.display = 'flex'; }
-          clearTimeout(hintTimer);
           hintTimer = setTimeout(function() {
             if (hint) hint.style.display = 'none';
+            hintTimer = null;
           }, 1500);
         }, 600);
       } else {
-        // Two fingers — cancel hint, hide if showing
-        clearTimeout(hintTimer);
-        if (hint) hint.style.display = 'none';
+        // Twee vingers, hint heeft geen functie meer
+        _hideHint();
       }
     }, { passive: true });
 
-    mapEl.addEventListener('touchend', function() {
-      clearTimeout(hintTimer);
-      if (hint) hint.style.display = 'none';
-    }, { passive: true });
+    mapEl.addEventListener('touchend', _hideHint, { passive: true });
+    mapEl.addEventListener('touchcancel', _hideHint, { passive: true });
 
     mapEl.addEventListener('touchmove', function(e) {
-      if (e.touches.length >= 2) {
-        clearTimeout(hintTimer);
-        if (hint) hint.style.display = 'none';
-      }
+      if (e.touches.length >= 2) _hideHint();
     }, { passive: true });
+
+    // Vangnet: zodra Leaflet een popup opent, hint direct dichttrekken zodat
+    // hij nooit boven een geopende popup kan komen te liggen.
+    if (map && map.on) map.on('popupopen', _hideHint);
   } catch(e) {
     console.log('Leaflet init failed, using fallback:', e);
     activateFallbackMap();
