@@ -3630,6 +3630,16 @@ function renderMarkers() {
       // Zo ziet de gebruiker direct hoeveel huizen er bij deze buurtverkoop horen.
       zoomToBoundsOnClick: false,
       showCoverageOnHover: false,
+      // Default is true: clusters/markers buiten de viewport-buffer worden
+      // verwijderd voor performance. Op iOS Safari leverde dat een zichtbare
+      // glitch op: tap op een pin → popup autoPan → tijdens de pan komt de
+      // pin in de buffer-grenszone en verdween 1-2 sec voor hij terugkwam.
+      // Bij ons aantal listings is die optimalisatie niet nodig.
+      removeOutsideVisibleBounds: false,
+      // Houd reken-padding rond de zichtbare bounds extra ruim, zodat ook
+      // markers vlak buiten het scherm in de cluster-state blijven en de
+      // pan-animatie geen rerender forceert.
+      animate: true,
       iconCreateFunction: function(cluster) {
         var count = cluster.getChildCount();
         var c = '#E07B39';
