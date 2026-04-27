@@ -10,6 +10,16 @@
 <meta name="theme-color" content="#E07B39">
 <link rel="canonical" href="https://www.yardigo.nl/">
 
+<!-- hreflang voor SEO: vertelt Google dat yardigo.nl en yardigo.be twee
+     locale-varianten zijn van dezelfde site, geen duplicate content. De
+     FR-variant deelt voorlopig dezelfde URL als de NL-variant op .be met
+     ?lang=fr; later kunnen we naar /fr en /nl subpaths als de FR-content
+     substantieel uitbreidt. -->
+<link rel="alternate" hreflang="nl-nl" href="https://www.yardigo.nl/">
+<link rel="alternate" hreflang="nl-be" href="https://www.yardigo.be/">
+<link rel="alternate" hreflang="fr-be" href="https://www.yardigo.be/?lang=fr">
+<link rel="alternate" hreflang="x-default" href="https://www.yardigo.nl/">
+
 <!-- Open Graph (WhatsApp, Facebook, LinkedIn, Slack) -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.yardigo.nl/">

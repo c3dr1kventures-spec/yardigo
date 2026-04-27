@@ -194,13 +194,24 @@
   </ul>
   <p>Stuur een verzoek naar <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Wij reageren binnen één maand (art. 12 lid 3 AVG). Om je identiteit vast te stellen vragen we je het verzoek te sturen vanaf het bij jouw account geregistreerde e-mailadres; een kopie van een identiteitsbewijs hebben we daarvoor niet nodig.</p>
 
-  <h2>10. Klachtrecht bij de Autoriteit Persoonsgegevens</h2>
-  <p>Ben je van mening dat wij niet zorgvuldig met je gegevens omgaan, dan kun je een klacht indienen bij de Nederlandse toezichthouder:</p>
+  <h2>10. Klachtrecht bij de toezichthouder</h2>
+  <p>Ben je van mening dat wij niet zorgvuldig met je gegevens omgaan, dan kun je een klacht indienen bij de Nederlandse toezichthouder. YardiGo is gevestigd in Nederland en valt primair onder het toezicht van de Autoriteit Persoonsgegevens:</p>
   <p>
     <strong>Autoriteit Persoonsgegevens</strong><br>
     Postbus 93374, 2509 AJ Den Haag<br>
     <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener">autoriteitpersoonsgegevens.nl</a>
   </p>
+  <!-- BE-specifieke aanvulling: wordt door yg-country-script onderaan deze
+       pagina alleen getoond als de bezoeker via yardigo.be binnenkomt of
+       met ?country=BE. Voor NL-bezoekers blijft dit verborgen. -->
+  <div id="dpa-be" style="display:none;border-left:3px solid #3A6B4A;padding:6px 14px;margin:14px 0;background:#F0F6F2;border-radius:6px">
+    <p style="margin-top:8px"><strong>Voor inwoners van België.</strong> Onder de AVG kun je je klacht ook indienen bij de toezichthouder van je woonland. In België is dat:</p>
+    <p style="margin-bottom:8px">
+      <strong>Gegevensbeschermingsautoriteit (APD/GBA)</strong><br>
+      Drukpersstraat 35, 1000 Brussel<br>
+      <a href="https://www.gegevensbeschermingsautoriteit.be" target="_blank" rel="noopener">gegevensbeschermingsautoriteit.be</a>
+    </p>
+  </div>
 
   <h2>11. Gebruikers jonger dan 16 jaar</h2>
   <p>YardiGo is bedoeld voor gebruikers vanaf 16 jaar. Gebruikers onder de 16 hebben op grond van artikel 8 AVG toestemming van een ouder of voogd nodig. Als je vermoedt dat wij gegevens van een minderjarige zonder toestemming verwerken, neem dan contact op via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>; we verwijderen die gegevens dan zo snel mogelijk.</p>
@@ -227,5 +238,26 @@
     &copy; 2026 YardiGo · <a href="/voorwaarden">Gebruiksvoorwaarden</a> · <a href="/">Terug naar YardiGo</a>
   </footer>
 
+<script>
+// Country-detectie via TLD met ?country=XX override voor lokaal testen.
+// Toont BE-specifieke blokken alleen op yardigo.be of via expliciete override.
+(function() {
+  try {
+    var country = (function() {
+      var override = new URLSearchParams(location.search).get('country');
+      if (override) return override.toUpperCase();
+      var host = (location.hostname || '').toLowerCase();
+      if (host.endsWith('.be')) return 'BE';
+      if (host.endsWith('.fr')) return 'FR';
+      if (host.endsWith('.de')) return 'DE';
+      return 'NL';
+    })();
+    if (country === 'BE') {
+      var dpaBE = document.getElementById('dpa-be');
+      if (dpaBE) dpaBE.style.display = 'block';
+    }
+  } catch(e) { /* stil falen, BE-blok blijft verborgen */ }
+})();
+</script>
 </body>
 </html>
