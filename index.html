@@ -1074,17 +1074,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <!-- Type pills + tabs -->
 <div class="type-row">
-  <span style="font-size:10px;font-weight:700;color:var(--muted);margin-right:2px">TYPES</span>
-  <div class="type-pill active" id="leg-all" onclick="filterType('all')">Alle</div>
-  <div class="type-pill p" id="leg-particulier" onclick="filterType('particulier')">🏠 Particulier</div>
-  <div class="type-pill b" id="leg-buurt" onclick="filterType('buurt')">🏘️ Buurtverkoop</div>
-  <div class="type-pill e" id="leg-evenement" onclick="filterType('evenement')">🎪 Evenement</div>
+  <span style="font-size:10px;font-weight:700;color:var(--muted);margin-right:2px" data-i18n="types.heading">TYPES</span>
+  <div class="type-pill active" id="leg-all" onclick="filterType('all')" data-i18n="filter.all">Alle</div>
+  <div class="type-pill p" id="leg-particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Particulier</span></div>
+  <div class="type-pill b" id="leg-buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Buurtverkoop</span></div>
+  <div class="type-pill e" id="leg-evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
 </div>
 <div class="tab-row">
-  <div class="tab active" onclick="sv('kaart',this)">🗺️ Kaart</div>
-  <div class="tab" onclick="sv('lijst',this)">📋 Lijst</div>
-  <div class="tab" onclick="sv('route',this)">🧭 Route</div>
-  <div class="tab" onclick="sv('mijn',this)">⭐ Mijn</div>
+  <div class="tab active" onclick="sv('kaart',this)">🗺️ <span data-i18n="nav.map">Kaart</span></div>
+  <div class="tab" onclick="sv('lijst',this)">📋 <span data-i18n="nav.list">Lijst</span></div>
+  <div class="tab" onclick="sv('route',this)">🧭 <span data-i18n="nav.route">Route</span></div>
+  <div class="tab" onclick="sv('mijn',this)">⭐ <span data-i18n="nav.mine">Mijn</span></div>
 </div>
 
 <!-- Views -->
@@ -1113,13 +1113,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <span id="lcount">0 gevonden</span>
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:11px;color:var(--muted);font-weight:600">Sorteer op:</span>
+        <span style="font-size:11px;color:var(--muted);font-weight:600" data-i18n="list.sort_by">Sorteer op:</span>
         <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
-          <option value="newest">🆕 Nieuwste eerst</option>
-          <option value="date-asc">📅 Vroegste eerst</option>
-          <option value="date-desc">📅 Laatste eerst</option>
-          <option value="nearby">📍 Dichtstbijzijnde</option>
-          <option value="interest">🔥 Meest populair</option>
+          <option value="newest" data-i18n="list.sort.newest">🆕 Nieuwste eerst</option>
+          <option value="date-asc" data-i18n="list.sort.date_asc">📅 Vroegste eerst</option>
+          <option value="date-desc" data-i18n="list.sort.date_desc">📅 Laatste eerst</option>
+          <option value="nearby" data-i18n="list.sort.nearby">📍 Dichtstbijzijnde</option>
+          <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
         </select>
       </div>
     </div>
@@ -1806,9 +1806,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <div id="det-seller" style="display:none;font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:500"></div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <button id="det-route-btn" onclick="detailRoute()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)">🧭 Route</button>
-        <button id="det-fav-btn" onclick="detailFav()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)">☆ Favoriet</button>
-        <button onclick="detailShare()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)">↑ Delen</button>
+        <button id="det-route-btn" onclick="detailRoute()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)" data-i18n="detail.route">🧭 Route</button>
+        <button id="det-fav-btn" onclick="detailFav()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)" data-i18n="detail.fav">☆ Favoriet</button>
+        <button onclick="detailShare()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--text)" data-i18n="detail.share">↑ Delen</button>
       </div>
       <!-- Mini map -->
       <div id="det-minimap-wrap" style="margin-bottom:14px">
@@ -1848,7 +1848,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- CTA -->
       <button id="det-cta" onclick="toggleInterest()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(224,123,57,.35)">
-        <span id="det-cta-icon">🎉</span><span id="det-cta-text">Ik ga erheen!</span>
+        <span id="det-cta-icon">🎉</span><span id="det-cta-text" data-i18n="detail.cta_going">Ik ga erheen!</span>
       </button>
       <!-- Melden knop (alleen ingelogde leden) -->
       <div class="members-only" id="det-report-wrap" style="text-align:center;margin-top:12px">
@@ -1931,16 +1931,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="padding:20px">
       <!-- Step 0: Type -->
       <div id="add-s0">
-        <div style="font-size:17px;font-weight:800;margin-bottom:4px">Type verkoop</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Wat voor soort verkoop is dit?</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:4px" data-i18n="publish.s0.title">Type verkoop</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px" data-i18n="publish.s0.sub">Wat voor soort verkoop is dit?</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span>Particulier: eigen spullen</span></div>
-          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span>Buurtverkoop: meerdere huizen</span></div>
-          <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span>Evenement: kies een type</span></div>
+          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span data-i18n="publish.type.particulier">Particulier: eigen spullen</span></div>
+          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span data-i18n="publish.type.buurt">Buurtverkoop: meerdere huizen</span></div>
+          <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span data-i18n="publish.type.evenement">Evenement: kies een type</span></div>
         </div>
         <!-- Evenement subtype dropdown -->
         <div id="evenement-subtype-wrap" style="display:none;margin-top:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">WAT VOOR EVENEMENT?</div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px" data-i18n="publish.event.subtype_label">WAT VOOR EVENEMENT?</div>
           <select id="aEventType" class="form-input" onchange="toggleEventAnders(this.value)" style="width:100%;cursor:pointer">
             <option value="">Kies een type</option>
             <option value="Vlooienmarkt">🎪 Vlooienmarkt</option>
@@ -1959,7 +1959,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- Step 1: Details -->
       <div id="add-s1" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:16px">Details</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s1.title">Details</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'">
           <!-- Naam-override per advertentie -->
@@ -2001,7 +2001,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- Step 2: Location & tags -->
       <div id="add-s2" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:16px">Locatie & categorieën</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s2.title">Locatie & categorieën</div>
         <!-- Enkel adres (particulier / evenement) -->
         <div id="add-s2-single" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
           <div style="position:relative">
@@ -2055,7 +2055,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- Step 3: Photos + (buurtverkoop: plattegrond) -->
       <div id="add-s3" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title">Foto's</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title" data-i18n="publish.s3.title">Foto's</div>
         <div style="font-size:12px;margin-bottom:14px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
@@ -2079,8 +2079,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
     </div>
     <div style="padding:0 16px 24px;display:flex;gap:8px">
-      <button id="addNext" onclick="addNav(1)" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Volgende →</button>
-      <button id="addPublish" style="display:none;flex:1;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer" onclick="publishSale()">Publiceren 🎉</button>
+      <button id="addNext" onclick="addNav(1)" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer" data-i18n="publish.btn_next">Volgende →</button>
+      <button id="addPublish" style="display:none;flex:1;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer" onclick="publishSale()" data-i18n="publish.btn_publish">Publiceren 🎉</button>
     </div>
   </div>
 </div>
@@ -2556,6 +2556,26 @@ var I18N = {
     'publish.step_details': 'Vertel meer',
     'publish.step_address': 'Adres',
     'publish.publish_btn': '🚀 Publiceren',
+    // Plaats-flow stappen + types
+    'publish.s0.title': 'Type verkoop',
+    'publish.s0.sub': 'Wat voor soort verkoop is dit?',
+    'publish.s1.title': 'Details',
+    'publish.s2.title': 'Locatie & categorieën',
+    'publish.s3.title': "Foto's",
+    'publish.type.particulier': 'Particulier: eigen spullen',
+    'publish.type.buurt': 'Buurtverkoop: meerdere huizen',
+    'publish.type.evenement': 'Evenement: kies een type',
+    'publish.event.subtype_label': 'WAT VOOR EVENEMENT?',
+    'publish.btn_next': 'Volgende →',
+    'publish.btn_publish': 'Publiceren 🎉',
+    // Type pills + lijst-view
+    'types.heading': 'TYPES',
+    'list.sort_by': 'Sorteer op:',
+    'list.sort.newest': '🆕 Nieuwste eerst',
+    'list.sort.date_asc': '📅 Vroegste eerst',
+    'list.sort.date_desc': '📅 Laatste eerst',
+    'list.sort.nearby': '📍 Dichtstbijzijnde',
+    'list.sort.interest': '🔥 Meest populair',
     // Toasts algemeen
     'toast.welcome_guest': 'Je bekijkt YardiGo als gast 👁️',
     'toast.logged_out': 'Je bent uitgelogd',
@@ -2646,6 +2666,26 @@ var I18N = {
     'publish.step_details': 'Tell us more',
     'publish.step_address': 'Address',
     'publish.publish_btn': '🚀 Publish',
+    // Plaats-flow steps + types
+    'publish.s0.title': 'Sale type',
+    'publish.s0.sub': 'What kind of sale is this?',
+    'publish.s1.title': 'Details',
+    'publish.s2.title': 'Location & categories',
+    'publish.s3.title': 'Photos',
+    'publish.type.particulier': 'Private: your own items',
+    'publish.type.buurt': 'Neighborhood: multiple houses',
+    'publish.type.evenement': 'Event: pick a type',
+    'publish.event.subtype_label': 'WHAT KIND OF EVENT?',
+    'publish.btn_next': 'Next →',
+    'publish.btn_publish': 'Publish 🎉',
+    // Type pills + list view
+    'types.heading': 'TYPES',
+    'list.sort_by': 'Sort by:',
+    'list.sort.newest': '🆕 Newest first',
+    'list.sort.date_asc': '📅 Earliest first',
+    'list.sort.date_desc': '📅 Latest first',
+    'list.sort.nearby': '📍 Nearest',
+    'list.sort.interest': '🔥 Most popular',
     // Toasts
     'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
     'toast.logged_out': 'You have been signed out',
@@ -2736,6 +2776,26 @@ var I18N = {
     'publish.step_details': 'Plus de détails',
     'publish.step_address': 'Adresse',
     'publish.publish_btn': '🚀 Publier',
+    // Plaats-flow étapes + types
+    'publish.s0.title': 'Type de vente',
+    'publish.s0.sub': 'Quel type de vente est-ce ?',
+    'publish.s1.title': 'Détails',
+    'publish.s2.title': 'Lieu et catégories',
+    'publish.s3.title': 'Photos',
+    'publish.type.particulier': 'Particulier : vos propres objets',
+    'publish.type.buurt': 'Vente de quartier : plusieurs maisons',
+    'publish.type.evenement': 'Événement : choisissez un type',
+    'publish.event.subtype_label': 'QUEL TYPE D\'ÉVÉNEMENT ?',
+    'publish.btn_next': 'Suivant →',
+    'publish.btn_publish': 'Publier 🎉',
+    // Type pills + vue liste
+    'types.heading': 'TYPES',
+    'list.sort_by': 'Trier par :',
+    'list.sort.newest': '🆕 Plus récents',
+    'list.sort.date_asc': '📅 Plus tôt',
+    'list.sort.date_desc': '📅 Plus tard',
+    'list.sort.nearby': '📍 Plus proches',
+    'list.sort.interest': '🔥 Plus populaires',
     // Toasts
     'toast.welcome_guest': 'Vous parcourez YardiGo en tant qu\'invité 👁️',
     'toast.logged_out': 'Vous avez été déconnecté',
@@ -2819,6 +2879,24 @@ var I18N = {
     'publish.step_details': 'Tell us more',
     'publish.step_address': 'Address',
     'publish.publish_btn': '🚀 Publish',
+    'publish.s0.title': 'Sale type',
+    'publish.s0.sub': 'What kind of sale is this?',
+    'publish.s1.title': 'Details',
+    'publish.s2.title': 'Location & categories',
+    'publish.s3.title': 'Photos',
+    'publish.type.particulier': 'Private: your own items',
+    'publish.type.buurt': 'Neighborhood: multiple houses',
+    'publish.type.evenement': 'Event: pick a type',
+    'publish.event.subtype_label': 'WHAT KIND OF EVENT?',
+    'publish.btn_next': 'Next →',
+    'publish.btn_publish': 'Publish 🎉',
+    'types.heading': 'TYPES',
+    'list.sort_by': 'Sort by:',
+    'list.sort.newest': '🆕 Newest first',
+    'list.sort.date_asc': '📅 Earliest first',
+    'list.sort.date_desc': '📅 Latest first',
+    'list.sort.nearby': '📍 Nearest',
+    'list.sort.interest': '🔥 Most popular',
     'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
     'toast.logged_out': 'You have been signed out',
     'lang.switched_nl': '🇳🇱 Nederlands',

@@ -22,6 +22,7 @@
 <body>
 
   <a class="back" href="/">← Terug naar YardiGo</a>
+  <span style="float:right;font-size:12px;color:#7A6E62"><a href="/voorwaarden-fr" style="color:#3A6B4A;text-decoration:none">🇫🇷 Version française</a></span>
 
   <h1>Gebruiksvoorwaarden</h1>
   <p class="last-updated">Versie 2.0 · Laatst bijgewerkt: 17 april 2026</p>
@@ -124,5 +125,19 @@
     &copy; 2026 YardiGo · <a href="/privacy">Privacyverklaring</a> · <a href="/">Terug naar YardiGo</a>
   </footer>
 
+<script>
+// Auto-redirect naar FR-versie als de gebruiker FR als taal heeft gekozen
+// (yg-lang in localStorage of ?lang=fr in URL).
+(function() {
+  try {
+    var lang = null;
+    try { lang = localStorage.getItem('yg-lang'); } catch(e) {}
+    var qLang = new URLSearchParams(location.search).get('lang');
+    if ((qLang === 'fr' || lang === 'fr') && location.pathname !== '/voorwaarden-fr' && location.pathname !== '/voorwaarden-fr.html') {
+      location.replace('/voorwaarden-fr');
+    }
+  } catch(e) {}
+})();
+</script>
 </body>
 </html>

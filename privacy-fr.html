@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Politique de confidentialité – YardiGo</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; color: #2C2416; background: #F9F5EF; line-height: 1.7; }
+    h1 { font-size: 28px; color: #E07B39; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 36px; color: #3A6B4A; }
+    h3 { font-size: 15px; margin-top: 24px; color: #3A6B4A; }
+    p, li { font-size: 15px; color: #4A3E32; }
+    ul { padding-left: 20px; }
+    a { color: #E07B39; }
+    .last-updated { font-size: 13px; color: #7A6E62; margin-bottom: 32px; }
+    footer { margin-top: 48px; font-size: 13px; color: #7A6E62; border-top: 1px solid #EDE8DF; padding-top: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #EDE8DF; vertical-align: top; }
+    th { background: #F2EADD; color: #2C2416; font-weight: 700; }
+    .note { font-size: 13px; color: #7A6E62; background: #F2EADD; border-left: 3px solid #E07B39; padding: 10px 12px; border-radius: 6px; margin: 12px 0; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #3A6B4A; text-decoration: none; margin-bottom: 28px; }
+    .back:hover { opacity: .75; }
+    .lang-switch { float: right; font-size: 12px; color: #7A6E62; }
+    .lang-switch a { color: #3A6B4A; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <a class="back" href="/">← Retour à YardiGo</a>
+  <span class="lang-switch"><a href="/privacy">🇳🇱 Nederlandse versie</a></span>
+
+  <h1>Politique de confidentialité</h1>
+  <p class="last-updated">Version 2.3 · Dernière mise à jour : 20 avril 2026</p>
+
+  <div class="note">Cette traduction est fournie à titre informatif. En cas de divergence avec la version néerlandaise, la version néerlandaise fait foi pour les utilisateurs établis aux Pays-Bas. Pour les utilisateurs résidant en Belgique, vos droits sous le RGPD restent intégralement applicables.</div>
+
+  <p>YardiGo est une application et un site web néerlandais qui vous permet de trouver et de publier des vide-greniers, des ventes de quartier, des ventes de coffre et des brocantes près de chez vous. Cette politique de confidentialité explique quelles données personnelles nous traitons, pourquoi, pendant combien de temps et sur quelle base juridique, ainsi que les droits dont vous disposez en vertu du Règlement général sur la protection des données (RGPD).</p>
+
+  <h2>1. Responsable du traitement</h2>
+  <p>
+    <strong>Christian Koops</strong>, sous le nom de <strong>YardiGo</strong> (entreprise individuelle en cours d'enregistrement).<br>
+    Numéro de la Chambre de Commerce et adresse d'établissement : <em>seront indiqués ici dès que l'inscription auprès de la Chambre de Commerce sera définitive.</em><br>
+    E-mail pour les demandes liées à la vie privée : <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a><br>
+    E-mail général : <a href="mailto:info@yardigo.nl">info@yardigo.nl</a>
+  </p>
+  <p>YardiGo n'a pas désigné de Délégué à la Protection des Données ; cela n'est pas obligatoire pour une organisation de cette taille.</p>
+
+  <h2>2. Quelles données traitons-nous ?</h2>
+  <p>Nous traitons uniquement les données nécessaires à la prestation du service (minimisation des données, art. 5.1.c RGPD) :</p>
+  <ul>
+    <li><strong>Nom</strong> – lors de la création d'un compte, comme nom d'affichage dans l'application.</li>
+    <li><strong>Adresse e-mail</strong> – pour l'inscription, la connexion et la communication concernant votre compte.</li>
+    <li><strong>Mot de passe haché</strong> – via Supabase Auth ; les mots de passe ne sont jamais stockés en clair.</li>
+    <li><strong>Identifiant utilisateur</strong> – un code d'identification interne lié à votre compte.</li>
+    <li><strong>Localisation précise (GPS)</strong> – pour afficher les ventes près de chez vous et placer votre propre annonce sur la carte. Uniquement après autorisation explicite via votre appareil. Cette localisation n'est pas stockée de manière persistante dans notre base de données ; nous l'utilisons en temps réel pour afficher la carte.</li>
+    <li><strong>Contenu de l'annonce</strong> – photos, adresse, date/heure, catégories et description que vous saisissez vous-même lors de la publication d'une vente.</li>
+    <li><strong>Logs techniques</strong> – adresse IP, type de navigateur, système d'exploitation et horodatages ; enregistrés automatiquement par Supabase et Vercel pour la sécurité et le diagnostic des erreurs.</li>
+  </ul>
+
+  <h2>3. Finalités, bases juridiques et durées de conservation</h2>
+  <p>Sous le RGPD, nous devons préciser pour chaque traitement <strong>ce</strong> que nous faisons, <strong>pourquoi</strong>, sur quelle <strong>base juridique</strong> (art. 6.1 RGPD) et combien de temps nous le <strong>conservons</strong> :</p>
+
+  <table>
+    <thead>
+      <tr><th>Données</th><th>Finalité</th><th>Base juridique</th><th>Conservation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Nom, e-mail, mot de passe haché, identifiant utilisateur</td>
+        <td>Création de compte, authentification, prestation du service</td>
+        <td>art. 6.1.b – exécution du contrat</td>
+        <td>Jusqu'à la suppression du compte, plus 30 jours maximum dans les sauvegardes</td>
+      </tr>
+      <tr>
+        <td>Localisation GPS (temps réel)</td>
+        <td>Afficher les ventes proches, placer votre annonce sur la carte</td>
+        <td>art. 6.1.a – consentement (via la demande iOS/Android)</td>
+        <td>Non stockée de manière persistante ; uniquement en mémoire pendant l'utilisation</td>
+      </tr>
+      <tr>
+        <td>Contenu de l'annonce (photos, adresse, date, description)</td>
+        <td>Affichage de votre vente aux autres utilisateurs</td>
+        <td>art. 6.1.b – exécution du contrat</td>
+        <td>Jusqu'à ce que vous supprimiez l'annonce, ou suppression automatique dans les 30 jours suivant la date de l'événement</td>
+      </tr>
+      <tr>
+        <td>Logs techniques (IP, appareil, erreurs)</td>
+        <td>Sécurité, détection de fraude, diagnostic d'erreurs, limitation de débit</td>
+        <td>art. 6.1.f – intérêt légitime</td>
+        <td>Maximum 90 jours dans les logs</td>
+      </tr>
+      <tr>
+        <td>E-mails de service (réinitialisation du mot de passe, notifications de compte)</td>
+        <td>Communication transactionnelle concernant votre compte</td>
+        <td>art. 6.1.b – exécution du contrat</td>
+        <td>Durée de la relation contractuelle</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>YardiGo n'utilise actuellement <strong>aucun</strong> mailing marketing ni newsletter. Si cela devait changer à l'avenir, ce serait uniquement sur la base d'un opt-in séparé et non pré-coché (art. 6.1.a RGPD).</p>
+
+  <h2>4. Conséquences si vous ne fournissez pas les données</h2>
+  <ul>
+    <li>Sans adresse e-mail et mot de passe, vous ne pouvez pas créer de compte ; vous pouvez toutefois utiliser YardiGo <strong>en tant qu'invité</strong> pour consulter les ventes.</li>
+    <li>Sans autorisation de localisation, vous ne pouvez pas voir automatiquement les ventes près de chez vous ; la recherche manuelle par ville ou code postal reste possible.</li>
+    <li>Sans données d'annonce (adresse, date), vous ne pouvez pas publier de vente ; consulter les ventes des autres reste possible.</li>
+  </ul>
+
+  <h2>5. Destinataires et sous-traitants</h2>
+  <p>Nous ne vendons jamais vos données et ne les partageons pas avec des annonceurs. Nous faisons exclusivement appel aux sous-traitants suivants, qui ont tous signé un accord de sous-traitance avec nous (ou appliquent leurs conditions standard) :</p>
+
+  <table>
+    <thead>
+      <tr><th>Partie</th><th>Finalité</th><th>Lieu de traitement</th><th>Garantie de transfert</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Supabase Inc.</strong> (États-Unis)</td>
+        <td>Base de données, authentification et stockage de fichiers (photos)</td>
+        <td>Région UE (Francfort)</td>
+        <td>EU-US Data Privacy Framework + clauses contractuelles types</td>
+      </tr>
+      <tr>
+        <td><strong>Vercel Inc.</strong> (États-Unis)</td>
+        <td>Hébergement du site web et edge-delivery</td>
+        <td>CDN mondial ; région principale UE</td>
+        <td>EU-US Data Privacy Framework + clauses contractuelles types</td>
+      </tr>
+      <tr>
+        <td><strong>Apple Inc.</strong> (États-Unis)</td>
+        <td>Distribution de l'application iOS, notifications push, authentification App Store</td>
+        <td>Mondial</td>
+        <td>EU-US Data Privacy Framework + clauses contractuelles types</td>
+      </tr>
+      <tr>
+        <td><strong>OpenStreetMap Foundation</strong> (Royaume-Uni)</td>
+        <td>Tuiles cartographiques chargées à l'ouverture de la carte ; reçoit votre adresse IP</td>
+        <td>Royaume-Uni</td>
+        <td>Décision d'adéquation de la Commission européenne (RU)</td>
+      </tr>
+      <tr>
+        <td><strong>Porkbun LLC</strong> (États-Unis)</td>
+        <td>Enregistrement de domaine et redirection e-mail pour privacy@yardigo.nl</td>
+        <td>États-Unis</td>
+        <td>EU-US Data Privacy Framework + clauses contractuelles types</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Les données d'annonce rendues publiques (adresse, description, photos et nom d'affichage que vous avez choisi) sont visibles par tous les visiteurs de YardiGo. Ne publiez donc pas de données que vous ne souhaitez pas rendre publiques.</p>
+
+  <h2>5a. Ventes de quartier : adresses d'autres résidents</h2>
+  <p>Lors d'une <strong>vente de quartier</strong>, l'organisateur peut indiquer plusieurs adresses dans le formulaire de publication. L'adresse d'un autre ménage est également une donnée personnelle de ce(s) résident(s). Pour ce traitement, une base juridique distincte est nécessaire. YardiGo travaille donc avec un <strong>lien de confirmation obligatoire</strong> :</p>
+  <ul>
+    <li>L'adresse personnelle de l'organisateur est mise en ligne directement. Pour cela, l'organisateur donne explicitement son consentement pour lui-même au moment de la publication (art. 6.1.a RGPD).</li>
+    <li>Pour chaque autre adresse, YardiGo génère un lien unique et aléatoire (<code>/bevestig?token=…</code>) et ne l'envoie <strong>pas</strong> directement au résident. L'organisateur partage le lien manuellement avec le résident concerné via WhatsApp, SMS ou e-mail.</li>
+    <li>Tant que le résident ne clique pas sur le lien, l'adresse <strong>n'est pas</strong> visible aux autres utilisateurs (même pas aux visiteurs connectés). L'annonce reste au statut <em>en attente</em>.</li>
+    <li>Le résident peut cliquer via le lien sur "Oui, confirmer mon adresse" (consentement ; statut <em>confirmé</em>) ou "Non, retirer" (refus ; statut <em>refusé</em>). En cas de refus, la rue, le code postal et les coordonnées sont <strong>immédiatement</strong> supprimés de notre base de données.</li>
+    <li>Si un lien de confirmation reste sans réponse pendant <strong>7 jours</strong>, YardiGo bascule automatiquement le statut à <em>expiré</em> et la rue, le code postal et les coordonnées sont également supprimés. Le résident n'a rien à faire.</li>
+    <li>Le résident peut éventuellement saisir un nom d'affichage (par ex. "Famille de Vries") ; cela n'est jamais obligatoire.</li>
+    <li>Si en tant que résident vous estimez que votre adresse a été saisie sans votre accord, envoyez un e-mail à <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Nous la supprimons sur simple demande, quel que soit le statut.</li>
+  </ul>
+  <p>Dans ce processus, nous traitons les données suivantes du résident : nom de rue + numéro, code postal, coordonnées géographiques et (facultatif) le nom d'affichage que le résident a choisi. Nous ne traitons <strong>aucun</strong> numéro de téléphone ni adresse e-mail du résident. La communication avec le résident se fait entièrement en dehors de YardiGo, par l'intermédiaire de l'organisateur.</p>
+  <p><strong>Étiquette de reconnaissance par l'organisateur.</strong> Lors de la création d'une vente de quartier, l'organisateur peut éventuellement saisir une courte étiquette de reconnaissance par adresse (par ex. un prénom ou "n° 14"). Cette étiquette sert uniquement d'aide-mémoire pour l'organisateur lui-même, n'est visible que dans son tableau de bord et n'apparaît <strong>jamais</strong> publiquement sur la carte, la page de détails ou la page de confirmation. Si un résident saisit son propre nom d'affichage via le lien de confirmation, cela ne remplace pas l'étiquette de l'organisateur, mais apparaît séparément dans le profil de résident de l'annonce.</p>
+  <p><strong>L'adresse e-mail du voisin est facultative et n'est pas stockée.</strong> L'organisateur peut saisir une adresse e-mail par adresse dans le formulaire de publication, uniquement pour ouvrir le bouton e-mail sur la page de partage <em>pré-rempli</em> directement après publication (via un lien <code>mailto:</code>). L'adresse e-mail est utilisée uniquement dans le navigateur de l'organisateur, ne <strong>passe pas</strong> par notre serveur et n'est <strong>pas</strong> stockée dans notre base de données. L'e-mail lui-même est envoyé par l'application e-mail de l'organisateur depuis sa propre adresse e-mail ; YardiGo n'est pas expéditeur ni sous-traitant dans cet envoi.</p>
+  <p><strong>Base juridique :</strong> consentement explicite via le lien de confirmation (art. 6.1.a RGPD). Le consentement peut être retiré à tout moment via ce même lien (tant que la vente n'a pas eu lieu) ou via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Le retrait n'a pas d'effet rétroactif sur le traitement effectué avant le retrait.</p>
+  <p><strong>Durée de conservation :</strong> active jusqu'à la date de la vente de quartier comprise ; ensuite les données d'adresse, de code postal et de coordonnées des résidents confirmés (plus l'étiquette de reconnaissance optionnelle de l'organisateur) sont supprimées dans les 30 jours. Les entrées en attente ou refusées sont supprimées immédiatement ou après 7 jours, comme décrit ci-dessus.</p>
+
+  <h2>6. Cookies et stockage local</h2>
+  <p>YardiGo n'utilise <strong>aucun</strong> cookie de traçage, <strong>aucun</strong> service d'analyse contenant des données personnelles (comme Google Analytics ou Meta Pixel) ni <strong>aucun</strong> pixel publicitaire. Nous ne plaçons que :</p>
+  <ul>
+    <li><strong>localStorage technique</strong> – pour stocker votre statut de connexion et vos préférences (comme les catégories sélectionnées) sur votre appareil. Il ne s'agit pas de cookies et les données ne quittent pas votre appareil.</li>
+    <li><strong>Cookies de session fonctionnels de Supabase Auth</strong> – strictement nécessaires pour vous garder connecté. Pour les cookies strictement nécessaires, le consentement n'est pas requis (art. 82 de la loi française "Informatique et Libertés" et législation belge équivalente transposant la directive ePrivacy).</li>
+  </ul>
+  <p>Comme nous ne chargeons aucun script analytique ou marketing, nous n'affichons délibérément aucune bannière de cookies. Si à l'avenir YardiGo utilise des analytiques ou d'autres cookies non nécessaires, nous placerons à ce moment-là une bannière de consentement avec des options "Accepter" et "Refuser" équivalentes, et ces scripts ne seront chargés qu'<strong>après</strong> consentement.</p>
+
+  <h2>7. Sécurité</h2>
+  <ul>
+    <li>Toute communication avec notre serveur se fait via HTTPS (TLS).</li>
+    <li>Les mots de passe ne sont jamais stockés en clair ; nous utilisons l'implémentation de hachage de Supabase Auth.</li>
+    <li>L'accès à la base de données est limité par Row Level Security (RLS) sur Supabase : vous ne pouvez modifier que vos propres annonces et données de profil.</li>
+    <li>Une limitation de débit (rate-limiting) est active sur les endpoints de connexion et d'inscription pour limiter les tentatives de brute-force.</li>
+  </ul>
+
+  <h2>8. Décisions automatisées et profilage</h2>
+  <p>YardiGo n'effectue <strong>aucune</strong> prise de décision automatisée ni profilage au sens de l'article 22 du RGPD. Aucune décision vous concernant n'est donc prise par des algorithmes ayant des effets juridiques ou des conséquences significatives pour vous.</p>
+
+  <h2>9. Vos droits</h2>
+  <p>Sous le RGPD, vous disposez des droits suivants :</p>
+  <ul>
+    <li><strong>Accès</strong> (art. 15) – demander quelles données nous détenons à votre sujet.</li>
+    <li><strong>Rectification</strong> (art. 16) – faire corriger des données inexactes.</li>
+    <li><strong>Suppression / oubli</strong> (art. 17) – faire supprimer votre compte et les données associées. Vous pouvez le faire vous-même via <em>Mes ventes → Paramètres → Supprimer le compte</em> dans l'application, ou par demande à <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>.</li>
+    <li><strong>Limitation</strong> (art. 18) – nous demander de limiter temporairement le traitement, par exemple en cas de litige sur l'exactitude.</li>
+    <li><strong>Portabilité</strong> (art. 20) – récupérer vos données de compte et annonces dans un format structuré et lisible par machine.</li>
+    <li><strong>Opposition</strong> (art. 21) – vous opposer aux traitements basés sur l'intérêt légitime (notamment les logs).</li>
+    <li><strong>Retrait du consentement</strong> (art. 7.3) – l'autorisation GPS peut être retirée à tout moment via les paramètres de votre appareil. Cela n'affecte pas le traitement déjà effectué avant le retrait.</li>
+  </ul>
+  <p>Envoyez votre demande à <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Nous répondons dans un délai d'un mois (art. 12.3 RGPD). Pour vérifier votre identité, nous vous demandons d'envoyer la demande depuis l'adresse e-mail enregistrée pour votre compte ; une copie d'une pièce d'identité n'est pas nécessaire.</p>
+
+  <h2>10. Droit d'introduire une réclamation auprès de l'autorité de contrôle</h2>
+  <p>Si vous estimez que nous ne traitons pas vos données avec soin, vous pouvez introduire une réclamation auprès de l'autorité de contrôle néerlandaise. YardiGo est établi aux Pays-Bas et relève principalement de la supervision de l'Autoriteit Persoonsgegevens :</p>
+  <p>
+    <strong>Autoriteit Persoonsgegevens</strong> (Pays-Bas)<br>
+    Postbus 93374, 2509 AJ Den Haag<br>
+    <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener">autoriteitpersoonsgegevens.nl</a>
+  </p>
+  <div style="border-left:3px solid #3A6B4A;padding:6px 14px;margin:14px 0;background:#F0F6F2;border-radius:6px">
+    <p style="margin-top:8px"><strong>Pour les résidents belges.</strong> Sous le RGPD, vous pouvez également introduire votre réclamation auprès de l'autorité de contrôle de votre pays de résidence. En Belgique, il s'agit de :</p>
+    <p style="margin-bottom:8px">
+      <strong>Autorité de protection des données (APD/GBA)</strong><br>
+      Rue de la Presse 35, 1000 Bruxelles<br>
+      <a href="https://www.autoriteprotectiondonnees.be" target="_blank" rel="noopener">autoriteprotectiondonnees.be</a>
+    </p>
+  </div>
+
+  <h2>11. Utilisateurs de moins de 16 ans</h2>
+  <p>YardiGo est destiné aux utilisateurs à partir de 16 ans. Les utilisateurs de moins de 16 ans ont besoin du consentement d'un parent ou tuteur en vertu de l'article 8 du RGPD. Si vous soupçonnez que nous traitons les données d'un mineur sans autorisation, contactez-nous via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a> ; nous supprimerons ces données dans les meilleurs délais.</p>
+
+  <h2>12. Violations de données</h2>
+  <p>Nous prenons au sérieux notre obligation de notification en cas de violation de données. Si une violation de données présente un risque pour vos droits et libertés, nous la notifions à l'Autoriteit Persoonsgegevens dans les <strong>72 heures</strong> après sa découverte (art. 33 RGPD). En cas de risque élevé, nous vous informons directement (art. 34 RGPD).</p>
+
+  <h2>13. Modifications de cette déclaration</h2>
+  <p>Nous pouvons adapter cette politique de confidentialité. La version la plus récente est toujours disponible sur <a href="https://www.yardigo.nl/privacy">www.yardigo.nl/privacy</a> (NL) et <a href="https://www.yardigo.be/privacy-fr">www.yardigo.be/privacy-fr</a> (FR). Pour les modifications importantes, nous vous informons via une notification dans l'application ou par e-mail, au moins 30 jours avant l'entrée en vigueur.</p>
+
+  <h3>Historique des versions</h3>
+  <ul>
+    <li><strong>v2.3 · 20 avril 2026</strong> : §5a complété par deux nouveaux points concernant le processus de vente de quartier : (1) l'organisateur peut enregistrer une étiquette de reconnaissance facultative et exclusivement visible pour lui-même par adresse (par ex. un prénom ou "n° 14"), et (2) l'adresse e-mail facultative du voisin est utilisée uniquement dans le navigateur pour un lien mailto pré-rempli et n'est pas stockée sur notre serveur.</li>
+    <li><strong>v2.2 · 19 avril 2026</strong> : coordonnées du responsable du traitement simplifiées ; l'adresse d'établissement et le numéro KvK seront indiqués dès que l'inscription auprès de la Chambre de Commerce sera définitive.</li>
+    <li><strong>v2.1 · 18 avril 2026</strong> : nouveau §5a sur les ventes de quartier avec lien de confirmation obligatoire pour les adresses d'autres résidents (RGPD art. 6.1.a) ; les entrées en attente sont automatiquement supprimées après 7 jours.</li>
+    <li><strong>v2.0 · 17 avril 2026</strong> : révision complète conforme à l'audit RGPD ; liste des sous-traitants élargie (Apple, OSM, Porkbun), transferts vers des pays tiers explicités, durées de conservation concrètes, base juridique f pour les logs, clause art. 22, paragraphe sur les violations de données, conséquences de la non-fourniture ajoutées.</li>
+    <li><strong>v1.0 · avril 2026</strong> : première version au lancement.</li>
+  </ul>
+
+  <h2>14. Contact</h2>
+  <p>Questions concernant la vie privée ? Envoyez un e-mail à <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Autres questions sur l'application : <a href="mailto:info@yardigo.nl">info@yardigo.nl</a>.</p>
+
+  <footer>
+    &copy; 2026 YardiGo · <a href="/voorwaarden-fr">Conditions d'utilisation</a> · <a href="/">Retour à YardiGo</a>
+  </footer>
+
+</body>
+</html>
