@@ -686,31 +686,31 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           </svg>
         </div>
 
-        <div class="ob-anim-2" style="font-size:30px;font-weight:800;color:white;text-align:center;margin-bottom:10px;line-height:1.2;letter-spacing:-.5px">
+        <div class="ob-anim-2" style="font-size:30px;font-weight:800;color:white;text-align:center;margin-bottom:10px;line-height:1.2;letter-spacing:-.5px" data-i18n-html="ob.s1.title">
           Ontdek verkopen<br>bij jou in de buurt
         </div>
-        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:32px;max-width:280px">
+        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:32px;max-width:280px" data-i18n="ob.s1.sub">
           Garageverkopen, buurtverkopen en vlooienmarkten, allemaal op de kaart.
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;width:100%">
           <div class="ob-feature-card ob-anim-3">
             <div class="ob-feature-icon">🗺️</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Op de kaart</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Zie alle verkopen in jouw buurt</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:white" data-i18n="ob.s1.feat1.title">Op de kaart</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px" data-i18n="ob.s1.feat1.sub">Zie alle verkopen in jouw buurt</div></div>
           </div>
           <div class="ob-feature-card ob-anim-4">
             <div class="ob-feature-icon">🧭</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Route plannen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Bezoek meerdere verkopen op één dag</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:white" data-i18n="ob.s1.feat2.title">Route plannen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px" data-i18n="ob.s1.feat2.sub">Bezoek meerdere verkopen op één dag</div></div>
           </div>
           <div class="ob-feature-card ob-anim-5">
             <div class="ob-feature-icon">🔔</div>
-            <div><div style="font-size:13px;font-weight:700;color:white">Meldingen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Nooit meer een verkoop missen</div></div>
+            <div><div style="font-size:13px;font-weight:700;color:white" data-i18n="ob.s1.feat3.title">Meldingen</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px" data-i18n="ob.s1.feat3.sub">Nooit meer een verkoop missen</div></div>
           </div>
         </div>
 
       </div>
       <div style="padding:24px 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <button class="ob-btn ob-btn-primary" onclick="obNext()">Aan de slag →</button>
+        <button class="ob-btn ob-btn-primary" onclick="obNext()" data-i18n="ob.s1.cta">Aan de slag →</button>
       </div>
     </div>
 
@@ -724,19 +724,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </svg>
         <div style="text-align:center;padding-bottom:16px">
           <div style="font-size:40px;margin-bottom:4px">🔐</div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Toestemmingen</div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)" data-i18n="ob.s2.heading">Toestemmingen</div>
         </div>
       </div>
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:6px">Jouw ervaring instellen</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:24px;line-height:1.6">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
+        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:6px" data-i18n="ob.s2.title">Jouw ervaring instellen</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:24px;line-height:1.6" data-i18n="ob.s2.sub">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
 
         <div class="ob-perm-card ob-anim-3" id="ob-loc-card" onclick="obRequestLocation()">
           <div class="ob-perm-icon">📍</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#2C2416">Locatie</div>
-            <div class="ob-perm-status">Tik om toestemming te geven</div>
+            <div style="font-size:13px;font-weight:700;color:#2C2416" data-i18n="ob.s2.loc">Locatie</div>
+            <div class="ob-perm-status" data-i18n="ob.s2.tap_grant">Tik om toestemming te geven</div>
           </div>
           <div class="ob-perm-arrow">›</div>
           <div class="ob-perm-check">✓</div>
@@ -745,8 +745,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="ob-perm-card ob-anim-4" id="ob-notif-card" onclick="obRequestNotif()">
           <div class="ob-perm-icon">🔔</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#2C2416">Meldingen</div>
-            <div class="ob-perm-status">Tik om toestemming te geven</div>
+            <div style="font-size:13px;font-weight:700;color:#2C2416" data-i18n="ob.s2.notif">Meldingen</div>
+            <div class="ob-perm-status" data-i18n="ob.s2.tap_grant">Tik om toestemming te geven</div>
           </div>
           <div class="ob-perm-arrow">›</div>
           <div class="ob-perm-check">✓</div>
@@ -754,8 +754,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
         <div style="flex:1;min-height:20px"></div>
         <div class="ob-anim-5" style="margin-top:24px;display:flex;flex-direction:column;gap:10px">
-          <button class="ob-btn ob-btn-primary" onclick="obNext()">Verder →</button>
-          <button class="ob-btn ob-btn-ghost" onclick="obNext()">Overslaan</button>
+          <button class="ob-btn ob-btn-primary" onclick="obNext()" data-i18n="ob.s2.next">Verder →</button>
+          <button class="ob-btn ob-btn-ghost" onclick="obNext()" data-i18n="ob.s2.skip">Overslaan</button>
         </div>
       </div>
     </div>
@@ -770,13 +770,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </svg>
         <div style="text-align:center;padding-bottom:16px">
           <div style="font-size:40px;margin-bottom:4px">🏷️</div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Categorieën</div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)" data-i18n="ob.s3.heading">Categorieën</div>
         </div>
       </div>
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px">Wat zoek jij?</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px">Kies je favoriete categorieën voor betere aanbevelingen.</div>
+        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px" data-i18n="ob.s3.title">Wat zoek jij?</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px" data-i18n="ob.s3.sub">Kies je favoriete categorieën voor betere aanbevelingen.</div>
         <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#3A6B4A;margin-bottom:18px" id="ob-cat-count">1 categorie geselecteerd</div>
 
         <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
@@ -805,7 +805,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </div>
 
         <div class="ob-anim-4">
-          <button class="ob-btn ob-btn-primary" onclick="obNext()">Volgende →</button>
+          <button class="ob-btn ob-btn-primary" onclick="obNext()" data-i18n="publish.btn_next">Volgende →</button>
         </div>
       </div>
     </div>
@@ -820,48 +820,48 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </svg>
         <div style="text-align:center;padding-bottom:16px">
           <div style="font-size:40px;margin-bottom:4px">👋</div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)">Bijna klaar!</div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.9)" data-i18n="ob.s4.heading">Bijna klaar!</div>
         </div>
       </div>
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px));overflow-y:auto">
-        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px">Welkom bij YardiGo</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:16px;line-height:1.6">Maak een gratis account aan voor de volledige ervaring.</div>
+        <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px" data-i18n="ob.s4.title">Welkom bij YardiGo</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:16px;line-height:1.6" data-i18n="ob.s4.sub">Maak een gratis account aan voor de volledige ervaring.</div>
 
         <div class="ob-anim-3" style="background:white;border-radius:16px;border:1.5px solid #EDE8DF;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(44,36,22,.06)">
-          <div style="font-size:13px;font-weight:700;color:#2C2416;margin-bottom:12px">Account aanmaken</div>
+          <div style="font-size:13px;font-weight:700;color:#2C2416;margin-bottom:12px" data-i18n="ob.s4.create_account">Account aanmaken</div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
-            <input class="form-input" id="ob-name" type="text" placeholder="Naam" autocomplete="name">
-            <input class="form-input" id="ob-email" type="email" placeholder="E-mailadres" autocomplete="email">
-            <input class="form-input" id="ob-pass" type="password" placeholder="Wachtwoord" autocomplete="new-password">
+            <input class="form-input" id="ob-name" type="text" placeholder="Naam" data-i18n-placeholder="ob.s4.ph_name" autocomplete="name">
+            <input class="form-input" id="ob-email" type="email" placeholder="E-mailadres" data-i18n-placeholder="ob.s4.ph_email" autocomplete="email">
+            <input class="form-input" id="ob-pass" type="password" placeholder="Wachtwoord" data-i18n-placeholder="ob.s4.ph_pass" autocomplete="new-password">
           </div>
           <label for="ob-terms" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
             <input type="checkbox" id="ob-terms" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
-            <span>Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.</span>
+            <span data-i18n-html="ob.s4.terms">Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.</span>
           </label>
-          <button class="ob-btn ob-btn-primary" onclick="obRegister()">Account aanmaken</button>
+          <button class="ob-btn ob-btn-primary" onclick="obRegister()" data-i18n="ob.s4.create_account">Account aanmaken</button>
         </div>
 
-        <div class="ob-anim-3" style="text-align:center;font-size:12px;color:#7A6E62;margin-bottom:12px">Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span></div>
+        <div class="ob-anim-3" style="text-align:center;font-size:12px;color:#7A6E62;margin-bottom:12px" data-i18n-html="ob.s4.have_account">Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span></div>
 
         <div class="ob-anim-4 ob-compare-table">
           <div class="ob-compare-head">
-            <div>👁️ Gast</div>
-            <div>✨ Account <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">GRATIS</span></div>
+            <div data-i18n="ob.compare.guest">👁️ Gast</div>
+            <div data-i18n-html="ob.compare.account">✨ Account <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">GRATIS</span></div>
           </div>
-          <div class="ob-compare-row has-both"><div>✓ Verkopen bekijken</div><div>✓ Verkopen bekijken</div></div>
-          <div class="ob-compare-row has-both"><div>✓ Foto's zien</div><div>✓ Foto's zien</div></div>
-          <div class="ob-compare-row has-both"><div>✓ Filteren</div><div>✓ Filteren</div></div>
-          <div class="ob-compare-row"><div>✗ Exact adres</div><div>✓ Exact adres</div></div>
-          <div class="ob-compare-row"><div>✗ Navigeren</div><div>✓ Navigeren</div></div>
-          <div class="ob-compare-row"><div>✗ Favorieten</div><div>✓ Favorieten</div></div>
-          <div class="ob-compare-row"><div>✗ Meldingen</div><div>✓ Meldingen</div></div>
-          <div class="ob-compare-row"><div>✗ Plaatsen</div><div>✓ Plaatsen</div></div>
+          <div class="ob-compare-row has-both"><div data-i18n="ob.compare.view_sales_yes">✓ Verkopen bekijken</div><div data-i18n="ob.compare.view_sales_yes">✓ Verkopen bekijken</div></div>
+          <div class="ob-compare-row has-both"><div data-i18n="ob.compare.view_photos_yes">✓ Foto's zien</div><div data-i18n="ob.compare.view_photos_yes">✓ Foto's zien</div></div>
+          <div class="ob-compare-row has-both"><div data-i18n="ob.compare.filter_yes">✓ Filteren</div><div data-i18n="ob.compare.filter_yes">✓ Filteren</div></div>
+          <div class="ob-compare-row"><div data-i18n="ob.compare.address_no">✗ Exact adres</div><div data-i18n="ob.compare.address_yes">✓ Exact adres</div></div>
+          <div class="ob-compare-row"><div data-i18n="ob.compare.navigate_no">✗ Navigeren</div><div data-i18n="ob.compare.navigate_yes">✓ Navigeren</div></div>
+          <div class="ob-compare-row"><div data-i18n="ob.compare.fav_no">✗ Favorieten</div><div data-i18n="ob.compare.fav_yes">✓ Favorieten</div></div>
+          <div class="ob-compare-row"><div data-i18n="ob.compare.notif_no">✗ Meldingen</div><div data-i18n="ob.compare.notif_yes">✓ Meldingen</div></div>
+          <div class="ob-compare-row"><div data-i18n="ob.compare.publish_no">✗ Plaatsen</div><div data-i18n="ob.compare.publish_yes">✓ Plaatsen</div></div>
         </div>
 
         <div class="ob-anim-5" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-          <button class="ob-btn ob-btn-ghost" onclick="obGuest()">Beperkt verder als gast →</button>
-          <div style="text-align:center;font-size:10px;color:#B0A899">Je kunt later alsnog een gratis account aanmaken</div>
+          <button class="ob-btn ob-btn-ghost" onclick="obGuest()" data-i18n="ob.s4.guest_btn">Beperkt verder als gast →</button>
+          <div style="text-align:center;font-size:10px;color:#B0A899" data-i18n="ob.s4.guest_note">Je kunt later alsnog een gratis account aanmaken</div>
         </div>
       </div>
     </div>
@@ -889,12 +889,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div id="welcome-sheet-body" style="position:relative;background:#F9F5EF;border-radius:24px 24px 0 0;padding:28px 24px max(28px,env(safe-area-inset-bottom,28px));width:100%;box-sizing:border-box;transform:translateY(100%);transition:transform .45s cubic-bezier(.4,0,.2,1)">
     <div style="width:40px;height:4px;background:#D8D0C5;border-radius:2px;margin:0 auto 24px"></div>
     <div style="text-align:center;font-size:36px;margin-bottom:12px">👋</div>
-    <div style="font-size:20px;font-weight:800;color:#2C2416;text-align:center;margin-bottom:6px">Welkom bij YardiGo!</div>
-    <div style="font-size:13px;color:#7A6E62;text-align:center;line-height:1.65;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto">Log in of maak een gratis account aan om het meeste uit YardiGo te halen.</div>
+    <div style="font-size:20px;font-weight:800;color:#2C2416;text-align:center;margin-bottom:6px" data-i18n="welcome.title">Welkom bij YardiGo!</div>
+    <div style="font-size:13px;color:#7A6E62;text-align:center;line-height:1.65;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto" data-i18n="welcome.body">Log in of maak een gratis account aan om het meeste uit YardiGo te halen.</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button onclick="startOnboarding(false)" style="background:#E07B39;color:white;border:none;border-radius:14px;padding:15px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;letter-spacing:-.1px">Gratis account aanmaken ✨</button>
-      <button onclick="startOnboarding(true)" style="background:white;color:#E07B39;border:2px solid #E07B39;border-radius:14px;padding:14px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%">Inloggen</button>
-      <button onclick="dismissWelcomeSheet()" style="background:transparent;color:#9A8E82;border:none;border-radius:14px;padding:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%">Niet nu, als gast verder →</button>
+      <button onclick="startOnboarding(false)" style="background:#E07B39;color:white;border:none;border-radius:14px;padding:15px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;letter-spacing:-.1px" data-i18n="welcome.signup">Gratis account aanmaken ✨</button>
+      <button onclick="startOnboarding(true)" style="background:white;color:#E07B39;border:2px solid #E07B39;border-radius:14px;padding:14px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%" data-i18n="header.login">Inloggen</button>
+      <button onclick="dismissWelcomeSheet()" style="background:transparent;color:#9A8E82;border:none;border-radius:14px;padding:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%" data-i18n="welcome.guest">Niet nu, als gast verder →</button>
     </div>
   </div>
 </div>
@@ -976,9 +976,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <!-- ── Cookie / privacy-notificatie (alleen web, eenmalig) ── -->
 <div id="yg-cookie-notice" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:9997;background:#2C2416;color:#F9F5EF;border-radius:14px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-family:'Poppins',sans-serif;max-width:560px;margin:0 auto">
-  <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#E07B39">🍪 Geen trackers op YardiGo</div>
-  <div style="font-size:12px;line-height:1.55;margin-bottom:10px;color:#EDE8DF">YardiGo gebruikt <strong>geen</strong> analytics- of advertentiecookies. Alleen functionele opslag om je ingelogd te houden en je voorkeuren te onthouden. Meer in onze <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacyverklaring</a>.</div>
-  <button onclick="dismissCookieNotice()" style="background:#E07B39;color:white;border:none;border-radius:10px;padding:9px 16px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Begrepen</button>
+  <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:#E07B39" data-i18n="cookie.title">🍪 Geen trackers op YardiGo</div>
+  <div style="font-size:12px;line-height:1.55;margin-bottom:10px;color:#EDE8DF" data-i18n-html="cookie.body">YardiGo gebruikt <strong>geen</strong> analytics- of advertentiecookies. Alleen functionele opslag om je ingelogd te houden en je voorkeuren te onthouden. Meer in onze <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacyverklaring</a>.</div>
+  <button onclick="dismissCookieNotice()" style="background:#E07B39;color:white;border:none;border-radius:10px;padding:9px 16px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="cookie.dismiss">Begrepen</button>
 </div>
 
 <!-- ════════════════════════════════════ APP ════════════════════════════════════ -->
@@ -2576,6 +2576,66 @@ var I18N = {
     'list.sort.date_desc': '📅 Laatste eerst',
     'list.sort.nearby': '📍 Dichtstbijzijnde',
     'list.sort.interest': '🔥 Meest populair',
+    // Cookie-notice
+    'cookie.title': '🍪 Geen trackers op YardiGo',
+    'cookie.body': 'YardiGo gebruikt <strong>geen</strong> analytics- of advertentiecookies. Alleen functionele opslag om je ingelogd te houden en je voorkeuren te onthouden. Meer in onze <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacyverklaring</a>.',
+    'cookie.dismiss': 'Begrepen',
+    // Welkom-sheet
+    'welcome.title': 'Welkom bij YardiGo!',
+    'welcome.body': 'Log in of maak een gratis account aan om het meeste uit YardiGo te halen.',
+    'welcome.signup': 'Gratis account aanmaken ✨',
+    'welcome.guest': 'Niet nu, als gast verder →',
+    // Onboarding screen 1 (Hero)
+    'ob.s1.title': 'Ontdek verkopen<br>bij jou in de buurt',
+    'ob.s1.sub': 'Garageverkopen, buurtverkopen en vlooienmarkten, allemaal op de kaart.',
+    'ob.s1.feat1.title': 'Op de kaart',
+    'ob.s1.feat1.sub': 'Zie alle verkopen in jouw buurt',
+    'ob.s1.feat2.title': 'Route plannen',
+    'ob.s1.feat2.sub': 'Bezoek meerdere verkopen op één dag',
+    'ob.s1.feat3.title': 'Meldingen',
+    'ob.s1.feat3.sub': 'Nooit meer een verkoop missen',
+    'ob.s1.cta': 'Aan de slag →',
+    // Onboarding screen 2 (Permissions)
+    'ob.s2.heading': 'Toestemmingen',
+    'ob.s2.title': 'Jouw ervaring instellen',
+    'ob.s2.sub': 'Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.',
+    'ob.s2.loc': 'Locatie',
+    'ob.s2.notif': 'Meldingen',
+    'ob.s2.tap_grant': 'Tik om toestemming te geven',
+    'ob.s2.next': 'Verder →',
+    'ob.s2.skip': 'Overslaan',
+    // Onboarding screen 3 (Categories)
+    'ob.s3.heading': 'Categorieën',
+    'ob.s3.title': 'Wat zoek jij?',
+    'ob.s3.sub': 'Kies je favoriete categorieën voor betere aanbevelingen.',
+    // Onboarding screen 4 (Account)
+    'ob.s4.heading': 'Bijna klaar!',
+    'ob.s4.title': 'Welkom bij YardiGo',
+    'ob.s4.sub': 'Maak een gratis account aan voor de volledige ervaring.',
+    'ob.s4.create_account': 'Account aanmaken',
+    'ob.s4.ph_name': 'Naam',
+    'ob.s4.ph_email': 'E-mailadres',
+    'ob.s4.ph_pass': 'Wachtwoord',
+    'ob.s4.terms': 'Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.',
+    'ob.s4.have_account': 'Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span>',
+    'ob.s4.guest_btn': 'Beperkt verder als gast →',
+    'ob.s4.guest_note': 'Je kunt later alsnog een gratis account aanmaken',
+    // Compare table (gast vs account)
+    'ob.compare.guest': '👁️ Gast',
+    'ob.compare.account': '✨ Account <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">GRATIS</span>',
+    'ob.compare.view_sales_yes': '✓ Verkopen bekijken',
+    'ob.compare.view_photos_yes': "✓ Foto's zien",
+    'ob.compare.filter_yes': '✓ Filteren',
+    'ob.compare.address_no': '✗ Exact adres',
+    'ob.compare.address_yes': '✓ Exact adres',
+    'ob.compare.navigate_no': '✗ Navigeren',
+    'ob.compare.navigate_yes': '✓ Navigeren',
+    'ob.compare.fav_no': '✗ Favorieten',
+    'ob.compare.fav_yes': '✓ Favorieten',
+    'ob.compare.notif_no': '✗ Meldingen',
+    'ob.compare.notif_yes': '✓ Meldingen',
+    'ob.compare.publish_no': '✗ Plaatsen',
+    'ob.compare.publish_yes': '✓ Plaatsen',
     // Toasts algemeen
     'toast.welcome_guest': 'Je bekijkt YardiGo als gast 👁️',
     'toast.logged_out': 'Je bent uitgelogd',
@@ -2686,6 +2746,66 @@ var I18N = {
     'list.sort.date_desc': '📅 Latest first',
     'list.sort.nearby': '📍 Nearest',
     'list.sort.interest': '🔥 Most popular',
+    // Cookie-notice
+    'cookie.title': '🍪 No trackers on YardiGo',
+    'cookie.body': 'YardiGo uses <strong>no</strong> analytics or advertising cookies. Only functional storage to keep you logged in and remember your preferences. More in our <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacy statement</a>.',
+    'cookie.dismiss': 'Got it',
+    // Welcome sheet
+    'welcome.title': 'Welcome to YardiGo!',
+    'welcome.body': 'Sign in or create a free account to get the most out of YardiGo.',
+    'welcome.signup': 'Create free account ✨',
+    'welcome.guest': 'Not now, continue as guest →',
+    // Onboarding screen 1 (Hero)
+    'ob.s1.title': 'Discover sales<br>near you',
+    'ob.s1.sub': 'Garage sales, neighborhood sales and flea markets, all on the map.',
+    'ob.s1.feat1.title': 'On the map',
+    'ob.s1.feat1.sub': 'See all sales in your area',
+    'ob.s1.feat2.title': 'Plan a route',
+    'ob.s1.feat2.sub': 'Visit multiple sales in one day',
+    'ob.s1.feat3.title': 'Notifications',
+    'ob.s1.feat3.sub': 'Never miss a sale again',
+    'ob.s1.cta': 'Get started →',
+    // Onboarding screen 2 (Permissions)
+    'ob.s2.heading': 'Permissions',
+    'ob.s2.title': 'Set up your experience',
+    'ob.s2.sub': 'Grant permissions for the best experience. You can always change this later.',
+    'ob.s2.loc': 'Location',
+    'ob.s2.notif': 'Notifications',
+    'ob.s2.tap_grant': 'Tap to grant permission',
+    'ob.s2.next': 'Continue →',
+    'ob.s2.skip': 'Skip',
+    // Onboarding screen 3 (Categories)
+    'ob.s3.heading': 'Categories',
+    'ob.s3.title': 'What are you looking for?',
+    'ob.s3.sub': 'Pick your favorite categories for better recommendations.',
+    // Onboarding screen 4 (Account)
+    'ob.s4.heading': 'Almost done!',
+    'ob.s4.title': 'Welcome to YardiGo',
+    'ob.s4.sub': 'Create a free account for the full experience.',
+    'ob.s4.create_account': 'Create account',
+    'ob.s4.ph_name': 'Name',
+    'ob.s4.ph_email': 'Email address',
+    'ob.s4.ph_pass': 'Password',
+    'ob.s4.terms': 'I agree to the <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Terms of use</a> and have read the <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacy statement</a>.',
+    'ob.s4.have_account': 'Already have an account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Sign in</span>',
+    'ob.s4.guest_btn': 'Continue as guest with limits →',
+    'ob.s4.guest_note': 'You can still create a free account later',
+    // Compare table (guest vs account)
+    'ob.compare.guest': '👁️ Guest',
+    'ob.compare.account': '✨ Account <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">FREE</span>',
+    'ob.compare.view_sales_yes': '✓ View sales',
+    'ob.compare.view_photos_yes': '✓ View photos',
+    'ob.compare.filter_yes': '✓ Filter',
+    'ob.compare.address_no': '✗ Exact address',
+    'ob.compare.address_yes': '✓ Exact address',
+    'ob.compare.navigate_no': '✗ Navigate',
+    'ob.compare.navigate_yes': '✓ Navigate',
+    'ob.compare.fav_no': '✗ Favorites',
+    'ob.compare.fav_yes': '✓ Favorites',
+    'ob.compare.notif_no': '✗ Notifications',
+    'ob.compare.notif_yes': '✓ Notifications',
+    'ob.compare.publish_no': '✗ Post',
+    'ob.compare.publish_yes': '✓ Post',
     // Toasts
     'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
     'toast.logged_out': 'You have been signed out',
@@ -2796,6 +2916,66 @@ var I18N = {
     'list.sort.date_desc': '📅 Plus tard',
     'list.sort.nearby': '📍 Plus proches',
     'list.sort.interest': '🔥 Plus populaires',
+    // Cookie-notice
+    'cookie.title': '🍪 Aucun traceur sur YardiGo',
+    'cookie.body': 'YardiGo n\'utilise <strong>aucun</strong> cookie d\'analyse ou de publicité. Uniquement du stockage fonctionnel pour vous garder connecté et mémoriser vos préférences. Plus d\'infos dans notre <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">politique de confidentialité</a>.',
+    'cookie.dismiss': 'J\'ai compris',
+    // Welcome sheet
+    'welcome.title': 'Bienvenue chez YardiGo !',
+    'welcome.body': 'Connectez-vous ou créez un compte gratuit pour profiter pleinement de YardiGo.',
+    'welcome.signup': 'Créer un compte gratuit ✨',
+    'welcome.guest': 'Pas maintenant, continuer en invité →',
+    // Onboarding screen 1 (Hero)
+    'ob.s1.title': 'Découvrez les ventes<br>près de chez vous',
+    'ob.s1.sub': 'Vide-greniers, ventes de quartier et brocantes, tous sur la carte.',
+    'ob.s1.feat1.title': 'Sur la carte',
+    'ob.s1.feat1.sub': 'Voyez toutes les ventes près de chez vous',
+    'ob.s1.feat2.title': 'Planifier un itinéraire',
+    'ob.s1.feat2.sub': 'Visitez plusieurs ventes le même jour',
+    'ob.s1.feat3.title': 'Notifications',
+    'ob.s1.feat3.sub': 'Ne ratez plus aucune vente',
+    'ob.s1.cta': 'Commencer →',
+    // Onboarding screen 2 (Permissions)
+    'ob.s2.heading': 'Autorisations',
+    'ob.s2.title': 'Configurez votre expérience',
+    'ob.s2.sub': 'Donnez votre autorisation pour la meilleure expérience. Vous pouvez toujours modifier cela plus tard.',
+    'ob.s2.loc': 'Localisation',
+    'ob.s2.notif': 'Notifications',
+    'ob.s2.tap_grant': 'Touchez pour autoriser',
+    'ob.s2.next': 'Continuer →',
+    'ob.s2.skip': 'Passer',
+    // Onboarding screen 3 (Categories)
+    'ob.s3.heading': 'Catégories',
+    'ob.s3.title': 'Que recherchez-vous ?',
+    'ob.s3.sub': 'Choisissez vos catégories préférées pour de meilleures recommandations.',
+    // Onboarding screen 4 (Account)
+    'ob.s4.heading': 'Presque fini !',
+    'ob.s4.title': 'Bienvenue chez YardiGo',
+    'ob.s4.sub': 'Créez un compte gratuit pour profiter de toute l\'expérience.',
+    'ob.s4.create_account': 'Créer un compte',
+    'ob.s4.ph_name': 'Nom',
+    'ob.s4.ph_email': 'Adresse e-mail',
+    'ob.s4.ph_pass': 'Mot de passe',
+    'ob.s4.terms': 'J\'accepte les <a href="/voorwaarden-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Conditions d\'utilisation</a> et j\'ai lu la <a href="/privacy-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Politique de confidentialité</a>.',
+    'ob.s4.have_account': 'Vous avez déjà un compte ? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Se connecter</span>',
+    'ob.s4.guest_btn': 'Continuer en invité (limité) →',
+    'ob.s4.guest_note': 'Vous pouvez toujours créer un compte gratuit plus tard',
+    // Compare table (invité vs compte)
+    'ob.compare.guest': '👁️ Invité',
+    'ob.compare.account': '✨ Compte <span style="background:#3A6B4A;color:white;border-radius:4px;padding:1px 5px;font-size:9px;margin-left:3px">GRATUIT</span>',
+    'ob.compare.view_sales_yes': '✓ Voir les ventes',
+    'ob.compare.view_photos_yes': '✓ Voir les photos',
+    'ob.compare.filter_yes': '✓ Filtrer',
+    'ob.compare.address_no': '✗ Adresse exacte',
+    'ob.compare.address_yes': '✓ Adresse exacte',
+    'ob.compare.navigate_no': '✗ Navigation',
+    'ob.compare.navigate_yes': '✓ Navigation',
+    'ob.compare.fav_no': '✗ Favoris',
+    'ob.compare.fav_yes': '✓ Favoris',
+    'ob.compare.notif_no': '✗ Notifications',
+    'ob.compare.notif_yes': '✓ Notifications',
+    'ob.compare.publish_no': '✗ Publier',
+    'ob.compare.publish_yes': '✓ Publier',
     // Toasts
     'toast.welcome_guest': 'Vous parcourez YardiGo en tant qu\'invité 👁️',
     'toast.logged_out': 'Vous avez été déconnecté',
@@ -2954,6 +3134,13 @@ function applyLang() {
     document.querySelectorAll('[data-i18n-title]').forEach(function(el){
       var t = i18n(el.getAttribute('data-i18n-title'), null);
       if (t != null) el.title = t;
+    });
+    // data-i18n-html → vervang volledige innerHTML, voor strings die zelf
+    // <a>, <strong> of andere markup bevatten en dus niet via textContent
+    // vertaald kunnen worden zonder de markup te verliezen.
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+      var t = i18n(el.getAttribute('data-i18n-html'), null);
+      if (t != null) el.innerHTML = t;
     });
     document.documentElement.lang = currentLang;
     document.body.classList.toggle('lang-en', currentLang === 'en');
