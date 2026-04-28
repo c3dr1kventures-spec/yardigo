@@ -7093,12 +7093,29 @@ var addrSugTimer = null;
 function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   var dd = document.getElementById(ddId);
   if (!dd) return;
+  // Gebruiker is aan het typen, dus eventueel eerder geselecteerde coords
+  // zijn niet meer geldig — wis de cache zodat publishSale niet stiekem
+  // de oude coords aan een nieuw adres koppelt.
+  var inputId = isBuurtRow ? 'bv-addr-' + buurtIdx : 'aAddr';
+  var inputEl = document.getElementById(inputId);
+  if (inputEl && inputEl.dataset) {
+    delete inputEl.dataset.lat;
+    delete inputEl.dataset.lng;
+  }
   if (!val || val.length < 3) { dd.style.display = 'none'; return; }
   clearTimeout(addrSugTimer);
   addrSugTimer = setTimeout(function() {
-    var renderRow = function(label) {
+    // renderRow accepteert nu optionele lat/lon zodat we ze meeprikken aan
+    // selectAddrSuggestion. Voor PDOK (NL) zijn ze niet beschikbaar in de
+    // suggest-response — dan blijft de oude flow (re-geocode in publishSale)
+    // gewoon werken want PDOK weergavenaam is netjes en Nominatim kan 'm
+    // wel matchen. Voor Nominatim-suggesties (BE/FR/DE) MOETEN we de coords
+    // cachen, anders faalt de re-geocode op Nominatim's eigen verbose
+    // display_name en landt alles op de fallback-coords.
+    var renderRow = function(label, lat, lon) {
+      var coordsArg = (lat != null && lon != null) ? (',' + lat + ',' + lon) : '';
       return '<div style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)" '
-        + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + String(label).replace(/'/g, "\\'") + '\')">'
+        + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + String(label).replace(/'/g, "\\'") + '\'' + coordsArg + ')">'
         + '📍 ' + escapeHtml(label) + '</div>';
     };
     if (currentListingCountry === 'NL') {
@@ -7113,29 +7130,42 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
         })
         .catch(function() { dd.style.display = 'none'; });
     } else {
-      // Nominatim met country-filter voor BE/FR/DE
+      // Nominatim met country-filter voor BE/FR/DE — coords cachen!
       var cc = lcCountryCode();
       fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val) + '&format=json&addressdetails=1&limit=6&countrycodes=' + cc, { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (!data || !data.length) { dd.style.display = 'none'; return; }
-          dd.innerHTML = data.map(function(d) { return renderRow(d.display_name || ''); }).join('');
+          dd.innerHTML = data.map(function(d) { return renderRow(d.display_name || '', +d.lat, +d.lon); }).join('');
           dd.style.display = 'block';
         })
         .catch(function() { dd.style.display = 'none'; });
     }
   }, 280);
 }
-function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label) {
+function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label, lat, lon) {
   var dd = document.getElementById(ddId);
   if (dd) dd.style.display = 'none';
+  // Coords meegegeven (Nominatim-suggestie): cache ze op het input element
+  // zodat publishSale ze direct kan gebruiken zonder een re-geocode op de
+  // verbose Nominatim display_name te doen — die faalt vaak.
+  var hasCoords = (typeof lat === 'number' && !isNaN(lat) && typeof lon === 'number' && !isNaN(lon));
   if (isBuurtRow) {
     var inp = document.getElementById('bv-addr-' + buurtIdx);
-    if (inp) inp.value = label;
-    if (buurtAdressen[buurtIdx]) buurtAdressen[buurtIdx].addr = label;
+    if (inp) {
+      inp.value = label;
+      if (hasCoords) { inp.dataset.lat = String(lat); inp.dataset.lng = String(lon); }
+    }
+    if (buurtAdressen[buurtIdx]) {
+      buurtAdressen[buurtIdx].addr = label;
+      if (hasCoords) { buurtAdressen[buurtIdx].lat = lat; buurtAdressen[buurtIdx].lng = lon; }
+    }
   } else {
     var aAddr = document.getElementById('aAddr');
-    if (aAddr) aAddr.value = label;
+    if (aAddr) {
+      aAddr.value = label;
+      if (hasCoords) { aAddr.dataset.lat = String(lat); aAddr.dataset.lng = String(lon); }
+    }
   }
 }
 // Herrender de foto-grid (na toevoegen/verwijderen)
@@ -7422,24 +7452,57 @@ async function publishSale() {
     // countrycodes. Het land komt uit `currentListingCountry` (de keuze in de
     // plaats-flow, default = TLD), zodat een NL-bezoeker op yardigo.nl een
     // Belgisch adres kan plaatsen door BE in de dropdown te kiezen.
+    //
+    // Optimalisatie: als de gebruiker een Nominatim-suggestie heeft geselecteerd
+    // hebben we de coords al gecached in dataset.lat/dataset.lng. Re-geocode
+    // dan overslaan, want Nominatim's verbose display_name (bv "Stadhuis Damme,
+    // 1, Markt, Damme, Brugge, West-Vlaanderen, Vlaanderen, 8340, België")
+    // matcht zichzelf vaak NIET op een tweede call en levert dan 0 results
+    // op, waardoor de listing op de fallback-coords landt. Voor PDOK (NL)
+    // zijn er geen cached coords en doen we de Nominatim-geocode wel — dat
+    // werkt prima omdat PDOK een schone weergavenaam teruggeeft.
     setPublishStatus('📍 Adres controleren...');
     var _geoCountry = lcCountryName();
     var _geoCC = lcCountryCode();
-    var geoAddr = isBuurt
-      ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
-      : (mainAddr + ', ' + _geoCountry);
-    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC);
-    var geoData = await geoRes.json();
-    // Fallback-coördinaten per land zodat een mislukte geocode niet altijd
-    // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers. Gebruikt
-    // de listing-country, niet de TLD-country, zodat een NL-bezoeker die in
-    // BE plaatst bij Brussel uitkomt.
-    var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[currentListingCountry] || [52.3,5.0];
-    var lat = geoData.length ? +geoData[0].lat : _geoFallback[0];
-    var lng = geoData.length ? +geoData[0].lon : _geoFallback[1];
-    var cityName = (geoData.length && geoData[0].address)
-      ? (geoData[0].address.city || geoData[0].address.town || geoData[0].address.village || geoData[0].address.municipality || extractCity(mainAddr))
-      : extractCity(mainAddr);
+    var _aAddrEl = document.getElementById('aAddr');
+    var _buurtAddrEl = isBuurt ? document.getElementById('bv-addr-0') : null;
+    var _cachedLat = null, _cachedLng = null;
+    if (isBuurt) {
+      if (_buurtAddrEl && _buurtAddrEl.dataset && _buurtAddrEl.dataset.lat && _buurtAddrEl.dataset.lng) {
+        _cachedLat = +_buurtAddrEl.dataset.lat;
+        _cachedLng = +_buurtAddrEl.dataset.lng;
+      } else if (buurtAdressen[0] && typeof buurtAdressen[0].lat === 'number' && typeof buurtAdressen[0].lng === 'number') {
+        _cachedLat = buurtAdressen[0].lat;
+        _cachedLng = buurtAdressen[0].lng;
+      }
+    } else {
+      if (_aAddrEl && _aAddrEl.dataset && _aAddrEl.dataset.lat && _aAddrEl.dataset.lng) {
+        _cachedLat = +_aAddrEl.dataset.lat;
+        _cachedLng = +_aAddrEl.dataset.lng;
+      }
+    }
+    var lat, lng, cityName, geoData = [];
+    if (_cachedLat != null && !isNaN(_cachedLat) && _cachedLng != null && !isNaN(_cachedLng)) {
+      lat = _cachedLat;
+      lng = _cachedLng;
+      cityName = extractCity(mainAddr);
+    } else {
+      var geoAddr = isBuurt
+        ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
+        : (mainAddr + ', ' + _geoCountry);
+      var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC);
+      geoData = await geoRes.json();
+      // Fallback-coördinaten per land zodat een mislukte geocode niet altijd
+      // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers. Gebruikt
+      // de listing-country, niet de TLD-country, zodat een NL-bezoeker die in
+      // BE plaatst bij Brussel uitkomt.
+      var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[currentListingCountry] || [52.3,5.0];
+      lat = geoData.length ? +geoData[0].lat : _geoFallback[0];
+      lng = geoData.length ? +geoData[0].lon : _geoFallback[1];
+      cityName = (geoData.length && geoData[0].address)
+        ? (geoData[0].address.city || geoData[0].address.town || geoData[0].address.village || geoData[0].address.municipality || extractCity(mainAddr))
+        : extractCity(mainAddr);
+    }
 
     // Categorie mapping voor Supabase
     var catMap = { particulier: 'garagesale', buurt: 'buurtverkoop', evenement: 'vlooienmarkt' };
@@ -7508,7 +7571,20 @@ async function publishSale() {
       // Sla per adres een listing op
       var addrsToGeo = buurtAdressen.slice(1); // al geocoded hoofd; rest geocoden
       if (addrsToGeo.length > 0) setPublishStatus('📍 Adressen verifiëren... (' + buurtAdressen.length + ' adressen)');
-      var geoPromises = addrsToGeo.map(function(a) {
+      var geoPromises = addrsToGeo.map(function(a, idx) {
+        // Zelfde optimalisatie als hoofd-adres: als de gebruiker via Nominatim
+        // suggesties heeft geselecteerd zijn de coords gecached op de buurt-rij
+        // (a.lat / a.lng) of op het input-element (bv-addr-{idx+1}.dataset).
+        // Re-geocode dan overslaan, anders faalt Nominatim op zijn eigen
+        // verbose display_name en valt het terug op de hoofd-adres-coords.
+        if (typeof a.lat === 'number' && typeof a.lng === 'number') {
+          return Promise.resolve({ lat: a.lat, lng: a.lng });
+        }
+        var rowEl = document.getElementById('bv-addr-' + (idx + 1));
+        if (rowEl && rowEl.dataset && rowEl.dataset.lat && rowEl.dataset.lng) {
+          var dl = +rowEl.dataset.lat, dn = +rowEl.dataset.lng;
+          if (!isNaN(dl) && !isNaN(dn)) return Promise.resolve({ lat: dl, lng: dn });
+        }
         return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', ' + _geoCountry) + '&format=json&limit=1&countrycodes=' + _geoCC)
           .then(function(r) { return r.json(); })
           .then(function(d) { return { lat: d.length ? +d[0].lat : lat, lng: d.length ? +d[0].lon : lng }; })
