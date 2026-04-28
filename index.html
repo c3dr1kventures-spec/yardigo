@@ -2002,6 +2002,23 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Step 2: Location & tags -->
       <div id="add-s2" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s2.title">Locatie & categorieën</div>
+        <!-- Land-keuze: standaard hetzelfde land als het TLD waarmee de
+             bezoeker binnenkomt, maar overrideable zodat een NL-bezoeker op
+             yardigo.nl een Belgisch adres kan opvoeren en omgekeerd. Bij
+             wijzigen worden adres-velden geleegd en placeholders / postcode
+             validatie aangepast op het nieuwe land. -->
+        <div id="add-s2-country-wrap" style="margin-bottom:14px;padding:10px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div style="min-width:0">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px" data-i18n="publish.country.label">🌍 Land</div>
+            <div style="font-size:10.5px;color:var(--muted);line-height:1.4;margin-top:2px" data-i18n="publish.country.help">In welk land staat het adres?</div>
+          </div>
+          <select id="aCountry" onchange="setListingCountry(this.value)" style="font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;background:white;color:var(--text);cursor:pointer;flex-shrink:0">
+            <option value="NL">🇳🇱 Nederland</option>
+            <option value="BE">🇧🇪 België</option>
+            <option value="FR">🇫🇷 France</option>
+            <option value="DE">🇩🇪 Deutschland</option>
+          </select>
+        </div>
         <!-- Enkel adres (particulier / evenement) -->
         <div id="add-s2-single" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
           <div style="position:relative">
@@ -2454,6 +2471,22 @@ var YG_ADDR_PLACEHOLDERS = {
   DE: { full: 'Hauptstraße 12, 10115 Berlin', pc: '10115', bulk: 'Anna | Hauptstraße 14, 10115\nJan | Hauptstraße 16, 10115' }
 };
 
+// Per-listing country override. Default is YG_COUNTRY (afgeleid van het TLD),
+// maar de gebruiker kan in de plaats-flow expliciet een ander land kiezen
+// zodat een NL-bezoeker op yardigo.nl een Belgisch adres kan opvoeren en
+// andersom. Wordt gereset bij elke openAdd().
+var currentListingCountry = (function(){
+  // Gebruik YG_COUNTRY zelf als default zodat alle code die deze variabele
+  // gebruikt voordat openAdd() wordt aangeroepen niet faalt.
+  return (typeof YG_COUNTRY !== 'undefined') ? YG_COUNTRY : 'NL';
+})();
+function lcCountryName() {
+  return ({ NL: 'Nederland', BE: 'België', FR: 'France', DE: 'Deutschland' })[currentListingCountry] || ygCountryName();
+}
+function lcCountryCode() {
+  return ({ NL: 'nl', BE: 'be', FR: 'fr', DE: 'de' })[currentListingCountry] || ygCountryCode();
+}
+
 var currentLang = (function(){
   // 1. Expliciete keuze in localStorage wint altijd
   try {
@@ -2561,6 +2594,8 @@ var I18N = {
     'publish.s0.sub': 'Wat voor soort verkoop is dit?',
     'publish.s1.title': 'Details',
     'publish.s2.title': 'Locatie & categorieën',
+    'publish.country.label': '🌍 Land',
+    'publish.country.help': 'In welk land staat het adres?',
     'publish.s3.title': "Foto's",
     'publish.type.particulier': 'Particulier: eigen spullen',
     'publish.type.buurt': 'Buurtverkoop: meerdere huizen',
@@ -2856,6 +2891,8 @@ var I18N = {
     'publish.s0.sub': 'What kind of sale is this?',
     'publish.s1.title': 'Details',
     'publish.s2.title': 'Location & categories',
+    'publish.country.label': '🌍 Country',
+    'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
     'publish.type.particulier': 'Private: your own items',
     'publish.type.buurt': 'Neighborhood: multiple houses',
@@ -3151,6 +3188,8 @@ var I18N = {
     'publish.s0.sub': 'Quel type de vente est-ce ?',
     'publish.s1.title': 'Détails',
     'publish.s2.title': 'Lieu et catégories',
+    'publish.country.label': '🌍 Pays',
+    'publish.country.help': "Dans quel pays se trouve l'adresse ?",
     'publish.s3.title': 'Photos',
     'publish.type.particulier': 'Particulier : vos propres objets',
     'publish.type.buurt': 'Vente de quartier : plusieurs maisons',
@@ -3438,6 +3477,8 @@ var I18N = {
     'publish.s0.sub': 'What kind of sale is this?',
     'publish.s1.title': 'Details',
     'publish.s2.title': 'Location & categories',
+    'publish.country.label': '🌍 Country',
+    'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
     'publish.type.particulier': 'Private: your own items',
     'publish.type.buurt': 'Neighborhood: multiple houses',
@@ -5942,8 +5983,75 @@ function closeAdd() {
 }
 
 // ══════════════════════════════════════════════════
-// BUURTVERKOOP — BEVESTIGINGSLINKS (AVG art. 6a)
+// CROSS-BORDER POSTING — listing-country override
+// ──────────────────────────────────────────────────
+// Standaard wordt het land van een listing afgeleid van YG_COUNTRY (de TLD).
+// Een NL-bezoeker op yardigo.nl en een Belgische bezoeker op yardigo.be
+// plaatsen meestal in eigen land. Maar de gebruiker kan in step 2 van de
+// plaats-flow expliciet een ander land kiezen, bijvoorbeeld als hij vanuit
+// Nederland een buurtverkoop in Antwerpen organiseert. Deze functie is de
+// enige plek waar `currentListingCountry` wijzigt; alle code die op de
+// listing-country leunt (autocomplete, geocoding, postcode-regex, placeholders)
+// leest hem uit deze variabele.
 // ══════════════════════════════════════════════════
+function setListingCountry(country, opts) {
+  opts = opts || {};
+  var c = String(country || 'NL').toUpperCase();
+  if (['NL','BE','FR','DE'].indexOf(c) === -1) c = 'NL';
+  var prev = currentListingCountry;
+  currentListingCountry = c;
+
+  // Sync dropdown — relevant als de functie programmatic wordt aangeroepen
+  // (bv. via resetAddForm bij het openen van het formulier).
+  var sel = document.getElementById('aCountry');
+  if (sel && sel.value !== c) sel.value = c;
+
+  // Placeholder van het hoofd-adres veld bijwerken op basis van het nieuwe
+  // land. Bestaande waarde blijft staan, behalve als de gebruiker echt
+  // switcht (zie hieronder).
+  try {
+    var ph = YG_ADDR_PLACEHOLDERS[c] || YG_ADDR_PLACEHOLDERS.NL;
+    var aAddr = document.getElementById('aAddr');
+    if (aAddr) aAddr.placeholder = 'Adres bijv. ' + ph.full;
+    var bulk = document.getElementById('bulkAdresText');
+    if (bulk) bulk.placeholder = 'Plak hier je adreslijst, bijvoorbeeld:\n' + ph.bulk;
+  } catch(e) { console.warn('setListingCountry placeholder faalde:', e); }
+
+  // Bij echte wijziging (gebruiker switcht in de UI van NL naar BE): leeg
+  // het hoofd-adres + de buurt-adres/postcode-velden, zodat een ingevulde
+  // Nederlandse postcode niet als Belgische geocodes wordt gestuurd. Label
+  // en email blijven behouden want die zijn taal-onafhankelijk. Bij silent
+  // reset (openAdd → resetAddForm) slaan we dit over want het formulier is
+  // al leeg.
+  if (!opts.silent && prev !== c) {
+    var aAddr2 = document.getElementById('aAddr');
+    if (aAddr2) aAddr2.value = '';
+    var ddSingle = document.getElementById('aAddr-dd');
+    if (ddSingle) { ddSingle.style.display = 'none'; ddSingle.innerHTML = ''; }
+    // Buurt-rijen rerenderen met nieuwe placeholder + maxlength. Label en
+    // email per rij behouden, addr en pc resetten (die zijn land-specifiek).
+    if (Array.isArray(buurtAdressen) && buurtAdressen.length > 0) {
+      var savedRows = buurtAdressen.map(function(a) {
+        return { addr: '', pc: '', label: a.label || '', email: a.email || '', preconsent: !!a.preconsent };
+      });
+      buurtAdressen = [];
+      var list = document.getElementById('buurt-adressen-list');
+      if (list) list.innerHTML = '';
+      savedRows.forEach(function(row) {
+        addBuurtAdres();
+        var newIdx = buurtAdressen.length - 1;
+        buurtAdressen[newIdx] = row;
+        var li = document.getElementById('bv-label-' + newIdx);
+        var ei = document.getElementById('bv-email-' + newIdx);
+        if (li) li.value = row.label;
+        if (ei) ei.value = row.email;
+      });
+    }
+    var flagMap = { NL:'🇳🇱', BE:'🇧🇪', FR:'🇫🇷', DE:'🇩🇪' };
+    var nameMap = { NL:'Nederland', BE:'België', FR:'France', DE:'Deutschland' };
+    toast((flagMap[c] || '🌍') + ' Land: ' + (nameMap[c] || c) + ' — adres opnieuw invoeren');
+  }
+}
 function generateConfirmationToken() {
   try {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -6114,6 +6222,10 @@ function resetAddForm() {
   // Reset adres-zichtbaarheid (default: pas 24u vooraf)
   var rDay = document.getElementById('aReveal-day-before'); if (rDay) rDay.checked = true;
   var rIns = document.getElementById('aReveal-instant');     if (rIns) rIns.checked = false;
+  // Reset listing-country naar de TLD-default. setListingCountry zet ook de
+  // dropdown, placeholders en postcode-regels; we slaan de toast over door
+  // silent=true mee te geven zodat het openen van het formulier rustig blijft.
+  setListingCountry(YG_COUNTRY, { silent: true });
   // Stap-navigatie
   ['add-s0','add-s1','add-s2','add-s3'].forEach(function(id, i) {
     var el = document.getElementById(id); if (el) el.style.display = i === 0 ? 'block' : 'none';
@@ -6251,7 +6363,7 @@ function addBuurtAdres() {
     + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
-    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml('Postcode bijv. ' + (YG_ADDR_PLACEHOLDERS[YG_COUNTRY] || YG_ADDR_PLACEHOLDERS.NL).pc) + '" maxlength="' + (YG_COUNTRY === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
+    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml('Postcode bijv. ' + (YG_ADDR_PLACEHOLDERS[currentListingCountry] || YG_ADDR_PLACEHOLDERS.NL).pc) + '" maxlength="' + (currentListingCountry === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
     + extraFields;
   if (list) list.appendChild(row);
 }
@@ -6585,7 +6697,9 @@ function parseBulkAdresLine(line) {
   var pc = '';
   // Country-aware: NL = 4 cijfers + 2 letters, BE = 4 cijfers, FR/DE = 5 cijfers.
   // Het optionele [A-Za-z]{2}-stuk dekt zowel NL als BE in één regex.
-  var pcRegex = (YG_COUNTRY === 'FR' || YG_COUNTRY === 'DE')
+  // Gebruikt currentListingCountry (de keuze in de plaats-flow) niet YG_COUNTRY,
+  // zodat bulk-import van een NL-adres-lijst werkt op yardigo.be en omgekeerd.
+  var pcRegex = (currentListingCountry === 'FR' || currentListingCountry === 'DE')
     ? /^\s*\d{5}\s*$/
     : /^\s*\d{4}(\s*[A-Za-z]{2})?\s*$/;
 
@@ -6615,23 +6729,25 @@ function parseBulkAdresLine(line) {
   // Als de "postcode"-kolom geen geldige postcode bevat (NL, BE, FR of DE),
   // negeer hem. Zo voorkomen we dat extra CSV-kolommen (bv. "extra") als
   // postcode worden gezien.
-  var pcAnyValid = (YG_COUNTRY === 'FR' || YG_COUNTRY === 'DE')
+  var pcAnyValid = (currentListingCountry === 'FR' || currentListingCountry === 'DE')
     ? /\b\d{5}\b/
     : /\b\d{4}(\s*[A-Za-z]{2})?\b/;
   if (pc && !pcAnyValid.test(pc)) {
     pc = '';
   }
 
-  // Postcode uit adres halen als pc nog leeg is
+  // Postcode uit adres halen als pc nog leeg is. Country = currentListingCountry
+  // zodat BE-bulkadressen ("Rue du Midi 14, 1000") ook netjes worden gesplitst
+  // op een 4-cijferige postcode in plaats van de NL-only 4cijfers+2letters regex.
   if (!pc) {
-    var ext = extractDutchPostcode(addr);
+    var ext = extractPostcode(addr, currentListingCountry);
     if (ext) { pc = ext.pc; addr = ext.rest; }
   } else {
     // Normaliseer expliciete postcode ook
-    var extPc = extractDutchPostcode(pc);
+    var extPc = extractPostcode(pc, currentListingCountry);
     if (extPc) pc = extPc.pc;
     // Verwijder de postcode uit adres als die er nog dubbel in staat
-    var extAddr = extractDutchPostcode(addr);
+    var extAddr = extractPostcode(addr, currentListingCountry);
     if (extAddr) addr = extAddr.rest;
   }
 
@@ -6971,8 +7087,8 @@ function importBulkAdres() {
 // ── Adres autocomplete: PDOK voor NL (beste dekking), Nominatim voor BE/FR/DE ──
 // PDOK Locatieserver kent alleen Nederlandse adressen en zou een Belgische
 // bezoeker dus geen suggesties geven. Daarom switchen we afhankelijk van
-// YG_COUNTRY: NL blijft op PDOK (preciezer), de rest via Nominatim met
-// countrycodes-filter.
+// currentListingCountry (de keuze uit de plaats-flow, default = TLD): NL
+// blijft op PDOK (preciezer), de rest via Nominatim met countrycodes-filter.
 var addrSugTimer = null;
 function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   var dd = document.getElementById(ddId);
@@ -6985,7 +7101,7 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
         + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + String(label).replace(/'/g, "\\'") + '\')">'
         + '📍 ' + escapeHtml(label) + '</div>';
     };
-    if (YG_COUNTRY === 'NL') {
+    if (currentListingCountry === 'NL') {
       // PDOK Locatieserver: gratis, snel, nauwkeurig voor NL
       fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam', { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
@@ -6998,7 +7114,7 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
         .catch(function() { dd.style.display = 'none'; });
     } else {
       // Nominatim met country-filter voor BE/FR/DE
-      var cc = ygCountryCode();
+      var cc = lcCountryCode();
       fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val) + '&format=json&addressdetails=1&limit=6&countrycodes=' + cc, { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -7303,19 +7419,22 @@ async function publishSale() {
 
     // Geocode hoofd-adres (met addressdetails voor city). Country-aware:
     // we sturen de country-naam mee in de query EN beperken Nominatim met
-    // countrycodes, zodat een BE-bezoeker op yardigo.be ook werkelijk
-    // Belgische adressen kan vinden in plaats van een hardcoded ', Nederland'.
+    // countrycodes. Het land komt uit `currentListingCountry` (de keuze in de
+    // plaats-flow, default = TLD), zodat een NL-bezoeker op yardigo.nl een
+    // Belgisch adres kan plaatsen door BE in de dropdown te kiezen.
     setPublishStatus('📍 Adres controleren...');
-    var _geoCountry = ygCountryName();
-    var _geoCC = ygCountryCode();
+    var _geoCountry = lcCountryName();
+    var _geoCC = lcCountryCode();
     var geoAddr = isBuurt
       ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
       : (mainAddr + ', ' + _geoCountry);
     var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC);
     var geoData = await geoRes.json();
     // Fallback-coördinaten per land zodat een mislukte geocode niet altijd
-    // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers.
-    var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[YG_COUNTRY] || [52.3,5.0];
+    // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers. Gebruikt
+    // de listing-country, niet de TLD-country, zodat een NL-bezoeker die in
+    // BE plaatst bij Brussel uitkomt.
+    var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[currentListingCountry] || [52.3,5.0];
     var lat = geoData.length ? +geoData[0].lat : _geoFallback[0];
     var lng = geoData.length ? +geoData[0].lon : _geoFallback[1];
     var cityName = (geoData.length && geoData[0].address)
