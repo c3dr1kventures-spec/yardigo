@@ -1041,33 +1041,33 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- Filter bar -->
 <div class="filter-bar">
   <div style="position:relative">
-    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')">📍 Afstand: <span id="lbl-afstand">Overal</span> ▾</button>
+    <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')"><span data-i18n="filter.dist_label">📍 Afstand</span>: <span id="lbl-afstand" data-i18n="filter.dist.everywhere">Overal</span> ▾</button>
     <div class="fdd-menu" id="dd-afstand">
       <div class="fdd-opt" onclick="pickR(5)">5 km</div>
       <div class="fdd-opt" onclick="pickR(10)">10 km</div>
       <div class="fdd-opt" onclick="pickR(25)">25 km</div>
       <div class="fdd-opt" onclick="pickR(50)">50 km</div>
-      <div class="fdd-opt sel" onclick="pickR(9999)">Overal</div>
+      <div class="fdd-opt sel" onclick="pickR(9999)" data-i18n="filter.dist.everywhere">Overal</div>
     </div>
   </div>
   <div style="position:relative">
-    <button class="fdd-btn" id="btn-datum" onclick="openDD(event,'datum')">📅 Datum: <span id="lbl-datum">Alle</span> ▾</button>
+    <button class="fdd-btn" id="btn-datum" onclick="openDD(event,'datum')"><span data-i18n="filter.date_label">📅 Datum</span>: <span id="lbl-datum" data-i18n="filter.date.all_short">Alle</span> ▾</button>
     <div class="fdd-menu" id="dd-datum">
-      <div class="fdd-opt sel" onclick="pickD('all','Alle')">Alle datums</div>
-      <div class="fdd-opt" onclick="pickD('today','Vandaag')">Vandaag</div>
-      <div class="fdd-opt" onclick="pickD('weekend','Dit weekend')">Dit weekend</div>
-      <div class="fdd-opt" onclick="pickD('week','Deze week')">Deze week</div>
-      <div class="fdd-opt" onclick="pickD('next','Volgende week')">Volgende week</div>
+      <div class="fdd-opt sel" onclick="pickD('all','filter.date.all_short')" data-i18n="filter.date.all">Alle datums</div>
+      <div class="fdd-opt" onclick="pickD('today','filter.date.today')" data-i18n="filter.date.today">Vandaag</div>
+      <div class="fdd-opt" onclick="pickD('weekend','filter.date.weekend')" data-i18n="filter.date.weekend">Dit weekend</div>
+      <div class="fdd-opt" onclick="pickD('week','filter.date.week')" data-i18n="filter.date.week">Deze week</div>
+      <div class="fdd-opt" onclick="pickD('next','filter.date.next_week')" data-i18n="filter.date.next_week">Volgende week</div>
     </div>
   </div>
   <div style="position:relative">
-    <button class="fdd-btn" id="btn-filter" onclick="openDD(event,'filter')">⚙️ Filter</button>
+    <button class="fdd-btn" id="btn-filter" onclick="openDD(event,'filter')"><span data-i18n="filter.label">⚙️ Filter</span></button>
     <div class="fdd-menu" id="dd-filter" style="min-width:200px">
-      <div style="padding:12px 16px 8px;font-size:11px;font-weight:700;color:var(--muted)">TYPE</div>
-      <div class="fdd-opt" onclick="filterType('particulier')">🏠 Particulier</div>
-      <div class="fdd-opt" onclick="filterType('buurt')">🏘️ Buurtverkoop</div>
-      <div class="fdd-opt" onclick="filterType('evenement')">🎪 Evenement</div>
-      <div class="fdd-opt" style="color:var(--terra)" onclick="filterType('all')">✕ Wis filter</div>
+      <div style="padding:12px 16px 8px;font-size:11px;font-weight:700;color:var(--muted)" data-i18n="filter.type">TYPE</div>
+      <div class="fdd-opt" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Particulier</span></div>
+      <div class="fdd-opt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Buurtverkoop</span></div>
+      <div class="fdd-opt" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
+      <div class="fdd-opt" style="color:var(--terra)" onclick="filterType('all')" data-i18n="filter.clear">✕ Wis filter</div>
     </div>
   </div>
 </div>
@@ -1130,21 +1130,21 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <div class="view" id="view-route">
   <div class="route-wrap">
     <div class="route-stats" id="routeStats" style="display:none">
-      <div class="rstat"><div class="rstat-num" id="stopCount">0</div><div class="rstat-lbl">Stops</div></div>
-      <div class="rstat"><div class="rstat-num" id="distKm">0</div><div class="rstat-lbl">Afstand</div></div>
-      <div class="rstat"><div class="rstat-num" id="timeMin">0</div><div class="rstat-lbl">Rijtijd</div></div>
+      <div class="rstat"><div class="rstat-num" id="stopCount">0</div><div class="rstat-lbl" data-i18n="route.stops">Stops</div></div>
+      <div class="rstat"><div class="rstat-num" id="distKm">0</div><div class="rstat-lbl" data-i18n="route.distance">Afstand</div></div>
+      <div class="rstat"><div class="rstat-num" id="timeMin">0</div><div class="rstat-lbl" data-i18n="route.duration">Rijtijd</div></div>
     </div>
     <div class="route-actions">
-      <button class="route-btn primary" onclick="startNavigation()">🧭 Navigeren</button>
-      <button class="route-btn ghost" onclick="clearRoute()">🗑️ Wissen</button>
+      <button class="route-btn primary" onclick="startNavigation()" data-i18n="route.navigate">🧭 Navigeren</button>
+      <button class="route-btn ghost" onclick="clearRoute()" data-i18n="route.clear">🗑️ Wissen</button>
     </div>
     <div id="routeList"></div>
     <div id="routeEmpty">
     <div class="empty-state">
       <div class="empty-icon">🧭</div>
-      <div class="empty-title">Nog geen route</div>
-      <div class="empty-sub">Sla verkopen op als favoriet om ze hier samen te voegen tot een route.</div>
-      <button class="empty-btn primary" onclick="document.querySelectorAll('.tab')[0].click();document.querySelectorAll('.bni')[1].click()">Verkopen bekijken →</button>
+      <div class="empty-title" data-i18n="route.empty_title">Nog geen route</div>
+      <div class="empty-sub" data-i18n="route.empty_sub">Sla verkopen op als favoriet om ze hier samen te voegen tot een route.</div>
+      <button class="empty-btn primary" onclick="document.querySelectorAll('.tab')[0].click();document.querySelectorAll('.bni')[1].click()" data-i18n="route.empty_cta">Verkopen bekijken →</button>
     </div>
   </div>
   </div>
@@ -1160,19 +1160,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--terra);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px">📷</div>
     </div>
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhoto(this)">
-    <div id="profile-name" style="font-size:20px;font-weight:800;color:white;margin-bottom:2px">Gast</div>
-    <div id="profile-subtitle" style="font-size:12px;color:rgba(255,255,255,.7)">Maak een account aan voor meer</div>
+    <div id="profile-name" style="font-size:20px;font-weight:800;color:white;margin-bottom:2px" data-i18n="profile.guest">Gast</div>
+    <div id="profile-subtitle" style="font-size:12px;color:rgba(255,255,255,.7)" data-i18n="profile.guest_sub">Maak een account aan voor meer</div>
   </div>
   <div style="padding:0 14px 100px;margin-top:-36px">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-      <div class="stat-card"><div class="stat-num" id="stat-verkopen">0</div><div class="stat-lbl">Verkopen</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-weergaven">0</div><div class="stat-lbl">Weergaven</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-interesses">0</div><div class="stat-lbl">Interesses</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-verkopen">0</div><div class="stat-lbl" data-i18n="profile.stat_sales">Verkopen</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-weergaven">0</div><div class="stat-lbl" data-i18n="profile.stat_views">Weergaven</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-interesses">0</div><div class="stat-lbl" data-i18n="profile.stat_interest">Interesses</div></div>
     </div>
 
     <!-- Attendance score -->
     <div class="att-card">
-      <div class="section-label">Aanwezigheidsscore</div>
+      <div class="section-label" data-i18n="profile.attendance_score">Aanwezigheidsscore</div>
       <div style="display:flex;align-items:center;gap:16px">
         <div style="position:relative;width:72px;height:72px;flex-shrink:0">
           <svg width="72" height="72" viewBox="0 0 72 72" style="transform:rotate(-90deg)">
@@ -1206,17 +1206,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
     <!-- Badges -->
     <div class="att-card">
-      <div class="section-label">Jouw badges</div>
+      <div class="section-label" data-i18n="profile.your_badges">Jouw badges</div>
       <div class="badge-grid" id="user-badge-grid"></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center" id="badge-count">Laden...</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center" id="badge-count" data-i18n="profile.loading">Laden...</div>
     </div>
 
     <!-- Profile tabs -->
     <div class="profile-tabs">
-      <div class="ptab active" id="pt-0" onclick="ptab(0)">Mijn verkopen</div>
-      <div class="ptab" id="pt-1" onclick="ptab(1)">Favorieten</div>
-      <div class="ptab" id="pt-2" onclick="ptab(2)">Reviews</div>
-      <div class="ptab" id="pt-3" onclick="ptab(3)">Instellingen</div>
+      <div class="ptab active" id="pt-0" onclick="ptab(0)" data-i18n="profile.tab_sales">Mijn verkopen</div>
+      <div class="ptab" id="pt-1" onclick="ptab(1)" data-i18n="profile.tab_favorites">Favorieten</div>
+      <div class="ptab" id="pt-2" onclick="ptab(2)" data-i18n="profile.tab_reviews">Reviews</div>
+      <div class="ptab" id="pt-3" onclick="ptab(3)" data-i18n="profile.tab_settings">Instellingen</div>
     </div>
     <div class="pp active" id="pp-0">
       <div id="my-sales-list"></div>
@@ -1244,14 +1244,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <!-- ── ACCOUNT ── -->
       <div class="settings-section">
-        <div class="settings-section-header">Account</div>
+        <div class="settings-section-header" data-i18n="settings.header_account">Account</div>
         <div class="settings-card">
           <!-- Naam -->
           <div class="srow">
             <div class="srow-icon" style="background:#FFF0E8;">✏️</div>
-            <div class="srow-body"><div class="srow-title">Naam</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.name">Naam</div></div>
             <div class="srow-right">
-              <input class="srow-input" id="set-name" placeholder="Jouw naam" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+              <input class="srow-input" id="set-name" placeholder="Jouw naam" data-i18n-placeholder="settings.name_ph" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
             </div>
           </div>
           <!-- Naam weergeven als -->
@@ -1259,32 +1259,32 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div style="display:flex;align-items:center;gap:12px;width:100%">
               <div class="srow-icon" style="background:#F0EBF8;">👤</div>
               <div class="srow-body">
-                <div class="srow-title">Naam in advertenties</div>
-                <div class="srow-sub">Hoe verschijn je bij je verkopen</div>
+                <div class="srow-title" data-i18n="settings.name_in_ads">Naam in advertenties</div>
+                <div class="srow-sub" data-i18n="settings.name_in_ads_sub">Hoe verschijn je bij je verkopen</div>
               </div>
             </div>
             <div style="display:flex;gap:6px;padding-left:44px;width:100%;box-sizing:border-box">
-              <button id="ndm-first" onclick="setNameDisplayMode('first')" style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">Voornaam</button>
-              <button id="ndm-full"  onclick="setNameDisplayMode('full')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--forest);background:#E8F4ED;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--forest)">Volledig</button>
-              <button id="ndm-last"  onclick="setNameDisplayMode('last')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)">Achternaam</button>
+              <button id="ndm-first" onclick="setNameDisplayMode('first')" style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.first_name">Voornaam</button>
+              <button id="ndm-full"  onclick="setNameDisplayMode('full')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--forest);background:#E8F4ED;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--forest)" data-i18n="settings.full_name">Volledig</button>
+              <button id="ndm-last"  onclick="setNameDisplayMode('last')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.last_name">Achternaam</button>
             </div>
             <div id="ndm-preview" style="padding-left:44px;font-size:11px;color:var(--muted)"></div>
           </div>
           <!-- Stad -->
           <div class="srow">
             <div class="srow-icon" style="background:#E8F4ED;">📍</div>
-            <div class="srow-body"><div class="srow-title">Woonplaats</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.city">Woonplaats</div></div>
             <div class="srow-right">
-              <input class="srow-input" id="set-city" placeholder="Bijv. Amsterdam" maxlength="40" onblur="saveProfileField('city',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+              <input class="srow-input" id="set-city" placeholder="Bijv. Amsterdam" data-i18n-placeholder="settings.city_ph" maxlength="40" onblur="saveProfileField('city',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
             </div>
           </div>
           <!-- Bio -->
           <div class="srow" style="flex-direction:column;align-items:flex-start;">
             <div style="display:flex;align-items:center;gap:12px;width:100%;">
               <div class="srow-icon" style="background:#F0EBF8;">💬</div>
-              <div class="srow-body"><div class="srow-title">Bio</div><div class="srow-sub">Korte beschrijving over jezelf</div></div>
+              <div class="srow-body"><div class="srow-title" data-i18n="settings.bio">Bio</div><div class="srow-sub" data-i18n="settings.bio_sub">Korte beschrijving over jezelf</div></div>
             </div>
-            <textarea class="srow-textarea" id="set-bio" rows="2" placeholder="Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️" maxlength="120" onblur="saveProfileField('bio',this.value)"></textarea>
+            <textarea class="srow-textarea" id="set-bio" rows="2" placeholder="Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️" data-i18n-placeholder="settings.bio_ph" maxlength="120" onblur="saveProfileField('bio',this.value)"></textarea>
             <div style="font-size:10px;color:var(--muted);text-align:right;width:100%;margin-top:2px"><span id="bio-count">0</span>/120</div>
           </div>
           <!-- Scheidslijn -->
@@ -1292,24 +1292,24 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- E-mail (readonly) -->
           <div class="srow">
             <div class="srow-icon" style="background:#E8F0F8;">📧</div>
-            <div class="srow-body"><div class="srow-title">E-mailadres</div><div class="srow-sub" id="set-email-display">—</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.email">E-mailadres</div><div class="srow-sub" id="set-email-display">—</div></div>
           </div>
           <!-- Wachtwoord wijzigen -->
           <div class="srow tappable" onclick="openChangePassword()">
             <div class="srow-icon" style="background:#F0EBF8;">🔑</div>
-            <div class="srow-body"><div class="srow-title">Wachtwoord wijzigen</div><div class="srow-sub">Stuur een herstel-e-mail</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.password_change">Wachtwoord wijzigen</div><div class="srow-sub" data-i18n="settings.password_change_sub">Stuur een herstel-e-mail</div></div>
             <div class="srow-right"><span class="srow-chevron">›</span></div>
           </div>
           <!-- Uitloggen -->
           <div class="srow tappable" onclick="doLogout()">
             <div class="srow-icon" style="background:#FFF0E8;">🚪</div>
-            <div class="srow-body"><div class="srow-title" style="color:var(--terra)">Uitloggen</div></div>
+            <div class="srow-body"><div class="srow-title" style="color:var(--terra)" data-i18n="settings.logout">Uitloggen</div></div>
             <div class="srow-right"><span class="srow-chevron" style="color:var(--terra)">›</span></div>
           </div>
           <!-- Account verwijderen -->
           <div class="srow tappable" onclick="openDeleteConfirm()">
             <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
-            <div class="srow-body"><div class="srow-title" style="color:#C0392B">Account verwijderen</div><div class="srow-sub">Wis al je data permanent</div></div>
+            <div class="srow-body"><div class="srow-title" style="color:#C0392B" data-i18n="settings.delete_account">Account verwijderen</div><div class="srow-sub" data-i18n="settings.delete_account_sub">Wis al je data permanent</div></div>
             <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
           </div>
         </div>
@@ -1384,7 +1384,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <!-- ── MELDINGEN ── -->
       <div class="settings-section">
-        <div class="settings-section-header">Meldingen</div>
+        <div class="settings-section-header" data-i18n="settings.header_notif">Meldingen</div>
 
         <!-- Master toggle -->
         <div class="settings-card" style="margin-bottom:4px;">
@@ -1742,25 +1742,25 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <div class="feedback-overlay" id="reportOv" onclick="if(event.target===this)closeReport()">
   <div class="feedback-card">
     <h3 data-i18n="report.title">🚩 Advertentie melden</h3>
-    <p>Wat klopt er niet aan deze advertentie?</p>
+    <p data-i18n="report.what_wrong">Wat klopt er niet aan deze advertentie?</p>
     <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px" id="report-options">
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
-        <input type="radio" name="report-reason" value="Spam of nep advertentie" style="accent-color:var(--terra)"> Spam of nep advertentie
+        <input type="radio" name="report-reason" value="Spam of nep advertentie" style="accent-color:var(--terra)"> <span data-i18n="report.r_spam">Spam of nep advertentie</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
-        <input type="radio" name="report-reason" value="Misleidende of onjuiste informatie" style="accent-color:var(--terra)"> Misleidende of onjuiste informatie
+        <input type="radio" name="report-reason" value="Misleidende of onjuiste informatie" style="accent-color:var(--terra)"> <span data-i18n="report.r_misleading">Misleidende of onjuiste informatie</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
-        <input type="radio" name="report-reason" value="Ongepaste of aanstootgevende foto's" style="accent-color:var(--terra)"> Ongepaste of aanstootgevende foto's
+        <input type="radio" name="report-reason" value="Ongepaste of aanstootgevende foto's" style="accent-color:var(--terra)"> <span data-i18n="report.r_photos">Ongepaste of aanstootgevende foto's</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
-        <input type="radio" name="report-reason" value="Onjuist adres of locatie" style="accent-color:var(--terra)"> Onjuist adres of locatie
+        <input type="radio" name="report-reason" value="Onjuist adres of locatie" style="accent-color:var(--terra)"> <span data-i18n="report.r_address">Onjuist adres of locatie</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
-        <input type="radio" name="report-reason" value="Anders" style="accent-color:var(--terra)"> Anders
+        <input type="radio" name="report-reason" value="Anders" style="accent-color:var(--terra)"> <span data-i18n="report.r_other">Anders</span>
       </label>
     </div>
-    <textarea class="feedback-card textarea" id="report-extra" placeholder="Optioneel: toelichting…" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;resize:none;height:70px;background:var(--bg);color:var(--text);outline:none"></textarea>
+    <textarea class="feedback-card textarea" id="report-extra" placeholder="Optioneel: toelichting…" data-i18n-placeholder="report.placeholder" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;resize:none;height:70px;background:var(--bg);color:var(--text);outline:none"></textarea>
     <div class="feedback-actions">
       <button class="btn-feedback-cancel" data-i18n="feedback.cancel" onclick="closeReport()">Annuleer</button>
       <button class="btn-feedback-send" data-i18n="report.send" style="background:var(--red)" onclick="sendReport()">🚩 Verstuur melding</button>
@@ -1793,15 +1793,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <div id="det-addr-pending" style="display:none;font-size:12px;color:#2C4A36;margin-bottom:4px;border:1.5px solid #C7DFCF;background:#F0F6F2;border-radius:8px;padding:8px 10px;line-height:1.45">
         <div><span id="det-addr-pending-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒</div>
-        <div style="margin-top:4px;font-size:11px;color:#3A6B4A;font-weight:600">⏳ Volledig adres zichtbaar over <span id="det-addr-countdown">—</span></div>
+        <div style="margin-top:4px;font-size:11px;color:#3A6B4A;font-weight:600"><span data-i18n="detail.addr_visible_in">⏳ Volledig adres zichtbaar over</span> <span id="det-addr-countdown">—</span></div>
       </div>
       <div id="det-interest-wrap" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:4px 8px;border-radius:8px">
         <span style="font-size:16px;font-weight:800;color:var(--terra)" id="det-interest-num">0</span>
-        <span style="font-size:11px;color:var(--muted)" id="det-interest-label">gaan erheen</span>
+        <span style="font-size:11px;color:var(--muted)" id="det-interest-label" data-i18n="detail.going">gaan erheen</span>
       </div>
       <div id="det-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
       <div id="det-desc-wrap" style="display:none;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">OMSCHRIJVING</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px" data-i18n="detail.description_label">OMSCHRIJVING</div>
         <div id="det-desc" style="font-size:13px;color:var(--text);line-height:1.6"></div>
       </div>
       <div id="det-seller" style="display:none;font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:500"></div>
@@ -1821,8 +1821,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
            style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:12px;text-decoration:none;color:#2C4A36">
           <span style="font-size:22px">🗺️</span>
           <div>
-            <div style="font-size:13px;font-weight:700">Plattegrond downloaden</div>
-            <div style="font-size:11px;color:#3A6B4A">PDF of afbeelding · tik om te openen</div>
+            <div style="font-size:13px;font-weight:700" data-i18n="detail.floorplan.download">Plattegrond downloaden</div>
+            <div style="font-size:11px;color:#3A6B4A" data-i18n="detail.floorplan.download_sub">PDF of afbeelding · tik om te openen</div>
           </div>
           <span style="margin-left:auto;font-size:18px;color:#3A6B4A">⬇️</span>
         </a>
@@ -1830,20 +1830,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div id="det-floorplan-guest" style="display:none;align-items:center;gap:10px;padding:12px 14px;background:#F3EDE7;border:1.5px solid #D8C9B5;border-radius:12px;cursor:pointer" onclick="guestGate('de plattegrond bekijken')">
           <span style="font-size:22px">🗺️</span>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#5A4A3A">Plattegrond & adresgegevens</div>
-            <div id="det-floorplan-guest-sub" style="font-size:11px;color:#8A7A65">Maak een gratis account aan voor adresgegevens en eventuele plattegrond</div>
+            <div style="font-size:13px;font-weight:700;color:#5A4A3A" data-i18n="detail.floorplan.guest_title">Plattegrond & adresgegevens</div>
+            <div id="det-floorplan-guest-sub" style="font-size:11px;color:#8A7A65" data-i18n="detail.floorplan.guest_sub">Maak een gratis account aan voor adresgegevens en eventuele plattegrond</div>
           </div>
           <span style="font-size:18px;color:#8A7A65">🔒</span>
         </div>
       </div>
       <!-- Bewerk-knop (alleen voor eigenaar) -->
       <div id="det-edit-wrap" style="display:none;margin-bottom:14px">
-        <button id="det-edit-btn" onclick="openEditSaleFromDetail()" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--terra);background:white;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--terra)">✏️ Bewerk advertentie</button>
+        <button id="det-edit-btn" onclick="openEditSaleFromDetail()" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--terra);background:white;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--terra)" data-i18n="detail.edit">✏️ Bewerk advertentie</button>
       </div>
       <!-- Guest banner -->
       <div id="det-guest-banner" style="display:none;background:linear-gradient(135deg,#3A6B4A,#2A5038);border-radius:14px;padding:16px;cursor:pointer;align-items:center;gap:12px" onclick="guestRegister()">
         <div style="font-size:28px">🔓</div>
-        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:white">Maak gratis account aan</div><div style="font-size:11px;color:rgba(255,255,255,.75)">Zie adressen · Navigeer · Sla op</div></div>
+        <div style="flex:1"><div style="font-size:13px;font-weight:700;color:white" data-i18n="detail.guest_title">Maak gratis account aan</div><div style="font-size:11px;color:rgba(255,255,255,.75)" data-i18n="detail.guest_sub">Zie adressen · Navigeer · Sla op</div></div>
         <div style="color:white;font-size:18px">›</div>
       </div>
       <!-- CTA -->
@@ -1896,8 +1896,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <li>🔔 Meldingen ontvangen</li>
         <li>🏪 Eigen verkopen plaatsen</li>
       </ul>
-      <button onclick="guestRegister()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Gratis account aanmaken →</button>
-      <button onclick="closeGuestGate()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Verder als gast</button>
+      <button onclick="guestRegister()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px" data-i18n="gate.btn_signup">Gratis account aanmaken →</button>
+      <button onclick="closeGuestGate()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="gate.btn_continue">Verder als gast</button>
     </div>
   </div>
 </div>
@@ -1942,18 +1942,18 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div id="evenement-subtype-wrap" style="display:none;margin-top:14px">
           <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px" data-i18n="publish.event.subtype_label">WAT VOOR EVENEMENT?</div>
           <select id="aEventType" class="form-input" onchange="toggleEventAnders(this.value)" style="width:100%;cursor:pointer">
-            <option value="">Kies een type</option>
-            <option value="Vlooienmarkt">🎪 Vlooienmarkt</option>
-            <option value="Rommelmarkt">🛒 Rommelmarkt</option>
-            <option value="Kofferbakverkoop">🚗 Kofferbakverkoop</option>
-            <option value="Braderie">🏪 Braderie</option>
-            <option value="Kerstmarkt">🎄 Kerstmarkt</option>
-            <option value="Boekenmarkt">📚 Boekenmarkt</option>
-            <option value="Antiekmarkt">🏺 Antiekmarkt</option>
-            <option value="Anders">✏️ Anders</option>
+            <option value="" data-i18n="event_subtype.placeholder">Kies een type</option>
+            <option value="Vlooienmarkt" data-i18n="event_subtype.vlooienmarkt">🎪 Vlooienmarkt</option>
+            <option value="Rommelmarkt" data-i18n="event_subtype.rommelmarkt">🛒 Rommelmarkt</option>
+            <option value="Kofferbakverkoop" data-i18n="event_subtype.kofferbak">🚗 Kofferbakverkoop</option>
+            <option value="Braderie" data-i18n="event_subtype.braderie">🏪 Braderie</option>
+            <option value="Kerstmarkt" data-i18n="event_subtype.kerstmarkt">🎄 Kerstmarkt</option>
+            <option value="Boekenmarkt" data-i18n="event_subtype.boekenmarkt">📚 Boekenmarkt</option>
+            <option value="Antiekmarkt" data-i18n="event_subtype.antiekmarkt">🏺 Antiekmarkt</option>
+            <option value="Anders" data-i18n="event_subtype.other">✏️ Anders</option>
           </select>
           <div id="evenement-anders-wrap" style="display:none;margin-top:8px">
-            <input class="form-input" id="aEventAnders" placeholder="Omschrijf het evenement type..." style="width:100%">
+            <input class="form-input" id="aEventAnders" placeholder="Omschrijf het evenement type..." data-i18n-placeholder="event_subtype.other_placeholder" style="width:100%">
           </div>
         </div>
       </div>
@@ -1961,42 +1961,42 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="add-s1" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s1.title">Details</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'">
+          <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'" data-i18n-placeholder="publish.title_placeholder">
           <!-- Naam-override per advertentie -->
           <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
             <div>
-              <div style="font-size:12px;font-weight:700;color:var(--text)">👤 Naam weergeven als</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text)" data-i18n="publish.name_display">👤 Naam weergeven als</div>
               <div id="aNamePreview" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
             </div>
             <select id="aNameMode" onchange="updateAddNamePreview()" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:8px;padding:5px 8px;background:white;color:var(--text);cursor:pointer">
-              <option value="global">Gebruik instelling profiel</option>
-              <option value="first">Alleen voornaam</option>
-              <option value="full">Voor- en achternaam</option>
-              <option value="last">Alleen achternaam</option>
+              <option value="global" data-i18n="publish.name.global">Gebruik instelling profiel</option>
+              <option value="first" data-i18n="publish.name.first">Alleen voornaam</option>
+              <option value="full" data-i18n="publish.name.full">Voor- en achternaam</option>
+              <option value="last" data-i18n="publish.name.last">Alleen achternaam</option>
             </select>
           </div>
           <div style="background:var(--bg2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px">
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">🕐 Tijden</div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px" data-i18n="publish.times">🕐 Tijden</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                 <div>
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Van</div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px" data-i18n="publish.time_from">Van</div>
                   <input class="form-input" id="aFrom" type="time" value="09:00">
                 </div>
                 <div>
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px">Tot</div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:3px" data-i18n="publish.time_till">Tot</div>
                   <input class="form-input" id="aTill" type="time" value="15:00">
                 </div>
               </div>
             </div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px">📅 Datum</div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px" data-i18n="publish.date">📅 Datum</div>
               <input class="form-input" id="aDate" type="date">
             </div>
           </div>
-          <textarea class="form-input" id="aDesc" placeholder="Omschrijving (optioneel)" rows="3" oninput="validateDesc(this.value)" style="resize:none"></textarea>
-          <div id="desc-warn" style="display:none;font-size:10px;color:#E07B39;font-weight:600">⚠️ Geen telefoonnummers, e-mails of links</div>
-          <div style="font-size:10px;color:#8A7A65;line-height:1.4;margin-top:6px">Je adres en datum zijn al zichtbaar. Dat is genoeg om bezoekers te laten komen. Persoonlijke contactgegevens in de omschrijving maken je kwetsbaar voor spam en oplichting.</div>
+          <textarea class="form-input" id="aDesc" placeholder="Omschrijving (optioneel)" data-i18n-placeholder="publish.desc_placeholder" rows="3" oninput="validateDesc(this.value)" style="resize:none"></textarea>
+          <div id="desc-warn" style="display:none;font-size:10px;color:#E07B39;font-weight:600" data-i18n="publish.desc_warn">⚠️ Geen telefoonnummers, e-mails of links</div>
+          <div style="font-size:10px;color:#8A7A65;line-height:1.4;margin-top:6px" data-i18n="publish.desc_help">Je adres en datum zijn al zichtbaar. Dat is genoeg om bezoekers te laten komen. Persoonlijke contactgegevens in de omschrijving maken je kwetsbaar voor spam en oplichting.</div>
         </div>
       </div>
       <!-- Step 2: Location & tags -->
@@ -2008,47 +2008,47 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, 9741 AB Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" autocomplete="off">
             <div id="aAddr-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
           </div>
-          <div style="font-size:11px;color:var(--muted);padding:0 2px">💡 Typ straat, postcode of plaatsnaam en selecteer een suggestie</div>
+          <div style="font-size:11px;color:var(--muted);padding:0 2px" data-i18n="publish.addr_help">💡 Typ straat, postcode of plaatsnaam en selecteer een suggestie</div>
         </div>
         <!-- Multi-adres (buurtverkoop) -->
         <div id="add-s2-buurt" style="display:none;margin-bottom:16px">
           <!-- AVG-uitleg: wat betekent buurtverkoop voor de organisator -->
           <div style="margin-bottom:14px;padding:12px 14px;background:#FDF0E7;border:1.5px solid #F4D7B0;border-left:3px solid var(--terra);border-radius:10px">
-            <div style="font-size:13px;font-weight:700;color:#A04A18;margin-bottom:6px">🏘️ Zo werkt een buurtverkoop</div>
-            <div style="font-size:11.5px;color:#7A4A2A;line-height:1.55">Je plaatst één buurtverkoop met jouw eigen adres én de adressen van meedoende buren. Omdat het adres van een buur een persoonsgegeven is, vraagt YardiGo eerst <strong>hun toestemming</strong>. Dat is verplicht volgens de AVG.</div>
-            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #F4D7B0;font-size:11px;color:#7A4A2A;line-height:1.55">
+            <div style="font-size:13px;font-weight:700;color:#A04A18;margin-bottom:6px" data-i18n="publish.buurt.howto">🏘️ Zo werkt een buurtverkoop</div>
+            <div style="font-size:11.5px;color:#7A4A2A;line-height:1.55" data-i18n-html="publish.buurt.intro">Je plaatst één buurtverkoop met jouw eigen adres én de adressen van meedoende buren. Omdat het adres van een buur een persoonsgegeven is, vraagt YardiGo eerst <strong>hun toestemming</strong>. Dat is verplicht volgens de AVG.</div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #F4D7B0;font-size:11px;color:#7A4A2A;line-height:1.55" data-i18n-html="publish.buurt.steps">
               <div style="margin-bottom:3px">✅ <strong>Jouw eigen adres</strong> gaat direct online.</div>
               <div style="margin-bottom:3px">📨 Voor elke buur krijg je <strong>na publiceren</strong> een bevestigingslink om zelf te delen (WhatsApp/SMS/e-mail).</div>
               <div style="margin-bottom:3px">⏳ Pas na "ja" van de buur verschijnt hun adres op de kaart.</div>
               <div>🗑️ Niet bevestigd binnen <strong>7 dagen</strong>? Adres wordt automatisch gewist.</div>
             </div>
-            <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.5">Tip: vraag buren bij voorkeur <em>vóór</em> je publiceert of ze mee willen doen, dan weet je zeker dat ze de link verwachten.</div>
+            <div style="margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.5" data-i18n-html="publish.buurt.tip">Tip: vraag buren bij voorkeur <em>vóór</em> je publiceert of ze mee willen doen, dan weet je zeker dat ze de link verwachten.</div>
           </div>
-          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">DEELNEMENDE ADRESSEN</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Voeg alle adressen toe die meedoen. Eerste adres = jijzelf; daarna 1 regel per buur.</div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px" data-i18n="publish.buurt.addr_list_title">DEELNEMENDE ADRESSEN</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px" data-i18n="publish.buurt.addr_list_help">Voeg alle adressen toe die meedoen. Eerste adres = jijzelf; daarna 1 regel per buur.</div>
           <div id="buurt-adressen-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
           <div style="display:flex;gap:8px">
-            <button type="button" onclick="addBuurtAdres()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer">+ Adres toevoegen</button>
-            <button type="button" onclick="openBulkAdresModal()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer">📋 Meerdere tegelijk</button>
+            <button type="button" onclick="addBuurtAdres()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--border);background:transparent;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer" data-i18n="publish.buurt.add_addr">+ Adres toevoegen</button>
+            <button type="button" onclick="openBulkAdresModal()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="publish.buurt.multi">📋 Meerdere tegelijk</button>
           </div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.5">Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.5" data-i18n="publish.buurt.bulk_hint">Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.</div>
         </div>
         <!-- Adres-zichtbaarheid (AVG-gevoelig) -->
         <div style="margin-bottom:16px;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px">🔒 Wanneer mag je adres zichtbaar zijn?</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.45">Gasten zien nooit je adres, alleen de plaats. Hieronder kies je wanneer ingelogde bezoekers je volledige adres mogen zien.</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px" data-i18n="publish.reveal.title">🔒 Wanneer mag je adres zichtbaar zijn?</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.45" data-i18n="publish.reveal.sub">Gasten zien nooit je adres, alleen de plaats. Hieronder kies je wanneer ingelogde bezoekers je volledige adres mogen zien.</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:white" id="aReveal-day-before-lbl">
               <input type="radio" name="aReveal" value="day_before" id="aReveal-day-before" checked style="margin-top:2px;accent-color:#2D6A4F;flex-shrink:0">
-              <span style="font-size:12px;line-height:1.45"><strong style="color:var(--forest)">Pas 24 uur vooraf</strong> <span style="color:var(--muted);font-weight:600">(aanbevolen)</span><br><span style="color:var(--muted)">Bezoekers zien een aftelklok. Het exacte adres en de routeknop worden automatisch 24 uur vóór de sale zichtbaar.</span></span>
+              <span style="font-size:12px;line-height:1.45" data-i18n-html="publish.reveal.day_before"><strong style="color:var(--forest)">Pas 24 uur vooraf</strong> <span style="color:var(--muted);font-weight:600">(aanbevolen)</span><br><span style="color:var(--muted)">Bezoekers zien een aftelklok. Het exacte adres en de routeknop worden automatisch 24 uur vóór de sale zichtbaar.</span></span>
             </label>
             <label style="display:flex;align-items:flex-start;gap:8px;padding:10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:white">
               <input type="radio" name="aReveal" value="instant" id="aReveal-instant" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
-              <span style="font-size:12px;line-height:1.45"><strong style="color:var(--terra)">Direct zichtbaar</strong><br><span style="color:var(--muted)">Ingelogde bezoekers zien je adres zodra je publiceert.</span></span>
+              <span style="font-size:12px;line-height:1.45" data-i18n-html="publish.reveal.instant"><strong style="color:var(--terra)">Direct zichtbaar</strong><br><span style="color:var(--muted)">Ingelogde bezoekers zien je adres zodra je publiceert.</span></span>
             </label>
           </div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px" id="add-tags-label">CATEGORIEËN</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px" id="add-tags-label" data-i18n="publish.categories_label">CATEGORIEËN</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px" id="add-tags-grid">
           <!-- Wordt dynamisch gevuld door updateTagsForType() -->
         </div>
@@ -2059,10 +2059,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="font-size:12px;margin-bottom:14px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
-          📷 Foto's toevoegen
+          <span data-i18n="publish.photos.add">📷 Foto's toevoegen</span>
           <input type="file" accept="image/*" multiple style="display:none" onchange="handleAddPhotos(this)">
         </label>
-        <div style="background:#FFF4E6;border:1px solid #F4D7B0;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A2E;line-height:1.5">
+        <div style="background:#FFF4E6;border:1px solid #F4D7B0;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A2E;line-height:1.5" data-i18n-html="publish.photos.privacy_tip">
           <strong style="color:#C5612A">⚠️ Privacy-tip:</strong> zorg dat er géén gezichten van omstanders, kentekens, persoonlijke documenten of andere herleidbare details op je foto's staan. Je foto's worden openbaar zichtbaar.
         </div>
         <!-- Plattegrond sectie (alleen buurtverkoop) -->
@@ -2636,6 +2636,131 @@ var I18N = {
     'ob.compare.notif_yes': '✓ Meldingen',
     'ob.compare.publish_no': '✗ Plaatsen',
     'ob.compare.publish_yes': '✓ Plaatsen',
+    // Guest gate
+    'gate.route.title': 'Route plannen',
+    'gate.route.desc': 'Log in om te navigeren naar deze verkoop.',
+    'gate.favoriet.title': 'Favoriet opslaan',
+    'gate.favoriet.desc': 'Log in om verkopen op te slaan.',
+    'gate.adres.title': 'Exact adres zien',
+    'gate.adres.desc': 'Log in om het volledige adres te zien.',
+    'gate.interesse.title': 'Aanmelden',
+    'gate.interesse.desc': 'Maak een gratis account aan om je aan te melden.',
+    'gate.default.title': 'Account nodig',
+    'gate.default.desc': 'Maak een gratis account aan.',
+    'gate.btn_signup': 'Gratis account aanmaken →',
+    'gate.btn_continue': 'Verder als gast',
+    // Filter-bar dynamische labels
+    'filter.dist_label': '📍 Afstand',
+    'filter.dist.everywhere': 'Overal',
+    'filter.date_label': '📅 Datum',
+    'filter.date.all_short': 'Alle',
+    'filter.date.all': 'Alle datums',
+    'filter.date.today': 'Vandaag',
+    'filter.date.weekend': 'Dit weekend',
+    'filter.date.week': 'Deze week',
+    'filter.date.next_week': 'Volgende week',
+    'filter.label': '⚙️ Filter',
+    'filter.clear': '✕ Wis filter',
+    // Lijst
+    'list.count_found': 'gevonden',
+    // Plaats-flow extra
+    'publish.title_placeholder': "Titel bijv. 'Zolder opruiming'",
+    'publish.name_display': '👤 Naam weergeven als',
+    'publish.name.global': 'Gebruik instelling profiel',
+    'publish.name.first': 'Alleen voornaam',
+    'publish.name.full': 'Voor- en achternaam',
+    'publish.name.last': 'Alleen achternaam',
+    'publish.times': '🕐 Tijden',
+    'publish.time_from': 'Van',
+    'publish.time_till': 'Tot',
+    'publish.date': '📅 Datum',
+    'publish.desc_placeholder': 'Omschrijving (optioneel)',
+    'publish.desc_warn': '⚠️ Geen telefoonnummers, e-mails of links',
+    'publish.desc_help': 'Je adres en datum zijn al zichtbaar. Dat is genoeg om bezoekers te laten komen. Persoonlijke contactgegevens in de omschrijving maken je kwetsbaar voor spam en oplichting.',
+    'publish.addr_help': '💡 Typ straat, postcode of plaatsnaam en selecteer een suggestie',
+    'publish.reveal.title': '🔒 Wanneer mag je adres zichtbaar zijn?',
+    'publish.reveal.sub': 'Gasten zien nooit je adres, alleen de plaats. Hieronder kies je wanneer ingelogde bezoekers je volledige adres mogen zien.',
+    'publish.reveal.day_before': '<strong style="color:var(--forest)">Pas 24 uur vooraf</strong> <span style="color:var(--muted);font-weight:600">(aanbevolen)</span><br><span style="color:var(--muted)">Bezoekers zien een aftelklok. Het exacte adres en de routeknop worden automatisch 24 uur vóór de sale zichtbaar.</span>',
+    'publish.reveal.instant': '<strong style="color:var(--terra)">Direct zichtbaar</strong><br><span style="color:var(--muted)">Ingelogde bezoekers zien je adres zodra je publiceert.</span>',
+    'publish.categories_label': 'CATEGORIEËN',
+    'publish.buurt.howto': '🏘️ Zo werkt een buurtverkoop',
+    'publish.buurt.intro': 'Je plaatst één buurtverkoop met jouw eigen adres én de adressen van meedoende buren. Omdat het adres van een buur een persoonsgegeven is, vraagt YardiGo eerst <strong>hun toestemming</strong>. Dat is verplicht volgens de AVG.',
+    'publish.buurt.steps': '<div style="margin-bottom:3px">✅ <strong>Jouw eigen adres</strong> gaat direct online.</div><div style="margin-bottom:3px">📨 Voor elke buur krijg je <strong>na publiceren</strong> een bevestigingslink om zelf te delen (WhatsApp/SMS/e-mail).</div><div style="margin-bottom:3px">⏳ Pas na "ja" van de buur verschijnt hun adres op de kaart.</div><div>🗑️ Niet bevestigd binnen <strong>7 dagen</strong>? Adres wordt automatisch gewist.</div>',
+    'publish.buurt.tip': 'Tip: vraag buren bij voorkeur <em>vóór</em> je publiceert of ze mee willen doen, dan weet je zeker dat ze de link verwachten.',
+    'publish.buurt.addr_list_title': 'DEELNEMENDE ADRESSEN',
+    'publish.buurt.addr_list_help': 'Voeg alle adressen toe die meedoen. Eerste adres = jijzelf; daarna 1 regel per buur.',
+    'publish.buurt.add_addr': '+ Adres toevoegen',
+    'publish.buurt.multi': '📋 Meerdere tegelijk',
+    'publish.buurt.bulk_hint': 'Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.',
+    'publish.photos.add': "📷 Foto's toevoegen",
+    'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy-tip:</strong> zorg dat er géén gezichten van omstanders, kentekens, persoonlijke documenten of andere herleidbare details op je foto\'s staan. Je foto\'s worden openbaar zichtbaar.',
+    // Evenement subtypes
+    'event_subtype.placeholder': 'Kies een type',
+    'event_subtype.vlooienmarkt': '🎪 Vlooienmarkt',
+    'event_subtype.rommelmarkt': '🛒 Rommelmarkt',
+    'event_subtype.kofferbak': '🚗 Kofferbakverkoop',
+    'event_subtype.braderie': '🏪 Braderie',
+    'event_subtype.kerstmarkt': '🎄 Kerstmarkt',
+    'event_subtype.boekenmarkt': '📚 Boekenmarkt',
+    'event_subtype.antiekmarkt': '🏺 Antiekmarkt',
+    'event_subtype.other': '✏️ Anders',
+    'event_subtype.other_placeholder': 'Omschrijf het evenement type...',
+    // Detail-view
+    'detail.addr_visible_in': '⏳ Volledig adres zichtbaar over',
+    'detail.going': 'gaan erheen',
+    'detail.description_label': 'OMSCHRIJVING',
+    'detail.floorplan.download': 'Plattegrond downloaden',
+    'detail.floorplan.download_sub': 'PDF of afbeelding · tik om te openen',
+    'detail.floorplan.guest_title': 'Plattegrond & adresgegevens',
+    'detail.floorplan.guest_sub': 'Maak een gratis account aan voor adresgegevens en eventuele plattegrond',
+    'detail.edit': '✏️ Bewerk advertentie',
+    // Report modal
+    'report.what_wrong': 'Wat klopt er niet aan deze advertentie?',
+    'report.r_spam': 'Spam of nep advertentie',
+    'report.r_misleading': 'Misleidende of onjuiste informatie',
+    'report.r_photos': "Ongepaste of aanstootgevende foto's",
+    'report.r_address': 'Onjuist adres of locatie',
+    'report.r_other': 'Anders',
+    'report.placeholder': 'Optioneel: toelichting…',
+    // Route-tab
+    'route.stops': 'Stops',
+    'route.distance': 'Afstand',
+    'route.duration': 'Rijtijd',
+    'route.navigate': '🧭 Navigeren',
+    'route.clear': '🗑️ Wissen',
+    'route.empty_title': 'Nog geen route',
+    'route.empty_sub': 'Sla verkopen op als favoriet om ze hier samen te voegen tot een route.',
+    'route.empty_cta': 'Verkopen bekijken →',
+    // Mijn / Profile
+    'profile.stat_sales': 'Verkopen',
+    'profile.stat_views': 'Weergaven',
+    'profile.stat_interest': 'Interesses',
+    'profile.attendance_score': 'Aanwezigheidsscore',
+    'profile.your_badges': 'Jouw badges',
+    'profile.loading': 'Laden...',
+    'profile.tab_favorites': 'Favorieten',
+    'profile.tab_reviews': 'Reviews',
+    // Settings - Account & Meldingen sections
+    'settings.header_account': 'Account',
+    'settings.header_notif': 'Meldingen',
+    'settings.name': 'Naam',
+    'settings.name_ph': 'Jouw naam',
+    'settings.name_in_ads': 'Naam in advertenties',
+    'settings.name_in_ads_sub': 'Hoe verschijn je bij je verkopen',
+    'settings.first_name': 'Voornaam',
+    'settings.full_name': 'Volledig',
+    'settings.last_name': 'Achternaam',
+    'settings.city': 'Woonplaats',
+    'settings.city_ph': 'Bijv. Amsterdam',
+    'settings.bio': 'Bio',
+    'settings.bio_sub': 'Korte beschrijving over jezelf',
+    'settings.bio_ph': 'Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️',
+    'settings.email': 'E-mailadres',
+    'settings.password_change': 'Wachtwoord wijzigen',
+    'settings.password_change_sub': 'Stuur een herstel-e-mail',
+    'settings.logout': 'Uitloggen',
+    'settings.delete_account': 'Account verwijderen',
+    'settings.delete_account_sub': 'Wis al je data permanent',
     // Toasts algemeen
     'toast.welcome_guest': 'Je bekijkt YardiGo als gast 👁️',
     'toast.logged_out': 'Je bent uitgelogd',
@@ -2806,6 +2931,131 @@ var I18N = {
     'ob.compare.notif_yes': '✓ Notifications',
     'ob.compare.publish_no': '✗ Post',
     'ob.compare.publish_yes': '✓ Post',
+    // Guest gate
+    'gate.route.title': 'Plan a route',
+    'gate.route.desc': 'Sign in to navigate to this sale.',
+    'gate.favoriet.title': 'Save favorite',
+    'gate.favoriet.desc': 'Sign in to save sales.',
+    'gate.adres.title': 'See exact address',
+    'gate.adres.desc': 'Sign in to see the full address.',
+    'gate.interesse.title': "I'm going",
+    'gate.interesse.desc': 'Create a free account to register your interest.',
+    'gate.default.title': 'Account needed',
+    'gate.default.desc': 'Create a free account.',
+    'gate.btn_signup': 'Create free account →',
+    'gate.btn_continue': 'Continue as guest',
+    // Filter bar dynamic labels
+    'filter.dist_label': '📍 Distance',
+    'filter.dist.everywhere': 'Anywhere',
+    'filter.date_label': '📅 Date',
+    'filter.date.all_short': 'All',
+    'filter.date.all': 'All dates',
+    'filter.date.today': 'Today',
+    'filter.date.weekend': 'This weekend',
+    'filter.date.week': 'This week',
+    'filter.date.next_week': 'Next week',
+    'filter.label': '⚙️ Filter',
+    'filter.clear': '✕ Clear filter',
+    // List view
+    'list.count_found': 'found',
+    // Publish flow
+    'publish.title_placeholder': "Title e.g. 'Attic clearance'",
+    'publish.name_display': '👤 Show name as',
+    'publish.name.global': 'Use profile setting',
+    'publish.name.first': 'First name only',
+    'publish.name.full': 'First and last name',
+    'publish.name.last': 'Last name only',
+    'publish.times': '🕐 Times',
+    'publish.time_from': 'From',
+    'publish.time_till': 'Till',
+    'publish.date': '📅 Date',
+    'publish.desc_placeholder': 'Description (optional)',
+    'publish.desc_warn': '⚠️ No phone numbers, emails or links',
+    'publish.desc_help': 'Your address and date are already visible. That is enough to bring visitors. Including personal contact details in the description makes you vulnerable to spam and scams.',
+    'publish.addr_help': '💡 Type a street, postcode or city and pick a suggestion',
+    'publish.reveal.title': '🔒 When can your address be visible?',
+    'publish.reveal.sub': 'Guests never see your address, only the city. Below you choose when signed-in visitors can see your full address.',
+    'publish.reveal.day_before': '<strong style="color:var(--forest)">Only 24 hours before</strong> <span style="color:var(--muted);font-weight:600">(recommended)</span><br><span style="color:var(--muted)">Visitors see a countdown. The exact address and the route button automatically appear 24 hours before the sale.</span>',
+    'publish.reveal.instant': '<strong style="color:var(--terra)">Visible immediately</strong><br><span style="color:var(--muted)">Signed-in visitors see your address as soon as you publish.</span>',
+    'publish.categories_label': 'CATEGORIES',
+    'publish.buurt.howto': '🏘️ How a neighborhood sale works',
+    'publish.buurt.intro': 'You publish one neighborhood sale with your own address and the addresses of participating neighbors. Because a neighbor\'s address is personal data, YardiGo first asks for <strong>their consent</strong>. That is required under the GDPR.',
+    'publish.buurt.steps': '<div style="margin-bottom:3px">✅ <strong>Your own address</strong> goes online immediately.</div><div style="margin-bottom:3px">📨 For each neighbor you receive <strong>after publishing</strong> a confirmation link to share yourself (WhatsApp/SMS/email).</div><div style="margin-bottom:3px">⏳ Only after the neighbor says "yes" does their address appear on the map.</div><div>🗑️ Not confirmed within <strong>7 days</strong>? The address is automatically deleted.</div>',
+    'publish.buurt.tip': 'Tip: ask neighbors <em>before</em> you publish if they want to take part, so they expect the link.',
+    'publish.buurt.addr_list_title': 'PARTICIPATING ADDRESSES',
+    'publish.buurt.addr_list_help': 'Add all participating addresses. First address = yourself; then one per neighbor.',
+    'publish.buurt.add_addr': '+ Add address',
+    'publish.buurt.multi': '📋 Multiple at once',
+    'publish.buurt.bulk_hint': 'Got a list ready? Paste or upload an Excel, CSV or text file with one address per line.',
+    'publish.photos.add': '📷 Add photos',
+    'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy tip:</strong> make sure no faces of bystanders, license plates, personal documents or other identifiable details are in your photos. Your photos will be publicly visible.',
+    // Event subtypes
+    'event_subtype.placeholder': 'Pick a type',
+    'event_subtype.vlooienmarkt': '🎪 Flea market',
+    'event_subtype.rommelmarkt': '🛒 Jumble sale',
+    'event_subtype.kofferbak': '🚗 Car boot sale',
+    'event_subtype.braderie': '🏪 Street fair',
+    'event_subtype.kerstmarkt': '🎄 Christmas market',
+    'event_subtype.boekenmarkt': '📚 Book market',
+    'event_subtype.antiekmarkt': '🏺 Antique market',
+    'event_subtype.other': '✏️ Other',
+    'event_subtype.other_placeholder': 'Describe the event type...',
+    // Detail view
+    'detail.addr_visible_in': '⏳ Full address visible in',
+    'detail.going': 'going',
+    'detail.description_label': 'DESCRIPTION',
+    'detail.floorplan.download': 'Download floor plan',
+    'detail.floorplan.download_sub': 'PDF or image · tap to open',
+    'detail.floorplan.guest_title': 'Floor plan & address details',
+    'detail.floorplan.guest_sub': 'Create a free account for address details and any floor plan',
+    'detail.edit': '✏️ Edit listing',
+    // Report modal
+    'report.what_wrong': 'What is wrong with this listing?',
+    'report.r_spam': 'Spam or fake listing',
+    'report.r_misleading': 'Misleading or incorrect information',
+    'report.r_photos': 'Inappropriate or offensive photos',
+    'report.r_address': 'Wrong address or location',
+    'report.r_other': 'Other',
+    'report.placeholder': 'Optional: explanation…',
+    // Route tab
+    'route.stops': 'Stops',
+    'route.distance': 'Distance',
+    'route.duration': 'Drive time',
+    'route.navigate': '🧭 Navigate',
+    'route.clear': '🗑️ Clear',
+    'route.empty_title': 'No route yet',
+    'route.empty_sub': 'Save sales as favorite to combine them into a route here.',
+    'route.empty_cta': 'View sales →',
+    // Profile / My
+    'profile.stat_sales': 'Sales',
+    'profile.stat_views': 'Views',
+    'profile.stat_interest': 'Interests',
+    'profile.attendance_score': 'Attendance score',
+    'profile.your_badges': 'Your badges',
+    'profile.loading': 'Loading...',
+    'profile.tab_favorites': 'Favorites',
+    'profile.tab_reviews': 'Reviews',
+    // Settings - Account & Notifications
+    'settings.header_account': 'Account',
+    'settings.header_notif': 'Notifications',
+    'settings.name': 'Name',
+    'settings.name_ph': 'Your name',
+    'settings.name_in_ads': 'Name in listings',
+    'settings.name_in_ads_sub': 'How you appear on your sales',
+    'settings.first_name': 'First name',
+    'settings.full_name': 'Full',
+    'settings.last_name': 'Last name',
+    'settings.city': 'City',
+    'settings.city_ph': 'E.g. Amsterdam',
+    'settings.bio': 'Bio',
+    'settings.bio_sub': 'Short description about yourself',
+    'settings.bio_ph': 'E.g. Regular garage sale fan from Utrecht 🛍️',
+    'settings.email': 'Email address',
+    'settings.password_change': 'Change password',
+    'settings.password_change_sub': 'Send a recovery email',
+    'settings.logout': 'Sign out',
+    'settings.delete_account': 'Delete account',
+    'settings.delete_account_sub': 'Permanently erase all your data',
     // Toasts
     'toast.welcome_guest': 'You\'re browsing YardiGo as a guest 👁️',
     'toast.logged_out': 'You have been signed out',
@@ -2976,6 +3226,131 @@ var I18N = {
     'ob.compare.notif_yes': '✓ Notifications',
     'ob.compare.publish_no': '✗ Publier',
     'ob.compare.publish_yes': '✓ Publier',
+    // Guest gate
+    'gate.route.title': 'Planifier un itinéraire',
+    'gate.route.desc': 'Connectez-vous pour naviguer vers cette vente.',
+    'gate.favoriet.title': 'Enregistrer en favori',
+    'gate.favoriet.desc': 'Connectez-vous pour sauvegarder des ventes.',
+    'gate.adres.title': 'Voir l\'adresse exacte',
+    'gate.adres.desc': 'Connectez-vous pour voir l\'adresse complète.',
+    'gate.interesse.title': 'Je participe',
+    'gate.interesse.desc': 'Créez un compte gratuit pour vous inscrire.',
+    'gate.default.title': 'Compte requis',
+    'gate.default.desc': 'Créez un compte gratuit.',
+    'gate.btn_signup': 'Créer un compte gratuit →',
+    'gate.btn_continue': 'Continuer en invité',
+    // Filter bar dynamic labels
+    'filter.dist_label': '📍 Distance',
+    'filter.dist.everywhere': 'Partout',
+    'filter.date_label': '📅 Date',
+    'filter.date.all_short': 'Toutes',
+    'filter.date.all': 'Toutes les dates',
+    'filter.date.today': "Aujourd'hui",
+    'filter.date.weekend': 'Ce week-end',
+    'filter.date.week': 'Cette semaine',
+    'filter.date.next_week': 'Semaine prochaine',
+    'filter.label': '⚙️ Filtre',
+    'filter.clear': '✕ Effacer le filtre',
+    // Vue liste
+    'list.count_found': 'trouvées',
+    // Plaats-flow
+    'publish.title_placeholder': "Titre p.ex. 'Vide-grenier'",
+    'publish.name_display': '👤 Afficher le nom comme',
+    'publish.name.global': 'Utiliser le réglage du profil',
+    'publish.name.first': 'Prénom uniquement',
+    'publish.name.full': 'Prénom et nom',
+    'publish.name.last': 'Nom uniquement',
+    'publish.times': '🕐 Horaires',
+    'publish.time_from': 'De',
+    'publish.time_till': 'À',
+    'publish.date': '📅 Date',
+    'publish.desc_placeholder': 'Description (facultatif)',
+    'publish.desc_warn': '⚠️ Pas de numéros de téléphone, e-mails ou liens',
+    'publish.desc_help': 'Votre adresse et la date sont déjà visibles. Cela suffit pour attirer les visiteurs. Indiquer vos coordonnées dans la description vous expose au spam et aux arnaques.',
+    'publish.addr_help': '💡 Tapez une rue, un code postal ou une ville et choisissez une suggestion',
+    'publish.reveal.title': '🔒 Quand votre adresse peut-elle être visible ?',
+    'publish.reveal.sub': "Les invités ne voient jamais votre adresse, uniquement la ville. Choisissez ci-dessous quand les visiteurs connectés peuvent voir l'adresse complète.",
+    'publish.reveal.day_before': '<strong style="color:var(--forest)">24 heures avant seulement</strong> <span style="color:var(--muted);font-weight:600">(recommandé)</span><br><span style="color:var(--muted)">Les visiteurs voient un compte à rebours. L\'adresse exacte et le bouton itinéraire apparaissent automatiquement 24 heures avant la vente.</span>',
+    'publish.reveal.instant': "<strong style=\"color:var(--terra)\">Visible immédiatement</strong><br><span style=\"color:var(--muted)\">Les visiteurs connectés voient votre adresse dès la publication.</span>",
+    'publish.categories_label': 'CATÉGORIES',
+    'publish.buurt.howto': '🏘️ Comment fonctionne une vente de quartier',
+    'publish.buurt.intro': "Vous publiez une seule vente de quartier avec votre adresse et celles des voisins participants. Comme l'adresse d'un voisin est une donnée personnelle, YardiGo demande d'abord <strong>son consentement</strong>. C'est obligatoire selon le RGPD.",
+    'publish.buurt.steps': '<div style="margin-bottom:3px">✅ <strong>Votre propre adresse</strong> est mise en ligne immédiatement.</div><div style="margin-bottom:3px">📨 Pour chaque voisin vous recevez <strong>après publication</strong> un lien de confirmation à partager (WhatsApp/SMS/e-mail).</div><div style="margin-bottom:3px">⏳ Ce n\'est qu\'après le « oui » du voisin que son adresse apparaît sur la carte.</div><div>🗑️ Pas confirmé sous <strong>7 jours</strong> ? L\'adresse est automatiquement supprimée.</div>',
+    'publish.buurt.tip': "Conseil : demandez aux voisins de préférence <em>avant</em> de publier s'ils veulent participer, ainsi ils s'attendent au lien.",
+    'publish.buurt.addr_list_title': 'ADRESSES PARTICIPANTES',
+    'publish.buurt.addr_list_help': 'Ajoutez toutes les adresses participantes. Première adresse = vous-même ; ensuite une ligne par voisin.',
+    'publish.buurt.add_addr': '+ Ajouter une adresse',
+    'publish.buurt.multi': '📋 Plusieurs à la fois',
+    'publish.buurt.bulk_hint': 'Vous avez déjà une liste ? Collez ou téléchargez un fichier Excel, CSV ou texte avec une adresse par ligne.',
+    'publish.photos.add': '📷 Ajouter des photos',
+    'publish.photos.privacy_tip': "<strong style=\"color:#C5612A\">⚠️ Conseil vie privée :</strong> assurez-vous qu'aucun visage de passants, plaque d'immatriculation, document personnel ou autre détail identifiable ne figure sur vos photos. Vos photos seront publiquement visibles.",
+    // Sous-types d'événement
+    'event_subtype.placeholder': 'Choisissez un type',
+    'event_subtype.vlooienmarkt': '🎪 Marché aux puces',
+    'event_subtype.rommelmarkt': '🛒 Brocante',
+    'event_subtype.kofferbak': '🚗 Vente de coffre',
+    'event_subtype.braderie': '🏪 Braderie',
+    'event_subtype.kerstmarkt': '🎄 Marché de Noël',
+    'event_subtype.boekenmarkt': '📚 Marché du livre',
+    'event_subtype.antiekmarkt': "🏺 Marché d'antiquités",
+    'event_subtype.other': '✏️ Autre',
+    'event_subtype.other_placeholder': "Décrivez le type d'événement...",
+    // Vue détail
+    'detail.addr_visible_in': "⏳ Adresse complète visible dans",
+    'detail.going': "j'y vais",
+    'detail.description_label': 'DESCRIPTION',
+    'detail.floorplan.download': 'Télécharger le plan',
+    'detail.floorplan.download_sub': "PDF ou image · touchez pour ouvrir",
+    'detail.floorplan.guest_title': "Plan & coordonnées d'adresse",
+    'detail.floorplan.guest_sub': "Créez un compte gratuit pour les coordonnées d'adresse et un éventuel plan",
+    'detail.edit': "✏️ Modifier l'annonce",
+    // Modal de signalement
+    'report.what_wrong': 'Quel est le problème avec cette annonce ?',
+    'report.r_spam': 'Spam ou fausse annonce',
+    'report.r_misleading': 'Information trompeuse ou incorrecte',
+    'report.r_photos': 'Photos inappropriées ou offensantes',
+    'report.r_address': 'Adresse ou lieu incorrect',
+    'report.r_other': 'Autre',
+    'report.placeholder': 'Facultatif : précisions…',
+    // Onglet Itinéraire
+    'route.stops': 'Arrêts',
+    'route.distance': 'Distance',
+    'route.duration': 'Trajet',
+    'route.navigate': '🧭 Naviguer',
+    'route.clear': '🗑️ Effacer',
+    'route.empty_title': "Pas encore d'itinéraire",
+    'route.empty_sub': "Enregistrez des ventes en favoris pour les combiner ici en un itinéraire.",
+    'route.empty_cta': 'Voir les ventes →',
+    // Profil / Mes ventes
+    'profile.stat_sales': 'Ventes',
+    'profile.stat_views': 'Vues',
+    'profile.stat_interest': 'Intérêts',
+    'profile.attendance_score': 'Score de présence',
+    'profile.your_badges': 'Vos badges',
+    'profile.loading': 'Chargement...',
+    'profile.tab_favorites': 'Favoris',
+    'profile.tab_reviews': 'Avis',
+    // Paramètres - Compte & Notifications
+    'settings.header_account': 'Compte',
+    'settings.header_notif': 'Notifications',
+    'settings.name': 'Nom',
+    'settings.name_ph': 'Votre nom',
+    'settings.name_in_ads': 'Nom sur les annonces',
+    'settings.name_in_ads_sub': 'Comment vous apparaissez sur vos ventes',
+    'settings.first_name': 'Prénom',
+    'settings.full_name': 'Complet',
+    'settings.last_name': 'Nom',
+    'settings.city': 'Ville',
+    'settings.city_ph': 'P.ex. Bruxelles',
+    'settings.bio': 'Bio',
+    'settings.bio_sub': 'Courte description de vous-même',
+    'settings.bio_ph': "P.ex. Habitué des vide-greniers à Bruxelles 🛍️",
+    'settings.email': 'Adresse e-mail',
+    'settings.password_change': 'Changer le mot de passe',
+    'settings.password_change_sub': 'Envoyer un e-mail de récupération',
+    'settings.logout': 'Se déconnecter',
+    'settings.delete_account': 'Supprimer le compte',
+    'settings.delete_account_sub': 'Effacer définitivement toutes vos données',
     // Toasts
     'toast.welcome_guest': 'Vous parcourez YardiGo en tant qu\'invité 👁️',
     'toast.logged_out': 'Vous avez été déconnecté',
@@ -4110,9 +4485,11 @@ function makeMarkerIcon(sale) {
 function createListingPopup(sale) {
   var t = TYPES[sale.type];
   // Voor evenementen: gebruik subtype-icoon + subtype-label in de header
-  // zodat het consistent is met de marker op de kaart.
+  // zodat het consistent is met de marker op de kaart. Type-label via
+  // i18n zodat NL/EN/FR/DE consistent zijn met de filters.
   var _headIcon = getSaleIcon(sale);
-  var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : t.label;
+  var _typeLabel = i18n('type.' + sale.type, t.label);
+  var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : _typeLabel;
   var fav = favorites.has(sale.id);
   var tagsHtml = (sale.tags || []).map(function(tg) {
     return '<span class="pop-tag ' + sale.type + '">' + tg + '</span>';
@@ -4479,8 +4856,12 @@ function openDD(e, name) {
 }
 function pickR(km) {
   activeRadiusKm = km;
-  var lbl = km === 9999 ? 'Overal' : km + ' km';
-  document.getElementById('lbl-afstand').textContent = lbl;
+  var lblEl = document.getElementById('lbl-afstand');
+  if (km === 9999) {
+    if (lblEl) { lblEl.setAttribute('data-i18n', 'filter.dist.everywhere'); lblEl.textContent = i18n('filter.dist.everywhere', 'Overal'); }
+  } else {
+    if (lblEl) { lblEl.removeAttribute('data-i18n'); lblEl.textContent = km + ' km'; }
+  }
   document.getElementById('dd-afstand').style.display = 'none';
   // Als er een afstandsfilter is én we nog geen locatie hebben, vraag locatie op
   if (km < 9999 && !userLocation && navigator.geolocation) {
@@ -4497,9 +4878,13 @@ function pickR(km) {
     applyFilters();
   }
 }
-function pickD(key, lbl) {
+function pickD(key, i18nKey) {
   activeDateFilter = key;
-  document.getElementById('lbl-datum').textContent = lbl;
+  var lblEl = document.getElementById('lbl-datum');
+  if (lblEl && i18nKey) {
+    lblEl.setAttribute('data-i18n', i18nKey);
+    lblEl.textContent = i18n(i18nKey, i18nKey);
+  }
   document.getElementById('dd-datum').style.display = 'none';
   applyFilters();
 }
@@ -4508,12 +4893,18 @@ function pickD(key, lbl) {
 // LIST
 // ══════════════════════════════════════════════════
 function fmtDate(d) {
-  return new Date(d).toLocaleDateString('nl-NL', { weekday:'short', day:'numeric', month:'short' });
+  // Locale afgeleid van currentLang (nl-NL/en-GB/fr-FR/de-DE) zodat
+  // datums in de juiste taal worden geformatteerd
+  var locale = ({ nl:'nl-NL', en:'en-GB', fr:'fr-FR', de:'de-DE' })[currentLang] || 'nl-NL';
+  return new Date(d).toLocaleDateString(locale, { weekday:'short', day:'numeric', month:'short' });
 }
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
   var el = document.getElementById('lcount');
-  if (el) el.textContent = visible.length + ' gevonden';
+  if (el) {
+    var word = i18n('list.count_found', 'gevonden');
+    el.textContent = visible.length + ' ' + word;
+  }
   // Sorteer de lijst op basis van geselecteerde modus
   visible = visible.slice();
   if (listSortMode === 'newest') {
@@ -4642,7 +5033,8 @@ function createListingCard(s, i) {
   var t = TYPES[s.type], fav = favorites.has(s.id);
   // Bij evenementen tonen we het subtype (bijv. "Braderie") in het chip-label
   // en gebruiken we het subtype-icoon als thumb-emoji zodat de lijst aansluit op de kaart.
-  var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : t.label;
+  var _typeLabelI = i18n('type.' + s.type, t.label);
+  var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : _typeLabelI;
   var _thumbIcon = getSaleIcon(s);
   var d2 = (Math.random() * 8 + 0.5).toFixed(1);
   var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + escapeHtml(tg) + '</span>'; }).join('');
@@ -5252,16 +5644,21 @@ function shareCalendar() {
 // GUEST GATE
 // ══════════════════════════════════════════════════
 function guestGate(feature) {
-  var msgs = {
-    route:     { icon:'🧭', title:'Route plannen', desc:'Log in om te navigeren naar deze verkoop.' },
-    favoriet:  { icon:'⭐', title:'Favoriet opslaan', desc:'Log in om verkopen op te slaan.' },
-    adres:     { icon:'📍', title:'Exact adres zien', desc:'Log in om het volledige adres te zien.' },
-    interesse: { icon:'🎉', title:'Aanmelden', desc:'Maak een gratis account aan om je aan te melden.' }
-  };
-  var msg = msgs[feature] || { icon:'🔓', title:'Account nodig', desc:'Maak een gratis account aan.' };
-  document.getElementById('gate-icon').textContent = msg.icon;
-  document.getElementById('gate-title').textContent = msg.title;
-  document.getElementById('gate-desc').textContent = msg.desc;
+  // Icons + i18n keys per feature; titel/desc komen via i18n() zodat
+  // ze in de actieve taal getoond worden ipv hardcoded NL.
+  var icons = { route:'🧭', favoriet:'⭐', adres:'📍', interesse:'🎉' };
+  var icon = icons[feature] || '🔓';
+  var titleKey = 'gate.' + feature + '.title';
+  var descKey  = 'gate.' + feature + '.desc';
+  var fallbackTitleKey = 'gate.default.title';
+  var fallbackDescKey  = 'gate.default.desc';
+  var title = i18n(titleKey, null);
+  if (title == null || title === titleKey) title = i18n(fallbackTitleKey, 'Account nodig');
+  var desc = i18n(descKey, null);
+  if (desc == null || desc === descKey) desc = i18n(fallbackDescKey, 'Maak een gratis account aan.');
+  document.getElementById('gate-icon').textContent = icon;
+  document.getElementById('gate-title').textContent = title;
+  document.getElementById('gate-desc').textContent = desc;
   document.getElementById('guestGateOv').classList.add('open');
 }
 function closeGuestGate() { document.getElementById('guestGateOv').classList.remove('open'); }
