@@ -2436,6 +2436,24 @@ var LANG_AVAILABILITY_BY_COUNTRY = {
   default: ['nl', 'en']
 };
 
+// Geocoding-helpers per land. Worden gebruikt door publishSale en de
+// adres-autocomplete om Nominatim te beperken tot het juiste land in
+// plaats van een hardcoded ", Nederland"-suffix.
+function ygCountryName() {
+  return ({ NL: 'Nederland', BE: 'België', FR: 'France', DE: 'Deutschland' })[YG_COUNTRY] || 'Nederland';
+}
+function ygCountryCode() {
+  return ({ NL: 'nl', BE: 'be', FR: 'fr', DE: 'de' })[YG_COUNTRY] || 'nl';
+}
+// Voorbeeld-adres voor placeholders, zodat een BE-bezoeker geen "Kerklaan
+// 12, 9741 AB Groningen"-tekst ziet maar iets uit zijn eigen land.
+var YG_ADDR_PLACEHOLDERS = {
+  NL: { full: 'Kerklaan 12, 9741 AB Groningen', pc: '9741 AB', bulk: 'Marieke | Kerklaan 14, 9741 AB\nJan | Kerklaan 16, 9741 AB\nLotte | Kerklaan 18, 9741 AB' },
+  BE: { full: 'Rue du Midi 16, 1000 Bruxelles', pc: '1000', bulk: 'Marie | Rue du Midi 14, 1000\nJean | Rue du Midi 16, 1000\nLotte | Rue du Midi 18, 1000' },
+  FR: { full: 'Rue de Rivoli 12, 75001 Paris', pc: '75001', bulk: 'Marie | Rue de Rivoli 14, 75001\nJean | Rue de Rivoli 16, 75001' },
+  DE: { full: 'Hauptstraße 12, 10115 Berlin', pc: '10115', bulk: 'Anna | Hauptstraße 14, 10115\nJan | Hauptstraße 16, 10115' }
+};
+
 var currentLang = (function(){
   // 1. Expliciete keuze in localStorage wint altijd
   try {
@@ -3013,13 +3031,24 @@ function maybeShowBELangChoice() {
   document.body.style.overflow = 'hidden';
 }
 
-// Boot: filter dropdown + toon BE keuzescherm indien van toepassing.
+// Boot: filter dropdown + toon BE keuzescherm + country-aware placeholders.
 // DOM-ready check via document.readyState om robuust te zijn ongeacht
 // of dit script vroeg of laat in de page geladen wordt.
+function applyCountryToPlaceholders() {
+  try {
+    var ph = YG_ADDR_PLACEHOLDERS[YG_COUNTRY] || YG_ADDR_PLACEHOLDERS.NL;
+    var aAddr = document.getElementById('aAddr');
+    if (aAddr) aAddr.placeholder = 'Adres bijv. ' + ph.full;
+    var bulk = document.getElementById('bulkAdresText');
+    if (bulk) bulk.placeholder = 'Plak hier je adreslijst, bijvoorbeeld:\n' + ph.bulk;
+  } catch(e) { console.warn('applyCountryToPlaceholders faalde:', e); }
+}
+
 (function() {
   function _ygI18nBoot() {
     applyCountryToLangMenu();
     maybeShowBELangChoice();
+    applyCountryToPlaceholders();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _ygI18nBoot);
@@ -4500,7 +4529,7 @@ function autoRouteFromLocation() {
 function startNavigation() {
   var opt = optimizeRoute(sales.filter(function(s) { return favorites.has(s.id); }).slice());
   if (!opt.length) { toast('Voeg eerst verkopen toe'); return; }
-  window.open('https://www.google.com/maps/dir/' + opt.map(function(s) { return encodeURIComponent(s.address + ', Nederland'); }).join('/'));
+  window.open('https://www.google.com/maps/dir/' + opt.map(function(s) { return encodeURIComponent(s.address + ', ' + ygCountryName()); }).join('/'));
 }
 
 // ══════════════════════════════════════════════════
@@ -5560,7 +5589,7 @@ function addBuurtAdres() {
     + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
-    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="Postcode bijv. 9741 AB" maxlength="7" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
+    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml('Postcode bijv. ' + (YG_ADDR_PLACEHOLDERS[YG_COUNTRY] || YG_ADDR_PLACEHOLDERS.NL).pc) + '" maxlength="' + (YG_COUNTRY === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
     + extraFields;
   if (list) list.appendChild(row);
 }
@@ -5822,20 +5851,46 @@ function handleBulkAdresFile(input) {
   input.value = '';
 }
 
-// Nederlandse postcode-regex: 4 cijfers + optionele spatie + 2 letters.
-// Retourneert { pc: '1234 AB', rest: 'adres zonder postcode' } of null.
-function extractDutchPostcode(raw) {
+// Postcode-extractie. Ondersteunt NL (4 cijfers + 2 letters) en
+// BE/FR/DE (alleen cijfers). NL is meest specifiek dus die proberen we
+// eerst, daarna fallback op pure-cijfer-formats afhankelijk van het land.
+// Retourneert { pc, rest, country } of null.
+function extractPostcode(raw, country) {
   if (!raw) return null;
-  var m = raw.match(/\b(\d{4})\s*([A-Za-z]{2})\b/);
-  if (!m) return null;
-  var pc = m[1] + ' ' + m[2].toUpperCase();
-  var rest = (raw.slice(0, m.index) + raw.slice(m.index + m[0].length))
-    .replace(/^[\s,;|]+|[\s,;|]+$/g, '')
-    .replace(/,\s*,/g, ',')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-  return { pc: pc, rest: rest };
+  // NL eerst (4 cijfers + 2 letters), dat is de meest specifieke
+  var mNL = raw.match(/\b(\d{4})\s*([A-Za-z]{2})\b/);
+  if (mNL) {
+    var pcNL = mNL[1] + ' ' + mNL[2].toUpperCase();
+    var restNL = (raw.slice(0, mNL.index) + raw.slice(mNL.index + mNL[0].length))
+      .replace(/^[\s,;|]+|[\s,;|]+$/g, '')
+      .replace(/,\s*,/g, ',').replace(/\s{2,}/g, ' ').trim();
+    return { pc: pcNL, rest: restNL, country: 'NL' };
+  }
+  var c = (country || YG_COUNTRY || 'NL').toUpperCase();
+  // BE: 4 cijfers, niet gevolgd door letters (anders had NL gematcht)
+  if (c === 'BE') {
+    var mBE = raw.match(/\b(\d{4})\b/);
+    if (mBE) {
+      var rBE = (raw.slice(0, mBE.index) + raw.slice(mBE.index + mBE[0].length))
+        .replace(/^[\s,;|]+|[\s,;|]+$/g, '')
+        .replace(/,\s*,/g, ',').replace(/\s{2,}/g, ' ').trim();
+      return { pc: mBE[1], rest: rBE, country: 'BE' };
+    }
+  }
+  // FR/DE: 5 cijfers
+  if (c === 'FR' || c === 'DE') {
+    var m5 = raw.match(/\b(\d{5})\b/);
+    if (m5) {
+      var r5 = (raw.slice(0, m5.index) + raw.slice(m5.index + m5[0].length))
+        .replace(/^[\s,;|]+|[\s,;|]+$/g, '')
+        .replace(/,\s*,/g, ',').replace(/\s{2,}/g, ' ').trim();
+      return { pc: m5[1], rest: r5, country: c };
+    }
+  }
+  return null;
 }
+// Backwards-compat wrapper: oude code roept nog extractDutchPostcode aan.
+function extractDutchPostcode(raw) { return extractPostcode(raw, 'NL'); }
 
 // Parseer 1 regel naar { label, addr, pc } of null als de regel leeg is.
 // Separator-detectie per regel: eerst pipe (|), dan tab, dan puntkomma (;).
@@ -5866,7 +5921,11 @@ function parseBulkAdresLine(line) {
   var label = '';
   var addr = '';
   var pc = '';
-  var pcRegex = /^\s*\d{4}\s*[A-Za-z]{2}\s*$/;
+  // Country-aware: NL = 4 cijfers + 2 letters, BE = 4 cijfers, FR/DE = 5 cijfers.
+  // Het optionele [A-Za-z]{2}-stuk dekt zowel NL als BE in één regex.
+  var pcRegex = (YG_COUNTRY === 'FR' || YG_COUNTRY === 'DE')
+    ? /^\s*\d{5}\s*$/
+    : /^\s*\d{4}(\s*[A-Za-z]{2})?\s*$/;
 
   if (parts.length === 1) {
     addr = parts[0];
@@ -5891,9 +5950,13 @@ function parseBulkAdresLine(line) {
     pc = parts[2];
   }
 
-  // Als de "postcode"-kolom geen geldige NL postcode bevat, negeer hem.
-  // Zo voorkomen we dat extra CSV-kolommen (bv. "extra") als postcode worden gezien.
-  if (pc && !/\b\d{4}\s*[A-Za-z]{2}\b/.test(pc)) {
+  // Als de "postcode"-kolom geen geldige postcode bevat (NL, BE, FR of DE),
+  // negeer hem. Zo voorkomen we dat extra CSV-kolommen (bv. "extra") als
+  // postcode worden gezien.
+  var pcAnyValid = (YG_COUNTRY === 'FR' || YG_COUNTRY === 'DE')
+    ? /\b\d{5}\b/
+    : /\b\d{4}(\s*[A-Za-z]{2})?\b/;
+  if (pc && !pcAnyValid.test(pc)) {
     pc = '';
   }
 
@@ -6243,7 +6306,11 @@ function importBulkAdres() {
   toast(msg);
 }
 
-// ── Adres autocomplete via PDOK Locatieserver ──
+// ── Adres autocomplete: PDOK voor NL (beste dekking), Nominatim voor BE/FR/DE ──
+// PDOK Locatieserver kent alleen Nederlandse adressen en zou een Belgische
+// bezoeker dus geen suggesties geven. Daarom switchen we afhankelijk van
+// YG_COUNTRY: NL blijft op PDOK (preciezer), de rest via Nominatim met
+// countrycodes-filter.
 var addrSugTimer = null;
 function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   var dd = document.getElementById(ddId);
@@ -6251,20 +6318,34 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   if (!val || val.length < 3) { dd.style.display = 'none'; return; }
   clearTimeout(addrSugTimer);
   addrSugTimer = setTimeout(function() {
-    fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam', { headers: { 'Accept': 'application/json' } })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var docs = (data.response && data.response.docs) ? data.response.docs : [];
-        if (!docs.length) { dd.style.display = 'none'; return; }
-        dd.innerHTML = docs.map(function(d) {
-          var label = d.weergavenaam || '';
-          return '<div style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)" '
-            + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + label.replace(/'/g, "\\'") + '\')">'
-            + '📍 ' + label + '</div>';
-        }).join('');
-        dd.style.display = 'block';
-      })
-      .catch(function() { dd.style.display = 'none'; });
+    var renderRow = function(label) {
+      return '<div style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)" '
+        + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + String(label).replace(/'/g, "\\'") + '\')">'
+        + '📍 ' + escapeHtml(label) + '</div>';
+    };
+    if (YG_COUNTRY === 'NL') {
+      // PDOK Locatieserver: gratis, snel, nauwkeurig voor NL
+      fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam', { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var docs = (data.response && data.response.docs) ? data.response.docs : [];
+          if (!docs.length) { dd.style.display = 'none'; return; }
+          dd.innerHTML = docs.map(function(d) { return renderRow(d.weergavenaam || ''); }).join('');
+          dd.style.display = 'block';
+        })
+        .catch(function() { dd.style.display = 'none'; });
+    } else {
+      // Nominatim met country-filter voor BE/FR/DE
+      var cc = ygCountryCode();
+      fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val) + '&format=json&addressdetails=1&limit=6&countrycodes=' + cc, { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data || !data.length) { dd.style.display = 'none'; return; }
+          dd.innerHTML = data.map(function(d) { return renderRow(d.display_name || ''); }).join('');
+          dd.style.display = 'block';
+        })
+        .catch(function() { dd.style.display = 'none'; });
+    }
   }, 280);
 }
 function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label) {
@@ -6558,13 +6639,23 @@ async function publishSale() {
       return last || 'Onbekend';
     }
 
-    // Geocode hoofd-adres (met addressdetails voor city)
+    // Geocode hoofd-adres (met addressdetails voor city). Country-aware:
+    // we sturen de country-naam mee in de query EN beperken Nominatim met
+    // countrycodes, zodat een BE-bezoeker op yardigo.be ook werkelijk
+    // Belgische adressen kan vinden in plaats van een hardcoded ', Nederland'.
     setPublishStatus('📍 Adres controleren...');
-    var geoAddr = isBuurt ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', Nederland') : (mainAddr + ', Nederland');
-    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1');
+    var _geoCountry = ygCountryName();
+    var _geoCC = ygCountryCode();
+    var geoAddr = isBuurt
+      ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
+      : (mainAddr + ', ' + _geoCountry);
+    var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC);
     var geoData = await geoRes.json();
-    var lat = geoData.length ? +geoData[0].lat : 52.3;
-    var lng = geoData.length ? +geoData[0].lon : 5.0;
+    // Fallback-coördinaten per land zodat een mislukte geocode niet altijd
+    // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers.
+    var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[YG_COUNTRY] || [52.3,5.0];
+    var lat = geoData.length ? +geoData[0].lat : _geoFallback[0];
+    var lng = geoData.length ? +geoData[0].lon : _geoFallback[1];
     var cityName = (geoData.length && geoData[0].address)
       ? (geoData[0].address.city || geoData[0].address.town || geoData[0].address.village || geoData[0].address.municipality || extractCity(mainAddr))
       : extractCity(mainAddr);
@@ -6637,7 +6728,7 @@ async function publishSale() {
       var addrsToGeo = buurtAdressen.slice(1); // al geocoded hoofd; rest geocoden
       if (addrsToGeo.length > 0) setPublishStatus('📍 Adressen verifiëren... (' + buurtAdressen.length + ' adressen)');
       var geoPromises = addrsToGeo.map(function(a) {
-        return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', Nederland') + '&format=json&limit=1')
+        return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', ' + _geoCountry) + '&format=json&limit=1&countrycodes=' + _geoCC)
           .then(function(r) { return r.json(); })
           .then(function(d) { return { lat: d.length ? +d[0].lat : lat, lng: d.length ? +d[0].lon : lng }; })
           .catch(function() { return { lat: lat, lng: lng }; });
@@ -7031,7 +7122,7 @@ async function doSearch() {
   if (!raw) { toast('Vul een postcode of plaats in'); return; }
   showL();
   try {
-    var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(raw + ', Nederland') + '&format=json&limit=1&countrycodes=nl', { headers:{'Accept-Language':'nl'} });
+    var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(raw + ', ' + ygCountryName()) + '&format=json&limit=1&countrycodes=' + ygCountryCode(), { headers:{'Accept-Language':currentLang || 'nl'} });
     var data = await res.json();
     if (!data.length) { toast('❌ Niet gevonden'); hideL(); return; }
     var lat = +data[0].lat, lon = +data[0].lon;
