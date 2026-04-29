@@ -1181,12 +1181,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           </svg>
           <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
             <div style="font-size:17px;font-weight:800;color:var(--text)" id="att-pct">80%</div>
-            <div style="font-size:8px;color:var(--muted)">aanwezig</div>
+            <div style="font-size:8px;color:var(--muted)" data-i18n="profile.attendance_aanwezig">aanwezig</div>
           </div>
         </div>
         <div style="flex:1">
-          <div id="att-label" style="font-size:13px;font-weight:700;color:#3A6B4A;margin-bottom:4px">✓ Komt altijd</div>
-          <div style="font-size:11px;color:var(--muted);line-height:1.5">Je was bij <span id="att-visits">4</span> van <span id="att-total">5</span> aangemelde verkopen.</div>
+          <div id="att-label" style="font-size:13px;font-weight:700;color:#3A6B4A;margin-bottom:4px" data-i18n="profile.attendance_label_default">✓ Komt altijd</div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.5" data-i18n-html="profile.attendance_visited_html">Je was bij <span id="att-visits">4</span> van <span id="att-total">5</span> aangemelde verkopen.</div>
         </div>
       </div>
     </div>
@@ -1195,12 +1195,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="checkin-card" id="checkin-card" style="display:none">
       <div style="font-size:28px">🏪</div>
       <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:white;margin-bottom:2px">Ben je geweest?</div>
+        <div style="font-size:12px;font-weight:700;color:white;margin-bottom:2px" data-i18n="checkin.title">Ben je geweest?</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7)" id="checkin-sale-name">Zolder opruiming</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        <button class="checkin-yes" onclick="doCheckin(true)">✓ Ja</button>
-        <button class="checkin-no" onclick="doCheckin(false)">✗ Nee</button>
+        <button class="checkin-yes" onclick="doCheckin(true)" data-i18n="checkin.yes">✓ Ja</button>
+        <button class="checkin-no" onclick="doCheckin(false)" data-i18n="checkin.no">✗ Nee</button>
       </div>
     </div>
 
@@ -1227,17 +1227,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="fav-empty">
         <div class="empty-state">
           <div class="empty-icon">⭐</div>
-          <div class="empty-title">Nog geen favorieten</div>
-          <div class="empty-sub">Tik op ⭐ bij een verkoop om hem hier op te slaan.</div>
-          <button class="empty-btn ghost" onclick="sv('lijst',document.querySelectorAll('.tab')[1]);document.querySelectorAll('.bni')[1].click()">Verkopen ontdekken →</button>
+          <div class="empty-title" data-i18n="empty.no_favorites_title">Nog geen favorieten</div>
+          <div class="empty-sub" data-i18n="empty.no_favorites_sub">Tik op ⭐ bij een verkoop om hem hier op te slaan.</div>
+          <button class="empty-btn ghost" onclick="sv('lijst',document.querySelectorAll('.tab')[1]);document.querySelectorAll('.bni')[1].click()" data-i18n="empty.discover_btn">Verkopen ontdekken →</button>
         </div>
       </div>
     </div>
     <div class="pp" id="pp-2">
       <div class="empty-state">
           <div class="empty-icon">💬</div>
-          <div class="empty-title">Nog geen reviews</div>
-          <div class="empty-sub">Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.</div>
+          <div class="empty-title" data-i18n="empty.no_reviews_title">Nog geen reviews</div>
+          <div class="empty-sub" data-i18n="empty.no_reviews_sub">Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.</div>
         </div>
     </div>
     <div class="pp" id="pp-3">
@@ -1341,7 +1341,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Standaard zoekradius -->
           <div class="srow" style="flex-wrap:wrap;gap:8px;">
             <div class="srow-icon" style="background:#E8F4ED;">🔍</div>
-            <div class="srow-body"><div class="srow-title">Standaard zoekradius</div><div class="srow-sub" id="radius-sub">10 km rondom jouw locatie</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.radius.title">Standaard zoekradius</div><div class="srow-sub" id="radius-sub" data-i18n="settings.radius.sub_default">10 km rondom jouw locatie</div></div>
             <div style="width:100%;padding-left:44px;">
               <div class="seg-ctrl" id="seg-radius">
                 <button class="seg-opt" data-v="5" onclick="setRadiusPref(this)">5 km</button>
@@ -1354,19 +1354,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Kaarttype -->
           <div class="srow" style="flex-wrap:wrap;gap:8px;">
             <div class="srow-icon" style="background:#E8F0F8;">🗺️</div>
-            <div class="srow-body"><div class="srow-title">Kaarttype</div><div class="srow-sub" id="maptype-sub">Standaard kaartweergave</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.maptype.title">Kaarttype</div><div class="srow-sub" id="maptype-sub" data-i18n="settings.maptype.sub_default">Standaard kaartweergave</div></div>
             <div style="width:100%;padding-left:44px;">
               <div class="seg-ctrl" id="seg-maptype">
-                <button class="seg-opt active" data-v="roadmap" onclick="setMapTypePref(this)">Standaard</button>
-                <button class="seg-opt" data-v="satellite" onclick="setMapTypePref(this)">Satelliet</button>
-                <button class="seg-opt" data-v="terrain" onclick="setMapTypePref(this)">Terrein</button>
+                <button class="seg-opt active" data-v="roadmap" onclick="setMapTypePref(this)" data-i18n="settings.maptype.roadmap">Standaard</button>
+                <button class="seg-opt" data-v="satellite" onclick="setMapTypePref(this)" data-i18n="settings.maptype.satellite">Satelliet</button>
+                <button class="seg-opt" data-v="terrain" onclick="setMapTypePref(this)" data-i18n="settings.maptype.terrain">Terrein</button>
               </div>
             </div>
           </div>
           <!-- Kaart auto-centreren -->
           <div class="srow">
             <div class="srow-icon" style="background:#FFF8E8;">🎯</div>
-            <div class="srow-body"><div class="srow-title">Auto-centreren</div><div class="srow-sub">Kaart centreert op jouw locatie bij openen</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.autocenter.title">Auto-centreren</div><div class="srow-sub" data-i18n="settings.autocenter.sub">Kaart centreert op jouw locatie bij openen</div></div>
             <div class="srow-right">
               <div class="toggle-wrap" id="autocenter-toggle" onclick="togglePref('autocenter',this)"><div class="toggle-ball"></div></div>
             </div>
@@ -1374,7 +1374,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Afstand tonen -->
           <div class="srow">
             <div class="srow-icon" style="background:#E8F4ED;">📏</div>
-            <div class="srow-body"><div class="srow-title">Afstand tonen</div><div class="srow-sub">Toon kilometer-afstand bij elke verkoop</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.showdist.title">Afstand tonen</div><div class="srow-sub" data-i18n="settings.showdist.sub">Toon kilometer-afstand bij elke verkoop</div></div>
             <div class="srow-right">
               <div class="toggle-wrap" id="showdist-toggle" onclick="togglePref('showdist',this)"><div class="toggle-ball"></div></div>
             </div>
@@ -1391,8 +1391,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div class="srow">
             <div class="srow-icon" style="background:#FFF8E8;">🔔</div>
             <div class="srow-body">
-              <div class="srow-title">Alle meldingen</div>
-              <div class="srow-sub" id="notif-master-lbl">Ingeschakeld</div>
+              <div class="srow-title" data-i18n="settings.notif.master_title">Alle meldingen</div>
+              <div class="srow-sub" id="notif-master-lbl" data-i18n="settings.notif.master_on">Ingeschakeld</div>
             </div>
             <div class="srow-right">
               <div class="toggle-wrap" id="notif-master" onclick="toggleMaster()"><div class="toggle-ball"></div></div>
@@ -1408,7 +1408,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="notif-card-head" onclick="toggleNotifCard(0)">
               <div style="font-size:22px">🏠</div>
               <div style="flex:1">
-                <div style="font-size:13px;font-weight:700">Nieuwe verkopen in de buurt</div>
+                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card1_title">Nieuwe verkopen in de buurt</div>
                 <div class="notif-card-sub" id="ncs-0">Direct · binnen 2 km</div>
               </div>
               <div class="toggle-wrap" id="nt-0" onclick="event.stopPropagation();toggleNotifType(0)"><div class="toggle-ball"></div></div>
@@ -1416,7 +1416,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             </div>
             <div class="notif-card-body" id="nb-0">
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Afstand</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_distance">Afstand</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="notif-pill active" data-g="0" data-v="1" onclick="pickNotifPill(this)">1 km</button>
                   <button class="notif-pill active" data-g="0" data-v="2" onclick="pickNotifPill(this)">2 km</button>
@@ -1426,14 +1426,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
                 </div>
               </div>
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Timing</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_timing">Timing</span>
                 <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
-                  <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks overzicht</button>
+                  <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
+                  <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_daily_overview">Dagelijks overzicht</button>
                 </div>
               </div>
               <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Types</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_types">Types</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 Particulier</button>
                   <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ Buurt</button>
@@ -1448,7 +1448,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="notif-card-head" onclick="toggleNotifCard(1)">
               <div style="font-size:22px">⭐</div>
               <div style="flex:1">
-                <div style="font-size:13px;font-weight:700">Herinneringen favorieten</div>
+                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card2_title">Herinneringen favorieten</div>
                 <div class="notif-card-sub" id="ncs-1">20 min van tevoren</div>
               </div>
               <div class="toggle-wrap" id="nt-1" onclick="event.stopPropagation();toggleNotifType(1)"><div class="toggle-ball"></div></div>
@@ -1456,7 +1456,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             </div>
             <div class="notif-card-body" id="nb-1">
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Hoe ver van tevoren?</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_advance">Hoe ver van tevoren?</span>
                 <div style="padding:0 4px">
                   <input type="range" min="5" max="120" step="5" value="20" id="fav-slider"
                     oninput="updateSliderLabel('fav-slider','fav-lbl',this.value+' min voor aanvang')"
@@ -1467,24 +1467,24 @@ body.dark .bv-addr-row:active { background: var(--bg); }
                 </div>
               </div>
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Extra opties</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_extra">Extra opties</span>
                 <div style="display:flex;flex-direction:column;gap:8px">
                   <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                    <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> Ochtendoverzicht om 08:00
+                    <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> <span data-i18n="settings.notif.morning_overview">Ochtendoverzicht om 08:00</span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                    <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> Routeherinnering meesturen
+                    <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> <span data-i18n="settings.notif.route_reminder">Routeherinnering meesturen</span>
                   </label>
                 </div>
               </div>
               <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Stilte-uren</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_quiet_hours">Stilte-uren</span>
                 <div style="padding:0 4px">
                   <input type="range" min="0" max="1440" step="30" value="480" id="quiet-start"
                     oninput="updateTimeSlider('quiet-start','qs-lbl')"
                     style="width:100%;accent-color:var(--forest)">
                   <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                    <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)">Geen stilte-uren</span><span>23:30</span>
+                    <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)" data-i18n="settings.notif.no_quiet_hours">Geen stilte-uren</span><span>23:30</span>
                   </div>
                 </div>
               </div>
@@ -1496,7 +1496,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="notif-card-head" onclick="toggleNotifCard(2)">
               <div style="font-size:22px">🌅</div>
               <div style="flex:1">
-                <div style="font-size:13px;font-weight:700">Ochtendroute-overzicht</div>
+                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card3_title">Ochtendroute-overzicht</div>
                 <div class="notif-card-sub" id="ncs-2">Za & zo · om 08:00</div>
               </div>
               <div class="toggle-wrap" id="nt-2" onclick="event.stopPropagation();toggleNotifType(2)"><div class="toggle-ball"></div></div>
@@ -1504,7 +1504,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             </div>
             <div class="notif-card-body" id="nb-2">
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Tijdstip</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_time">Tijdstip</span>
                 <div style="padding:0 4px">
                   <input type="range" min="300" max="720" step="15" value="480" id="route-time"
                     oninput="updateTimeSlider('route-time','rt-lbl')"
@@ -1515,22 +1515,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
                 </div>
               </div>
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Op welke dagen?</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_days">Op welke dagen?</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)">Ma</button>
-                  <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)">Di</button>
-                  <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)">Wo</button>
-                  <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)">Do</button>
-                  <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)">Vr</button>
-                  <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)">Za</button>
-                  <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)">Zo</button>
+                  <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)" data-i18n="settings.day.mon">Ma</button>
+                  <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)" data-i18n="settings.day.tue">Di</button>
+                  <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)" data-i18n="settings.day.wed">Wo</button>
+                  <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)" data-i18n="settings.day.thu">Do</button>
+                  <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)" data-i18n="settings.day.fri">Vr</button>
+                  <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)" data-i18n="settings.day.sat">Za</button>
+                  <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)" data-i18n="settings.day.sun">Zo</button>
                 </div>
               </div>
               <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Sturen als</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_send_when">Sturen als</span>
                 <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)">Altijd</button>
-                  <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)">Alleen met favorieten</button>
+                  <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_always">Altijd</button>
+                  <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_only_favs">Alleen met favorieten</button>
                 </div>
               </div>
             </div>
@@ -1541,7 +1541,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="notif-card-head" onclick="toggleNotifCard(3)">
               <div style="font-size:22px">🏷️</div>
               <div style="flex:1">
-                <div style="font-size:13px;font-weight:700">Nieuwe items in categorieën</div>
+                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card4_title">Nieuwe items in categorieën</div>
                 <div class="notif-card-sub" id="ncs-3">Kleding · binnen 25 km</div>
               </div>
               <div class="toggle-wrap" id="nt-3" onclick="event.stopPropagation();toggleNotifType(3)"><div class="toggle-ball"></div></div>
@@ -1549,30 +1549,30 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             </div>
             <div class="notif-card-body" id="nb-3">
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Categorieën</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_categories">Categorieën</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding</button>
-                  <button class="notif-pill" data-g="5" data-v="Schoenen" onclick="toggleNotifPill(this)">👟 Schoenen</button>
-                  <button class="notif-pill" data-g="5" data-v="Antiek & Vintage" onclick="toggleNotifPill(this)">🏺 Antiek & Vintage</button>
-                  <button class="notif-pill" data-g="5" data-v="Retro" onclick="toggleNotifPill(this)">📻 Retro</button>
-                  <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels</button>
-                  <button class="notif-pill" data-g="5" data-v="Huishoudspullen" onclick="toggleNotifPill(this)">🏠 Huishoudspullen</button>
-                  <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed</button>
-                  <button class="notif-pill" data-g="5" data-v="Baby & Kind" onclick="toggleNotifPill(this)">👶 Baby & Kind</button>
-                  <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica</button>
-                  <button class="notif-pill" data-g="5" data-v="Films & Games" onclick="toggleNotifPill(this)">🎮 Films & Games</button>
-                  <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken</button>
-                  <button class="notif-pill" data-g="5" data-v="Vinyl & Muziek" onclick="toggleNotifPill(this)">🎵 Vinyl & Muziek</button>
-                  <button class="notif-pill" data-g="5" data-v="Sport" onclick="toggleNotifPill(this)">⚽ Sport & Fitness</button>
-                  <button class="notif-pill" data-g="5" data-v="Fietsen" onclick="toggleNotifPill(this)">🚲 Fietsen & Steps</button>
-                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin & Buiten</button>
-                  <button class="notif-pill" data-g="5" data-v="Gereedschap" onclick="toggleNotifPill(this)">🔧 Gereedschap</button>
-                  <button class="notif-pill" data-g="5" data-v="Kunst & Deco" onclick="toggleNotifPill(this)">🎨 Kunst & Deco</button>
-                  <button class="notif-pill" data-g="5" data-v="Verzamelaars" onclick="toggleNotifPill(this)">🔭 Verzamelaars</button>
+                  <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding data-i18n="cat.kleding">👗 Kleding</button>
+                  <button class="notif-pill" data-g="5" data-v="Schoenen" onclick="toggleNotifPill(this)">👟 Schoenen data-i18n="cat.schoenen">👟 Schoenen</button>
+                  <button class="notif-pill" data-g="5" data-v="Antiek & Vintage" onclick="toggleNotifPill(this)" data-i18n="cat.antiek">🏺 Antiek & Vintage</button>
+                  <button class="notif-pill" data-g="5" data-v="Retro" onclick="toggleNotifPill(this)">📻 Retro data-i18n="cat.retro">📻 Retro</button>
+                  <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels data-i18n="cat.meubels">🛋️ Meubels</button>
+                  <button class="notif-pill" data-g="5" data-v="Huishoudspullen" onclick="toggleNotifPill(this)">🏠 Huishoudspullen data-i18n="cat.huishoud">🏠 Huishoudspullen</button>
+                  <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed data-i18n="cat.speelgoed">🧸 Speelgoed</button>
+                  <button class="notif-pill" data-g="5" data-v="Baby & Kind" onclick="toggleNotifPill(this)" data-i18n="cat.babykind">👶 Baby & Kind</button>
+                  <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica data-i18n="cat.elektro">📱 Elektronica</button>
+                  <button class="notif-pill" data-g="5" data-v="Films & Games" onclick="toggleNotifPill(this)" data-i18n="cat.films">🎮 Films & Games</button>
+                  <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken data-i18n="cat.boeken">📚 Boeken</button>
+                  <button class="notif-pill" data-g="5" data-v="Vinyl & Muziek" onclick="toggleNotifPill(this)" data-i18n="cat.vinyl">🎵 Vinyl & Muziek</button>
+                  <button class="notif-pill" data-g="5" data-v="Sport" onclick="toggleNotifPill(this)">⚽ Sport & Fitness data-i18n="cat.sport">⚽ Sport & Fitness</button>
+                  <button class="notif-pill" data-g="5" data-v="Fietsen" onclick="toggleNotifPill(this)">🚲 Fietsen & Steps data-i18n="cat.fietsen">🚲 Fietsen & Steps</button>
+                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin & Buiten data-i18n="cat.tuin">🌿 Tuin & Buiten</button>
+                  <button class="notif-pill" data-g="5" data-v="Gereedschap" onclick="toggleNotifPill(this)">🔧 Gereedschap data-i18n="cat.gereedschap">🔧 Gereedschap</button>
+                  <button class="notif-pill" data-g="5" data-v="Kunst & Deco" onclick="toggleNotifPill(this)" data-i18n="cat.kunst">🎨 Kunst & Deco</button>
+                  <button class="notif-pill" data-g="5" data-v="Verzamelaars" onclick="toggleNotifPill(this)">🔭 Verzamelaars data-i18n="cat.verzamel">🔭 Verzamelaars</button>
                 </div>
               </div>
               <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Zoekradius</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_radius">Zoekradius</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="notif-pill" data-g="6" data-v="5" onclick="pickNotifPill(this)">5 km</button>
                   <button class="notif-pill" data-g="6" data-v="10" onclick="pickNotifPill(this)">10 km</button>
@@ -1581,11 +1581,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
                 </div>
               </div>
               <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)">Frequentie</span>
+                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_freq">Frequentie</span>
                 <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)">Direct</button>
-                  <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)">Dagelijks</button>
-                  <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)">Wekelijks</button>
+                  <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
+                  <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_daily">Dagelijks</button>
+                  <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_weekly">Wekelijks</button>
                 </div>
               </div>
             </div>
@@ -1593,7 +1593,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
         </div><!-- /notif-cards -->
 
-        <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px">✓ Meldingen opslaan</button>
+        <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px" data-i18n="settings.notif.save_btn">✓ Meldingen opslaan</button>
       </div>
 
       <!-- ── PRIVACY ── -->
@@ -1603,19 +1603,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Adres zichtbaarheid -->
           <div class="srow" style="flex-wrap:wrap;gap:8px;">
             <div class="srow-icon" style="background:#E8F4ED;">🏠</div>
-            <div class="srow-body"><div class="srow-title">Adres van mijn verkopen</div><div class="srow-sub" id="addr-pref-sub">Alleen voor ingelogde gebruikers</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.addr_title">Adres van mijn verkopen</div><div class="srow-sub" id="addr-pref-sub" data-i18n="settings.privacy.addr_sub_members">Alleen voor ingelogde gebruikers</div></div>
             <div style="width:100%;padding-left:44px;">
               <div class="seg-ctrl" id="seg-addrpref">
-                <button class="seg-opt active" data-v="members" onclick="setAddrPref(this)">Leden</button>
-                <button class="seg-opt" data-v="all" onclick="setAddrPref(this)">Iedereen</button>
-                <button class="seg-opt" data-v="none" onclick="setAddrPref(this)">Niemand</button>
+                <button class="seg-opt active" data-v="members" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_members">Leden</button>
+                <button class="seg-opt" data-v="all" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_all">Iedereen</button>
+                <button class="seg-opt" data-v="none" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_none">Niemand</button>
               </div>
             </div>
           </div>
           <!-- Profiel zichtbaarheid -->
           <div class="srow">
             <div class="srow-icon" style="background:#F0EBF8;">👤</div>
-            <div class="srow-body"><div class="srow-title">Profiel publiek zichtbaar</div><div class="srow-sub">Anderen kunnen jouw profiel bekijken</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.profile_title">Profiel publiek zichtbaar</div><div class="srow-sub" data-i18n="settings.privacy.profile_sub">Anderen kunnen jouw profiel bekijken</div></div>
             <div class="srow-right">
               <div class="toggle-wrap" id="pubprofile-toggle" onclick="togglePref('pubprofile',this)"><div class="toggle-ball"></div></div>
             </div>
@@ -1623,7 +1623,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Statistieken tonen -->
           <div class="srow">
             <div class="srow-icon" style="background:#FFF0E8;">📊</div>
-            <div class="srow-body"><div class="srow-title">Statistieken tonen</div><div class="srow-sub">Weergaven en interesses op jouw profiel</div></div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.stats_title">Statistieken tonen</div><div class="srow-sub" data-i18n="settings.privacy.stats_sub">Weergaven en interesses op jouw profiel</div></div>
             <div class="srow-right">
               <div class="toggle-wrap" id="showstats-toggle" onclick="togglePref('showstats',this)"><div class="toggle-ball"></div></div>
             </div>
@@ -1908,10 +1908,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="sheet-handle"></div>
     <div style="padding:20px 24px 32px;text-align:center">
       <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-      <div style="font-size:18px;font-weight:800;color:var(--terra);margin-bottom:8px">Account verwijderen</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Weet je zeker dat je je account wilt verwijderen? Al je verkopen en gegevens worden permanent gewist. Dit kan niet ongedaan worden gemaakt.</div>
-      <button onclick="doDeleteAccount()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">Ja, verwijder mijn account</button>
-      <button onclick="closeDeleteConfirm()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
+      <div style="font-size:18px;font-weight:800;color:var(--terra);margin-bottom:8px" data-i18n="delete.title">Account verwijderen</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5" data-i18n="delete.warn">Weet je zeker dat je je account wilt verwijderen? Al je verkopen en gegevens worden permanent gewist. Dit kan niet ongedaan worden gemaakt.</div>
+      <button onclick="doDeleteAccount()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px" data-i18n="delete.btn_confirm">Ja, verwijder mijn account</button>
+      <button onclick="closeDeleteConfirm()" style="width:100%;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="delete.btn_cancel">Annuleren</button>
     </div>
   </div>
 </div>
@@ -2181,9 +2181,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
               <span style="font-size:18px;line-height:1.2;flex-shrink:0">🛡️</span>
               <div style="flex:1;min-width:0">
                 <div style="margin-bottom:3px">
-                  <strong style="color:var(--text);font-size:13px">Ik heb al toestemming van alle buren</strong>
+                  <strong style="color:var(--text);font-size:13px" data-i18n="bulk.consent_card2_title">Ik heb al toestemming van alle buren</strong>
                 </div>
-                <div style="color:var(--muted);font-size:11.5px;line-height:1.5">Klik om te verklaren dat je van iedere bewoner persoonlijk toestemming hebt. Adressen komen direct online, jij bent dan aanspreekpunt bij vragen.</div>
+                <div style="color:var(--muted);font-size:11.5px;line-height:1.5" data-i18n="bulk.consent_card2_sub">Klik om te verklaren dat je van iedere bewoner persoonlijk toestemming hebt. Adressen komen direct online, jij bent dan aanspreekpunt bij vragen.</div>
               </div>
               <span id="bulkConsentCardDeclaredDot" style="font-size:18px;color:var(--border);flex-shrink:0;line-height:1.2">○</span>
             </div>
@@ -2191,14 +2191,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
           <!-- Bevestigingsbandje: alleen zichtbaar zodra kaart 2 via de modal bevestigd is -->
           <div id="bulkConsentConfirmedNote" style="display:none;padding:8px 10px;background:#E5F0FB;border:1px solid #B8D4E8;border-radius:8px;font-size:11.5px;color:#1F4A7A;line-height:1.5">
-            <strong>🛡️ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href="#" onclick="undoBulkConsent(event)" style="color:#1F4A7A;text-decoration:underline">Toch via bevestigingslink</a>.
+            <span data-i18n-html="bulk.consent_confirmed_banner_html"><strong>🛡️ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href="#" onclick="undoBulkConsent(event)" style="color:#1F4A7A;text-decoration:underline">Toch via bevestigingslink</a>.</span>
           </div>
         </div>
       </div>
 
       <div style="display:flex;gap:8px">
         <button type="button" onclick="closeBulkAdresModal()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
-        <button type="button" id="bulkAdresImportBtn" onclick="importBulkAdres()" disabled style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;opacity:.5">Eerst plakken of bestand kiezen</button>
+        <button type="button" id="bulkAdresImportBtn" onclick="importBulkAdres()" disabled style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer;opacity:.5" data-i18n="bulk.btn_paste_first">Eerst plakken of bestand kiezen</button>
       </div>
     </div>
   </div>
@@ -2217,30 +2217,30 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="padding:22px 24px 18px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
         <span style="font-size:24px">🛡️</span>
-        <div style="font-size:18px;font-weight:800;color:var(--text)">Even checken: AVG-toestemming</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text)" data-i18n="bulk.warn_title">Even checken: AVG-toestemming</div>
       </div>
 
-      <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px">
+      <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px" data-i18n-html="bulk.warn_intro_html">
         Door dit aan te zetten verklaar je dat je van iedere bewoner in de lijst <strong>persoonlijk toestemming</strong> hebt om zijn of haar adres te tonen op YardiGo voor deze buurtverkoop.
       </div>
 
       <div style="background:#FFF8EC;border-left:3px solid #E0A458;border-radius:8px;padding:11px 13px;font-size:12px;color:#7A5A2A;line-height:1.55;margin-bottom:12px">
-        <strong>Waar moet je aan denken?</strong>
+        <strong data-i18n="bulk.warn_think_about">Waar moet je aan denken?</strong>
         <ul style="margin:6px 0 0;padding-left:18px">
-          <li style="margin-bottom:4px">De toestemming moet aantoonbaar zijn (bijvoorbeeld een WhatsApp-bericht, mailtje of een getekend lijstje).</li>
-          <li style="margin-bottom:4px">Krijgt YardiGo een klacht van een bewoner, dan halen we het adres direct offline en kunnen we jou om bewijs vragen.</li>
-          <li style="margin-bottom:4px">Bewoners kunnen op elk moment hun adres laten verwijderen via een bericht aan info@yardigo.nl.</li>
-          <li>De toestemming geldt alleen voor déze buurtverkoop, niet voor toekomstige.</li>
+          <li style="margin-bottom:4px" data-i18n="bulk.warn_li1">De toestemming moet aantoonbaar zijn (bijvoorbeeld een WhatsApp-bericht, mailtje of een getekend lijstje).</li>
+          <li style="margin-bottom:4px" data-i18n="bulk.warn_li2">Krijgt YardiGo een klacht van een bewoner, dan halen we het adres direct offline en kunnen we jou om bewijs vragen.</li>
+          <li style="margin-bottom:4px" data-i18n="bulk.warn_li3">Bewoners kunnen op elk moment hun adres laten verwijderen via een bericht aan info@yardigo.nl.</li>
+          <li data-i18n="bulk.warn_li4">De toestemming geldt alleen voor déze buurtverkoop, niet voor toekomstige.</li>
         </ul>
       </div>
 
-      <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:18px">
+      <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:18px" data-i18n="bulk.warn_audit_note">
         Je verklaring wordt vastgelegd met datum, tijd en je account-ID. Dat dient als audit-spoor voor het geval er ooit gevraagd wordt hoe de toestemming is verkregen.
       </div>
 
       <div style="display:flex;gap:8px">
-        <button type="button" onclick="declineBulkConsent()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer">Annuleren</button>
-        <button type="button" onclick="acceptBulkConsent()" style="flex:1.4;padding:12px;border-radius:12px;border:none;background:#3A6B4A;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Ik begrijp en bevestig</button>
+        <button type="button" onclick="declineBulkConsent()" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:white;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="bulk.warn_btn_cancel">Annuleren</button>
+        <button type="button" onclick="acceptBulkConsent()" style="flex:1.4;padding:12px;border-radius:12px;border:none;background:#3A6B4A;color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer" data-i18n="bulk.warn_btn_accept">Ik begrijp en bevestig</button>
       </div>
     </div>
   </div>
@@ -2624,6 +2624,121 @@ var I18N = {
     'publish.floorplan.btn_upload': "📎 Plattegrond uploaden (optioneel)",
     'bulk.consent_title': "Hoe regel je de toestemming van de buren?",
     'bulk.consent_recommended': "AANBEVOLEN",
+    // Settings (Voorkeuren, Meldingen, Privacy)
+    'settings.radius.title': "Standaard zoekradius",
+    'settings.radius.sub_default': "10 km rondom jouw locatie",
+    'settings.maptype.title': "Kaarttype",
+    'settings.maptype.sub_default': "Standaard kaartweergave",
+    'settings.maptype.roadmap': "Standaard",
+    'settings.maptype.satellite': "Satelliet",
+    'settings.maptype.terrain': "Terrein",
+    'settings.autocenter.title': "Auto-centreren",
+    'settings.autocenter.sub': "Kaart centreert op jouw locatie bij openen",
+    'settings.showdist.title': "Afstand tonen",
+    'settings.showdist.sub': "Toon kilometer-afstand bij elke verkoop",
+    'settings.notif.master_title': "Alle meldingen",
+    'settings.notif.master_on': "Ingeschakeld",
+    'settings.notif.master_off': "Uitgeschakeld",
+    'settings.notif.card1_title': "Nieuwe verkopen in de buurt",
+    'settings.notif.label_distance': "Afstand",
+    'settings.notif.label_timing': "Timing",
+    'settings.notif.label_types': "Types",
+    'settings.notif.timing_direct': "Direct",
+    'settings.notif.timing_daily_overview': "Dagelijks overzicht",
+    'settings.notif.card2_title': "Herinneringen favorieten",
+    'settings.notif.label_advance': "Hoe ver van tevoren?",
+    'settings.notif.label_extra': "Extra opties",
+    'settings.notif.morning_overview': "Ochtendoverzicht om 08:00",
+    'settings.notif.route_reminder': "Routeherinnering meesturen",
+    'settings.notif.label_quiet_hours': "Stilte-uren",
+    'settings.notif.no_quiet_hours': "Geen stilte-uren",
+    'settings.notif.card3_title': "Ochtendroute-overzicht",
+    'settings.notif.label_time': "Tijdstip",
+    'settings.notif.label_days': "Op welke dagen?",
+    'settings.notif.label_send_when': "Sturen als",
+    'settings.notif.send_always': "Altijd",
+    'settings.notif.send_only_favs': "Alleen met favorieten",
+    'settings.notif.card4_title': "Nieuwe items in categorieën",
+    'settings.notif.label_categories': "Categorieën",
+    'settings.notif.label_radius': "Zoekradius",
+    'settings.notif.label_freq': "Frequentie",
+    'settings.notif.freq_daily': "Dagelijks",
+    'settings.notif.freq_weekly': "Wekelijks",
+    'settings.notif.save_btn': "✓ Meldingen opslaan",
+    'settings.privacy.addr_title': "Adres van mijn verkopen",
+    'settings.privacy.addr_sub_members': "Alleen voor ingelogde gebruikers",
+    'settings.privacy.addr_members': "Leden",
+    'settings.privacy.addr_all': "Iedereen",
+    'settings.privacy.addr_none': "Niemand",
+    'settings.privacy.profile_title': "Profiel publiek zichtbaar",
+    'settings.privacy.profile_sub': "Anderen kunnen jouw profiel bekijken",
+    'settings.privacy.stats_title': "Statistieken tonen",
+    'settings.privacy.stats_sub': "Weergaven en interesses op jouw profiel",
+    'settings.day.mon': "Ma",
+    'settings.day.tue': "Di",
+    'settings.day.wed': "Wo",
+    'settings.day.thu': "Do",
+    'settings.day.fri': "Vr",
+    'settings.day.sat': "Za",
+    'settings.day.sun': "Zo",
+    'cat.kleding': "👗 Kleding",
+    'cat.schoenen': "👟 Schoenen",
+    'cat.antiek': "🏺 Antiek & Vintage",
+    'cat.retro': "📻 Retro",
+    'cat.meubels': "🛋️ Meubels",
+    'cat.huishoud': "🏠 Huishoudspullen",
+    'cat.speelgoed': "🧸 Speelgoed",
+    'cat.babykind': "👶 Baby & Kind",
+    'cat.elektro': "📱 Elektronica",
+    'cat.films': "🎮 Films & Games",
+    'cat.boeken': "📚 Boeken",
+    'cat.vinyl': "🎵 Vinyl & Muziek",
+    'cat.sport': "⚽ Sport & Fitness",
+    'cat.fietsen': "🚲 Fietsen & Steps",
+    'cat.tuin': "🌿 Tuin & Buiten",
+    'cat.gereedschap': "🔧 Gereedschap",
+    'cat.kunst': "🎨 Kunst & Deco",
+    'cat.verzamel': "🔭 Verzamelaars",
+    // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
+    'edit.title': "Advertentie bewerken",
+    'edit.label_title': "Titel",
+    'edit.label_date': "Datum",
+    'edit.label_from': "Van",
+    'edit.label_till': "Tot",
+    'edit.label_status': "Status",
+    'edit.status_active': "✓ Actief",
+    'edit.status_paused': "⏸ Gepauzeerd",
+    'edit.status_sold': "✓ Verkocht / afgelopen",
+    'edit.label_desc': "Omschrijving",
+    'bulk.consent_card2_title': "Ik heb al toestemming van alle buren",
+    'bulk.consent_card2_sub': "Klik om te verklaren dat je van iedere bewoner persoonlijk toestemming hebt. Adressen komen direct online, jij bent dan aanspreekpunt bij vragen.",
+    'bulk.consent_confirmed_banner_html': "<strong>🛡️ Toestemming verklaard.</strong> Deze adressen gaan na publiceren direct online. <a href=\"#\" onclick=\"undoBulkConsent(event)\" style=\"color:#1F4A7A;text-decoration:underline\">Toch via bevestigingslink</a>.",
+    'bulk.btn_paste_first': "Eerst plakken of bestand kiezen",
+    'bulk.warn_title': "Even checken: AVG-toestemming",
+    'bulk.warn_intro_html': "Door dit aan te zetten verklaar je dat je van iedere bewoner in de lijst <strong>persoonlijk toestemming</strong> hebt om zijn of haar adres te tonen op YardiGo voor deze buurtverkoop.",
+    'bulk.warn_think_about': "Waar moet je aan denken?",
+    'bulk.warn_li1': "De toestemming moet aantoonbaar zijn (bijvoorbeeld een WhatsApp-bericht, mailtje of een getekend lijstje).",
+    'bulk.warn_li2': "Krijgt YardiGo een klacht van een bewoner, dan halen we het adres direct offline en kunnen we jou om bewijs vragen.",
+    'bulk.warn_li3': "Bewoners kunnen op elk moment hun adres laten verwijderen via een bericht aan info@yardigo.nl.",
+    'bulk.warn_li4': "De toestemming geldt alleen voor déze buurtverkoop, niet voor toekomstige.",
+    'bulk.warn_audit_note': "Je verklaring wordt vastgelegd met datum, tijd en je account-ID. Dat dient als audit-spoor voor het geval er ooit gevraagd wordt hoe de toestemming is verkregen.",
+    'bulk.warn_btn_cancel': "Annuleren",
+    'bulk.warn_btn_accept': "Ik begrijp en bevestig",
+    'profile.attendance_visited_html': "Je was bij <span id=\"att-visits\">{visited}</span> van <span id=\"att-total\">{total}</span> aangemelde verkopen.",
+    'checkin.title': "Ben je geweest?",
+    'checkin.yes': "✓ Ja",
+    'checkin.no': "✗ Nee",
+    'profile.attendance_label_default': "✓ Komt altijd",
+    'profile.attendance_aanwezig': "aanwezig",
+    'empty.no_favorites_title': "Nog geen favorieten",
+    'empty.no_favorites_sub': "Tik op ⭐ bij een verkoop om hem hier op te slaan.",
+    'empty.discover_btn': "Verkopen ontdekken →",
+    'empty.no_reviews_title': "Nog geen reviews",
+    'empty.no_reviews_sub': "Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.",
+    'delete.title': "Account verwijderen",
+    'delete.warn': "Weet je zeker dat je je account wilt verwijderen? Al je verkopen en gegevens worden permanent gewist. Dit kan niet ongedaan worden gemaakt.",
+    'delete.btn_confirm': "Ja, verwijder mijn account",
+    'delete.btn_cancel': "Annuleren",
     // Header
     'header.login': 'Inloggen',
     'header.publish': 'Plaatsen',
@@ -3036,6 +3151,121 @@ var I18N = {
     'publish.floorplan.btn_upload': "📎 Upload floor plan (optional)",
     'bulk.consent_title': "How do you arrange the neighbors' consent?",
     'bulk.consent_recommended': "RECOMMENDED",
+    // Settings (Voorkeuren, Meldingen, Privacy)
+    'settings.radius.title': "Default search radius",
+    'settings.radius.sub_default': "10 km around your location",
+    'settings.maptype.title': "Map type",
+    'settings.maptype.sub_default': "Standard map view",
+    'settings.maptype.roadmap': "Standard",
+    'settings.maptype.satellite': "Satellite",
+    'settings.maptype.terrain': "Terrain",
+    'settings.autocenter.title': "Auto-center",
+    'settings.autocenter.sub': "Map centers on your location when opening",
+    'settings.showdist.title': "Show distance",
+    'settings.showdist.sub': "Show kilometer distance for each sale",
+    'settings.notif.master_title': "All notifications",
+    'settings.notif.master_on': "Enabled",
+    'settings.notif.master_off': "Disabled",
+    'settings.notif.card1_title': "New sales nearby",
+    'settings.notif.label_distance': "Distance",
+    'settings.notif.label_timing': "Timing",
+    'settings.notif.label_types': "Types",
+    'settings.notif.timing_direct': "Instantly",
+    'settings.notif.timing_daily_overview': "Daily digest",
+    'settings.notif.card2_title': "Favorite reminders",
+    'settings.notif.label_advance': "How far in advance?",
+    'settings.notif.label_extra': "Extra options",
+    'settings.notif.morning_overview': "Morning overview at 08:00",
+    'settings.notif.route_reminder': "Include route reminder",
+    'settings.notif.label_quiet_hours': "Quiet hours",
+    'settings.notif.no_quiet_hours': "No quiet hours",
+    'settings.notif.card3_title': "Morning route overview",
+    'settings.notif.label_time': "Time",
+    'settings.notif.label_days': "On which days?",
+    'settings.notif.label_send_when': "Send when",
+    'settings.notif.send_always': "Always",
+    'settings.notif.send_only_favs': "Only with favorites",
+    'settings.notif.card4_title': "New items in categories",
+    'settings.notif.label_categories': "Categories",
+    'settings.notif.label_radius': "Search radius",
+    'settings.notif.label_freq': "Frequency",
+    'settings.notif.freq_daily': "Daily",
+    'settings.notif.freq_weekly': "Weekly",
+    'settings.notif.save_btn': "✓ Save notifications",
+    'settings.privacy.addr_title': "Address of my sales",
+    'settings.privacy.addr_sub_members': "Only for logged-in users",
+    'settings.privacy.addr_members': "Members",
+    'settings.privacy.addr_all': "Everyone",
+    'settings.privacy.addr_none': "Nobody",
+    'settings.privacy.profile_title': "Profile publicly visible",
+    'settings.privacy.profile_sub': "Others can view your profile",
+    'settings.privacy.stats_title': "Show statistics",
+    'settings.privacy.stats_sub': "Views and interests on your profile",
+    'settings.day.mon': "Mon",
+    'settings.day.tue': "Tue",
+    'settings.day.wed': "Wed",
+    'settings.day.thu': "Thu",
+    'settings.day.fri': "Fri",
+    'settings.day.sat': "Sat",
+    'settings.day.sun': "Sun",
+    'cat.kleding': "👗 Clothing",
+    'cat.schoenen': "👟 Shoes",
+    'cat.antiek': "🏺 Antique & Vintage",
+    'cat.retro': "📻 Retro",
+    'cat.meubels': "🛋️ Furniture",
+    'cat.huishoud': "🏠 Household",
+    'cat.speelgoed': "🧸 Toys",
+    'cat.babykind': "👶 Baby & Kids",
+    'cat.elektro': "📱 Electronics",
+    'cat.films': "🎮 Movies & Games",
+    'cat.boeken': "📚 Books",
+    'cat.vinyl': "🎵 Vinyl & Music",
+    'cat.sport': "⚽ Sports & Fitness",
+    'cat.fietsen': "🚲 Bikes & Scooters",
+    'cat.tuin': "🌿 Garden & Outdoor",
+    'cat.gereedschap': "🔧 Tools",
+    'cat.kunst': "🎨 Art & Decor",
+    'cat.verzamel': "🔭 Collectibles",
+    // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
+    'edit.title': "Edit listing",
+    'edit.label_title': "Title",
+    'edit.label_date': "Date",
+    'edit.label_from': "From",
+    'edit.label_till': "Till",
+    'edit.label_status': "Status",
+    'edit.status_active': "✓ Active",
+    'edit.status_paused': "⏸ Paused",
+    'edit.status_sold': "✓ Sold / ended",
+    'edit.label_desc': "Description",
+    'bulk.consent_card2_title': "I already have consent from all neighbors",
+    'bulk.consent_card2_sub': "Click to declare you have personally obtained consent from each resident. Addresses go online instantly and you become the contact for any questions.",
+    'bulk.consent_confirmed_banner_html': "<strong>🛡️ Consent declared.</strong> These addresses go online instantly after publishing. <a href=\"#\" onclick=\"undoBulkConsent(event)\" style=\"color:#1F4A7A;text-decoration:underline\">Switch back to confirmation links</a>.",
+    'bulk.btn_paste_first': "Paste or choose a file first",
+    'bulk.warn_title': "Quick check: GDPR consent",
+    'bulk.warn_intro_html': "By enabling this you declare you have <strong>personal consent</strong> from each resident on the list to display their address on YardiGo for this neighborhood sale.",
+    'bulk.warn_think_about': "What to keep in mind?",
+    'bulk.warn_li1': "The consent must be demonstrable (e.g. a WhatsApp message, email or signed list).",
+    'bulk.warn_li2': "If YardiGo receives a complaint from a resident we will take the address offline immediately and may ask you for proof.",
+    'bulk.warn_li3': "Residents can have their address removed at any time by sending a message to info@yardigo.nl.",
+    'bulk.warn_li4': "The consent applies only to this neighborhood sale, not future ones.",
+    'bulk.warn_audit_note': "Your declaration is recorded with date, time and your account ID. This serves as an audit trail in case it is ever asked how consent was obtained.",
+    'bulk.warn_btn_cancel': "Cancel",
+    'bulk.warn_btn_accept': "I understand and confirm",
+    'profile.attendance_visited_html': "You attended <span id=\"att-visits\">{visited}</span> of <span id=\"att-total\">{total}</span> registered sales.",
+    'checkin.title': "Did you go?",
+    'checkin.yes': "✓ Yes",
+    'checkin.no': "✗ No",
+    'profile.attendance_label_default': "✓ Always shows up",
+    'profile.attendance_aanwezig': "attended",
+    'empty.no_favorites_title': "No favorites yet",
+    'empty.no_favorites_sub': "Tap ⭐ on a sale to save it here.",
+    'empty.discover_btn': "Discover sales →",
+    'empty.no_reviews_title': "No reviews yet",
+    'empty.no_reviews_sub': "Reviews appear here after visitors have rated your sales.",
+    'delete.title': "Delete account",
+    'delete.warn': "Are you sure you want to delete your account? All your sales and data will be permanently erased. This cannot be undone.",
+    'delete.btn_confirm': "Yes, delete my account",
+    'delete.btn_cancel': "Cancel",
     // Header
     'header.login': 'Sign in',
     'header.publish': 'Post sale',
@@ -3448,6 +3678,121 @@ var I18N = {
     'publish.floorplan.btn_upload': "📎 Téléverser un plan (facultatif)",
     'bulk.consent_title': "Comment obtiens-tu le consentement des voisins ?",
     'bulk.consent_recommended': "RECOMMANDÉ",
+    // Settings (Voorkeuren, Meldingen, Privacy)
+    'settings.radius.title': "Rayon de recherche par défaut",
+    'settings.radius.sub_default': "10 km autour de ta position",
+    'settings.maptype.title': "Type de carte",
+    'settings.maptype.sub_default': "Vue de carte standard",
+    'settings.maptype.roadmap': "Standard",
+    'settings.maptype.satellite': "Satellite",
+    'settings.maptype.terrain': "Terrain",
+    'settings.autocenter.title': "Centrage auto",
+    'settings.autocenter.sub': "La carte se centre sur ta position à l'ouverture",
+    'settings.showdist.title': "Afficher la distance",
+    'settings.showdist.sub': "Affiche la distance en kilomètres pour chaque vente",
+    'settings.notif.master_title': "Toutes les notifications",
+    'settings.notif.master_on': "Activées",
+    'settings.notif.master_off': "Désactivées",
+    'settings.notif.card1_title': "Nouvelles ventes à proximité",
+    'settings.notif.label_distance': "Distance",
+    'settings.notif.label_timing': "Timing",
+    'settings.notif.label_types': "Types",
+    'settings.notif.timing_direct': "Immédiat",
+    'settings.notif.timing_daily_overview': "Résumé quotidien",
+    'settings.notif.card2_title': "Rappels favoris",
+    'settings.notif.label_advance': "Combien de temps à l'avance ?",
+    'settings.notif.label_extra': "Options supplémentaires",
+    'settings.notif.morning_overview': "Aperçu du matin à 08:00",
+    'settings.notif.route_reminder': "Inclure un rappel d'itinéraire",
+    'settings.notif.label_quiet_hours': "Heures de silence",
+    'settings.notif.no_quiet_hours': "Pas de plage de silence",
+    'settings.notif.card3_title': "Aperçu de la route matinale",
+    'settings.notif.label_time': "Heure",
+    'settings.notif.label_days': "Quels jours ?",
+    'settings.notif.label_send_when': "Envoyer quand",
+    'settings.notif.send_always': "Toujours",
+    'settings.notif.send_only_favs': "Seulement avec des favoris",
+    'settings.notif.card4_title': "Nouveaux articles par catégorie",
+    'settings.notif.label_categories': "Catégories",
+    'settings.notif.label_radius': "Rayon de recherche",
+    'settings.notif.label_freq': "Fréquence",
+    'settings.notif.freq_daily': "Quotidien",
+    'settings.notif.freq_weekly': "Hebdomadaire",
+    'settings.notif.save_btn': "✓ Enregistrer les notifications",
+    'settings.privacy.addr_title': "Adresse de mes ventes",
+    'settings.privacy.addr_sub_members': "Uniquement pour les utilisateurs connectés",
+    'settings.privacy.addr_members': "Membres",
+    'settings.privacy.addr_all': "Tout le monde",
+    'settings.privacy.addr_none': "Personne",
+    'settings.privacy.profile_title': "Profil visible publiquement",
+    'settings.privacy.profile_sub': "Les autres peuvent voir ton profil",
+    'settings.privacy.stats_title': "Afficher les statistiques",
+    'settings.privacy.stats_sub': "Vues et intérêts sur ton profil",
+    'settings.day.mon': "Lun",
+    'settings.day.tue': "Mar",
+    'settings.day.wed': "Mer",
+    'settings.day.thu': "Jeu",
+    'settings.day.fri': "Ven",
+    'settings.day.sat': "Sam",
+    'settings.day.sun': "Dim",
+    'cat.kleding': "👗 Vêtements",
+    'cat.schoenen': "👟 Chaussures",
+    'cat.antiek': "🏺 Antiquités & Vintage",
+    'cat.retro': "📻 Rétro",
+    'cat.meubels': "🛋️ Meubles",
+    'cat.huishoud': "🏠 Ménage",
+    'cat.speelgoed': "🧸 Jouets",
+    'cat.babykind': "👶 Bébé & Enfants",
+    'cat.elektro': "📱 Électronique",
+    'cat.films': "🎮 Films & Jeux",
+    'cat.boeken': "📚 Livres",
+    'cat.vinyl': "🎵 Vinyles & Musique",
+    'cat.sport': "⚽ Sport & Fitness",
+    'cat.fietsen': "🚲 Vélos & Trottinettes",
+    'cat.tuin': "🌿 Jardin & Extérieur",
+    'cat.gereedschap': "🔧 Outils",
+    'cat.kunst': "🎨 Art & Déco",
+    'cat.verzamel': "🔭 Collections",
+    // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
+    'edit.title': "Modifier l'annonce",
+    'edit.label_title': "Titre",
+    'edit.label_date': "Date",
+    'edit.label_from': "De",
+    'edit.label_till': "À",
+    'edit.label_status': "Statut",
+    'edit.status_active': "✓ Actif",
+    'edit.status_paused': "⏸ En pause",
+    'edit.status_sold': "✓ Vendu / terminé",
+    'edit.label_desc': "Description",
+    'bulk.consent_card2_title': "J'ai déjà le consentement de tous les voisins",
+    'bulk.consent_card2_sub': "Clique pour déclarer que tu as obtenu le consentement personnel de chaque résident. Les adresses sont publiées immédiatement et tu deviens le point de contact pour les questions.",
+    'bulk.consent_confirmed_banner_html': "<strong>🛡️ Consentement déclaré.</strong> Ces adresses seront publiées immédiatement après publication. <a href=\"#\" onclick=\"undoBulkConsent(event)\" style=\"color:#1F4A7A;text-decoration:underline\">Revenir aux liens de confirmation</a>.",
+    'bulk.btn_paste_first': "Colle d'abord ou choisis un fichier",
+    'bulk.warn_title': "Petit point : consentement RGPD",
+    'bulk.warn_intro_html': "En activant ceci, tu déclares avoir le <strong>consentement personnel</strong> de chaque résident de la liste pour afficher son adresse sur YardiGo pour cette vente de quartier.",
+    'bulk.warn_think_about': "Que faut-il garder à l'esprit ?",
+    'bulk.warn_li1': "Le consentement doit être prouvable (par exemple un message WhatsApp, un e-mail ou une liste signée).",
+    'bulk.warn_li2': "Si YardiGo reçoit une plainte d'un résident, nous retirons immédiatement l'adresse et pouvons te demander des preuves.",
+    'bulk.warn_li3': "Les résidents peuvent à tout moment faire supprimer leur adresse en envoyant un message à info@yardigo.nl.",
+    'bulk.warn_li4': "Le consentement ne vaut que pour cette vente de quartier, pas pour les suivantes.",
+    'bulk.warn_audit_note': "Ta déclaration est enregistrée avec date, heure et identifiant de compte. Cela sert de piste d'audit au cas où la manière dont le consentement a été obtenu serait demandée.",
+    'bulk.warn_btn_cancel': "Annuler",
+    'bulk.warn_btn_accept': "Je comprends et confirme",
+    'profile.attendance_visited_html': "Tu as assisté à <span id=\"att-visits\">{visited}</span> sur <span id=\"att-total\">{total}</span> ventes inscrites.",
+    'checkin.title': "Tu y es allé ?",
+    'checkin.yes': "✓ Oui",
+    'checkin.no': "✗ Non",
+    'profile.attendance_label_default': "✓ Toujours présent",
+    'profile.attendance_aanwezig': "présent",
+    'empty.no_favorites_title': "Pas encore de favoris",
+    'empty.no_favorites_sub': "Appuie sur ⭐ d'une vente pour la sauvegarder ici.",
+    'empty.discover_btn': "Découvrir les ventes →",
+    'empty.no_reviews_title': "Pas encore d'avis",
+    'empty.no_reviews_sub': "Les avis apparaissent ici après que les visiteurs ont noté tes ventes.",
+    'delete.title': "Supprimer le compte",
+    'delete.warn': "Es-tu sûr de vouloir supprimer ton compte ? Toutes tes ventes et données seront définitivement effacées. Cette action est irréversible.",
+    'delete.btn_confirm': "Oui, supprime mon compte",
+    'delete.btn_cancel': "Annuler",
     // Header
     'header.login': 'Connexion',
     'header.publish': 'Publier',
@@ -3863,6 +4208,121 @@ var I18N = {
     'publish.floorplan.btn_upload': "📎 Lageplan hochladen (optional)",
     'bulk.consent_title': "Wie holst du die Zustimmung der Nachbarn ein?",
     'bulk.consent_recommended': "EMPFOHLEN",
+    // Settings (Voorkeuren, Meldingen, Privacy)
+    'settings.radius.title': "Standard-Suchradius",
+    'settings.radius.sub_default': "10 km um deinen Standort",
+    'settings.maptype.title': "Kartentyp",
+    'settings.maptype.sub_default': "Standard-Kartenansicht",
+    'settings.maptype.roadmap': "Standard",
+    'settings.maptype.satellite': "Satellit",
+    'settings.maptype.terrain': "Gelände",
+    'settings.autocenter.title': "Auto-Zentrierung",
+    'settings.autocenter.sub': "Karte zentriert beim Öffnen auf deinen Standort",
+    'settings.showdist.title': "Entfernung anzeigen",
+    'settings.showdist.sub': "Kilometer-Entfernung für jeden Verkauf anzeigen",
+    'settings.notif.master_title': "Alle Benachrichtigungen",
+    'settings.notif.master_on': "Aktiviert",
+    'settings.notif.master_off': "Deaktiviert",
+    'settings.notif.card1_title': "Neue Verkäufe in der Nähe",
+    'settings.notif.label_distance': "Entfernung",
+    'settings.notif.label_timing': "Zeitpunkt",
+    'settings.notif.label_types': "Typen",
+    'settings.notif.timing_direct': "Sofort",
+    'settings.notif.timing_daily_overview': "Tägliche Übersicht",
+    'settings.notif.card2_title': "Favoriten-Erinnerungen",
+    'settings.notif.label_advance': "Wie weit im Voraus?",
+    'settings.notif.label_extra': "Zusätzliche Optionen",
+    'settings.notif.morning_overview': "Morgenübersicht um 08:00",
+    'settings.notif.route_reminder': "Routenerinnerung mitsenden",
+    'settings.notif.label_quiet_hours': "Ruhezeiten",
+    'settings.notif.no_quiet_hours': "Keine Ruhezeiten",
+    'settings.notif.card3_title': "Morgenroute-Übersicht",
+    'settings.notif.label_time': "Uhrzeit",
+    'settings.notif.label_days': "An welchen Tagen?",
+    'settings.notif.label_send_when': "Senden wenn",
+    'settings.notif.send_always': "Immer",
+    'settings.notif.send_only_favs': "Nur mit Favoriten",
+    'settings.notif.card4_title': "Neue Artikel in Kategorien",
+    'settings.notif.label_categories': "Kategorien",
+    'settings.notif.label_radius': "Suchradius",
+    'settings.notif.label_freq': "Häufigkeit",
+    'settings.notif.freq_daily': "Täglich",
+    'settings.notif.freq_weekly': "Wöchentlich",
+    'settings.notif.save_btn': "✓ Benachrichtigungen speichern",
+    'settings.privacy.addr_title': "Adresse meiner Verkäufe",
+    'settings.privacy.addr_sub_members': "Nur für angemeldete Nutzer",
+    'settings.privacy.addr_members': "Mitglieder",
+    'settings.privacy.addr_all': "Alle",
+    'settings.privacy.addr_none': "Niemand",
+    'settings.privacy.profile_title': "Profil öffentlich sichtbar",
+    'settings.privacy.profile_sub': "Andere können dein Profil sehen",
+    'settings.privacy.stats_title': "Statistiken anzeigen",
+    'settings.privacy.stats_sub': "Aufrufe und Interessen in deinem Profil",
+    'settings.day.mon': "Mo",
+    'settings.day.tue': "Di",
+    'settings.day.wed': "Mi",
+    'settings.day.thu': "Do",
+    'settings.day.fri': "Fr",
+    'settings.day.sat': "Sa",
+    'settings.day.sun': "So",
+    'cat.kleding': "👗 Kleidung",
+    'cat.schoenen': "👟 Schuhe",
+    'cat.antiek': "🏺 Antik & Vintage",
+    'cat.retro': "📻 Retro",
+    'cat.meubels': "🛋️ Möbel",
+    'cat.huishoud': "🏠 Haushalt",
+    'cat.speelgoed': "🧸 Spielzeug",
+    'cat.babykind': "👶 Baby & Kind",
+    'cat.elektro': "📱 Elektronik",
+    'cat.films': "🎮 Filme & Spiele",
+    'cat.boeken': "📚 Bücher",
+    'cat.vinyl': "🎵 Vinyl & Musik",
+    'cat.sport': "⚽ Sport & Fitness",
+    'cat.fietsen': "🚲 Fahrräder & Roller",
+    'cat.tuin': "🌿 Garten & Outdoor",
+    'cat.gereedschap': "🔧 Werkzeuge",
+    'cat.kunst': "🎨 Kunst & Deko",
+    'cat.verzamel': "🔭 Sammlerstücke",
+    // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
+    'edit.title': "Anzeige bearbeiten",
+    'edit.label_title': "Titel",
+    'edit.label_date': "Datum",
+    'edit.label_from': "Von",
+    'edit.label_till': "Bis",
+    'edit.label_status': "Status",
+    'edit.status_active': "✓ Aktiv",
+    'edit.status_paused': "⏸ Pausiert",
+    'edit.status_sold': "✓ Verkauft / beendet",
+    'edit.label_desc': "Beschreibung",
+    'bulk.consent_card2_title': "Ich habe bereits die Zustimmung aller Nachbarn",
+    'bulk.consent_card2_sub': "Klicke, um zu erklären, dass du von jedem Bewohner persönlich die Zustimmung hast. Adressen erscheinen sofort online, du bist Ansprechpartner bei Fragen.",
+    'bulk.consent_confirmed_banner_html': "<strong>🛡️ Zustimmung erklärt.</strong> Diese Adressen erscheinen nach Veröffentlichung sofort online. <a href=\"#\" onclick=\"undoBulkConsent(event)\" style=\"color:#1F4A7A;text-decoration:underline\">Zurück zu Bestätigungslinks</a>.",
+    'bulk.btn_paste_first': "Zuerst einfügen oder Datei wählen",
+    'bulk.warn_title': "Kurz prüfen: DSGVO-Zustimmung",
+    'bulk.warn_intro_html': "Mit dieser Aktivierung erklärst du, dass du von jedem Bewohner der Liste die <strong>persönliche Zustimmung</strong> hast, seine Adresse auf YardiGo für diesen Nachbarschaftsverkauf anzuzeigen.",
+    'bulk.warn_think_about': "Was solltest du beachten?",
+    'bulk.warn_li1': "Die Zustimmung muss nachweisbar sein (z. B. eine WhatsApp-Nachricht, E-Mail oder unterschriebene Liste).",
+    'bulk.warn_li2': "Erhält YardiGo eine Beschwerde von einem Bewohner, nehmen wir die Adresse sofort offline und können dich um Nachweis bitten.",
+    'bulk.warn_li3': "Bewohner können ihre Adresse jederzeit entfernen lassen, indem sie eine Nachricht an info@yardigo.nl senden.",
+    'bulk.warn_li4': "Die Zustimmung gilt nur für diesen Nachbarschaftsverkauf, nicht für zukünftige.",
+    'bulk.warn_audit_note': "Deine Erklärung wird mit Datum, Uhrzeit und deiner Konto-ID festgehalten. Das dient als Audit-Spur, falls jemals gefragt wird, wie die Zustimmung eingeholt wurde.",
+    'bulk.warn_btn_cancel': "Abbrechen",
+    'bulk.warn_btn_accept': "Ich verstehe und bestätige",
+    'profile.attendance_visited_html': "Du warst bei <span id=\"att-visits\">{visited}</span> von <span id=\"att-total\">{total}</span> angemeldeten Verkäufen.",
+    'checkin.title': "Warst du dort?",
+    'checkin.yes': "✓ Ja",
+    'checkin.no': "✗ Nein",
+    'profile.attendance_label_default': "✓ Kommt immer",
+    'profile.attendance_aanwezig': "anwesend",
+    'empty.no_favorites_title': "Noch keine Favoriten",
+    'empty.no_favorites_sub': "Tippe ⭐ bei einem Verkauf, um ihn hier zu speichern.",
+    'empty.discover_btn': "Verkäufe entdecken →",
+    'empty.no_reviews_title': "Noch keine Bewertungen",
+    'empty.no_reviews_sub': "Bewertungen erscheinen hier, nachdem Besucher deine Verkäufe bewertet haben.",
+    'delete.title': "Konto löschen",
+    'delete.warn': "Bist du sicher, dass du dein Konto löschen möchtest? Alle deine Verkäufe und Daten werden dauerhaft gelöscht. Das kann nicht rückgängig gemacht werden.",
+    'delete.btn_confirm': "Ja, mein Konto löschen",
+    'delete.btn_cancel': "Abbrechen",
     // Header
     'header.login': 'Sign in',
     'header.publish': 'Post sale',
@@ -6871,7 +7331,7 @@ function openBulkAdresModal() {
   if (ta) ta.value = '';
   if (prev) { prev.style.display = 'none'; prev.innerHTML = ''; }
   var btn = document.getElementById('bulkAdresImportBtn');
-  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = 'Eerst plakken of bestand kiezen'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = i18n('bulk.btn_paste_first', 'Eerst plakken of bestand kiezen'); }
   // Reset consent-state bij openen van een nieuwe bulk-sessie.
   resetBulkConsentUI();
   if (ov) ov.classList.add('open');
@@ -7450,7 +7910,7 @@ function previewBulkAdres() {
     prev.innerHTML = '';
     btn.disabled = true;
     btn.style.opacity = '.5';
-    btn.textContent = 'Eerst plakken of bestand kiezen';
+    btn.textContent = i18n('bulk.btn_paste_first', 'Eerst plakken of bestand kiezen');
     showBulkConsentBlock(false);
     return;
   }
@@ -9565,38 +10025,38 @@ async function doDeleteSale() {
 <div class="feedback-overlay" id="editSaleOv" onclick="if(event.target===this)closeEditSale()">
   <div class="feedback-card" style="max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:800">Advertentie bewerken</div>
+      <div style="font-size:16px;font-weight:800" data-i18n="edit.title">Advertentie bewerken</div>
       <button onclick="closeEditSale()" style="background:var(--bg2);border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">×</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Titel</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_title">Titel</div>
         <input class="form-input" id="edit-title">
       </div>
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Datum</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_date">Datum</div>
         <input class="form-input" id="edit-date" type="date">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Van</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_from">Van</div>
           <input class="form-input" id="edit-from" type="time">
         </div>
         <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Tot</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_till">Tot</div>
           <input class="form-input" id="edit-till" type="time">
         </div>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Status</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_status">Status</div>
         <select class="form-input" id="edit-status">
-          <option value="active">✓ Actief</option>
-          <option value="paused">⏸ Gepauzeerd</option>
-          <option value="sold">✓ Verkocht / afgelopen</option>
+          <option value="active" data-i18n="edit.status_active">✓ Actief</option>
+          <option value="paused" data-i18n="edit.status_paused">⏸ Gepauzeerd</option>
+          <option value="sold" data-i18n="edit.status_sold">✓ Verkocht / afgelopen</option>
         </select>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Omschrijving</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600" data-i18n="edit.label_desc">Omschrijving</div>
         <textarea class="form-input" id="edit-desc" rows="3" style="resize:none"></textarea>
       </div>
       <!-- Plattegrond (alleen buurtverkoop) -->
