@@ -2085,10 +2085,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Plattegrond sectie (alleen buurtverkoop) -->
         <div id="add-floorplan-section" style="display:none">
           <div style="height:1px;background:var(--border);margin:0 0 14px"></div>
-          <div style="font-size:14px;font-weight:800;margin-bottom:4px">🗺️ Plattegrond</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Upload een plattegrond van de buurtverkoop (PDF, PNG of JPG, max 10 MB). Ingelogde bezoekers kunnen dit downloaden vanuit de advertentie.</div>
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px" data-i18n="publish.floorplan.title">🗺️ Plattegrond</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5" data-i18n="publish.floorplan.help">Upload een plattegrond van de buurtverkoop (PDF, PNG of JPG, max 10 MB). Ingelogde bezoekers kunnen dit downloaden vanuit de advertentie.</div>
           <label id="add-floorplan-label" style="display:flex;align-items:center;gap:10px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)">
-            📎 Plattegrond uploaden (optioneel)
+            <span data-i18n="publish.floorplan.btn_upload">📎 Plattegrond uploaden (optioneel)</span>
             <input type="file" id="add-floorplan-file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" style="display:none" onchange="handleAddFloorplanSelect(this)">
           </label>
           <div id="add-floorplan-status" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
@@ -2109,16 +2109,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="sheet" style="max-height:92vh;overflow-y:auto">
     <div class="sheet-handle"></div>
     <div style="padding:18px 22px 24px">
-      <div style="font-size:20px;font-weight:800;margin-bottom:6px">📨 Stuur deze links naar je buren</div>
-      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op "Kopieer tekst + link" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px" data-i18n="sharebuurt.title">📨 Stuur deze links naar je buren</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px" data-i18n="sharebuurt.intro">Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op "Kopieer tekst + link" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.</div>
       <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:12px;color:#7A4A2A;margin-bottom:10px">
-        ⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.
+        <span data-i18n-html="sharebuurt.warn_expire">⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.</span>
       </div>
       <div style="background:#EAF2EC;border-left:3px solid var(--forest);padding:10px 12px;border-radius:8px;font-size:12px;color:#2C4A36;margin-bottom:16px">
-        💾 Geen haast? Je kunt deze links later ook terugvinden onder <strong>Mijn verkopen</strong> → klik op je buurtverkoop.
+        <span data-i18n-html="sharebuurt.tip_later">💾 Geen haast? Je kunt deze links later ook terugvinden onder <strong>Mijn verkopen</strong> → klik op je buurtverkoop.</span>
       </div>
       <div id="shareBuurtLinksList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px"></div>
-      <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Klaar, sluiten</button>
+      <button onclick="closeShareBuurtLinks()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer" data-i18n="sharebuurt.btn_close">Klaar, sluiten</button>
     </div>
   </div>
 </div>
@@ -2131,19 +2131,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="sheet" style="max-height:92vh;overflow-y:auto;z-index:951">
     <div class="sheet-handle"></div>
     <div style="padding:18px 22px 24px">
-      <div style="font-size:20px;font-weight:800;margin-bottom:4px">📋 Meerdere adressen tegelijk</div>
-      <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px">Plak je lijstje hieronder of upload een tekst- of CSV-bestand. 1 regel per buur. De site zet elk adres automatisch klaar en maakt na publiceren de bevestigingslinks aan.</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px" data-i18n="bulk.title">📋 Meerdere adressen tegelijk</div>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:14px" data-i18n="bulk.intro">Plak je lijstje hieronder of upload een tekst- of CSV-bestand. 1 regel per buur. De site zet elk adres automatisch klaar en maakt na publiceren de bevestigingslinks aan.</div>
 
       <div style="background:#FDF0E7;border-left:3px solid var(--terra);padding:10px 12px;border-radius:8px;font-size:11.5px;color:#7A4A2A;margin-bottom:14px;line-height:1.5">
-        <strong>Ondersteunde formaten per regel:</strong><br>
+        <strong data-i18n="bulk.formats_label">Ondersteunde formaten per regel:</strong><br>
         <span style="font-family:monospace;font-size:11px">Kerklaan 14, 9741 AB</span><br>
         <span style="font-family:monospace;font-size:11px">Marieke | Kerklaan 14, 9741 AB</span><br>
         <span style="font-family:monospace;font-size:11px">nr. 16 ; Kerklaan 16 ; 9741 AB</span><br>
-        Je mag ook komma's, tabs of puntkomma's gebruiken om label en adres te scheiden. Uploaden kan als <strong>.txt, .csv, .tsv, .xlsx of .xls</strong>.
+        <span data-i18n-html="bulk.formats_help">Je mag ook komma's, tabs of puntkomma's gebruiken om label en adres te scheiden. Uploaden kan als <strong>.txt, .csv, .tsv, .xlsx of .xls</strong>.</span>
       </div>
 
       <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;background:var(--bg2)" id="bulkAdresFileLbl">
-        📁 Bestand kiezen (.xlsx, .csv, .txt)
+        <span data-i18n="bulk.choose_file">📁 Bestand kiezen (.xlsx, .csv, .txt)</span>
         <input type="file" accept=".txt,.csv,.tsv,.xlsx,.xls,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="handleBulkAdresFile(this)">
       </label>
 
@@ -2157,7 +2157,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
            waarschuwingsmodal; pas na bevestiging schuift de selectie naar
            kaart 2 en gaan adressen direct online na publiceren. -->
       <div id="bulkConsentBlock" style="display:none;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Hoe regel je de toestemming van de buren?</div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px" data-i18n="bulk.consent_title">Hoe regel je de toestemming van de buren?</div>
         <div style="display:flex;flex-direction:column;gap:8px">
 
           <!-- Kaart 1: per-buur bevestigingslink (default) -->
@@ -2167,7 +2167,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
               <div style="flex:1;min-width:0">
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
                   <strong style="color:var(--text);font-size:13px">Bevestigingslink per buur</strong>
-                  <span style="font-size:9.5px;font-weight:700;background:#2D6A4F;color:white;padding:2px 6px;border-radius:4px;letter-spacing:.3px">AANBEVOLEN</span>
+                  <span style="font-size:9.5px;font-weight:700;background:#2D6A4F;color:white;padding:2px 6px;border-radius:4px;letter-spacing:.3px" data-i18n="bulk.consent_recommended">AANBEVOLEN</span>
                 </div>
                 <div style="color:var(--muted);font-size:11.5px;line-height:1.5">Elke buur krijgt na publiceren een persoonlijke link via WhatsApp, sms of e-mail en bevestigt zelf. Hun adres komt pas op de kaart na hun klik.</div>
               </div>
@@ -2509,6 +2509,121 @@ var currentLang = (function(){
 
 var I18N = {
   nl: {
+    // Toasts (cross-border + algemene flow)
+    'toast.title_required': "Vul een titel in",
+    'toast.address_required': "Vul een adres in",
+    'toast.email_required': "Vul een geldig e-mailadres in",
+    'toast.password_required': "Vul je wachtwoord in",
+    'toast.password_min_length': "Wachtwoord minimaal 6 tekens",
+    'toast.name_required': "Vul je naam in",
+    'toast.terms_required': "Ga akkoord met de voorwaarden en privacyverklaring",
+    'toast.postal_code_or_city_required': "Vul een postcode of plaats in",
+    'toast.event_type_required': "🎪 Kies een type evenement",
+    'toast.event_describe_required': "✏️ Omschrijf het type evenement",
+    'toast.photo_min_required': "📷 Voeg minimaal 1 foto toe",
+    'toast.address_min_required': "Voeg minimaal 1 adres toe",
+    'toast.category_min_required': "Kies minimaal 1 categorie",
+    'toast.option_min_required': "Selecteer minimaal 1 optie",
+    'toast.both_checks_required': "Vink beide vakjes aan om te publiceren",
+    'toast.add_sales_first': "Voeg eerst verkopen toe",
+    'toast.publish_success': "🎉 Verkoop geplaatst!",
+    'toast.listing_updated': "✓ Advertentie bijgewerkt",
+    'toast.listing_deleted': "🗑️ Advertentie verwijderd",
+    'toast.profile_photo_saved': "✓ Profielfoto opgeslagen!",
+    'toast.notif_settings_saved': "✓ Meldingsinstellingen opgeslagen",
+    'toast.name_pref_saved': "✓ Naam-voorkeur opgeslagen",
+    'toast.address_pref_saved': "Adresvoorkeur opgeslagen",
+    'toast.attendance_recorded': "✓ Aanwezigheid geregistreerd! 🎉",
+    'toast.attendance_skipped': "Jammer! Score bijgewerkt.",
+    'toast.feedback_thanks': "Bedankt voor je feedback! 🙏",
+    'toast.report_thanks': "Melding ontvangen, bedankt! 🙏",
+    'toast.account_deleted': "✓ Je account is verwijderd",
+    'toast.logged_out': "Je bent uitgelogd",
+    'toast.installed': "✓ YardiGo geïnstalleerd!",
+    'toast.added_to_home': "✓ YardiGo toegevoegd aan beginscherm",
+    'toast.guest_view': "Je bekijkt YardiGo als gast 👁️",
+    'toast.calendar_downloaded': "📅 Kalenderbestand gedownload!",
+    'toast.added_to_route': "📍 Toegevoegd aan route!",
+    'toast.route_cleared': "🗑️ Route gewist",
+    'toast.draft_restored': "Concept hersteld. Foto's opnieuw toevoegen.",
+    'toast.floorplan_deleted': "✓ Plattegrond verwijderd",
+    'toast.location_set': "✓ Kaart op jouw locatie",
+    'toast.copy_failed': "Kopiëren mislukt",
+    'toast.no_connection': "Geen verbinding, probeer opnieuw.",
+    'toast.something_wrong': "Er ging iets mis, probeer opnieuw.",
+    'toast.save_error': "Fout bij opslaan",
+    'toast.login_failed': "❌ Inloggen mislukt",
+    'toast.signup_failed': "❌ Registratie mislukt",
+    'toast.publish_failed': "❌ Publiceren mislukt",
+    'toast.delete_failed': "❌ Verwijderen mislukt",
+    'toast.save_failed': "❌ Opslaan mislukt",
+    'toast.search_failed': "❌ Zoeken mislukt",
+    'toast.not_found': "❌ Niet gevonden",
+    'toast.profile_open_failed': "❌ Profiel kon niet geopend worden",
+    'toast.session_expired_publish': "❌ Je sessie is verlopen. Log opnieuw in om te publiceren.",
+    'toast.not_logged_in_relog': "❌ Je bent niet meer ingelogd. Log opnieuw in.",
+    'toast.session_check_failed': "❌ Kan niet verifiëren of je ingelogd bent. Probeer opnieuw.",
+    'toast.location_denied': "❌ Locatie geweigerd. Zet locatie aan in je instellingen.",
+    'toast.file_too_large_2mb': "❌ Bestand is te groot (max 2 MB)",
+    'toast.file_read_error': "❌ Kan bestand niet lezen",
+    'toast.file_too_large_5mb': "Max 5MB",
+    'toast.publish_in_progress': "⏳ Publicatie loopt al, even geduld...",
+    'toast.session_expired_login_required': "Je sessie is verlopen, log opnieuw in om een verkoop te plaatsen.",
+    'toast.photo_processing_warn': "⚠️ Eén foto kon niet worden verwerkt",
+    'toast.excel_no_rows': "⚠️ Geen rijen gevonden in het Excel-bestand",
+    'toast.floorplan_upload_failed': "⚠️ Plattegrond upload mislukt",
+    'toast.fetching_location': "📍 Locatie ophalen…",
+    'toast.location_unavailable_emoji': "📍 Locatie niet beschikbaar",
+    'toast.location_unavailable_filter': "📍 Locatie niet beschikbaar. Afstandsfilter werkt zonder locatie niet.",
+    'toast.location_unavailable': "Locatie niet beschikbaar",
+    'toast.no_sales_found': "Geen verkopen gevonden",
+    'toast.nothing_to_import': "Niks te importeren",
+    'toast.notif_browser_settings': "Meldingen kun je later aanzetten via je browserinstellingen",
+    'toast.notif_unsupported': "Meldingen worden niet ondersteund in deze browser",
+    'toast.notif_ios_settings': "Meldingen kun je beheren via iOS Instellingen",
+    'toast.not_logged_in': "Je bent niet ingelogd",
+    'toast.not_logged_in_simple': "Niet ingelogd",
+    'toast.login_to_save_photo': "Log in om je foto op te slaan",
+    'toast.user_verify_failed': "Kon gebruiker niet verifiëren, log opnieuw in",
+    'toast.link_not_found': "Link niet gevonden",
+    'toast.listing_not_found': "Advertentie niet gevonden",
+    'toast.edit_only_own': "Je kunt alleen je eigen advertenties bewerken",
+    'toast.delete_only_own': "Je kunt alleen je eigen advertenties verwijderen",
+    'toast.welcome_user': "Welkom, {name}! 🎉",
+    'toast.welcome_back': "Welkom! 🎉",
+    'toast.route_planned': "✅ Route gepland met {count} stops!",
+    'toast.address_visible_in': "🔒 Volledig adres zichtbaar {when}",
+    'toast.address_visible_soon': "binnenkort",
+    'toast.rate_limit_wait': "Even wachten. Je kunt over {sec} seconden opnieuw publiceren.",
+    'toast.search_radius': "Zoekradius: {km} km",
+    'toast.map_type': "Kaarttype: {label}",
+    'toast.recovery_email_sent': "✉️ Herstel-e-mail verstuurd naar {email}",
+    'toast.country_switched': "{flag} Land: {name} — adres opnieuw invoeren",
+    // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
+    'publish.buurt.row_own': "🏠 JOUW EIGEN ADRES",
+    'publish.buurt.row_neighbor': "👤 ADRES BUUR {idx}",
+    'publish.buurt.helper_own': "Gaat direct online, dit is jouw eigen toestemming.",
+    'publish.buurt.helper_neighbor': "Na publiceren krijg je een bevestigingslink om naar deze buur te sturen. Adres staat pas online na hun \"ja\".",
+    'publish.buurt.label_placeholder': "Naam of herkenning (optioneel, bv. Marieke of nr. 14)",
+    'publish.buurt.email_placeholder': "E-mailadres (optioneel, voor voorgevulde mail)",
+    'publish.buurt.email_help': "E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.",
+    'publish.buurt.addr_placeholder': "Straatnaam + huisnummer",
+    'publish.buurt.pc_placeholder_prefix': "Postcode bijv. {ex}",
+    'sharebuurt.title': "📨 Stuur deze links naar je buren",
+    'sharebuurt.intro': "Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op \"Kopieer tekst + link\" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.",
+    'sharebuurt.warn_expire': "⏳ <strong>Let op:</strong> niet bevestigde adressen vervallen automatisch na 7 dagen.",
+    'sharebuurt.tip_later': "💾 Geen haast? Je kunt deze links later ook terugvinden onder <strong>Mijn verkopen</strong> → klik op je buurtverkoop.",
+    'sharebuurt.btn_close': "Klaar, sluiten",
+    'bulk.title': "📋 Meerdere adressen tegelijk",
+    'bulk.intro': "Plak je lijstje hieronder of upload een tekst- of CSV-bestand. 1 regel per buur. De site zet elk adres automatisch klaar en maakt na publiceren de bevestigingslinks aan.",
+    'bulk.formats_label': "Ondersteunde formaten per regel:",
+    'bulk.formats_help': "Je mag ook komma's, tabs of puntkomma's gebruiken om label en adres te scheiden. Uploaden kan als <strong>.txt, .csv, .tsv, .xlsx of .xls</strong>.",
+    'bulk.choose_file': "📁 Bestand kiezen (.xlsx, .csv, .txt)",
+    'publish.floorplan.title': "🗺️ Plattegrond",
+    'publish.floorplan.help': "Upload een plattegrond van de buurtverkoop (PDF, PNG of JPG, max 10 MB). Ingelogde bezoekers kunnen dit downloaden vanuit de advertentie.",
+    'publish.floorplan.btn_upload': "📎 Plattegrond uploaden (optioneel)",
+    'bulk.consent_title': "Hoe regel je de toestemming van de buren?",
+    'bulk.consent_recommended': "AANBEVOLEN",
     // Header
     'header.login': 'Inloggen',
     'header.publish': 'Plaatsen',
@@ -2806,6 +2921,121 @@ var I18N = {
     'lang.switched_fr': '🇫🇷 Français'
   },
   en: {
+    // Toasts (cross-border + algemene flow)
+    'toast.title_required': "Enter a title",
+    'toast.address_required': "Enter an address",
+    'toast.email_required': "Enter a valid email address",
+    'toast.password_required': "Enter your password",
+    'toast.password_min_length': "Password at least 6 characters",
+    'toast.name_required': "Enter your name",
+    'toast.terms_required': "Accept the terms and privacy policy",
+    'toast.postal_code_or_city_required': "Enter a postcode or city",
+    'toast.event_type_required': "🎪 Pick an event type",
+    'toast.event_describe_required': "✏️ Describe the event type",
+    'toast.photo_min_required': "📷 Add at least 1 photo",
+    'toast.address_min_required': "Add at least 1 address",
+    'toast.category_min_required': "Pick at least 1 category",
+    'toast.option_min_required': "Select at least 1 option",
+    'toast.both_checks_required': "Tick both boxes to publish",
+    'toast.add_sales_first': "First add sales",
+    'toast.publish_success': "🎉 Sale posted!",
+    'toast.listing_updated': "✓ Listing updated",
+    'toast.listing_deleted': "🗑️ Listing deleted",
+    'toast.profile_photo_saved': "✓ Profile photo saved!",
+    'toast.notif_settings_saved': "✓ Notification settings saved",
+    'toast.name_pref_saved': "✓ Name preference saved",
+    'toast.address_pref_saved': "Address preference saved",
+    'toast.attendance_recorded': "✓ Attendance registered! 🎉",
+    'toast.attendance_skipped': "Too bad! Score updated.",
+    'toast.feedback_thanks': "Thanks for your feedback! 🙏",
+    'toast.report_thanks': "Report received, thanks! 🙏",
+    'toast.account_deleted': "✓ Your account has been deleted",
+    'toast.logged_out': "You have been logged out",
+    'toast.installed': "✓ YardiGo installed!",
+    'toast.added_to_home': "✓ YardiGo added to home screen",
+    'toast.guest_view': "You're viewing YardiGo as guest 👁️",
+    'toast.calendar_downloaded': "📅 Calendar file downloaded!",
+    'toast.added_to_route': "📍 Added to route!",
+    'toast.route_cleared': "🗑️ Route cleared",
+    'toast.draft_restored': "Draft restored. Re-add photos.",
+    'toast.floorplan_deleted': "✓ Floor plan deleted",
+    'toast.location_set': "✓ Map at your location",
+    'toast.copy_failed': "Copy failed",
+    'toast.no_connection': "No connection, try again.",
+    'toast.something_wrong': "Something went wrong, try again.",
+    'toast.save_error': "Save error",
+    'toast.login_failed': "❌ Login failed",
+    'toast.signup_failed': "❌ Sign-up failed",
+    'toast.publish_failed': "❌ Publish failed",
+    'toast.delete_failed': "❌ Delete failed",
+    'toast.save_failed': "❌ Save failed",
+    'toast.search_failed': "❌ Search failed",
+    'toast.not_found': "❌ Not found",
+    'toast.profile_open_failed': "❌ Profile could not be opened",
+    'toast.session_expired_publish': "❌ Your session has expired. Log in again to publish.",
+    'toast.not_logged_in_relog': "❌ You're no longer logged in. Log in again.",
+    'toast.session_check_failed': "❌ Cannot verify if you're logged in. Try again.",
+    'toast.location_denied': "❌ Location denied. Enable location in your settings.",
+    'toast.file_too_large_2mb': "❌ File too large (max 2 MB)",
+    'toast.file_read_error': "❌ Cannot read file",
+    'toast.file_too_large_5mb': "Max 5MB",
+    'toast.publish_in_progress': "⏳ Already publishing, please wait...",
+    'toast.session_expired_login_required': "Your session has expired, log in again to post a sale.",
+    'toast.photo_processing_warn': "⚠️ One photo could not be processed",
+    'toast.excel_no_rows': "⚠️ No rows found in the Excel file",
+    'toast.floorplan_upload_failed': "⚠️ Floor plan upload failed",
+    'toast.fetching_location': "📍 Getting location…",
+    'toast.location_unavailable_emoji': "📍 Location unavailable",
+    'toast.location_unavailable_filter': "📍 Location unavailable. Distance filter doesn't work without it.",
+    'toast.location_unavailable': "Location unavailable",
+    'toast.no_sales_found': "No sales found",
+    'toast.nothing_to_import': "Nothing to import",
+    'toast.notif_browser_settings': "Notifications can be enabled later via your browser settings",
+    'toast.notif_unsupported': "Notifications are not supported in this browser",
+    'toast.notif_ios_settings': "Manage notifications via iOS Settings",
+    'toast.not_logged_in': "You're not logged in",
+    'toast.not_logged_in_simple': "Not logged in",
+    'toast.login_to_save_photo': "Log in to save your photo",
+    'toast.user_verify_failed': "Could not verify user, log in again",
+    'toast.link_not_found': "Link not found",
+    'toast.listing_not_found': "Listing not found",
+    'toast.edit_only_own': "You can only edit your own listings",
+    'toast.delete_only_own': "You can only delete your own listings",
+    'toast.welcome_user': "Welcome, {name}! 🎉",
+    'toast.welcome_back': "Welcome! 🎉",
+    'toast.route_planned': "✅ Route planned with {count} stops!",
+    'toast.address_visible_in': "🔒 Full address visible {when}",
+    'toast.address_visible_soon': "soon",
+    'toast.rate_limit_wait': "Please wait. You can publish again in {sec} seconds.",
+    'toast.search_radius': "Search radius: {km} km",
+    'toast.map_type': "Map type: {label}",
+    'toast.recovery_email_sent': "✉️ Recovery email sent to {email}",
+    'toast.country_switched': "{flag} Country: {name} — re-enter the address",
+    // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
+    'publish.buurt.row_own': "🏠 YOUR OWN ADDRESS",
+    'publish.buurt.row_neighbor': "👤 NEIGHBOR ADDRESS {idx}",
+    'publish.buurt.helper_own': "Goes online instantly, this is your own consent.",
+    'publish.buurt.helper_neighbor': "After publishing you'll get a confirmation link to send to this neighbor. The address only goes online after their \"yes\".",
+    'publish.buurt.label_placeholder': "Name or label (optional, e.g. Marieke or no. 14)",
+    'publish.buurt.email_placeholder': "Email address (optional, for prefilled mail)",
+    'publish.buurt.email_help': "Email is not stored, only used to prefill the email button for you.",
+    'publish.buurt.addr_placeholder': "Street + house number",
+    'publish.buurt.pc_placeholder_prefix': "Postcode e.g. {ex}",
+    'sharebuurt.title': "📨 Send these links to your neighbors",
+    'sharebuurt.intro': "Your own address is already online. For the other addresses, YardiGo first asks the resident for permission — required under GDPR. A ready-made message with a personal greeting is prepared for each neighbor. Click \"Copy text + link\" or send directly via WhatsApp, SMS or email. Their address only appears on the map after confirmation.",
+    'sharebuurt.warn_expire': "⏳ <strong>Note:</strong> unconfirmed addresses expire automatically after 7 days.",
+    'sharebuurt.tip_later': "💾 No rush? You can also find these links later under <strong>My sales</strong> → click your neighborhood sale.",
+    'sharebuurt.btn_close': "Done, close",
+    'bulk.title': "📋 Multiple addresses at once",
+    'bulk.intro': "Paste your list below or upload a text or CSV file. One line per neighbor. The site prepares each address automatically and creates the confirmation links after publishing.",
+    'bulk.formats_label': "Supported formats per line:",
+    'bulk.formats_help': "You can also use commas, tabs or semicolons to separate label and address. Upload as <strong>.txt, .csv, .tsv, .xlsx or .xls</strong>.",
+    'bulk.choose_file': "📁 Choose file (.xlsx, .csv, .txt)",
+    'publish.floorplan.title': "🗺️ Floor plan",
+    'publish.floorplan.help': "Upload a floor plan of the neighborhood sale (PDF, PNG or JPG, max 10 MB). Logged-in visitors can download it from the listing.",
+    'publish.floorplan.btn_upload': "📎 Upload floor plan (optional)",
+    'bulk.consent_title': "How do you arrange the neighbors' consent?",
+    'bulk.consent_recommended': "RECOMMENDED",
     // Header
     'header.login': 'Sign in',
     'header.publish': 'Post sale',
@@ -3103,6 +3333,121 @@ var I18N = {
     'lang.switched_fr': '🇫🇷 Français'
   },
   fr: {
+    // Toasts (cross-border + algemene flow)
+    'toast.title_required': "Saisis un titre",
+    'toast.address_required': "Saisis une adresse",
+    'toast.email_required': "Saisis une adresse e-mail valide",
+    'toast.password_required': "Saisis ton mot de passe",
+    'toast.password_min_length': "Mot de passe : 6 caractères minimum",
+    'toast.name_required': "Saisis ton nom",
+    'toast.terms_required': "Accepte les conditions et la politique de confidentialité",
+    'toast.postal_code_or_city_required': "Saisis un code postal ou une ville",
+    'toast.event_type_required': "🎪 Choisis un type d'événement",
+    'toast.event_describe_required': "✏️ Décris le type d'événement",
+    'toast.photo_min_required': "📷 Ajoute au moins 1 photo",
+    'toast.address_min_required': "Ajoute au moins 1 adresse",
+    'toast.category_min_required': "Choisis au moins 1 catégorie",
+    'toast.option_min_required': "Sélectionne au moins 1 option",
+    'toast.both_checks_required': "Coche les deux cases pour publier",
+    'toast.add_sales_first': "Ajoute d'abord des ventes",
+    'toast.publish_success': "🎉 Vente publiée !",
+    'toast.listing_updated': "✓ Annonce mise à jour",
+    'toast.listing_deleted': "🗑️ Annonce supprimée",
+    'toast.profile_photo_saved': "✓ Photo de profil enregistrée !",
+    'toast.notif_settings_saved': "✓ Préférences de notification enregistrées",
+    'toast.name_pref_saved': "✓ Préférence de nom enregistrée",
+    'toast.address_pref_saved': "Préférence d'adresse enregistrée",
+    'toast.attendance_recorded': "✓ Présence enregistrée ! 🎉",
+    'toast.attendance_skipped': "Dommage ! Score mis à jour.",
+    'toast.feedback_thanks': "Merci pour tes commentaires ! 🙏",
+    'toast.report_thanks': "Signalement reçu, merci ! 🙏",
+    'toast.account_deleted': "✓ Ton compte a été supprimé",
+    'toast.logged_out': "Tu es déconnecté",
+    'toast.installed': "✓ YardiGo installé !",
+    'toast.added_to_home': "✓ YardiGo ajouté à l'écran d'accueil",
+    'toast.guest_view': "Tu consultes YardiGo en invité 👁️",
+    'toast.calendar_downloaded': "📅 Fichier calendrier téléchargé !",
+    'toast.added_to_route': "📍 Ajouté à l'itinéraire !",
+    'toast.route_cleared': "🗑️ Itinéraire effacé",
+    'toast.draft_restored': "Brouillon restauré. Ajoute à nouveau les photos.",
+    'toast.floorplan_deleted': "✓ Plan supprimé",
+    'toast.location_set': "✓ Carte centrée sur ta position",
+    'toast.copy_failed': "Échec de la copie",
+    'toast.no_connection': "Pas de connexion, réessaie.",
+    'toast.something_wrong': "Une erreur s'est produite, réessaie.",
+    'toast.save_error': "Erreur d'enregistrement",
+    'toast.login_failed': "❌ Échec de la connexion",
+    'toast.signup_failed': "❌ Échec de l'inscription",
+    'toast.publish_failed': "❌ Échec de la publication",
+    'toast.delete_failed': "❌ Échec de la suppression",
+    'toast.save_failed': "❌ Échec de l'enregistrement",
+    'toast.search_failed': "❌ Échec de la recherche",
+    'toast.not_found': "❌ Introuvable",
+    'toast.profile_open_failed': "❌ Impossible d'ouvrir le profil",
+    'toast.session_expired_publish': "❌ Ta session a expiré. Reconnecte-toi pour publier.",
+    'toast.not_logged_in_relog': "❌ Tu n'es plus connecté. Reconnecte-toi.",
+    'toast.session_check_failed': "❌ Impossible de vérifier ta connexion. Réessaie.",
+    'toast.location_denied': "❌ Localisation refusée. Active-la dans tes paramètres.",
+    'toast.file_too_large_2mb': "❌ Fichier trop volumineux (max 2 Mo)",
+    'toast.file_read_error': "❌ Impossible de lire le fichier",
+    'toast.file_too_large_5mb': "Max 5 Mo",
+    'toast.publish_in_progress': "⏳ Publication en cours, patiente...",
+    'toast.session_expired_login_required': "Ta session a expiré, reconnecte-toi pour publier une vente.",
+    'toast.photo_processing_warn': "⚠️ Une photo n'a pas pu être traitée",
+    'toast.excel_no_rows': "⚠️ Aucune ligne trouvée dans le fichier Excel",
+    'toast.floorplan_upload_failed': "⚠️ Échec du téléversement du plan",
+    'toast.fetching_location': "📍 Localisation en cours…",
+    'toast.location_unavailable_emoji': "📍 Localisation indisponible",
+    'toast.location_unavailable_filter': "📍 Localisation indisponible. Le filtre de distance ne fonctionne pas sans.",
+    'toast.location_unavailable': "Localisation indisponible",
+    'toast.no_sales_found': "Aucune vente trouvée",
+    'toast.nothing_to_import': "Rien à importer",
+    'toast.notif_browser_settings': "Tu peux activer les notifications plus tard dans les paramètres du navigateur",
+    'toast.notif_unsupported': "Les notifications ne sont pas prises en charge par ce navigateur",
+    'toast.notif_ios_settings': "Gère les notifications via les Réglages iOS",
+    'toast.not_logged_in': "Tu n'es pas connecté",
+    'toast.not_logged_in_simple': "Non connecté",
+    'toast.login_to_save_photo': "Connecte-toi pour enregistrer ta photo",
+    'toast.user_verify_failed': "Impossible de vérifier l'utilisateur, reconnecte-toi",
+    'toast.link_not_found': "Lien introuvable",
+    'toast.listing_not_found': "Annonce introuvable",
+    'toast.edit_only_own': "Tu ne peux modifier que tes propres annonces",
+    'toast.delete_only_own': "Tu ne peux supprimer que tes propres annonces",
+    'toast.welcome_user': "Bienvenue, {name} ! 🎉",
+    'toast.welcome_back': "Bienvenue ! 🎉",
+    'toast.route_planned': "✅ Itinéraire planifié avec {count} arrêts !",
+    'toast.address_visible_in': "🔒 Adresse complète visible {when}",
+    'toast.address_visible_soon': "bientôt",
+    'toast.rate_limit_wait': "Patiente. Tu pourras publier à nouveau dans {sec} secondes.",
+    'toast.search_radius': "Rayon de recherche : {km} km",
+    'toast.map_type': "Type de carte : {label}",
+    'toast.recovery_email_sent': "✉️ E-mail de récupération envoyé à {email}",
+    'toast.country_switched': "{flag} Pays : {name} — saisis à nouveau l’adresse",
+    // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
+    'publish.buurt.row_own': "🏠 TON ADRESSE",
+    'publish.buurt.row_neighbor': "👤 ADRESSE VOISIN·E {idx}",
+    'publish.buurt.helper_own': "Mis en ligne immédiatement, c'est ton propre consentement.",
+    'publish.buurt.helper_neighbor': "Après publication, tu recevras un lien de confirmation à envoyer à ce voisin. L'adresse ne sera publiée qu'après leur \"oui\".",
+    'publish.buurt.label_placeholder': "Nom ou repère (facultatif, ex. Marie ou n° 14)",
+    'publish.buurt.email_placeholder': "Adresse e-mail (facultatif, pour pré-remplir le mail)",
+    'publish.buurt.email_help': "L'e-mail n'est pas enregistré, il sert uniquement à pré-remplir le bouton e-mail.",
+    'publish.buurt.addr_placeholder': "Rue + numéro",
+    'publish.buurt.pc_placeholder_prefix': "Code postal, ex. {ex}",
+    'sharebuurt.title': "📨 Envoie ces liens à tes voisins",
+    'sharebuurt.intro': "Ton adresse est déjà en ligne. Pour les autres adresses, YardiGo demande d'abord l'autorisation des résidents, c'est obligatoire selon le RGPD. Pour chaque voisin, un message tout prêt avec une formule personnalisée est préparé. Clique sur \"Copier le texte + lien\" ou envoie directement via WhatsApp, SMS ou e-mail. Leur adresse n'apparaît sur la carte qu'après confirmation.",
+    'sharebuurt.warn_expire': "⏳ <strong>Attention :</strong> les adresses non confirmées expirent automatiquement après 7 jours.",
+    'sharebuurt.tip_later': "💾 Pas pressé ? Tu peux retrouver ces liens plus tard sous <strong>Mes ventes</strong> → clique sur ta vente de quartier.",
+    'sharebuurt.btn_close': "Terminé, fermer",
+    'bulk.title': "📋 Plusieurs adresses à la fois",
+    'bulk.intro': "Colle ta liste ci-dessous ou téléverse un fichier texte ou CSV. Une ligne par voisin. Le site prépare chaque adresse automatiquement et crée les liens de confirmation après publication.",
+    'bulk.formats_label': "Formats pris en charge par ligne :",
+    'bulk.formats_help': "Tu peux aussi utiliser des virgules, tabulations ou points-virgules pour séparer le label et l'adresse. Téléversement possible en <strong>.txt, .csv, .tsv, .xlsx ou .xls</strong>.",
+    'bulk.choose_file': "📁 Choisir un fichier (.xlsx, .csv, .txt)",
+    'publish.floorplan.title': "🗺️ Plan",
+    'publish.floorplan.help': "Téléverse un plan de la vente de quartier (PDF, PNG ou JPG, max 10 Mo). Les visiteurs connectés peuvent le télécharger depuis l'annonce.",
+    'publish.floorplan.btn_upload': "📎 Téléverser un plan (facultatif)",
+    'bulk.consent_title': "Comment obtiens-tu le consentement des voisins ?",
+    'bulk.consent_recommended': "RECOMMANDÉ",
     // Header
     'header.login': 'Connexion',
     'header.publish': 'Publier',
@@ -3403,6 +3748,121 @@ var I18N = {
     // PLACEHOLDER: DE-vertaling staat klaar als structuur, maar de waarden
     // zijn voorlopig EN. Vul deze later met echte vertalingen voordat we
     // yardigo.de lanceren of DE als optie tonen voor NL-bezoekers.
+    // Toasts (cross-border + algemene flow)
+    'toast.title_required': "Titel eingeben",
+    'toast.address_required': "Adresse eingeben",
+    'toast.email_required': "Gültige E-Mail-Adresse eingeben",
+    'toast.password_required': "Passwort eingeben",
+    'toast.password_min_length': "Passwort mindestens 6 Zeichen",
+    'toast.name_required': "Namen eingeben",
+    'toast.terms_required': "Bedingungen und Datenschutzerklärung akzeptieren",
+    'toast.postal_code_or_city_required': "Postleitzahl oder Stadt eingeben",
+    'toast.event_type_required': "🎪 Wähle einen Veranstaltungstyp",
+    'toast.event_describe_required': "✏️ Beschreibe die Art der Veranstaltung",
+    'toast.photo_min_required': "📷 Mindestens 1 Foto hinzufügen",
+    'toast.address_min_required': "Mindestens 1 Adresse hinzufügen",
+    'toast.category_min_required': "Mindestens 1 Kategorie wählen",
+    'toast.option_min_required': "Mindestens 1 Option auswählen",
+    'toast.both_checks_required': "Beide Kästchen ankreuzen, um zu veröffentlichen",
+    'toast.add_sales_first': "Zuerst Verkäufe hinzufügen",
+    'toast.publish_success': "🎉 Verkauf veröffentlicht!",
+    'toast.listing_updated': "✓ Anzeige aktualisiert",
+    'toast.listing_deleted': "🗑️ Anzeige gelöscht",
+    'toast.profile_photo_saved': "✓ Profilfoto gespeichert!",
+    'toast.notif_settings_saved': "✓ Benachrichtigungseinstellungen gespeichert",
+    'toast.name_pref_saved': "✓ Namensvorlieben gespeichert",
+    'toast.address_pref_saved': "Adressvorlieben gespeichert",
+    'toast.attendance_recorded': "✓ Anwesenheit registriert! 🎉",
+    'toast.attendance_skipped': "Schade! Punktzahl aktualisiert.",
+    'toast.feedback_thanks': "Danke für dein Feedback! 🙏",
+    'toast.report_thanks': "Meldung erhalten, danke! 🙏",
+    'toast.account_deleted': "✓ Dein Konto wurde gelöscht",
+    'toast.logged_out': "Du bist abgemeldet",
+    'toast.installed': "✓ YardiGo installiert!",
+    'toast.added_to_home': "✓ YardiGo zum Startbildschirm hinzugefügt",
+    'toast.guest_view': "Du siehst YardiGo als Gast 👁️",
+    'toast.calendar_downloaded': "📅 Kalenderdatei heruntergeladen!",
+    'toast.added_to_route': "📍 Zur Route hinzugefügt!",
+    'toast.route_cleared': "🗑️ Route gelöscht",
+    'toast.draft_restored': "Entwurf wiederhergestellt. Fotos erneut hinzufügen.",
+    'toast.floorplan_deleted': "✓ Lageplan gelöscht",
+    'toast.location_set': "✓ Karte an deinem Standort",
+    'toast.copy_failed': "Kopieren fehlgeschlagen",
+    'toast.no_connection': "Keine Verbindung, versuche es erneut.",
+    'toast.something_wrong': "Etwas ist schiefgegangen, versuche es erneut.",
+    'toast.save_error': "Fehler beim Speichern",
+    'toast.login_failed': "❌ Anmeldung fehlgeschlagen",
+    'toast.signup_failed': "❌ Registrierung fehlgeschlagen",
+    'toast.publish_failed': "❌ Veröffentlichen fehlgeschlagen",
+    'toast.delete_failed': "❌ Löschen fehlgeschlagen",
+    'toast.save_failed': "❌ Speichern fehlgeschlagen",
+    'toast.search_failed': "❌ Suche fehlgeschlagen",
+    'toast.not_found': "❌ Nicht gefunden",
+    'toast.profile_open_failed': "❌ Profil konnte nicht geöffnet werden",
+    'toast.session_expired_publish': "❌ Deine Sitzung ist abgelaufen. Melde dich erneut an, um zu veröffentlichen.",
+    'toast.not_logged_in_relog': "❌ Du bist nicht mehr angemeldet. Melde dich erneut an.",
+    'toast.session_check_failed': "❌ Anmeldestatus kann nicht überprüft werden. Versuche es erneut.",
+    'toast.location_denied': "❌ Standort verweigert. Aktiviere ihn in deinen Einstellungen.",
+    'toast.file_too_large_2mb': "❌ Datei zu groß (max 2 MB)",
+    'toast.file_read_error': "❌ Datei kann nicht gelesen werden",
+    'toast.file_too_large_5mb': "Max 5 MB",
+    'toast.publish_in_progress': "⏳ Veröffentlichung läuft, bitte warten...",
+    'toast.session_expired_login_required': "Deine Sitzung ist abgelaufen, melde dich erneut an, um zu veröffentlichen.",
+    'toast.photo_processing_warn': "⚠️ Ein Foto konnte nicht verarbeitet werden",
+    'toast.excel_no_rows': "⚠️ Keine Zeilen in der Excel-Datei gefunden",
+    'toast.floorplan_upload_failed': "⚠️ Lageplan-Upload fehlgeschlagen",
+    'toast.fetching_location': "📍 Standort wird ermittelt…",
+    'toast.location_unavailable_emoji': "📍 Standort nicht verfügbar",
+    'toast.location_unavailable_filter': "📍 Standort nicht verfügbar. Entfernungsfilter funktioniert ohne Standort nicht.",
+    'toast.location_unavailable': "Standort nicht verfügbar",
+    'toast.no_sales_found': "Keine Verkäufe gefunden",
+    'toast.nothing_to_import': "Nichts zu importieren",
+    'toast.notif_browser_settings': "Benachrichtigungen können später in den Browsereinstellungen aktiviert werden",
+    'toast.notif_unsupported': "Benachrichtigungen werden in diesem Browser nicht unterstützt",
+    'toast.notif_ios_settings': "Verwalte Benachrichtigungen in den iOS-Einstellungen",
+    'toast.not_logged_in': "Du bist nicht angemeldet",
+    'toast.not_logged_in_simple': "Nicht angemeldet",
+    'toast.login_to_save_photo': "Melde dich an, um dein Foto zu speichern",
+    'toast.user_verify_failed': "Benutzer konnte nicht überprüft werden, melde dich erneut an",
+    'toast.link_not_found': "Link nicht gefunden",
+    'toast.listing_not_found': "Anzeige nicht gefunden",
+    'toast.edit_only_own': "Du kannst nur deine eigenen Anzeigen bearbeiten",
+    'toast.delete_only_own': "Du kannst nur deine eigenen Anzeigen löschen",
+    'toast.welcome_user': "Willkommen, {name}! 🎉",
+    'toast.welcome_back': "Willkommen! 🎉",
+    'toast.route_planned': "✅ Route mit {count} Stopps geplant!",
+    'toast.address_visible_in': "🔒 Vollständige Adresse sichtbar {when}",
+    'toast.address_visible_soon': "bald",
+    'toast.rate_limit_wait': "Bitte warte. Du kannst in {sec} Sekunden wieder veröffentlichen.",
+    'toast.search_radius': "Suchradius: {km} km",
+    'toast.map_type': "Kartentyp: {label}",
+    'toast.recovery_email_sent': "✉️ Wiederherstellungs-E-Mail an {email} gesendet",
+    'toast.country_switched': "{flag} Land: {name} — Adresse erneut eingeben",
+    // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
+    'publish.buurt.row_own': "🏠 DEINE EIGENE ADRESSE",
+    'publish.buurt.row_neighbor': "👤 NACHBAR-ADRESSE {idx}",
+    'publish.buurt.helper_own': "Geht sofort online, das ist deine eigene Zustimmung.",
+    'publish.buurt.helper_neighbor': "Nach der Veröffentlichung bekommst du einen Bestätigungslink für diesen Nachbarn. Die Adresse erscheint erst nach dem \"Ja\".",
+    'publish.buurt.label_placeholder': "Name oder Erkennung (optional, z. B. Marie oder Nr. 14)",
+    'publish.buurt.email_placeholder': "E-Mail-Adresse (optional, für vorausgefüllte E-Mail)",
+    'publish.buurt.email_help': "E-Mail wird nicht gespeichert, sondern nur zum Vorausfüllen der E-Mail-Schaltfläche verwendet.",
+    'publish.buurt.addr_placeholder': "Straße + Hausnummer",
+    'publish.buurt.pc_placeholder_prefix': "PLZ z. B. {ex}",
+    'sharebuurt.title': "📨 Sende diese Links an deine Nachbarn",
+    'sharebuurt.intro': "Deine eigene Adresse ist bereits online. Für die anderen Adressen fragt YardiGo zuerst die Bewohner um Erlaubnis — laut DSGVO Pflicht. Für jeden Nachbarn liegt eine vorbereitete Nachricht mit persönlicher Anrede bereit. Klicke auf \"Text + Link kopieren\" oder sende direkt via WhatsApp, SMS oder E-Mail. Ihre Adresse erscheint erst nach Bestätigung auf der Karte.",
+    'sharebuurt.warn_expire': "⏳ <strong>Hinweis:</strong> unbestätigte Adressen verfallen nach 7 Tagen automatisch.",
+    'sharebuurt.tip_later': "💾 Keine Eile? Du findest diese Links auch später unter <strong>Meine Verkäufe</strong> → klicke auf deinen Nachbarschaftsverkauf.",
+    'sharebuurt.btn_close': "Fertig, schließen",
+    'bulk.title': "📋 Mehrere Adressen auf einmal",
+    'bulk.intro': "Füge deine Liste unten ein oder lade eine Text- oder CSV-Datei hoch. Eine Zeile pro Nachbar. Die Website bereitet jede Adresse automatisch vor und erstellt nach der Veröffentlichung die Bestätigungslinks.",
+    'bulk.formats_label': "Unterstützte Formate pro Zeile:",
+    'bulk.formats_help': "Du kannst auch Kommas, Tabs oder Semikolons verwenden, um Label und Adresse zu trennen. Upload als <strong>.txt, .csv, .tsv, .xlsx oder .xls</strong> möglich.",
+    'bulk.choose_file': "📁 Datei wählen (.xlsx, .csv, .txt)",
+    'publish.floorplan.title': "🗺️ Lageplan",
+    'publish.floorplan.help': "Lade einen Lageplan des Nachbarschaftsverkaufs hoch (PDF, PNG oder JPG, max. 10 MB). Angemeldete Besucher können ihn aus der Anzeige herunterladen.",
+    'publish.floorplan.btn_upload': "📎 Lageplan hochladen (optional)",
+    'bulk.consent_title': "Wie holst du die Zustimmung der Nachbarn ein?",
+    'bulk.consent_recommended': "EMPFOHLEN",
     // Header
     'header.login': 'Sign in',
     'header.publish': 'Post sale',
@@ -4008,7 +4468,7 @@ function renderMySales() {
 // Open de share-modal met één specifieke link (gebruikt vanuit "Mijn verkopen")
 function reshareOneBuurtLink(saleId) {
   var row = sales.filter(function(x) { return String(x.id) === String(saleId); })[0];
-  if (!row || !row.confirmation_token) { toast('Link niet gevonden'); return; }
+  if (!row || !row.confirmation_token) { toast(i18n('toast.link_not_found', 'Link niet gevonden')); return; }
   var item = {
     address: row.address || '',
     token: row.confirmation_token,
@@ -4028,12 +4488,12 @@ async function doLogout() {
   updateUserUI();
   if (map) renderMarkers();
   renderList();
-  toast('Je bent uitgelogd');
+  toast(i18n('toast.logged_out', 'Je bent uitgelogd'));
 }
 
 // ── Account verwijderen ──
 function openDeleteConfirm() {
-  if (isGuest) { toast('Je bent niet ingelogd'); return; }
+  if (isGuest) { toast(i18n('toast.not_logged_in', 'Je bent niet ingelogd')); return; }
   document.getElementById('deleteAccOv').classList.add('open');
 }
 function closeDeleteConfirm() {
@@ -4078,7 +4538,7 @@ async function doDeleteAccount() {
     updateUserUI();
     if (map) renderMarkers();
     renderList();
-    toast('✓ Je account is verwijderd');
+    toast(i18n('toast.account_deleted', '✓ Je account is verwijderd'));
   } catch(e) {
     toast('❌ ' + (e.message || 'Er ging iets fout. Probeer opnieuw.'));
   }
@@ -4089,8 +4549,8 @@ async function doMainLogin() {
   var email = (document.getElementById('login-email') || {}).value || '';
   var pass  = (document.getElementById('login-pass')  || {}).value || '';
   email = email.trim();
-  if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
-  if (!pass) { toast('Vul je wachtwoord in'); return; }
+  if (!email.includes('@')) { toast(i18n('toast.email_required', 'Vul een geldig e-mailadres in')); return; }
+  if (!pass) { toast(i18n('toast.password_required', 'Vul je wachtwoord in')); return; }
   if (sbClient) {
     try {
       var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
@@ -4104,8 +4564,8 @@ async function doMainLogin() {
       ensureProfile(u.id, name, email);
       closeLogin(); updateUserUI();
       if (map) renderMarkers(); renderList();
-      toast('Welkom, ' + name.split(' ')[0] + '! 🎉'); return;
-    } catch(e) { logError(e, { action: 'login_exception' }); toast('❌ Inloggen mislukt'); return; }
+      toast(i18n('toast.welcome_user', 'Welkom, {name}! 🎉').replace('{name}', name.split(' ')[0])); return;
+    } catch(e) { logError(e, { action: 'login_exception' }); toast(i18n('toast.login_failed', '❌ Inloggen mislukt')); return; }
   }
   // Fallback
   var name = emailToName(email);
@@ -4115,7 +4575,7 @@ async function doMainLogin() {
   localStorage.setItem('yg-onboarded', '1');
   closeLogin(); updateUserUI();
   if (map) renderMarkers(); renderList();
-  toast('Welkom, ' + name.split(' ')[0] + '! 🎉');
+  toast(i18n('toast.welcome_user', 'Welkom, {name}! 🎉').replace('{name}', name.split(' ')[0]));
 }
 let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
@@ -4153,7 +4613,7 @@ function obRequestLocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function() { document.getElementById('ob-loc-card').classList.add('granted'); document.querySelector('#ob-loc-card .ob-perm-status').textContent = '✓ Toegang verleend'; },
-      function() { toast('Locatie niet beschikbaar'); }
+      function() { toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar')); }
     );
   }
 }
@@ -4162,24 +4622,24 @@ function obRequestNotif() {
   if (window.Capacitor) {
     document.getElementById('ob-notif-card').classList.add('granted');
     document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Ingesteld via Instellingen';
-    toast('Meldingen kun je beheren via iOS Instellingen');
+    toast(i18n('toast.notif_ios_settings', 'Meldingen kun je beheren via iOS Instellingen'));
     return;
   }
   // In browser/PWA: gebruik web Notification API
   if ('Notification' in window) {
     Notification.requestPermission().then(function(p) {
       if (p === 'granted') { document.getElementById('ob-notif-card').classList.add('granted'); document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Meldingen aan'; }
-      else toast('Meldingen kun je later aanzetten via je browserinstellingen');
+      else toast(i18n('toast.notif_browser_settings', 'Meldingen kun je later aanzetten via je browserinstellingen'));
     });
   } else {
-    toast('Meldingen worden niet ondersteund in deze browser');
+    toast(i18n('toast.notif_unsupported', 'Meldingen worden niet ondersteund in deze browser'));
   }
 }
 function obToggleCat(el) {
   var cat = el.dataset.cat;
   var idx = obSelectedCats.indexOf(cat);
   if (idx >= 0) {
-    if (obSelectedCats.length <= 1) { toast('Kies minimaal 1 categorie'); return; }
+    if (obSelectedCats.length <= 1) { toast(i18n('toast.category_min_required', 'Kies minimaal 1 categorie')); return; }
     obSelectedCats.splice(idx, 1); el.classList.remove('active');
   } else {
     obSelectedCats.push(cat); el.classList.add('active');
@@ -4191,10 +4651,10 @@ async function obRegister() {
   var email = document.getElementById('ob-email').value.trim();
   var pass  = document.getElementById('ob-pass').value;
   var termsEl = document.getElementById('ob-terms');
-  if (!name) { toast('Vul je naam in'); return; }
-  if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
-  if (pass.length < 6) { toast('Wachtwoord minimaal 6 tekens'); return; }
-  if (termsEl && !termsEl.checked) { toast('Ga akkoord met de voorwaarden en privacyverklaring'); return; }
+  if (!name) { toast(i18n('toast.name_required', 'Vul je naam in')); return; }
+  if (!email.includes('@')) { toast(i18n('toast.email_required', 'Vul een geldig e-mailadres in')); return; }
+  if (pass.length < 6) { toast(i18n('toast.password_min_length', 'Wachtwoord minimaal 6 tekens')); return; }
+  if (termsEl && !termsEl.checked) { toast(i18n('toast.terms_required', 'Ga akkoord met de voorwaarden en privacyverklaring')); return; }
   if (sbClient) {
     try {
       var res = await sbClient.auth.signUp({
@@ -4208,7 +4668,7 @@ async function obRegister() {
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       ensureProfile(signedUpId, name, email);
       obFinish(); return;
-    } catch(e) { toast('❌ Registratie mislukt'); return; }
+    } catch(e) { toast(i18n('toast.signup_failed', '❌ Registratie mislukt')); return; }
   }
   // Fallback
   isGuest = false;
@@ -4223,8 +4683,8 @@ async function obLogin() {
   var passEl  = document.querySelector('#ob-login-modal input[type="password"]');
   var email = emailEl ? emailEl.value.trim() : '';
   var pass  = passEl  ? passEl.value : '';
-  if (!email.includes('@')) { toast('Vul een geldig e-mailadres in'); return; }
-  if (!pass) { toast('Vul je wachtwoord in'); return; }
+  if (!email.includes('@')) { toast(i18n('toast.email_required', 'Vul een geldig e-mailadres in')); return; }
+  if (!pass) { toast(i18n('toast.password_required', 'Vul je wachtwoord in')); return; }
   if (sbClient) {
     try {
       var res = await sbClient.auth.signInWithPassword({ email: email, password: pass });
@@ -4236,7 +4696,7 @@ async function obLogin() {
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       ensureProfile(u.id, name, email);
       obHideLogin(); obFinish(); return;
-    } catch(e) { toast('❌ Inloggen mislukt'); return; }
+    } catch(e) { toast(i18n('toast.login_failed', '❌ Inloggen mislukt')); return; }
   }
   // Fallback (geen Supabase)
   var name = emailToName(email);
@@ -4253,9 +4713,9 @@ function obFinish() {
   setTimeout(function() { ob.style.display = 'none'; }, 400);
   localStorage.setItem('yg-onboarded', '1');
   if (isGuest) {
-    toast('Je bekijkt YardiGo als gast 👁️');
+    toast(i18n('toast.guest_view', 'Je bekijkt YardiGo als gast 👁️'));
   } else {
-    toast('Welkom' + (currentUser.name ? ', ' + currentUser.name.split(' ')[0] : '') + '! 🎉');
+    toast(currentUser.name ? i18n('toast.welcome_user', 'Welkom, {name}! 🎉').replace('{name}', currentUser.name.split(' ')[0]) : i18n('toast.welcome_back', 'Welkom! 🎉'));
   }
   updateUserUI();
   updateAttendanceUI();
@@ -4286,7 +4746,7 @@ function dismissWelcomeSheet() {
   hideWelcomeSheet(function() {
     isGuest = true;
     localStorage.setItem('yg-onboarded', '1');
-    toast('Je bekijkt YardiGo als gast 👁️');
+    toast(i18n('toast.guest_view', 'Je bekijkt YardiGo als gast 👁️'));
     updateAttendanceUI();
   });
 }
@@ -4349,7 +4809,7 @@ function confirmPublish() {
   var own = document.getElementById('yg-pc-own');
   var pub = document.getElementById('yg-pc-public');
   if (!own || !pub || !own.checked || !pub.checked) {
-    toast('Vink beide vakjes aan om te publiceren');
+    toast(i18n('toast.both_checks_required', 'Vink beide vakjes aan om te publiceren'));
     return;
   }
   var modal = document.getElementById('yg-publish-confirm');
@@ -4868,7 +5328,7 @@ function applyListSort(mode) {
       navigator.geolocation.getCurrentPosition(function(pos) {
         userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         renderList();
-      }, function() { toast('📍 Locatie niet beschikbaar'); });
+      }, function() { toast(i18n('toast.location_unavailable_emoji', '📍 Locatie niet beschikbaar')); });
     }
   } else { renderList(); }
 }
@@ -4910,7 +5370,7 @@ function pickR(km) {
       userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       applyFilters();
     }, function() {
-      toast('📍 Locatie niet beschikbaar. Afstandsfilter werkt zonder locatie niet.');
+      toast(i18n('toast.location_unavailable_filter', '📍 Locatie niet beschikbaar. Afstandsfilter werkt zonder locatie niet.'));
       activeRadiusKm = 9999;
       document.getElementById('lbl-afstand').textContent = 'Overal';
       applyFilters();
@@ -5190,18 +5650,18 @@ function updateRouteView() {
       + '<button onclick="toggleFav(\'' + escapeHtml(s.id) + '\')" style="background:none;border:none;font-size:18px;cursor:pointer">⭐</button></div>';
   }).join('');
 }
-function clearRoute() { favorites.clear(); renderMarkers(); renderList(); updateRouteView(); toast('🗑️ Route gewist'); }
+function clearRoute() { favorites.clear(); renderMarkers(); renderList(); updateRouteView(); toast(i18n('toast.route_cleared', '🗑️ Route gewist')); }
 
 // ── Auto-route: plan route op basis van GPS-locatie ──
 function autoRouteFromLocation() {
   if (isGuest) { guestGate('route'); return; }
-  if (!navigator.geolocation) { toast('📍 Locatie niet beschikbaar'); return; }
-  toast('📍 Locatie ophalen…');
+  if (!navigator.geolocation) { toast(i18n('toast.location_unavailable_emoji', '📍 Locatie niet beschikbaar')); return; }
+  toast(i18n('toast.fetching_location', '📍 Locatie ophalen…'));
   navigator.geolocation.getCurrentPosition(function(pos) {
     var userLat = pos.coords.latitude;
     var userLng = pos.coords.longitude;
     var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
-    if (!visible.length) { toast('Geen verkopen gevonden'); return; }
+    if (!visible.length) { toast(i18n('toast.no_sales_found', 'Geen verkopen gevonden')); return; }
     // Sorteer op afstand van gebruiker
     var userPos = { lat: userLat, lng: userLng };
     var sorted = visible.slice().sort(function(a, b) {
@@ -5219,14 +5679,14 @@ function autoRouteFromLocation() {
       routeNavBtn.classList.add('active');
     }
     sv('route', routeTab);
-    toast('✅ Route gepland met ' + Math.min(sorted.length, 8) + ' stops!');
+    toast(i18n('toast.route_planned', '✅ Route gepland met {count} stops!').replace('{count}', Math.min(sorted.length, 8)));
   }, function() {
-    toast('❌ Locatie geweigerd. Zet locatie aan in je instellingen.');
+    toast(i18n('toast.location_denied', '❌ Locatie geweigerd. Zet locatie aan in je instellingen.'));
   }, { timeout: 8000 });
 }
 function startNavigation() {
   var opt = optimizeRoute(sales.filter(function(s) { return favorites.has(s.id); }).slice());
-  if (!opt.length) { toast('Voeg eerst verkopen toe'); return; }
+  if (!opt.length) { toast(i18n('toast.add_sales_first', 'Voeg eerst verkopen toe')); return; }
   window.open('https://www.google.com/maps/dir/' + opt.map(function(s) { return encodeURIComponent(s.address + ', ' + ygCountryName()); }).join('/'));
 }
 
@@ -5352,7 +5812,7 @@ function openDetail(id) {
           );
         } catch (e) {
           console.error('openSellerProfile faalde:', e);
-          toast('❌ Profiel kon niet geopend worden');
+          toast(i18n('toast.profile_open_failed', '❌ Profiel kon niet geopend worden'));
         }
       });
       sellerEl.appendChild(btn);
@@ -5408,7 +5868,7 @@ function openDetail(id) {
     document.getElementById('det-addr-pending-city').textContent = '📍 ' + _pcity + ' · ';
     startDetailCountdown(s.address_visible_at);
     var _rb = document.getElementById('det-route-btn');
-    _rb.onclick = function() { toast('🔒 Volledig adres zichtbaar ' + (formatCountdownDetail(s.address_visible_at) || 'binnenkort')); };
+    _rb.onclick = function() { toast(i18n('toast.address_visible_in', '🔒 Volledig adres zichtbaar {when}').replace('{when}', formatCountdownDetail(s.address_visible_at) || i18n('toast.address_visible_soon', 'binnenkort'))); };
     _rb.style.opacity = '0.55';
     _rb.style.cursor = 'not-allowed';
     _rb.textContent = '🔒 Route';
@@ -5614,7 +6074,7 @@ function detailRoute() {
   if (!s) return;
   if (!favorites.has(s.id)) toggleFav(s.id);
   closeDetail(); sv('route', document.querySelectorAll('.tab')[2]);
-  toast('📍 Toegevoegd aan route!');
+  toast(i18n('toast.added_to_route', '📍 Toegevoegd aan route!'));
 }
 
 // ══════════════════════════════════════════════════
@@ -5678,7 +6138,7 @@ function shareCalendar() {
   var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
   var d = s.date.replace(/-/g,''), ics = ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','DTSTART:'+d+'T090000','DTEND:'+d+'T150000','SUMMARY:'+s.title,'LOCATION:'+s.address,'END:VEVENT','END:VCALENDAR'].join('\r\n');
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download = 'yardigo-'+s.id+'.ics'; a.click();
-  toast('📅 Kalenderbestand gedownload!'); closeShare();
+  toast(i18n('toast.calendar_downloaded', '📅 Kalenderbestand gedownload!')); closeShare();
 }
 
 // ══════════════════════════════════════════════════
@@ -5936,7 +6396,7 @@ async function openAdd() {
         try { await sbClient.auth.signOut(); } catch(e) {}
         currentUser = {};
         isGuest = true;
-        toast('Je sessie is verlopen, log opnieuw in om een verkoop te plaatsen.');
+        toast(i18n('toast.session_expired_login_required', 'Je sessie is verlopen, log opnieuw in om een verkoop te plaatsen.'));
         try { guestGate('listing plaatsen'); } catch(e) {}
         return;
       }
@@ -6049,7 +6509,7 @@ function setListingCountry(country, opts) {
     }
     var flagMap = { NL:'🇳🇱', BE:'🇧🇪', FR:'🇫🇷', DE:'🇩🇪' };
     var nameMap = { NL:'Nederland', BE:'België', FR:'France', DE:'Deutschland' };
-    toast((flagMap[c] || '🌍') + ' Land: ' + (nameMap[c] || c) + ' — adres opnieuw invoeren');
+    toast(i18n('toast.country_switched', '{flag} Land: {name} — adres opnieuw invoeren').replace('{flag}', flagMap[c] || '🌍').replace('{name}', nameMap[c] || c));
   }
 }
 function generateConfirmationToken() {
@@ -6145,7 +6605,7 @@ function showBuurtSharesModal(items) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(
             function() { toast(okMsg); },
-            function() { toast('Kopiëren mislukt'); }
+            function() { toast(i18n('toast.copy_failed', 'Kopiëren mislukt')); }
           );
         } else {
           var ta = document.createElement('textarea');
@@ -6153,7 +6613,7 @@ function showBuurtSharesModal(items) {
           document.execCommand('copy'); document.body.removeChild(ta);
           toast(okMsg);
         }
-      } catch (e) { toast('Kopiëren mislukt'); }
+      } catch (e) { toast(i18n('toast.copy_failed', 'Kopiëren mislukt')); }
     }
     var copyMsgBtn = row.querySelector('[data-copy-msg]');
     if (copyMsgBtn) {
@@ -6345,25 +6805,30 @@ function addBuurtAdres() {
   row.id = 'bv-row-' + idx;
   row.style.cssText = 'display:flex;flex-direction:column;gap:6px;background:var(--bg2);border-radius:10px;padding:10px;position:relative;border:1.5px solid var(--border)';
   var isOwn = (idx === 0);
-  var label = isOwn ? '🏠 JOUW EIGEN ADRES' : '👤 ADRES BUUR ' + idx;
+  var label = isOwn
+    ? i18n('publish.buurt.row_own', '🏠 JOUW EIGEN ADRES')
+    : i18n('publish.buurt.row_neighbor', '👤 ADRES BUUR {idx}').replace('{idx}', idx);
   var removeBtn = isOwn ? '' : '<button type="button" onclick="removeBuurtAdres(' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted)">✕</button>';
   var helper = isOwn
-    ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">Gaat direct online, dit is jouw eigen toestemming.</div>'
-    : '<div style="font-size:10px;color:#A04A18;margin-bottom:4px">Na publiceren krijg je een bevestigingslink om naar deze buur te sturen. Adres staat pas online na hun "ja".</div>';
+    ? '<div style="font-size:10px;color:var(--muted);margin-bottom:4px">' + escapeHtml(i18n('publish.buurt.helper_own', 'Gaat direct online, dit is jouw eigen toestemming.')) + '</div>'
+    : '<div style="font-size:10px;color:#A04A18;margin-bottom:4px">' + escapeHtml(i18n('publish.buurt.helper_neighbor', 'Na publiceren krijg je een bevestigingslink om naar deze buur te sturen. Adres staat pas online na hun "ja".')) + '</div>';
+  var _bvLabelPh = escapeHtml(i18n('publish.buurt.label_placeholder', 'Naam of herkenning (optioneel, bv. Marieke of nr. 14)'));
+  var _bvEmailPh = escapeHtml(i18n('publish.buurt.email_placeholder', 'E-mailadres (optioneel, voor voorgevulde mail)'));
+  var _bvEmailHelp = escapeHtml(i18n('publish.buurt.email_help', 'E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.'));
   var extraFields = isOwn ? '' :
-      '<input class="form-input" id="bv-label-' + idx + '" placeholder="Naam of herkenning (optioneel, bv. Marieke of nr. 14)" style="margin:0" maxlength="60" oninput="buurtAdressen[' + idx + '].label=this.value">'
-    + '<input class="form-input" id="bv-email-' + idx + '" type="email" placeholder="E-mailadres (optioneel, voor voorgevulde mail)" style="margin:0" maxlength="120" oninput="buurtAdressen[' + idx + '].email=this.value" autocomplete="off">'
-    + '<div style="font-size:10px;color:var(--muted);margin-top:-2px">E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.</div>';
+      '<input class="form-input" id="bv-label-' + idx + '" placeholder="' + _bvLabelPh + '" style="margin:0" maxlength="60" oninput="buurtAdressen[' + idx + '].label=this.value">'
+    + '<input class="form-input" id="bv-email-' + idx + '" type="email" placeholder="' + _bvEmailPh + '" style="margin:0" maxlength="120" oninput="buurtAdressen[' + idx + '].email=this.value" autocomplete="off">'
+    + '<div style="font-size:10px;color:var(--muted);margin-top:-2px">' + _bvEmailHelp + '</div>';
   row.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">'
     + '<span style="font-size:11px;font-weight:700;color:var(--muted)">' + label + '</span>'
     + removeBtn
     + '</div>'
     + helper
     + '<div style="position:relative">'
-    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="Straatnaam + huisnummer" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
+    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.addr_placeholder', 'Straatnaam + huisnummer')) + '" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
-    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml('Postcode bijv. ' + (YG_ADDR_PLACEHOLDERS[currentListingCountry] || YG_ADDR_PLACEHOLDERS.NL).pc) + '" maxlength="' + (currentListingCountry === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
+    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.pc_placeholder_prefix', 'Postcode bijv. {ex}').replace('{ex}', (YG_ADDR_PLACEHOLDERS[currentListingCountry] || YG_ADDR_PLACEHOLDERS.NL).pc)) + '" maxlength="' + (currentListingCountry === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
     + extraFields;
   if (list) list.appendChild(row);
 }
@@ -6569,7 +7034,7 @@ function handleBulkAdresFile(input) {
   var file = files[0];
   // Limiet: bescherm tegen per ongeluk een gigantisch bestand (> 2 MB is geen adreslijst meer)
   if (file.size > 2 * 1024 * 1024) {
-    toast('❌ Bestand is te groot (max 2 MB)');
+    toast(i18n('toast.file_too_large_2mb', '❌ Bestand is te groot (max 2 MB)'));
     input.value = '';
     return;
   }
@@ -6594,7 +7059,7 @@ function handleBulkAdresFile(input) {
           if (ta) {
             ta.value = text;
             previewBulkAdres();
-            if (!text) toast('⚠️ Geen rijen gevonden in het Excel-bestand');
+            if (!text) toast(i18n('toast.excel_no_rows', '⚠️ Geen rijen gevonden in het Excel-bestand'));
           }
         })
         .catch(function(err) {
@@ -6604,7 +7069,7 @@ function handleBulkAdresFile(input) {
     };
     reader.onerror = function() {
       if (lbl) lbl.textContent = origLbl;
-      toast('❌ Kan bestand niet lezen');
+      toast(i18n('toast.file_read_error', '❌ Kan bestand niet lezen'));
     };
     reader.readAsArrayBuffer(file);
   } else {
@@ -6617,7 +7082,7 @@ function handleBulkAdresFile(input) {
         previewBulkAdres();
       }
     };
-    tReader.onerror = function() { toast('❌ Kan bestand niet lezen'); };
+    tReader.onerror = function() { toast(i18n('toast.file_read_error', '❌ Kan bestand niet lezen')); };
     tReader.readAsText(file);
   }
 
@@ -7036,7 +7501,7 @@ function importBulkAdres() {
   var parsed = parseBulkAdresText(ta.value);
   var rows = parsed.rows || [];
   var skippedOrg = parsed.skipped || 0;
-  if (!rows.length) { toast('Niks te importeren'); return; }
+  if (!rows.length) { toast(i18n('toast.nothing_to_import', 'Niks te importeren')); return; }
 
   // Als alleen de lege placeholder-rij van buurtAdressen[0] bestaat en de
   // gebruiker nog helemaal niks heeft ingevuld, laten we die rij staan
@@ -7247,7 +7712,7 @@ function handleAddPhotos(input) {
           });
           uploadedPhotos.push(dataUrl2);
         } catch(e) {
-          toast('⚠️ Eén foto kon niet worden verwerkt');
+          toast(i18n('toast.photo_processing_warn', '⚠️ Eén foto kon niet worden verwerkt'));
         }
       }
       renderPhotoGrid();
@@ -7273,7 +7738,7 @@ var isPublishing = false; // anti-dubbelklik lock
 async function publishSale() {
   // Anti-dubbelklik: als er al een publicatie bezig is, negeer verdere klikken
   if (isPublishing) {
-    toast('⏳ Publicatie loopt al, even geduld...');
+    toast(i18n('toast.publish_in_progress', '⏳ Publicatie loopt al, even geduld...'));
     return;
   }
   // Authenticatiecheck (lokale state)
@@ -7283,19 +7748,19 @@ async function publishSale() {
   // Alleen tonen als de gebruiker in deze publish-poging nog niet bevestigd heeft.
   if (!window.__ygPublishConfirmed) {
     var _title = document.getElementById('aTitle');
-    if (!_title || !_title.value.trim()) { toast('Vul een titel in'); return; }
-    if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
+    if (!_title || !_title.value.trim()) { toast(i18n('toast.title_required', 'Vul een titel in')); return; }
+    if (uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
     var _isBuurt = selTypeVal === 'buurt';
     var _addrEl = document.getElementById('aAddr');
     var _previewAddr = _isBuurt
       ? (buurtAdressen && buurtAdressen.length ? buurtAdressen.map(function(a){return a.addr;}).filter(Boolean).join(' · ') : '')
       : (_addrEl ? _addrEl.value.trim() : '');
-    if (!_previewAddr) { toast('Vul een adres in'); return; }
+    if (!_previewAddr) { toast(i18n('toast.address_required', 'Vul een adres in')); return; }
     if (selTypeVal === 'evenement') {
       var _evSelCheck = document.getElementById('aEventType');
       var _evValCheck = _evSelCheck ? _evSelCheck.value : '';
       if (!_evValCheck) {
-        toast('🎪 Kies een type evenement');
+        toast(i18n('toast.event_type_required', '🎪 Kies een type evenement'));
         var evWrap = document.getElementById('evenement-subtype-wrap');
         if (evWrap) {
           evWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -7306,7 +7771,7 @@ async function publishSale() {
       if (_evValCheck === 'Anders') {
         var _evAndCheck = document.getElementById('aEventAnders');
         if (!_evAndCheck || !_evAndCheck.value.trim()) {
-          toast('✏️ Omschrijf het type evenement');
+          toast(i18n('toast.event_describe_required', '✏️ Omschrijf het type evenement'));
           if (_evAndCheck) _evAndCheck.focus();
           return;
         }
@@ -7329,14 +7794,14 @@ async function publishSale() {
         try { await sbClient.auth.signOut(); } catch(e) {}
         currentUser = {};
         isGuest = true;
-        toast('❌ Je sessie is verlopen. Log opnieuw in om te publiceren.');
+        toast(i18n('toast.session_expired_publish', '❌ Je sessie is verlopen. Log opnieuw in om te publiceren.'));
         // Trigger login-flow zodat gebruiker meteen opnieuw kan inloggen
         try { guestGate('listing plaatsen'); } catch(e) {}
         return;
       }
     } catch(e) {
       console.warn('Session-check faalde:', e);
-      toast('❌ Kan niet verifiëren of je ingelogd bent. Probeer opnieuw.');
+      toast(i18n('toast.session_check_failed', '❌ Kan niet verifiëren of je ingelogd bent. Probeer opnieuw.'));
       return;
     }
   }
@@ -7345,13 +7810,13 @@ async function publishSale() {
   var now = Date.now();
   if (now - lastPublishTime < 60000) {
     var secLeft = Math.ceil((60000 - (now - lastPublishTime)) / 1000);
-    toast('Even wachten. Je kunt over ' + secLeft + ' seconden opnieuw publiceren.');
+    toast(i18n('toast.rate_limit_wait', 'Even wachten. Je kunt over {sec} seconden opnieuw publiceren.').replace('{sec}', secLeft));
     return;
   }
 
   var title = document.getElementById('aTitle');
-  if (!title || !title.value.trim()) { toast('Vul een titel in'); return; }
-  if (uploadedPhotos.length < 1) { toast('📷 Voeg minimaal 1 foto toe'); return; }
+  if (!title || !title.value.trim()) { toast(i18n('toast.title_required', 'Vul een titel in')); return; }
+  if (uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
 
   // Adres-validatie LOS van button-state, anders blijft de knop op
   // "Bezig..." hangen als de validatie faalt (en heeft `isPublishing` ook
@@ -7361,8 +7826,8 @@ async function publishSale() {
   var mainAddr = isBuurt ? (buurtAdressen.length > 0 ? buurtAdressen[0].addr : '') : (addrEl ? addrEl.value.trim() : '');
   var revealMode = (typeof getSelectedRevealMode === 'function') ? getSelectedRevealMode() : 'day_before';
 
-  if (!isBuurt && !mainAddr) { toast('Vul een adres in'); return; }
-  if (isBuurt && buurtAdressen.length === 0) { toast('Voeg minimaal 1 adres toe'); return; }
+  if (!isBuurt && !mainAddr) { toast(i18n('toast.address_required', 'Vul een adres in')); return; }
+  if (isBuurt && buurtAdressen.length === 0) { toast(i18n('toast.address_min_required', 'Voeg minimaal 1 adres toe')); return; }
   if (isBuurt) {
     var _emptyIdx = -1;
     for (var _i = 0; _i < buurtAdressen.length; _i++) {
@@ -7528,7 +7993,7 @@ async function publishSale() {
           currentUserId = userRes && userRes.data && userRes.data.user ? userRes.data.user.id : null;
         } catch(e) { console.warn('getUser faalde:', e); }
       }
-      if (!currentUserId) { hideL(); toast('❌ Je bent niet meer ingelogd. Log opnieuw in.'); return; }
+      if (!currentUserId) { hideL(); toast(i18n('toast.not_logged_in_relog', '❌ Je bent niet meer ingelogd. Log opnieuw in.')); return; }
     }
 
     // Safety net: zorg dat er een profiles-rij bestaat vóór we de listing inserten.
@@ -7786,8 +8251,8 @@ async function publishSale() {
     loadAndRenderUserBadges(); // badges herberekenen
     _clearAddDraft();           // succesvol geplaatst, draft niet meer nodig
     closeAdd(); hideL();
-    toast('🎉 Verkoop geplaatst!');
-  } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast('❌ Publiceren mislukt'); }
+    toast(i18n('toast.publish_success', '🎉 Verkoop geplaatst!'));
+  } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast(i18n('toast.publish_failed', '❌ Publiceren mislukt')); }
   finally {
     // Lock altijd vrijgeven + knop herstellen
     isPublishing = false;
@@ -7882,11 +8347,11 @@ function searchSuggest(val) {
       document.getElementById('s-dropdown').classList.remove('open');
       document.getElementById('pcInput').value = '';
       if (navigator.geolocation) {
-        toast('📍 Locatie ophalen…');
+        toast(i18n('toast.fetching_location', '📍 Locatie ophalen…'));
         navigator.geolocation.getCurrentPosition(function(pos) {
-          if (map) { map.setView([pos.coords.latitude, pos.coords.longitude], 13); toast('✓ Kaart op jouw locatie'); }
-        }, function() { toast('Locatie niet beschikbaar'); });
-      } else { toast('Locatie niet beschikbaar'); }
+          if (map) { map.setView([pos.coords.latitude, pos.coords.longitude], 13); toast(i18n('toast.location_set', '✓ Kaart op jouw locatie')); }
+        }, function() { toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar')); });
+      } else { toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar')); }
     });
     dd.appendChild(locItem);
 
@@ -7976,16 +8441,16 @@ document.addEventListener('click', function(e) {
 });
 async function doSearch() {
   var raw = document.getElementById('pcInput').value.trim();
-  if (!raw) { toast('Vul een postcode of plaats in'); return; }
+  if (!raw) { toast(i18n('toast.postal_code_or_city_required', 'Vul een postcode of plaats in')); return; }
   showL();
   try {
     var res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(raw + ', ' + ygCountryName()) + '&format=json&limit=1&countrycodes=' + ygCountryCode(), { headers:{'Accept-Language':currentLang || 'nl'} });
     var data = await res.json();
-    if (!data.length) { toast('❌ Niet gevonden'); hideL(); return; }
+    if (!data.length) { toast(i18n('toast.not_found', '❌ Niet gevonden')); hideL(); return; }
     var lat = +data[0].lat, lon = +data[0].lon;
     if (map) { map.setView([lat, lon], 13); } else { fbSetView(lat, lon, 13); }
     toast('📍 ' + data[0].display_name.split(',')[0]);
-  } catch(e) { toast('❌ Zoeken mislukt'); }
+  } catch(e) { toast(i18n('toast.search_failed', '❌ Zoeken mislukt')); }
   hideL();
 }
 
@@ -7994,8 +8459,8 @@ async function doSearch() {
 // ══════════════════════════════════════════════════
 async function handleProfilePhoto(input) {
   var file = input.files[0]; if (!file) return;
-  if (file.size > 5*1024*1024) { toast('Max 5MB'); return; }
-  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); input.value=''; return; }
+  if (file.size > 5*1024*1024) { toast(i18n('toast.file_too_large_5mb', 'Max 5MB')); return; }
+  if (isGuest || !sbClient || !currentUser) { toast(i18n('toast.login_to_save_photo', 'Log in om je foto op te slaan')); input.value=''; return; }
   // Open crop/zoom modal i.p.v. direct te uploaden
   openAvatarCrop(file);
 }
@@ -8090,8 +8555,8 @@ function updateAttendanceUI() {
 }
 function doCheckin(attended) {
   attendanceData.total++;
-  if (attended) { attendanceData.visited++; toast('✓ Aanwezigheid geregistreerd! 🎉'); }
-  else toast('Jammer! Score bijgewerkt.');
+  if (attended) { attendanceData.visited++; toast(i18n('toast.attendance_recorded', '✓ Aanwezigheid geregistreerd! 🎉')); }
+  else toast(i18n('toast.attendance_skipped', 'Jammer! Score bijgewerkt.'));
   document.getElementById('checkin-card').style.display = 'none';
   updateAttendanceUI();
 }
@@ -8147,7 +8612,7 @@ function toggleNotifPill(el) {
   var g = el.dataset.g;
   var active = document.querySelectorAll('.notif-pill[data-g="' + g + '"].active');
   if (el.classList.contains('active') && active.length <= 1) {
-    toast('Selecteer minimaal 1 optie'); return;
+    toast(i18n('toast.option_min_required', 'Selecteer minimaal 1 optie')); return;
   }
   el.classList.toggle('active');
   updateNotifSubtitles();
@@ -8189,7 +8654,7 @@ function updateNotifSubtitles() {
 
 function saveNotifSettings() {
   if (isGuest) { guestGate('meldingen'); return; }
-  toast('✓ Meldingsinstellingen opgeslagen');
+  toast(i18n('toast.notif_settings_saved', '✓ Meldingsinstellingen opgeslagen'));
 }
 
 // ══════════════════════════════════════════════════
@@ -8312,8 +8777,8 @@ function setNameDisplayMode(mode) {
   }
   if (!isGuest && sbClient && currentUser && currentUser.id) {
     sbClient.from('profiles').update({ name_display_mode: mode }).eq('id', currentUser.id)
-      .then(function() { toast('✓ Naam-voorkeur opgeslagen'); })
-      .catch(function() { toast('Fout bij opslaan'); });
+      .then(function() { toast(i18n('toast.name_pref_saved', '✓ Naam-voorkeur opgeslagen')); })
+      .catch(function() { toast(i18n('toast.save_error', 'Fout bij opslaan')); });
   }
 }
 
@@ -8331,7 +8796,7 @@ async function saveProfileField(field, value) {
       var el = document.getElementById('profile-name');
       if (el && value) el.textContent = value;
     }
-  } catch(e) { toast('Fout bij opslaan'); }
+  } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); }
 }
 
 // Bio karakter-teller
@@ -8346,10 +8811,10 @@ async function saveProfileField(field, value) {
 
 // Wachtwoord wijzigen via Supabase reset-e-mail
 async function openChangePassword() {
-  if (isGuest || !currentUser || !currentUser.email) { toast('Niet ingelogd'); return; }
+  if (isGuest || !currentUser || !currentUser.email) { toast(i18n('toast.not_logged_in_simple', 'Niet ingelogd')); return; }
   try {
     if (sbClient) await sbClient.auth.resetPasswordForEmail(currentUser.email, { redirectTo: window.location.origin });
-    toast('✉️ Herstel-e-mail verstuurd naar ' + currentUser.email);
+    toast(i18n('toast.recovery_email_sent', '✉️ Herstel-e-mail verstuurd naar {email}').replace('{email}', currentUser.email));
   } catch(e) { toast('Fout: ' + (e.message || 'probeer opnieuw')); }
 }
 
@@ -8361,7 +8826,7 @@ function setRadiusPref(btn) {
   localStorage.setItem('yg-radius', v);
   var sub = document.getElementById('radius-sub');
   if (sub) sub.textContent = v + ' km rondom jouw locatie';
-  toast('Zoekradius: ' + v + ' km');
+  toast(i18n('toast.search_radius', 'Zoekradius: {km} km').replace('{km}', v));
 }
 
 // Segmented-control: kaarttype
@@ -8375,7 +8840,7 @@ function setMapTypePref(btn) {
   if (sub) sub.textContent = labels[v] || v;
   // Pas kaart aan als Google Maps beschikbaar
   if (window.map && map.setMapTypeId) { try { map.setMapTypeId(v); } catch(e) {} }
-  toast('Kaarttype: ' + (labels[v] || v));
+  toast(i18n('toast.map_type', 'Kaarttype: {label}').replace('{label}', labels[v] || v));
 }
 
 // Segmented-control: adres zichtbaarheid
@@ -8387,7 +8852,7 @@ function setAddrPref(btn) {
   var labels = { members: 'Alleen voor ingelogde gebruikers', all: 'Zichtbaar voor iedereen', none: 'Altijd verborgen' };
   var sub = document.getElementById('addr-pref-sub');
   if (sub) sub.textContent = labels[v] || v;
-  toast('Adresvoorkeur opgeslagen');
+  toast(i18n('toast.address_pref_saved', 'Adresvoorkeur opgeslagen'));
 }
 
 // Algemene toggle voor boolse voorkeuren
@@ -8613,7 +9078,7 @@ function doInstall() {
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
   deferredInstallPrompt.userChoice.then(function(result) {
-    if (result.outcome === 'accepted') toast('✓ YardiGo geïnstalleerd!');
+    if (result.outcome === 'accepted') toast(i18n('toast.installed', '✓ YardiGo geïnstalleerd!'));
     deferredInstallPrompt = null;
     dismissInstall();
   });
@@ -8624,7 +9089,7 @@ function dismissInstall() {
 }
 
 window.addEventListener('appinstalled', function() {
-  toast('✓ YardiGo toegevoegd aan beginscherm');
+  toast(i18n('toast.added_to_home', '✓ YardiGo toegevoegd aan beginscherm'));
   dismissInstall();
 });
 
@@ -8757,15 +9222,15 @@ function sendReport() {
     btn.disabled = false;
     if (data.success) {
       closeReport();
-      toast('Melding ontvangen, bedankt! 🙏');
+      toast(i18n('toast.report_thanks', 'Melding ontvangen, bedankt! 🙏'));
     } else {
-      toast('Er ging iets mis, probeer opnieuw.');
+      toast(i18n('toast.something_wrong', 'Er ging iets mis, probeer opnieuw.'));
     }
   })
   .catch(function(){
     btn.textContent = '🚩 Verstuur melding';
     btn.disabled = false;
-    toast('Geen verbinding, probeer opnieuw.');
+    toast(i18n('toast.no_connection', 'Geen verbinding, probeer opnieuw.'));
   });
 }
 
@@ -8820,15 +9285,15 @@ function sendFeedback() {
     btn.disabled = false;
     if (data.success) {
       closeFeedback();
-      toast('Bedankt voor je feedback! 🙏');
+      toast(i18n('toast.feedback_thanks', 'Bedankt voor je feedback! 🙏'));
     } else {
-      toast('Er ging iets mis, probeer opnieuw.');
+      toast(i18n('toast.something_wrong', 'Er ging iets mis, probeer opnieuw.'));
     }
   })
   .catch(function(){
     btn.textContent = '📧 Verstuur';
     btn.disabled = false;
-    toast('Geen verbinding, probeer opnieuw.');
+    toast(i18n('toast.no_connection', 'Geen verbinding, probeer opnieuw.'));
   });
 }
 // ══════════════════════════════════════════════════
@@ -8836,7 +9301,7 @@ function sendFeedback() {
 // ══════════════════════════════════════════════════
 async function openSellerProfile(email, name, userId) {
   var ov = document.getElementById('sellerProfileOv');
-  if (!ov) { console.error('sellerProfileOv ontbreekt in DOM'); toast('❌ Profiel kon niet geopend worden'); return; }
+  if (!ov) { console.error('sellerProfileOv ontbreekt in DOM'); toast(i18n('toast.profile_open_failed', '❌ Profiel kon niet geopend worden')); return; }
   var displayName = (name && String(name).trim()) ? String(name).trim() : 'Verkoper';
   var titleEl = document.getElementById('sellerProfileTitle');
   if (titleEl) titleEl.textContent = displayName + "'s profiel";
@@ -8904,11 +9369,11 @@ var _deletingSaleId = null;
 
 function openEditSale(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
-  if (!s) { toast('Advertentie niet gevonden'); return; }
+  if (!s) { toast(i18n('toast.listing_not_found', 'Advertentie niet gevonden')); return; }
   var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
               : (s.user_email && currentUser.email && s.user_email === currentUser.email);
   if (isGuest || !currentUser || !isOwner) {
-    toast('Je kunt alleen je eigen advertenties bewerken'); return;
+    toast(i18n('toast.edit_only_own', 'Je kunt alleen je eigen advertenties bewerken')); return;
   }
   _editingSaleId = id;
   document.getElementById('edit-title').value = s.title || '';
@@ -8994,7 +9459,7 @@ async function removeFloorplan() {
   s.floorplan_url = null;
   var fpCurrent = document.getElementById('edit-floorplan-current');
   if (fpCurrent) fpCurrent.style.display = 'none';
-  toast('✓ Plattegrond verwijderd');
+  toast(i18n('toast.floorplan_deleted', '✓ Plattegrond verwijderd'));
 }
 async function saveEditSale() {
   if (!_editingSaleId) return;
@@ -9007,7 +9472,7 @@ async function saveEditSale() {
     status: document.getElementById('edit-status').value,
     description: document.getElementById('edit-desc').value
   };
-  if (!upd.title) { toast('Vul een titel in'); return; }
+  if (!upd.title) { toast(i18n('toast.title_required', 'Vul een titel in')); return; }
 
   // Plattegrond uploaden als er een bestand geselecteerd is
   var fpFile = document.getElementById('edit-floorplan-file');
@@ -9030,7 +9495,7 @@ async function saveEditSale() {
           if (s2) s2.floorplan_url = upd.floorplan_url;
         }
       }
-    } catch(e) { toast('⚠️ Plattegrond upload mislukt'); console.error(e); }
+    } catch(e) { toast(i18n('toast.floorplan_upload_failed', '⚠️ Plattegrond upload mislukt')); console.error(e); }
     if (fpStatus) fpStatus.textContent = '';
   }
 
@@ -9038,7 +9503,7 @@ async function saveEditSale() {
     try {
       var res = await sbClient.from('listings').update(upd).eq('id', id).eq('user_id', currentUser.id);
       if (res.error) { toast('❌ ' + res.error.message); return; }
-    } catch(e) { toast('❌ Opslaan mislukt'); console.error(e); return; }
+    } catch(e) { toast(i18n('toast.save_failed', '❌ Opslaan mislukt')); console.error(e); return; }
   }
   // Update lokaal
   var s = sales.find(function(x) { return String(x.id) === String(id); });
@@ -9049,7 +9514,7 @@ async function saveEditSale() {
   }
   closeEditSale();
   renderMySales(); renderList(); if (typeof renderMarkers === 'function') renderMarkers();
-  toast('✓ Advertentie bijgewerkt');
+  toast(i18n('toast.listing_updated', '✓ Advertentie bijgewerkt'));
 }
 
 function confirmDeleteSale(id) {
@@ -9058,7 +9523,7 @@ function confirmDeleteSale(id) {
   var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
               : (s.user_email && currentUser.email && s.user_email === currentUser.email);
   if (isGuest || !currentUser || !isOwner) {
-    toast('Je kunt alleen je eigen advertenties verwijderen'); return;
+    toast(i18n('toast.delete_only_own', 'Je kunt alleen je eigen advertenties verwijderen')); return;
   }
   _deletingSaleId = id;
   document.getElementById('delSaleOv').classList.add('open');
@@ -9087,13 +9552,13 @@ async function doDeleteSale() {
     try {
       var res = await sbClient.from('listings').delete().eq('id', id).eq('user_id', currentUser.id);
       if (res.error) { toast('❌ ' + res.error.message); return; }
-    } catch(e) { toast('❌ Verwijderen mislukt'); console.error(e); return; }
+    } catch(e) { toast(i18n('toast.delete_failed', '❌ Verwijderen mislukt')); console.error(e); return; }
   }
   // Verwijder lokaal
   sales = sales.filter(function(x) { return String(x.id) !== String(id); });
   closeDeleteSale();
   renderMySales(); renderList(); if (typeof renderMarkers === 'function') renderMarkers();
-  toast('🗑️ Advertentie verwijderd');
+  toast(i18n('toast.listing_deleted', '🗑️ Advertentie verwijderd'));
 }
 </script>
 <!-- Bewerk advertentie modal -->
@@ -9348,7 +9813,7 @@ function clampAvatarOffset() {
 
 async function saveCroppedAvatar() {
   if (!_avatarCrop.img || !_avatarCrop.file) return;
-  if (isGuest || !sbClient || !currentUser) { toast('Log in om je foto op te slaan'); return; }
+  if (isGuest || !sbClient || !currentUser) { toast(i18n('toast.login_to_save_photo', 'Log in om je foto op te slaan')); return; }
   var btn = document.getElementById('avatarSaveBtn');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = 'Uploaden...'; }
   try {
@@ -9391,7 +9856,7 @@ async function saveCroppedAvatar() {
         if (sr.data && sr.data.user) { userId = sr.data.user.id; currentUser.id = userId; }
       } catch(e) {}
     }
-    if (!userId) { toast('Kon gebruiker niet verifiëren, log opnieuw in'); return; }
+    if (!userId) { toast(i18n('toast.user_verify_failed', 'Kon gebruiker niet verifiëren, log opnieuw in')); return; }
 
     var path = userId + '/avatar.jpg';
     var up = await sbClient.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
@@ -9404,7 +9869,7 @@ async function saveCroppedAvatar() {
     var imgEl = document.getElementById('profile-avatar-img');
     if (emoji) emoji.style.display = 'none';
     if (imgEl) { imgEl.src = avatarUrl; imgEl.style.display = 'block'; }
-    toast('✓ Profielfoto opgeslagen!');
+    toast(i18n('toast.profile_photo_saved', '✓ Profielfoto opgeslagen!'));
     closeAvatarCrop();
   } catch(e) {
     console.error('avatar save error', e);
