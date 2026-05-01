@@ -8415,18 +8415,50 @@ async function publishSale() {
       var geoAddr = isBuurt
         ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
         : (mainAddr + ', ' + _geoCountry);
-      var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC);
+      var _geoHeaders = { 'Accept-Language': 'nl,fr,de,en' };
+      var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC, { headers: _geoHeaders });
       geoData = await geoRes.json();
-      // Fallback-coördinaten per land zodat een mislukte geocode niet altijd
-      // bij Lelystad (52.3, 5.0) terechtkomt voor BE/FR/DE-bezoekers. Gebruikt
-      // de listing-country, niet de TLD-country, zodat een NL-bezoeker die in
-      // BE plaatst bij Brussel uitkomt.
-      var _geoFallback = ({ NL:[52.3,5.0], BE:[50.85,4.35], FR:[48.85,2.35], DE:[52.52,13.40] })[currentListingCountry] || [52.3,5.0];
-      lat = geoData.length ? +geoData[0].lat : _geoFallback[0];
-      lng = geoData.length ? +geoData[0].lon : _geoFallback[1];
-      cityName = (geoData.length && geoData[0].address)
+      // Als het volledige adres geen resultaat geeft, probeer een vereenvoudigde
+      // query met alleen postcode + stad. Dit helpt bij Belgische adressen waarbij
+      // schrijfwijzen, sub-gemeenten (bv. Wondelgem = deelgemeente Gent) of
+      // afwijkende straatnaamnoteringen de Nominatim-match blokkeren.
+      if (!geoData.length && currentListingCountry !== 'NL') {
+        var _pcFallback = isBuurt ? (buurtAdressen[0].pc || '') : '';
+        if (!_pcFallback) {
+          var _pcEx = extractPostcode(isBuurt ? (buurtAdressen[0].addr || '') : mainAddr, currentListingCountry);
+          if (_pcEx) _pcFallback = _pcEx.pc;
+        }
+        var _cityFallback2 = extractCity(isBuurt ? (buurtAdressen[0].addr || '') : mainAddr);
+        var _simpleGeoQuery = [_pcFallback, _cityFallback2 !== 'Onbekend' ? _cityFallback2 : '', _geoCountry].filter(Boolean).join(', ');
+        if (_simpleGeoQuery.replace(/,\s*/g, '').trim().length > 0) {
+          var geoRes2 = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(_simpleGeoQuery) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC, { headers: _geoHeaders });
+          var geoData2 = await geoRes2.json();
+          if (geoData2.length) geoData = geoData2;
+        }
+      }
+      if (!geoData.length) {
+        hideL();
+        clearPublishStatus();
+        toast(i18n('toast.geocode_failed', '❌ Adres niet herkend. Controleer het adres en probeer opnieuw.'));
+        return;
+      }
+      lat = +geoData[0].lat;
+      lng = +geoData[0].lon;
+      cityName = (geoData[0].address)
         ? (geoData[0].address.city || geoData[0].address.town || geoData[0].address.village || geoData[0].address.municipality || extractCity(mainAddr))
         : extractCity(mainAddr);
+    }
+
+    // Validatie: coördinaten moeten binnen een redelijke bounding box liggen.
+    // Blokkeert opslaan als gecachte of geocoded coords buiten het verwachte
+    // gebied vallen (bv. door een bug of een adres in het verkeerde land).
+    var _bboxMap = { NL:[50.5,53.7,3.2,7.3], BE:[49.5,51.6,2.5,6.5], FR:[41.0,51.3,-5.2,9.7], DE:[47.3,55.1,5.9,15.1] };
+    var _bb = _bboxMap[currentListingCountry] || _bboxMap.NL;
+    if (lat < _bb[0] || lat > _bb[1] || lng < _bb[2] || lng > _bb[3]) {
+      hideL();
+      clearPublishStatus();
+      toast(i18n('toast.geocode_outside', '❌ Adres lijkt niet in ' + lcCountryName() + ' te liggen. Pas het adres aan.'));
+      return;
     }
 
     // Categorie mapping voor Supabase
@@ -8510,10 +8542,23 @@ async function publishSale() {
           var dl = +rowEl.dataset.lat, dn = +rowEl.dataset.lng;
           if (!isNaN(dl) && !isNaN(dn)) return Promise.resolve({ lat: dl, lng: dn });
         }
-        return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', ' + _geoCountry) + '&format=json&limit=1&countrycodes=' + _geoCC)
+        var _bvQuery = encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', ' + _geoCountry);
+        var _bvHdr = { 'Accept-Language': 'nl,fr,de,en' };
+        return fetch('https://nominatim.openstreetmap.org/search?q=' + _bvQuery + '&format=json&limit=1&countrycodes=' + _geoCC, { headers: _bvHdr })
           .then(function(r) { return r.json(); })
-          .then(function(d) { return { lat: d.length ? +d[0].lat : lat, lng: d.length ? +d[0].lon : lng }; })
-          .catch(function() { return { lat: lat, lng: lng }; });
+          .then(function(d) {
+            if (d.length) return { lat: +d[0].lat, lng: +d[0].lon, ok: true };
+            // Vereenvoudigde fallback-query: postcode + stad (geen straatnaam)
+            if (currentListingCountry !== 'NL' && (a.pc || a.addr)) {
+              var _bvSimple = [a.pc || '', a.addr.split(',')[0] || '', _geoCountry].filter(Boolean).join(', ');
+              return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(_bvSimple) + '&format=json&limit=1&countrycodes=' + _geoCC, { headers: _bvHdr })
+                .then(function(r2) { return r2.json(); })
+                .then(function(d2) { return d2.length ? { lat: +d2[0].lat, lng: +d2[0].lon, ok: true } : { lat: lat, lng: lng, ok: false }; })
+                .catch(function() { return { lat: lat, lng: lng, ok: false }; });
+            }
+            return { lat: lat, lng: lng, ok: false };
+          })
+          .catch(function() { return { lat: lat, lng: lng, ok: false }; });
       });
       var extraCoords = await Promise.all(geoPromises);
 
