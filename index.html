@@ -5352,7 +5352,10 @@ function initMap() {
       tap: false,
       scrollWheelZoom: true,
       dragging: true
-    }).setView([52.3, 5.3], 7);
+    }).setView(
+      YG_COUNTRY === 'BE' ? [50.65, 4.35] : [52.3, 5.3],
+      YG_COUNTRY === 'BE' ? 8 : 7
+    );
     // CARTO Voyager tiles: gratis, geen API key, bedoeld voor productie.
     // OSM's eigen tile-servers blokkeren third-party apps bij meer verkeer.
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -8367,8 +8370,10 @@ async function publishSale() {
       var parts = addr.split(',').map(function(s){return s.trim();}).filter(Boolean);
       if (parts.length < 2) return 'Onbekend';
       var last = parts[parts.length - 1];
-      if (/nederland|netherlands/i.test(last)) last = parts[parts.length - 2] || 'Onbekend';
-      last = last.replace(/^\d{4}\s?[A-Z]{2}\s+/i, '').trim();
+      if (/nederland|netherlands|belgi[eë]|belgium|belgique|france|frankrijk|deutschland|duitsland/i.test(last)) {
+        last = parts[parts.length - 2] || 'Onbekend';
+      }
+      last = last.replace(/^\d{4}\s?[A-Z]{0,2}\s+/i, '').trim();
       return last || 'Onbekend';
     }
 
@@ -9442,7 +9447,7 @@ function closeLogin() { document.getElementById('loginOv').classList.remove('ope
 // ══════════════════════════════════════════════════
 // FALLBACK MAP (when Leaflet CDN fails)
 // ══════════════════════════════════════════════════
-var fbState = { lat: 52.3, lng: 5.3, zoom: 7 };
+var fbState = YG_COUNTRY === 'BE' ? { lat: 50.65, lng: 4.35, zoom: 8 } : { lat: 52.3, lng: 5.3, zoom: 7 };
 
 function tile2px(lat, lng, zoom, cx, cy, w, h) {
   var n = Math.pow(2, zoom);
