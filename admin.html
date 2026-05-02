@@ -322,6 +322,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="nav-tab" onclick="switchTab('photos',this)">📸 Foto's</div>
     <div class="nav-tab" onclick="switchTab('log',this)">📜 Log</div>
     <div class="nav-tab" onclick="switchTab('errors',this)">🐛 Fouten <span class="tab-badge" id="error-badge" style="display:none">0</span></div>
+    <div class="nav-tab" onclick="switchTab('broadcast',this)">📢 Berichten</div>
     <div class="nav-tab" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
   </div>
 
@@ -511,6 +512,58 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         </div>
         <div id="errors-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
       </div>
+    </div>
+
+    <!-- ════ BERICHTEN (BROADCAST) ════ -->
+    <div class="tab-pane" id="tab-broadcast">
+
+      <div class="settings-card">
+        <h3>📢 Nieuwsbrief / broadcast versturen</h3>
+        <p>Stuur een e-mail naar alle gebruikers die zich hebben ingeschreven voor de nieuwsbrief (<code>marketing_email_opt_in = true</code>). Je kunt filteren op land. De ontvangers zien jouw mail onder afzender <code>info@mail.yardigo.nl</code> met een uitschrijflink onderaan.</p>
+
+        <div style="margin-top:14px">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Onderwerp</label>
+          <input type="text" id="bc-subject" maxlength="120" placeholder="Bijv. Lente-update: nieuwe filters &amp; tips" oninput="bcUpdatePreview()" style="width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;outline:none">
+        </div>
+
+        <div style="margin-top:12px">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Berichttekst</label>
+          <textarea class="setting-input" id="bc-body" rows="9" placeholder="Schrijf hier je bericht. Lege regels worden paragrafen." oninput="bcUpdatePreview()" style="min-height:160px"></textarea>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px"><span id="bc-charcount">0</span> tekens</div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Doelgroep</label>
+            <select class="filter-sel" id="bc-country" onchange="bcRefreshCount()">
+              <option value="all" selected>🌍 Alle landen</option>
+              <option value="NL">🇳🇱 Alleen Nederland</option>
+              <option value="BE">🇧🇪 Alleen België</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Ontvangers</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="bc-count" style="font-size:22px;font-weight:800;color:var(--terra);line-height:1">—</span>
+              <span style="font-size:12px;color:var(--muted)" id="bc-count-sub">gebruikers ingeschreven</span>
+              <button class="btn btn-ghost btn-sm" onclick="bcRefreshCount()" style="margin-left:6px">🔄</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box" id="bc-result" style="display:none;margin-top:14px"></div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="bcTogglePreview()" id="bc-preview-btn">👁️ Voorbeeld tonen</button>
+          <button class="btn btn-terra" onclick="bcSendBroadcast()" id="bc-send-btn">📨 Verstuur naar <span id="bc-send-count">—</span> ontvangers</button>
+        </div>
+
+        <div id="bc-preview" style="display:none;margin-top:14px;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;background:#F9F5EF">
+          <div style="padding:8px 12px;background:#E07B39;color:white;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase">Voorbeeld (zoals ontvanger het ziet)</div>
+          <div id="bc-preview-body" style="padding:14px"></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ════ INSTELLINGEN ════ -->
@@ -906,6 +959,7 @@ function switchTab(name,el){
   if(name==='moderation') renderModerationTable();
   if(name==='errors') loadErrors();
   if(name==='analytics') loadAnalytics();
+  if(name==='broadcast') bcRefreshCount();
 }
 
 // ══════════════════════════════════════════════════
@@ -1803,6 +1857,154 @@ async function clearOldErrors() {
   if (error) { toast('❌ ' + error.message); return; }
   toast('✅ Oude foutlogs verwijderd');
   loadErrors();
+}
+
+// ══════════════════════════════════════════════════
+// BROADCAST (📢 Berichten)
+// ══════════════════════════════════════════════════
+function bcEscape(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function bcBodyToHtml(body){
+  return body.split(/\n\s*\n/).map(function(p){
+    return '<p style="margin:0 0 14px;color:#2C2416;line-height:1.6;font-size:14px">'+bcEscape(p).replace(/\n/g,'<br>')+'</p>';
+  }).join('');
+}
+function bcUpdatePreview(){
+  var subj = (document.getElementById('bc-subject').value || '').trim();
+  var body = (document.getElementById('bc-body').value || '').trim();
+  var cc = document.getElementById('bc-charcount');
+  if (cc) cc.textContent = body.length;
+  var prev = document.getElementById('bc-preview-body');
+  if (!prev) return;
+  if (!subj && !body) {
+    prev.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Vul onderwerp en bericht in om een voorbeeld te zien.</div>';
+    return;
+  }
+  prev.innerHTML =
+    '<div style="background:#E07B39;border-radius:10px 10px 0 0;padding:14px 16px">' +
+      '<div style="font-size:18px;font-weight:800;color:white">YardiGo</div>' +
+      '<div style="font-size:11px;color:rgba(255,255,255,.85)">Garagesales bij jou in de buurt</div>' +
+    '</div>' +
+    '<div style="background:white;border-radius:0 0 10px 10px;padding:18px 18px;border:1px solid var(--border);border-top:none">' +
+      '<h2 style="font-size:17px;margin:0 0 12px;color:#2C2416">'+bcEscape(subj || '(onderwerp)')+'</h2>' +
+      '<p style="margin:0 0 12px;color:#2C2416;line-height:1.55;font-size:14px">Hoi (voornaam),</p>' +
+      bcBodyToHtml(body || '(berichttekst)') +
+      '<p style="margin:18px 0 0;color:#7A6E62;font-size:12px">Veel zoek- en verkoopplezier,<br><strong>Het YardiGo-team</strong></p>' +
+    '</div>' +
+    '<div style="text-align:center;color:#7A6E62;font-size:10px;margin-top:10px">Uitschrijven voor deze nieuwsbrief</div>';
+}
+function bcTogglePreview(){
+  var p = document.getElementById('bc-preview');
+  var b = document.getElementById('bc-preview-btn');
+  if (!p || !b) return;
+  if (p.style.display === 'none' || !p.style.display) {
+    p.style.display = 'block';
+    b.textContent = '👁️ Voorbeeld verbergen';
+    bcUpdatePreview();
+  } else {
+    p.style.display = 'none';
+    b.textContent = '👁️ Voorbeeld tonen';
+  }
+}
+async function bcRefreshCount(){
+  var sel = document.getElementById('bc-country');
+  if (!sel) return;
+  var country = sel.value;
+  var elCount = document.getElementById('bc-count');
+  var elSendCount = document.getElementById('bc-send-count');
+  if (elCount) elCount.textContent = '…';
+  if (elSendCount) elSendCount.textContent = '…';
+  try {
+    var q = sb.from('profiles').select('id', { count: 'exact', head: true }).eq('marketing_email_opt_in', true);
+    if (country !== 'all') q = q.eq('country', country);
+    var res = await q;
+    if (res.error) throw res.error;
+    var n = (typeof res.count === 'number' ? res.count : 0);
+    if (elCount) elCount.textContent = String(n);
+    if (elSendCount) elSendCount.textContent = String(n);
+    var sub = document.getElementById('bc-count-sub');
+    if (sub) {
+      sub.textContent = (country === 'all' ? 'gebruikers ingeschreven' :
+                         country === 'NL' ? 'NL-gebruikers ingeschreven' :
+                         'BE-gebruikers ingeschreven');
+    }
+  } catch (e) {
+    if (elCount) elCount.textContent = '?';
+    if (elSendCount) elSendCount.textContent = '?';
+  }
+}
+async function bcSendBroadcast(){
+  var btn = document.getElementById('bc-send-btn');
+  var resultBox = document.getElementById('bc-result');
+  var subject = (document.getElementById('bc-subject').value || '').trim();
+  var body = (document.getElementById('bc-body').value || '').trim();
+  var country = document.getElementById('bc-country').value;
+  if (!subject) { alert('Onderwerp is verplicht.'); return; }
+  if (!body)    { alert('Berichttekst is verplicht.'); return; }
+
+  var countTxt = (document.getElementById('bc-count').textContent || '').trim();
+  var confirmMsg = 'Weet je zeker dat je deze nieuwsbrief naar ' + countTxt + ' ontvangers wilt versturen?\n\n' +
+                   'Onderwerp: ' + subject + '\n' +
+                   'Doelgroep: ' + (country === 'all' ? 'Alle landen' : country);
+  if (!confirm(confirmMsg)) return;
+
+  btn.disabled = true;
+  var originalLabel = btn.innerHTML;
+  btn.innerHTML = '⏳ Versturen…';
+  if (resultBox) { resultBox.style.display = 'none'; resultBox.innerHTML = ''; }
+
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if (!session || !session.access_token) {
+      throw new Error('Geen geldige sessie. Log opnieuw in.');
+    }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/send-broadcast', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({
+        subject: subject,
+        body: body,
+        country: country,
+      }),
+    });
+    var data = null;
+    try { data = await res.json(); } catch(_) { data = null; }
+    if (!res.ok) {
+      var msg = (data && data.error) ? data.error : ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+    var sent = data && typeof data.sent === 'number' ? data.sent : 0;
+    var failed = data && typeof data.failed === 'number' ? data.failed : 0;
+    var recipients = data && typeof data.recipients === 'number' ? data.recipients : 0;
+    if (resultBox) {
+      resultBox.style.display = 'block';
+      resultBox.innerHTML =
+        '<strong style="color:var(--green)">✅ Verstuurd</strong><br>' +
+        'Ontvangers: <strong>' + recipients + '</strong> · ' +
+        'Verzonden: <strong>' + sent + '</strong>' +
+        (failed > 0 ? ' · <span style="color:var(--red)">Mislukt: ' + failed + '</span>' : '') +
+        (data && data.errors && data.errors.length ?
+          '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px">Foutdetails</summary><pre style="font-size:11px;background:var(--bg2);padding:8px;border-radius:6px;overflow:auto">' +
+          bcEscape(data.errors.join('\n')) + '</pre></details>' : '');
+    }
+    // Refresh teller (kan veranderen door uitschrijvingen tussendoor)
+    bcRefreshCount();
+  } catch (e) {
+    if (resultBox) {
+      resultBox.style.display = 'block';
+      resultBox.innerHTML = '<strong style="color:var(--red)">❌ Mislukt</strong><br>' + bcEscape(e.message || String(e));
+    } else {
+      alert('Mislukt: ' + (e.message || e));
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalLabel;
+  }
 }
 
 document.addEventListener('keydown',function(e){
