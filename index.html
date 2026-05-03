@@ -385,6 +385,8 @@ body.dark .yg-footer{border-top-color:var(--border);}
 .ctag.particulier{background:var(--amber-light);color:#7A5A10;}
 .ctag.buurt{background:#FDF0E7;color:#A04A18;}
 .ctag.evenement{background:#EAF2EC;color:#2A5038;}
+.ctag.tag-more,.pop-tag.tag-more{cursor:pointer;background:#EFEAE0 !important;color:#5C4F38 !important;border:1px dashed #C9BFA8;}
+body.dark .ctag.tag-more,body.dark .pop-tag.tag-more{background:#2A2418 !important;color:#BFB497 !important;border-color:#5C4F38;}
 .card-foot{display:flex;align-items:center;gap:8px;}
 .c-time{font-size:10px;font-weight:600;flex:1;}
 .c-time.particulier{color:var(--amber);}
@@ -2276,6 +2278,53 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Toont een lijst van categorie-tags met een limiet en een "+N meer"-chip die
+// op klik de overige tags uitklapt. Gebruikt overal waar er categorieën in een
+// kleine ruimte staan (kaartpopup, lijstkaarten, detailpagina). NIET gebruiken
+// in het advertentie-formulier — daar moeten alle categorieën gewoon zichtbaar
+// blijven om aan te kunnen vinken.
+function renderTagChips(tags, type, opts) {
+  opts = opts || {};
+  var limit = typeof opts.limit === 'number' ? opts.limit : 3;
+  var chipBaseClass = opts.chipClass || 'ctag';
+  var chipClass = chipBaseClass + (type ? ' ' + type : '');
+  if (!tags || !tags.length) return '';
+  // Unieke tags behouden, in originele volgorde
+  var unique = [];
+  tags.forEach(function(tg) { if (tg && unique.indexOf(tg) === -1) unique.push(tg); });
+  var groupId = 'tg-' + Math.random().toString(36).substr(2, 9);
+  if (unique.length <= limit) {
+    return unique.map(function(tg) {
+      var inline = opts.tagStyle ? ' style="' + opts.tagStyle + '"' : '';
+      return '<span class="' + chipClass + '"' + inline + '>' + escapeHtml(tg) + '</span>';
+    }).join('');
+  }
+  var visible = unique.slice(0, limit);
+  var hidden = unique.slice(limit);
+  var html = visible.map(function(tg) {
+    var inline = opts.tagStyle ? ' style="' + opts.tagStyle + '"' : '';
+    return '<span class="' + chipClass + '"' + inline + '>' + escapeHtml(tg) + '</span>';
+  }).join('');
+  html += hidden.map(function(tg) {
+    var inline = opts.tagStyle ? opts.tagStyle + ';' : '';
+    return '<span class="' + chipClass + ' tag-hidden" data-tg="' + groupId + '" style="' + inline + 'display:none">' + escapeHtml(tg) + '</span>';
+  }).join('');
+  var moreLabel = '+' + hidden.length + ' ' + i18n('tags.more', 'meer');
+  html += '<span class="' + chipClass + ' tag-more" data-tg="' + groupId + '" onclick="toggleTagsMore(this);event.stopPropagation()">' + escapeHtml(moreLabel) + '</span>';
+  return html;
+}
+
+function toggleTagsMore(el) {
+  var groupId = el.getAttribute('data-tg');
+  if (!groupId) return;
+  var parent = el.parentNode;
+  if (!parent) return;
+  parent.querySelectorAll('.tag-hidden[data-tg="' + groupId + '"]').forEach(function(s) {
+    s.style.display = '';
+  });
+  el.style.display = 'none';
+}
+
 // ══════════════════════════════════════════════════
 // SUPABASE CLIENT
 // ══════════════════════════════════════════════════
@@ -2928,6 +2977,7 @@ var I18N = {
     'filter.clear': '✕ Wis filter',
     // Lijst
     'list.count_found': 'gevonden',
+    'tags.more': 'meer',
     // Plaats-flow extra
     'publish.title_placeholder': "Titel bijv. 'Zolder opruiming'",
     'publish.name_display': '👤 Naam weergeven als',
@@ -3455,6 +3505,7 @@ var I18N = {
     'filter.clear': '✕ Clear filter',
     // List view
     'list.count_found': 'found',
+    'tags.more': 'more',
     // Publish flow
     'publish.title_placeholder': "Title e.g. 'Attic clearance'",
     'publish.name_display': '👤 Show name as',
@@ -3982,6 +4033,7 @@ var I18N = {
     'filter.clear': '✕ Effacer le filtre',
     // Vue liste
     'list.count_found': 'trouvées',
+    'tags.more': 'autres',
     // Plaats-flow
     'publish.title_placeholder': "Titre p.ex. 'Vide-grenier'",
     'publish.name_display': '👤 Afficher le nom comme',
@@ -5455,9 +5507,9 @@ function createListingPopup(sale) {
   var _typeLabel = i18n('type.' + sale.type, t.label);
   var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : _typeLabel;
   var fav = favorites.has(sale.id);
-  var tagsHtml = (sale.tags || []).map(function(tg) {
-    return '<span class="pop-tag ' + sale.type + '">' + tg + '</span>';
-  }).join('');
+  // Beperk categorie-tags in popup tot 3 + "+N meer" — voorkomt dat veel
+  // categorieën de popup-hoogte uit balans halen.
+  var tagsHtml = renderTagChips(sale.tags || [], sale.type, { chipClass: 'pop-tag', limit: 3 });
   var _popCity = (sale.address || '').split(',').slice(-1)[0].trim();
   var addrHtml;
   if (isGuest) {
@@ -5619,7 +5671,13 @@ function renderMarkers() {
   // Buurtverkoop markers met MarkerClusterGroup
   Object.values(buurtverkopen).forEach(function(bv) {
     var group = L.markerClusterGroup({
-      maxClusterRadius: 60,
+      maxClusterRadius: 40,
+      // Bij genoeg inzoomen krijgt elk adres een eigen pin op de echte locatie,
+      // geen cluster meer. Zo ziet de gebruiker per huis een aparte marker.
+      disableClusteringAtZoom: 17,
+      // Niet "spiderfyen" (kunstmatig uitspreiden) — pins moeten op hun echte
+      // coördinaten blijven staan.
+      spiderfyOnMaxZoom: false,
       // Eigen click-flow: eerst overzichts-popup tonen, dan optioneel inzoomen.
       // Zo ziet de gebruiker direct hoeveel huizen er bij deze buurtverkoop horen.
       zoomToBoundsOnClick: false,
@@ -5864,30 +5922,61 @@ function fmtDate(d) {
 }
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
+  // Groepeer per buurtverkoop zodat elke buurtverkoop als 1 item geldt.
+  var bvGroups = groupByNeighborhoodSale(visible);
+  var losseListings = visible.filter(function(l) { return !l.neighborhood_sale_id; });
   var el = document.getElementById('lcount');
   if (el) {
     var word = i18n('list.count_found', 'gevonden');
-    el.textContent = visible.length + ' ' + word;
+    // 1 buurtverkoop met N adressen telt als 1 advertentie.
+    var totalCount = Object.keys(bvGroups).length + losseListings.length;
+    el.textContent = totalCount + ' ' + word;
   }
-  // Sorteer de lijst op basis van geselecteerde modus
-  visible = visible.slice();
-  if (listSortMode === 'newest') {
-    visible.sort(function(a,b) {
-      var ta = a.created_at ? new Date(a.created_at).getTime() : 0;
-      var tb = b.created_at ? new Date(b.created_at).getTime() : 0;
-      if (tb !== ta) return tb - ta;
-      // Fallback: numerieke ID descending
-      return (typeof b.id === 'number' && typeof a.id === 'number') ? b.id - a.id : 0;
-    });
-  } else if (listSortMode === 'date-desc') {
-    visible.sort(function(a,b) { return new Date(b.date) - new Date(a.date); });
-  } else if (listSortMode === 'date-asc') {
-    visible.sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
-  } else if (listSortMode === 'interest') {
-    visible.sort(function(a,b) { return (b.interested||0) - (a.interested||0); });
-  } else if (listSortMode === 'nearby' && userLocation) {
-    visible.sort(function(a,b) { return dist(userLocation,a) - dist(userLocation,b); });
+  // Bouw één gemengde itemlijst: buurtverkopen + losse listings.
+  // De gekozen sortering bepaalt de volledige volgorde — buurtverkopen krijgen
+  // niet langer automatisch een vaste positie bovenaan.
+  var items = [];
+  Object.values(bvGroups).forEach(function(bv) {
+    var createdVals = bv.listings.map(function(l) { return l.created_at ? new Date(l.created_at).getTime() : 0; });
+    var dateVals = bv.listings.map(function(l) { return l.date ? new Date(l.date).getTime() : 0; }).filter(function(v) { return v > 0; });
+    bv._sortCreated = createdVals.length ? Math.max.apply(null, createdVals) : 0;
+    bv._sortDateMax = dateVals.length ? Math.max.apply(null, dateVals) : 0;
+    bv._sortDateMin = dateVals.length ? Math.min.apply(null, dateVals) : Infinity;
+    bv._sortInterest = bv.listings.reduce(function(sum, l) { return sum + (l.interested || 0); }, 0);
+    if (userLocation) {
+      bv._sortDistance = Math.min.apply(null, bv.listings.map(function(l) { return dist(userLocation, l); }));
+    } else {
+      bv._sortDistance = Infinity;
+    }
+    items.push({ kind: 'bv', bv: bv });
+  });
+  losseListings.forEach(function(s) { items.push({ kind: 'listing', s: s }); });
+
+  function sortVal(item, mode) {
+    if (item.kind === 'bv') {
+      if (mode === 'newest') return item.bv._sortCreated;
+      if (mode === 'date-desc') return item.bv._sortDateMax;
+      if (mode === 'date-asc') return item.bv._sortDateMin;
+      if (mode === 'interest') return item.bv._sortInterest;
+      if (mode === 'nearby') return item.bv._sortDistance;
+    } else {
+      var s = item.s;
+      if (mode === 'newest') return s.created_at ? new Date(s.created_at).getTime() : 0;
+      if (mode === 'date-desc') return s.date ? new Date(s.date).getTime() : 0;
+      if (mode === 'date-asc') return s.date ? new Date(s.date).getTime() : Infinity;
+      if (mode === 'interest') return s.interested || 0;
+      if (mode === 'nearby') return userLocation ? dist(userLocation, s) : Infinity;
+    }
+    return 0;
   }
+  items.sort(function(a, b) {
+    var av = sortVal(a, listSortMode);
+    var bv2 = sortVal(b, listSortMode);
+    if (listSortMode === 'date-asc' || listSortMode === 'nearby') {
+      return av - bv2;
+    }
+    return bv2 - av;
+  });
   var list = document.getElementById('cardList');
   if (!list) return;
   if (!visible.length) {
@@ -5921,67 +6010,72 @@ function renderList() {
     list.querySelectorAll('.clr-dist').forEach(function(el) { el.addEventListener('click', function() { pickR(9999); }); });
     return;
   }
-  // Groepeer per buurtverkoop
-  var bvGroups = groupByNeighborhoodSale(visible);
-  var losseListings = visible.filter(function(l) { return !l.neighborhood_sale_id; });
-
+  // Render in volgorde van gesorteerde items (buurtverkopen ingemengd, niet
+  // automatisch bovenaan). Buurtverkopen blijven als 1 uitklapbare kaart staan.
   var html = '';
-
-  // Buurtverkopen als uitklapbare kaart
-  Object.values(bvGroups).forEach(function(bv) {
-    var bvDate = fmtDate(bv.info.date);
-    var bvId = escapeHtml(bv.info.id);
-    html += '<div class="card bv-list-card">'
-      // Klik-header (toggle)
-      + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
-      + '<div class="bv-list-icon">🏘️</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-      + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
-      + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
-      + '</div>'
-      + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ Buurtverkoop</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
-      + bv.listings.slice(0,3).map(function(l) {
-          return (l.tags||[]).slice(0,1).map(function(tg) {
-            return '<span class="ctag buurt">' + escapeHtml(tg) + '</span>';
-          }).join('');
-        }).join('')
-      + '</div>'
-      + '</div>'
-      + '<div class="bv-list-chevron" id="bv-chev-' + bvId + '">›</div>'
-      + '</div>'
-      // Uitklapbare adressenlijst
-      + '<div class="bv-list-addresses" id="bv-body-' + bvId + '" style="display:none">'
-      + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
-      + bv.listings.map(function(listing) {
-          var fav = favorites.has(listing.id);
-          var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
-          var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
-          var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
-            return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
-          }).join('');
-          return '<div class="bv-addr-row" id="bv-addr-' + escapeHtml(listing.id) + '" onclick="openDetail(' + idAttr + ')">'
-            + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
-            + '<div style="flex:1;min-width:0">'
-            + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
-            + '<div style="display:flex;gap:6px;margin-top:2px">' + tags + '</div>'
-            + '</div>'
-            + '<button class="bv-fav-btn" onclick="event.stopPropagation();toggleFav(' + idAttr + ')" title="Favoriet / route">'
-            + (fav ? '⭐' : '☆') + '</button>'
-            + '</div>';
-        }).join('')
-      + '</div>'
-      + '</div>';
-  });
-
-  // Losse listings
-  losseListings.forEach(function(s, i) {
-    html += createListingCard(s, i);
+  items.forEach(function(item, idx) {
+    if (item.kind === 'bv') {
+      html += renderBvCard(item.bv);
+    } else {
+      html += createListingCard(item.s, idx);
+    }
   });
 
   list.innerHTML = html;
 
+}
+
+// Eén buurtverkoop = 1 uitklapbare kaart in de lijst. Adressen verschijnen
+// onder de hoofdkaart wanneer je hem opent.
+function renderBvCard(bv) {
+  var bvDate = fmtDate(bv.info.date);
+  var bvId = escapeHtml(bv.info.id);
+  // Verzamel unieke categorieën van alle deelnemers, beperk tot 3 + "+N meer".
+  var allTags = [];
+  bv.listings.forEach(function(l) {
+    (l.tags || []).forEach(function(tg) {
+      if (allTags.indexOf(tg) === -1) allTags.push(tg);
+    });
+  });
+  var headerTags = renderTagChips(allTags, 'buurt');
+  return '<div class="card bv-list-card">'
+    // Klik-header (toggle)
+    + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
+    + '<div class="bv-list-icon">🏘️</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+    + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
+    + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ Buurtverkoop</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
+    + headerTags
+    + '</div>'
+    + '</div>'
+    + '<div class="bv-list-chevron" id="bv-chev-' + bvId + '">›</div>'
+    + '</div>'
+    // Uitklapbare adressenlijst
+    + '<div class="bv-list-addresses" id="bv-body-' + bvId + '" style="display:none">'
+    + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
+    + bv.listings.map(function(listing) {
+        var fav = favorites.has(listing.id);
+        var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
+        var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
+        var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
+          return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
+        }).join('');
+        return '<div class="bv-addr-row" id="bv-addr-' + escapeHtml(listing.id) + '" onclick="openDetail(' + idAttr + ')">'
+          + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
+          + '<div style="display:flex;gap:6px;margin-top:2px">' + tags + '</div>'
+          + '</div>'
+          + '<button class="bv-fav-btn" onclick="event.stopPropagation();toggleFav(' + idAttr + ')" title="Favoriet / route">'
+          + (fav ? '⭐' : '☆') + '</button>'
+          + '</div>';
+      }).join('')
+    + '</div>'
+    + '</div>';
 }
 
 function toggleBvCard(bvId) {
@@ -6001,7 +6095,9 @@ function createListingCard(s, i) {
   var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : _typeLabelI;
   var _thumbIcon = getSaleIcon(s);
   var d2 = (Math.random() * 8 + 0.5).toFixed(1);
-  var tags = (s.tags || []).map(function(tg) { return '<span class="ctag ' + s.type + '">' + escapeHtml(tg) + '</span>'; }).join('');
+  // Beperk categorieën in lijstkaart tot 3 + "+N meer" zodat de kaart-hoogte
+  // niet uitloopt wanneer een advertentie veel categorieën heeft.
+  var tags = renderTagChips(s.tags || [], s.type, { limit: 3 });
   // Adres is server-side al verborgen (NULL) voor gasten via get_listings_for_user(),
   // én voor ingelogde bezoekers wanneer de verkoper voor 'pas 24u vooraf' koos en het venster nog niet is geopend.
   var city = escapeHtml((s.city || (s.address || '').split(',').slice(-1)[0]).trim());
@@ -6224,12 +6320,13 @@ function openDetail(id) {
       }
     }
   }
-  // Tags
+  // Tags — beperk op detailpagina tot 5 + "+N meer" voor consistentie met
+  // popup/lijstkaart. Detailpagina heeft meer ruimte dan de popup, dus iets
+  // ruimer dan elders.
   var tagColors = { particulier:'#FEF5E4', buurt:'#FDF0E7', evenement:'#EAF2EC' };
   var tagText = { particulier:'#7A5A10', buurt:'#A04A18', evenement:'#2A5038' };
-  document.getElementById('det-tags').innerHTML = (s.tags || []).map(function(tg) {
-    return '<span style="background:' + tagColors[s.type] + ';color:' + tagText[s.type] + ';border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600">' + escapeHtml(tg) + '</span>';
-  }).join('');
+  var detTagStyle = 'background:' + tagColors[s.type] + ';color:' + tagText[s.type] + ';border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600';
+  document.getElementById('det-tags').innerHTML = renderTagChips(s.tags || [], s.type, { limit: 5, tagStyle: detTagStyle });
   // Desc
   var dw = document.getElementById('det-desc-wrap'), de = document.getElementById('det-desc');
   if (s.desc && s.desc.trim()) { de.textContent = s.desc; dw.style.display = 'block'; } else { dw.style.display = 'none'; }
