@@ -5525,20 +5525,27 @@ function createListingPopup(sale) {
     var photoCount = sale.photos.length;
     var popId = 'pop-sw-' + sale.id;
     if (!isGuest && photoCount > 1) {
-      // Swipeable carousel voor ingelogde gebruikers
+      // Swipeable carousel voor ingelogde gebruikers — volledige foto in beeld
+      // (contain) met dezelfde foto blurred als achtergrondvulling.
       var imgs = sale.photos.map(function(src) {
-        return '<img src="' + src + '" style="min-width:100%;width:100%;height:130px;object-fit:cover;flex-shrink:0" loading="lazy">';
+        var safe = escapeHtml(src);
+        return '<div style="position:relative;min-width:100%;width:100%;height:130px;overflow:hidden;flex-shrink:0;background:#1a1a1a">'
+          + '<img src="' + safe + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(20px);transform:scale(1.15);opacity:.55" aria-hidden="true" loading="lazy">'
+          + '<img src="' + safe + '" style="position:relative;width:100%;height:100%;object-fit:contain;display:block" loading="lazy">'
+          + '</div>';
       }).join('');
       var dots = sale.photos.map(function(_, i) {
         return '<div style="width:6px;height:6px;border-radius:50%;background:' + (i===0?'white':'rgba(255,255,255,.45)') + ';transition:background .2s"></div>';
       }).join('');
-      photoHtml = '<div id="' + popId + '" data-idx="0" data-count="' + photoCount + '" style="position:relative;height:130px;overflow:hidden;background:#F0EBE3">'
+      photoHtml = '<div id="' + popId + '" data-idx="0" data-count="' + photoCount + '" style="position:relative;height:130px;overflow:hidden;background:#1a1a1a">'
         + '<div class="pop-slides" style="display:flex;height:130px;transition:transform .3s;will-change:transform">' + imgs + '</div>'
         + '<div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;pointer-events:none">' + dots + '</div>'
         + '</div>';
     } else {
-      photoHtml = '<div style="position:relative;height:130px;overflow:hidden;background:#F0EBE3">'
-        + '<img src="' + sale.photos[0] + '" style="width:100%;height:130px;object-fit:cover;display:block" loading="lazy">'
+      var _safeSrc = escapeHtml(sale.photos[0]);
+      photoHtml = '<div style="position:relative;height:130px;overflow:hidden;background:#1a1a1a">'
+        + '<img src="' + _safeSrc + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(20px);transform:scale(1.15);opacity:.55" aria-hidden="true" loading="lazy">'
+        + '<img src="' + _safeSrc + '" style="position:relative;width:100%;height:130px;object-fit:contain;display:block" loading="lazy">'
         + (photoCount > 1 ? '<div style="position:absolute;bottom:7px;right:8px;background:rgba(44,36,22,.65);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px">&#128247; ' + photoCount + '</div>' : '')
         + '</div>';
     }
@@ -6306,8 +6313,15 @@ function openDetail(id) {
   if (detDots) detDots.innerHTML = '';
   if (s.photos && s.photos.length) {
     noPhoto.style.display = 'none';
+    // Toon de volledige foto (object-fit: contain) zodat affiches met tekst
+    // niet meer afgesneden worden. De originele foto blurred op de
+    // achtergrond vult het frame netjes op zonder lelijke randen.
     photos.innerHTML = s.photos.map(function(src) {
-      return '<img src="' + src + '" style="min-width:100%;width:100%;height:200px;object-fit:cover;flex-shrink:0">';
+      var safe = escapeHtml(src);
+      return '<div style="position:relative;min-width:100%;width:100%;height:200px;overflow:hidden;flex-shrink:0;background:#1a1a1a">'
+        + '<img src="' + safe + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(22px);transform:scale(1.15);opacity:.55" aria-hidden="true">'
+        + '<img src="' + safe + '" style="position:relative;width:100%;height:100%;object-fit:contain;display:block">'
+        + '</div>';
     }).join('');
     photos.style.transform = 'translateX(0)';
     if (s.photos.length > 1) {
