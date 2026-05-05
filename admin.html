@@ -518,8 +518,8 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="tab-pane" id="tab-broadcast">
 
       <div class="settings-card">
-        <h3>📢 Nieuwsbrief / broadcast versturen</h3>
-        <p>Stuur een e-mail naar alle gebruikers die zich hebben ingeschreven voor de nieuwsbrief (<code>marketing_email_opt_in = true</code>). Je kunt filteren op land. De ontvangers zien jouw mail onder afzender <code>info@mail.yardigo.nl</code> met een uitschrijflink onderaan.</p>
+        <h3>📢 Update versturen aan gebruikers</h3>
+        <p>Stuur een service-update (releasenotes, belangrijke mededelingen, nieuwe features) naar alle gebruikers die in hun instellingen <em>YardiGo updates per e-mail</em> hebben aangezet (<code>marketing_email_opt_in = true</code>). Je kunt filteren op land. De ontvangers zien jouw mail onder afzender <code>info@mail.yardigo.nl</code> met een uitschrijflink onderaan. <strong>Geen marketing of promoties</strong> — alleen mededelingen over de dienst zelf, conform onze privacyverklaring.</p>
 
         <div style="margin-top:14px">
           <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Onderwerp</label>
@@ -545,7 +545,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
             <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Ontvangers</label>
             <div style="display:flex;align-items:center;gap:8px">
               <span id="bc-count" style="font-size:22px;font-weight:800;color:var(--terra);line-height:1">—</span>
-              <span style="font-size:12px;color:var(--muted)" id="bc-count-sub">gebruikers ingeschreven</span>
+              <span style="font-size:12px;color:var(--muted)" id="bc-count-sub">gebruikers met updates aan</span>
               <button class="btn btn-ghost btn-sm" onclick="bcRefreshCount()" style="margin-left:6px">🔄</button>
             </div>
           </div>
@@ -823,7 +823,7 @@ function getAutoBadges(user, userListings, allUsers){
   var sortedByDate=[...allUsers].sort(function(a,b){return new Date(a.created_at)-new Date(b.created_at);});
   var rank=sortedByDate.findIndex(function(u){return u.id===user.id;});
   if(rank>=0&&rank<50) badges.push('pioneer');
-  var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
+  var lbu=listingsPerUser(allListings);
   var mx=Math.max(1,...Object.values(lbu));
   if((lbu[user.id]||0)>=Math.max(3,mx)) badges.push('top');
   var today=new Date().toISOString().split('T')[0];
@@ -1160,6 +1160,37 @@ async function runCleanup(){
 }
 
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// DEDUP HELPER: buurtverkopen tellen als 1 verkoop
+// Geeft het aantal unieke "verkopen": losse listings
+// + unieke neighborhood_group_id's (buurtverkopen).
+// ══════════════════════════════════════════════════
+function countUniqueVerkopen(listings){
+  var groups=new Set();
+  var count=0;
+  listings.forEach(function(l){
+    if(l.neighborhood_group_id){
+      if(!groups.has(l.neighborhood_group_id)){groups.add(l.neighborhood_group_id);count++;}
+    } else {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Geeft unique verkopen per user_id als object {user_id: count}
+function listingsPerUser(listings){
+  var byUser={}; // user_id → Set van (listing.id voor losse, group_id voor buurt)
+  listings.forEach(function(l){
+    if(!l.user_id) return;
+    if(!byUser[l.user_id]) byUser[l.user_id]=new Set();
+    byUser[l.user_id].add(l.neighborhood_group_id||l.id);
+  });
+  var result={};
+  Object.keys(byUser).forEach(function(uid){result[uid]=byUser[uid].size;});
+  return result;
+}
+
 // DASHBOARD
 // ══════════════════════════════════════════════════
 async function loadDashboard(){
@@ -1173,11 +1204,13 @@ async function loadDashboard(){
   var lastWeek=listings.filter(function(l){var a=Date.now()-new Date(l.created_at);return a>=7*86400000&&a<14*86400000;});
   var weekDiff=thisWeek.length-lastWeek.length;
 
+  var totalUniek=countUniqueVerkopen(listings);
+  var activeUniek=countUniqueVerkopen(active);
   document.getElementById('stat-grid').innerHTML=
-    statCard('Totaal listings',listings.length,'In de database','')+
-    statCard('Actief',active.length,'Komende verkopen','accent')+
+    statCard('Totaal verkopen',totalUniek,'Unieke verkopen (buurtverkoop = 1)','')+
+    statCard('Actief',activeUniek,'Komende verkopen','accent')+
     statCard('Wachtrij',pending.length,pending.length>0?'⚠️ Wacht op goedkeuring':'Geen pending',pending.length>0?'warn':'')+
-    statCard('Vandaag',today24.length,today24.length===0?'⚠️ Geen nieuwe ads':'Nieuw',today24.length>0?'green':'');
+    statCard('Vandaag',countUniqueVerkopen(today24),today24.length===0?'⚠️ Geen nieuwe ads':'Nieuw',today24.length>0?'green':'');
 
   // Update moderatie badge
   var badge=document.getElementById('pending-badge');
@@ -1540,7 +1573,7 @@ async function loadUsers(){
 function renderUsersTable(rows){
   var tbody=document.getElementById('users-table-body');
   if(!rows.length){tbody.innerHTML='<div class="empty"><div class="e-icon">👥</div><div class="e-text">Geen gebruikers gevonden</div></div>';return;}
-  var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
+  var lbu=listingsPerUser(allListings);
   var mx=Math.max(1,...Object.values(lbu));
   tbody.innerHTML='<table><thead><tr><th>Naam</th><th>Badges</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
     +'<tbody>'+rows.map(function(u){
@@ -1563,7 +1596,7 @@ function renderUsersTable(rows){
 function filterUsers(){
   var q=document.getElementById('users-search').value.toLowerCase();
   var ft=document.getElementById('users-filter').value;
-  var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
+  var lbu=listingsPerUser(allListings);
   var rows=allUsers.filter(function(u){
     var mq=!q||(u.email||'').toLowerCase().includes(q)||(u.display_name||'').toLowerCase().includes(q);
     var mf=ft==='all'||(ft==='active'&&(lbu[u.id]||0)>0)||(ft==='inactive'&&!(lbu[u.id]||0))||(ft==='blocked'&&u.is_blocked);
@@ -1583,7 +1616,7 @@ async function toggleBlock(userId,block){
 
 function exportUsersCSV(){
   if(!allUsers.length){toast('Geen gebruikers');return;}
-  var lbu={}; allListings.forEach(function(l){if(l.user_id)lbu[l.user_id]=(lbu[l.user_id]||0)+1;});
+  var lbu=listingsPerUser(allListings);
   var csv='id;naam;email;advertenties;geregistreerd;geblokkeerd;badges\n';
   allUsers.forEach(function(u){
     var manual=getManualBadges(u);
@@ -1610,7 +1643,7 @@ function openUserDetail(id){
   document.getElementById('ud-avatar').textContent=initials;
   document.getElementById('ud-header-name').textContent=name||u.email||'—';
   document.getElementById('ud-header-email').textContent=u.email||'';
-  document.getElementById('ud-ads-count').textContent=userListings.length;
+  document.getElementById('ud-ads-count').textContent=countUniqueVerkopen(userListings);
   document.getElementById('ud-status').innerHTML=u.is_blocked?'<span class="badge badge-blocked">🚫 Geblokkeerd</span>':'<span class="badge badge-active">✓ Actief</span>';
   document.getElementById('ud-created').textContent=fmtDate(u.created_at);
   document.getElementById('ud-last-login').textContent=fmtRelTime(u.last_sign_in_at||u.updated_at);
@@ -1892,7 +1925,7 @@ function bcUpdatePreview(){
       bcBodyToHtml(body || '(berichttekst)') +
       '<p style="margin:18px 0 0;color:#7A6E62;font-size:12px">Veel zoek- en verkoopplezier,<br><strong>Het YardiGo-team</strong></p>' +
     '</div>' +
-    '<div style="text-align:center;color:#7A6E62;font-size:10px;margin-top:10px">Uitschrijven voor deze nieuwsbrief</div>';
+    '<div style="text-align:center;color:#7A6E62;font-size:10px;margin-top:10px">Uitschrijven voor YardiGo updates</div>';
 }
 function bcTogglePreview(){
   var p = document.getElementById('bc-preview');
@@ -1925,9 +1958,9 @@ async function bcRefreshCount(){
     if (elSendCount) elSendCount.textContent = String(n);
     var sub = document.getElementById('bc-count-sub');
     if (sub) {
-      sub.textContent = (country === 'all' ? 'gebruikers ingeschreven' :
-                         country === 'NL' ? 'NL-gebruikers ingeschreven' :
-                         'BE-gebruikers ingeschreven');
+      sub.textContent = (country === 'all' ? 'gebruikers met updates aan' :
+                         country === 'NL' ? 'NL-gebruikers met updates aan' :
+                         'BE-gebruikers met updates aan');
     }
   } catch (e) {
     if (elCount) elCount.textContent = '?';
@@ -1944,7 +1977,7 @@ async function bcSendBroadcast(){
   if (!body)    { alert('Berichttekst is verplicht.'); return; }
 
   var countTxt = (document.getElementById('bc-count').textContent || '').trim();
-  var confirmMsg = 'Weet je zeker dat je deze nieuwsbrief naar ' + countTxt + ' ontvangers wilt versturen?\n\n' +
+  var confirmMsg = 'Weet je zeker dat je deze update naar ' + countTxt + ' ontvangers wilt versturen?\n\n' +
                    'Onderwerp: ' + subject + '\n' +
                    'Doelgroep: ' + (country === 'all' ? 'Alle landen' : country);
   if (!confirm(confirmMsg)) return;
