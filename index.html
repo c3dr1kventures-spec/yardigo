@@ -2102,7 +2102,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Step 0: Type -->
       <div id="add-s0">
         <div style="font-size:17px;font-weight:800;margin-bottom:4px" data-i18n="publish.s0.title">Type verkoop</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px" data-i18n="publish.s0.sub">Wat voor soort verkoop is dit?</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px" data-i18n="publish.s0.sub">Wat voor soort verkoop is dit?</div>
+        <!-- Cedrik – Stap 0: wuivend -->
+        <div class="cedrik-bubble" style="margin-bottom:12px">
+          <img src="cedrik-ob-s1.png" alt="Cedrik" style="width:72px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.15))">
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s0">Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!</div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span data-i18n="publish.type.particulier">Opritverkoop: eigen spullen</span></div>
           <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span data-i18n="publish.type.buurt">Rommelroute: meerdere huizen</span></div>
@@ -2129,7 +2134,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- Step 1: Details -->
       <div id="add-s1" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s1.title">Details</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:10px" data-i18n="publish.s1.title">Details</div>
+        <!-- Cedrik – Stap 1: wijzend -->
+        <div class="cedrik-bubble" style="margin-bottom:12px">
+          <img src="cedrik-ob-s2.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s1">Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!</div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'" data-i18n-placeholder="publish.title_placeholder">
           <!-- Naam-override per advertentie -->
@@ -2171,7 +2181,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <!-- Step 2: Location & tags -->
       <div id="add-s2" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:16px" data-i18n="publish.s2.title">Locatie & categorieën</div>
+        <div style="font-size:17px;font-weight:800;margin-bottom:10px" data-i18n="publish.s2.title">Locatie & categorieën</div>
+        <!-- Cedrik – Stap 2: kaart tonen -->
+        <div class="cedrik-bubble" style="margin-bottom:12px">
+          <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s2">Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt — niet je exacte adres.</div>
+        </div>
         <!-- Land-keuze: standaard hetzelfde land als het TLD waarmee de
              bezoeker binnenkomt, maar overrideable zodat een NL-bezoeker op
              yardigo.nl een Belgisch adres kan opvoeren en omgekeerd. Bij
@@ -2243,7 +2258,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Step 3: Photos + (buurtverkoop: plattegrond) -->
       <div id="add-s3" style="display:none">
         <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title" data-i18n="publish.s3.title">Foto's</div>
-        <div style="font-size:12px;margin-bottom:14px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
+        <div style="font-size:12px;margin-bottom:10px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
+        <!-- Cedrik – Stap 3: duim omhoog -->
+        <div class="cedrik-bubble" style="margin-bottom:12px">
+          <img src="cedrik-ob-s4.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s3">Bijna klaar! Voeg minstens 1 foto toe — verkopen met foto's trekken 3× meer bezoekers!</div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
           <span data-i18n="publish.photos.add">📷 Foto's toevoegen</span>
@@ -3199,6 +3219,10 @@ var I18N = {
     'publish.country.label': '🌍 Land',
     'publish.country.help': 'In welk land staat het adres?',
     'publish.s3.title': "Foto's",
+    'publish.cedrik.s0': 'Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!',
+    'publish.cedrik.s1': 'Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!',
+    'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt — niet je exacte adres.',
+    'publish.cedrik.s3': 'Bijna klaar! Voeg minstens 1 foto toe — verkopen met foto\'s trekken 3× meer bezoekers!',
     'publish.type.particulier': 'Opritverkoop: eigen spullen',
     'publish.type.buurt': 'Rommelroute: meerdere huizen',
     'publish.type.evenement': 'Evenement: kies een type',
@@ -3750,6 +3774,10 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
+    'publish.cedrik.s0': 'Welcome! Choose the type that fits your sale best. Driveway sale is the most popular!',
+    'publish.cedrik.s1': 'Give your sale a catchy title and clear date. The more info, the more visitors!',
+    'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood — not your exact address.',
+    'publish.cedrik.s3': 'Almost done! Add at least 1 photo — sales with photos attract 3× more visitors!',
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
@@ -4301,6 +4329,10 @@ var I18N = {
     'publish.country.label': '🌍 Pays',
     'publish.country.help': "Dans quel pays se trouve l'adresse ?",
     'publish.s3.title': 'Photos',
+    'publish.cedrik.s0': 'Bienvenue ! Choisissez le type qui correspond le mieux à votre vente. La vente sur allée est la plus populaire !',
+    'publish.cedrik.s1': 'Donnez un titre accrocheur et une date claire. Plus d\'infos = plus de visiteurs !',
+    'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord que le quartier — pas votre adresse exacte.',
+    'publish.cedrik.s3': 'Presque fini ! Ajoutez au moins 1 photo — les ventes avec photos attirent 3× plus de visiteurs !',
     'publish.type.particulier': 'Vente sur allée : vos propres objets',
     'publish.type.buurt': 'Circuit brocante : plusieurs maisons',
     'publish.type.evenement': 'Événement : choisissez un type',
@@ -4849,6 +4881,10 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
+    'publish.cedrik.s0': 'Willkommen! Wähle den Typ, der am besten zu deinem Verkauf passt. Hofverkauf ist am beliebtesten!',
+    'publish.cedrik.s1': 'Gib deinem Verkauf einen einprägsamen Titel und ein klares Datum. Mehr Infos = mehr Besucher!',
+    'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel — nicht deine genaue Adresse.',
+    'publish.cedrik.s3': 'Fast fertig! Füge mindestens 1 Foto hinzu — Verkäufe mit Fotos ziehen 3× mehr Besucher an!',
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
