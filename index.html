@@ -2868,14 +2868,19 @@ var currentLang = (function(){
     if (s && I18N_LANGS.indexOf(s) !== -1) return s;
   } catch(e){}
 
-  // 2. Browser-taal matchen tegen de talen die voor dit land beschikbaar zijn
-  var allowed = LANG_AVAILABILITY_BY_COUNTRY[YG_COUNTRY] || LANG_AVAILABILITY_BY_COUNTRY.default;
-  try {
-    var bl = (navigator.language || navigator.userLanguage || 'nl').toLowerCase();
-    for (var i = 0; i < allowed.length; i++) {
-      if (bl.indexOf(allowed[i]) === 0) return allowed[i];
-    }
-  } catch(e){}
+  // 2. Browser-taal matchen — ALLEEN voor niet-NL landen (yardigo.be/.fr/.de).
+  //    Voor yardigo.nl en yardigo.app starten we altijd in het Nederlands,
+  //    ongeacht de browser-taal. Gebruikers kunnen via de taalswitch alsnog
+  //    Engels kiezen; die keuze wordt daarna opgeslagen in localStorage (stap 1).
+  if (YG_COUNTRY !== 'NL') {
+    var allowed = LANG_AVAILABILITY_BY_COUNTRY[YG_COUNTRY] || LANG_AVAILABILITY_BY_COUNTRY.default;
+    try {
+      var bl = (navigator.language || navigator.userLanguage || 'nl').toLowerCase();
+      for (var i = 0; i < allowed.length; i++) {
+        if (bl.indexOf(allowed[i]) === 0) return allowed[i];
+      }
+    } catch(e){}
+  }
 
   // 3. Country-default als ultieme fallback
   return (COUNTRY_DEFAULTS[YG_COUNTRY] && COUNTRY_DEFAULTS[YG_COUNTRY].lang) || 'nl';
