@@ -592,39 +592,16 @@ body.dark .seg-opt.active{background:var(--bg);}
 .btn-pub:hover{border-color:var(--terra);color:var(--terra);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── BUURTVERKOOP LIST CARD ── */
+/* ── ROMMELROUTE LIST CARD (zelfde basis-layout als losse listing) ── */
 .bv-list-card {
-  border-left: 4px solid #E07B39 !important;
+  flex-direction: column;            /* hoofdrij + uitklap onder elkaar */
+  border-left: 4px solid #E07B39;
   overflow: hidden;
-  padding: 0 !important;
-}
-.bv-list-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
-  cursor: pointer;
-  user-select: none;
-}
-.bv-list-icon {
-  font-size: 22px;
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #FFF3ED;
-  border-radius: 10px;
-  flex-shrink: 0;
 }
 .bv-list-chevron {
-  font-size: 22px;
-  color: #E07B39;
-  font-weight: 700;
+  display: inline-block;
   transition: transform .25s;
   line-height: 1;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 .bv-list-addresses {
   border-top: 1.5px solid var(--border);
@@ -650,7 +627,6 @@ body.dark .seg-opt.active{background:var(--bg);}
   flex-shrink: 0;
 }
 /* Dark mode */
-body.dark .bv-list-icon { background: #3a2a1f; }
 body.dark .bv-addr-row { border-bottom-color: var(--border); }
 body.dark .bv-addr-row:active { background: var(--bg); }
 
@@ -6192,7 +6168,27 @@ function buildBuurtClusterPopup(bv, cluster) {
   // inzoomen), toon dan hoeveel er in totaal bij horen zodat duidelijk is
   // dat dit niet alles is.
   var otherInGroup = Math.max(0, totalInBv - count);
-  var head = '<div style="background:#E07B39;color:white;padding:14px 16px">'
+  // Cover-foto: pak de eerste deelnemer met foto's (zoals losse listing-popup)
+  var bvCoverPhoto = '';
+  for (var bvi = 0; bvi < listings.length; bvi++) {
+    if (listings[bvi] && listings[bvi].photos && listings[bvi].photos.length) {
+      bvCoverPhoto = listings[bvi].photos[0]; break;
+    }
+  }
+  // Photo-block in dezelfde stijl als createListingPopup (130px hoog, lightbox-trigger)
+  var photoBlock = '';
+  if (bvCoverPhoto) {
+    var orgList = listings.find(function(l) { return !l.confirmation_token; }) || listings[0];
+    var orgIdSafe = orgList ? escapeHtml(String(orgList.id)) : '';
+    if (orgList && orgList.photos) registerSalePhotos(orgList.id, orgList.photos);
+    photoBlock = '<div class="smart-photo-cell" onclick="event.stopPropagation();' + (orgList ? ('openPhotoLightboxBySale(\'' + orgIdSafe + '\',0)') : '') + '"'
+      + ' style="position:relative;height:130px;overflow:hidden;background:#1a1a1a;cursor:zoom-in">'
+      + '<img src="' + escapeHtml(bvCoverPhoto) + '" onload="applySmartFit(this)" style="width:100%;height:130px;object-fit:cover;display:block" loading="lazy">'
+      + '<div aria-hidden="true" style="position:absolute;bottom:7px;left:8px;background:rgba(0,0,0,.55);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;pointer-events:none;z-index:2">⤢</div>'
+      + '</div>';
+  }
+  var head = photoBlock
+    + '<div style="background:#E07B39;color:white;padding:14px 16px">'
     + '<div style="font-size:11px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🏘️ ' + i18n('type.buurt', 'Rommelroute') + '</div>'
     + '<div style="font-size:15px;font-weight:800;line-height:1.25;margin-bottom:6px">' + escapeHtml(title) + '</div>'
     + '<div style="font-size:12px;opacity:.95">' + count + ' huis' + (count === 1 ? '' : 'jes') + ' in deze cluster'
@@ -6639,52 +6635,91 @@ function renderBvCard(bv) {
       if (allTags.indexOf(tg) === -1) allTags.push(tg);
     });
   });
-  var headerTags = renderTagChips(allTags, 'buurt');
-  // Cover-foto: pak de eerste deelnemer met foto's. Als geen enkele deelnemer
-  // foto's heeft val terug op de oranje 🏘️-tegel zodat oude rommelroutes niet
-  // suddenly leeg ogen.
+  var tags = renderTagChips(allTags, 'buurt', { limit: 3 });
+  // Bepaal de organisator-listing (geen confirmation_token = de eigenaar);
+  // val terug op listings[0] als we niets vinden.
+  var organizer = null;
+  for (var oi = 0; oi < bv.listings.length; oi++) {
+    if (!bv.listings[oi].confirmation_token) { organizer = bv.listings[oi]; break; }
+  }
+  if (!organizer) organizer = bv.listings[0];
+  var orgIdAttr = organizer && typeof organizer.id === 'string'
+    ? "'" + escapeHtml(organizer.id) + "'"
+    : (organizer ? organizer.id : '');
+  // Cover-foto: pak de eerste deelnemer met foto's. Geen enkele foto? → emoji.
   var coverPhoto = '';
   for (var pi = 0; pi < bv.listings.length; pi++) {
     var lp = bv.listings[pi];
     if (lp && lp.photos && lp.photos.length) { coverPhoto = lp.photos[0]; break; }
   }
-  var iconHtml = coverPhoto
-    ? '<div class="bv-list-icon" style="padding:0;overflow:hidden;background:#F0EBE3"><img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>'
-    : '<div class="bv-list-icon">🏘️</div>';
+  // Bevestigde adressen tellen (zonder declined/expired/pending)
+  var nConfirmed = bv.listings.filter(function(l) {
+    return !l.confirmation_status || l.confirmation_status === 'confirmed';
+  }).length;
+  var nTotal = bv.listings.length;
+  var fav = organizer ? favorites.has(organizer.id) : false;
+  var going = organizer ? goingSet.has(organizer.id) : false;
+  // Stadsnaam voor adres-regel (zoals losse card)
+  var bvCity = (bv.info && bv.info.city) || (organizer ? prettyCity(organizer.address) : '');
+  var addrLine = '📍 ' + escapeHtml(bvCity);
+  // Identieke layout als createListingCard: thumb links, body rechts, klik = openDetail
+  var thumb = coverPhoto
+    ? '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')" style="padding:0;overflow:hidden">'
+        + '<img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+      + '</div>'
+    : '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')">🏘️</div>';
+  var addrCount = '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'
+    + nTotal + ' ' + (nTotal === 1 ? 'adres' : 'adressen') + '</span>';
+  var confirmedNote = (nConfirmed > 0)
+    ? '<span style="font-size:10px;color:#3A6B4A;font-weight:600">✅ ' + nConfirmed + ' bevestigd</span>'
+    : '';
+  // Uitklapknop onderaan card-body
+  var toggleBtn = '<button type="button" onclick="event.stopPropagation();toggleBvCard(\'' + bvId + '\')" '
+    + 'style="background:none;border:none;color:var(--terra);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;gap:3px">'
+    + '<span id="bv-toggle-label-' + bvId + '">Bekijk alle adressen</span>'
+    + '<span class="bv-list-chevron" id="bv-chev-' + bvId + '" style="font-size:14px;line-height:1">›</span>'
+    + '</button>';
   return '<div class="card bv-list-card">'
-    // Klik-header (toggle)
-    + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
-    + iconHtml
-    + '<div style="flex:1;min-width:0">'
-    + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-    + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
-    + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
+    // Hoofdrij: identieke layout als andere kaarten — foto + body, beide klikbaar = openDetail
+    + '<div style="display:flex;align-items:stretch;width:100%">'
+    + thumb
+    + '<div class="card-body" onclick="openDetail(' + orgIdAttr + ')">'
+      + '<div class="card-top">'
+        + '<div class="card-title">' + escapeHtml(bv.info.title) + '</div>'
+        + '<span class="type-chip buurt">' + escapeHtml(i18n('type.buurt', 'Rommelroute')) + '</span>'
+      + '</div>'
+      + '<div class="card-addr">' + addrLine + (bvDate ? ' · ' + bvDate : '') + '</div>'
+      + '<div class="card-tags">' + tags + '</div>'
+      + '<div class="card-foot">'
+        + addrCount
+        + (confirmedNote ? ' ' + confirmedNote : '')
+        + '<span style="flex:1"></span>'
+        + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">'
+          + (going ? '✓ Ik ga' : '🕐 ' + (organizer ? escapeHtml(organizer.from + '–' + organizer.till) : ''))
+        + '</span>'
+        + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + orgIdAttr + ')">' + (fav ? '⭐' : '☆') + '</button>'
+      + '</div>'
+      + '<div style="margin-top:6px">' + toggleBtn + '</div>'
     + '</div>'
-    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ ' + i18n('type.buurt', 'Rommelroute') + '</div>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
-    + headerTags
-    + '</div>'
-    + '</div>'
-    + '<div class="bv-list-chevron" id="bv-chev-' + bvId + '">›</div>'
     + '</div>'
     // Uitklapbare adressenlijst
     + '<div class="bv-list-addresses" id="bv-body-' + bvId + '" style="display:none">'
     + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
     + bv.listings.map(function(listing) {
-        var fav = favorites.has(listing.id);
+        var rowFav = favorites.has(listing.id);
         var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
         var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
-        var tags = (listing.tags||[]).slice(0,1).map(function(tg) {
+        var rowTags = (listing.tags||[]).slice(0,1).map(function(tg) {
           return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
         }).join('');
         return '<div class="bv-addr-row" id="bv-addr-' + escapeHtml(listing.id) + '" onclick="openDetail(' + idAttr + ')">'
           + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
           + '<div style="flex:1;min-width:0">'
           + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
-          + '<div style="display:flex;gap:6px;margin-top:2px">' + tags + '</div>'
+          + '<div style="display:flex;gap:6px;margin-top:2px">' + rowTags + '</div>'
           + '</div>'
           + '<button class="bv-fav-btn" onclick="event.stopPropagation();toggleFav(' + idAttr + ')" title="Favoriet / route">'
-          + (fav ? '⭐' : '☆') + '</button>'
+          + (rowFav ? '⭐' : '☆') + '</button>'
           + '</div>';
       }).join('')
     + '</div>'
@@ -6694,10 +6729,12 @@ function renderBvCard(bv) {
 function toggleBvCard(bvId) {
   var body = document.getElementById('bv-body-' + bvId);
   var chev = document.getElementById('bv-chev-' + bvId);
+  var lbl  = document.getElementById('bv-toggle-label-' + bvId);
   if (!body) return;
   var isOpen = body.style.display !== 'none';
   body.style.display = isOpen ? 'none' : 'block';
   if (chev) { chev.style.transform = isOpen ? '' : 'rotate(90deg)'; }
+  if (lbl)  { lbl.textContent = isOpen ? 'Bekijk alle adressen' : 'Verberg adressen'; }
 }
 
 function createListingCard(s, i) {
