@@ -28,7 +28,7 @@
   <span style="float:right;font-size:12px;color:#7A6E62"><a href="/privacy-fr" style="color:#3A6B4A;text-decoration:none">🇫🇷 Version française</a></span>
 
   <h1>Privacyverklaring</h1>
-  <p class="last-updated">Versie 2.3 · Laatst bijgewerkt: 20 april 2026</p>
+  <p class="last-updated">Versie 2.4 · Laatst bijgewerkt: 2 mei 2026</p>
 
   <p>YardiGo is een Nederlandse app en website waarmee je garagesales, buurtverkopen, kofferbakverkopen en rommelmarkten bij jou in de buurt kunt vinden en plaatsen. In deze privacyverklaring leggen we uit welke persoonsgegevens wij verwerken, waarom, hoe lang en op welke rechtsgrond, en welke rechten jij hebt onder de Algemene Verordening Gegevensbescherming (AVG / GDPR).</p>
 
@@ -51,6 +51,7 @@
     <li><strong>Nauwkeurige locatie (GPS)</strong> – om garagesales in de buurt te tonen en je eigen advertentie op de kaart te plaatsen. Alleen na expliciete toestemming via je apparaat. Deze locatie wordt niet persistent in onze database opgeslagen; we gebruiken hem real-time om de kaart te renderen.</li>
     <li><strong>Advertentie-inhoud</strong> – foto's, adres, datum/tijd, categorieën en beschrijving die jij zelf invoert bij het plaatsen van een verkoop.</li>
     <li><strong>Technische logs</strong> – IP-adres, browsertype, besturingssysteem en tijdstempels; automatisch geregistreerd door Supabase en Vercel voor beveiliging en foutdiagnose.</li>
+    <li><strong>Communicatievoorkeuren</strong> – twee aparte opt-in vlaggen: (1) <em>service-updates</em> per e-mail (releasenotes, mededelingen over de dienst) en (2) <em>gepersonaliseerde verkoop-tips</em> per e-mail — reminders over komende garagesales bij jou in de buurt. Daarnaast bewaren we je gewenste e-mailfrequentie (wekelijks of maandelijks), een landcode voor doelgroepfiltering (NL of BE) en een willekeurig uitschrijftoken zodat je via de link in een mail kunt uitschrijven zonder in te loggen.</li>
   </ul>
 
   <h2>3. Doelen, rechtsgronden en bewaartermijnen</h2>
@@ -91,10 +92,27 @@
         <td>art. 6.1.b – uitvoering overeenkomst</td>
         <td>Duur van de accountrelatie</td>
       </tr>
+      <tr>
+        <td>Service-update opt-in vlag, landcode, uitschrijftoken en e-mailadres</td>
+        <td>Versturen van YardiGo service-updates per e-mail (releasenotes, nieuwe features, belangrijke mededelingen over de dienst) en uitschrijven mogelijk maken</td>
+        <td>art. 6.1.a – toestemming, gegeven via een niet-vooraangevinkte opt-in tijdens registratie of via <em>Instellingen → Meldingen</em></td>
+        <td>Tot je je toestemming intrekt of je account verwijdert. Bij intrekking blijft de vlag op 'uit'; bij accountverwijdering alles binnen 30 dagen gewist</td>
+      </tr>
+      <tr>
+        <td>Promo opt-in vlag, e-mailfrequentie, stad/regio, uitschrijftoken en e-mailadres</td>
+        <td>Versturen van gepersonaliseerde e-mailreminders over komende garagesales bij jou in de buurt, op de door jou gekozen frequentie (wekelijks of maandelijks)</td>
+        <td>art. 6.1.a – toestemming, gegeven via een aparte niet-vooraangevinkte opt-in checkbox tijdens registratie of via <em>Instellingen → E-mail voorkeuren</em></td>
+        <td>Tot je je toestemming intrekt of je account verwijdert. Uitschrijven kan via de toggle in je instellingen, via de uitschrijflink onderaan elke mail of via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a></td>
+      </tr>
     </tbody>
   </table>
 
-  <p>YardiGo gebruikt op dit moment <strong>geen</strong> marketing-mailing en <strong>geen</strong> nieuwsbrief. Mocht dat in de toekomst veranderen, dan gebeurt dat uitsluitend op basis van een aparte, niet-vooraangevinkte opt-in (art. 6.1.a AVG).</p>
+  <p><strong>E-mailcommunicatie.</strong> YardiGo verstuurt twee soorten opt-in e-mails, elk met een <strong>aparte</strong> toestemming:</p>
+  <ul>
+    <li><strong>Service-updates</strong> – releasenotes, nieuwe of gewijzigde functies, en belangrijke mededelingen over de dienst. Alleen voor gebruikers die het vakje <em>YardiGo updates per e-mail</em> hebben aangevinkt.</li>
+    <li><strong>Gepersonaliseerde verkoop-tips</strong> – automatische reminders over komende garagesales bij jou in de buurt, verstuurd op de door jou gekozen frequentie. Alleen voor gebruikers die het vakje <em>Stuur mij tips over verkopen bij mij in de buurt</em> hebben aangevinkt. De e-mail bevat verkopen in of nabij jouw stad, op basis van de stad die je in je profiel hebt opgegeven.</li>
+  </ul>
+  <p>Beide vakjes zijn <strong>niet voorgevuld</strong>. Je kunt je toestemming op elk moment intrekken via <em>Instellingen → E-mail voorkeuren</em>, via de uitschrijflink onderaan elke mail, of via <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Wij voegen je e-mailadres niet toe aan andere lijsten en delen je adres niet met derden buiten onze e-mailverwerker (zie §5).</p>
 
   <h2>4. Gevolgen als je gegevens niet verstrekt</h2>
   <ul>
@@ -140,6 +158,12 @@
         <td>Domeinregistratie en e-mailforwarding voor privacy@yardigo.nl</td>
         <td>VS</td>
         <td>EU-US Data Privacy Framework + SCC's</td>
+      </tr>
+      <tr>
+        <td><strong>Resend Inc.</strong> (VS)</td>
+        <td>Versturen van transactionele e-mails (zoals wachtwoord-reset) en service-updates aan gebruikers die opt-in hebben gegeven; ontvangt daarbij je e-mailadres en de inhoud van het bericht</td>
+        <td>VS, met EU-regio voor verzending uit Frankfurt</td>
+        <td>EU-US Data Privacy Framework + SCC's; verwerkersovereenkomst onder Resend's standaard DPA</td>
       </tr>
     </tbody>
   </table>
@@ -225,6 +249,8 @@
 
   <h3>Versiehistorie</h3>
   <ul>
+    <li><strong>v2.5 · 9 mei 2026</strong>: in-app berichtensysteem en gepersonaliseerde e-mailreminders toegevoegd. §2 aangevuld met promo opt-in vlag, e-mailfrequentie. §3 nieuwe tabelrij voor gepersonaliseerde verkoop-tips (aparte opt-in, art. 6.1.a AVG). E-mailparagraaf herschreven om beide soorten e-mail te onderscheiden. Uitschrijfmechanisme voor promo-mails gedocumenteerd.</li>
+    <li><strong>v2.4 · 2 mei 2026</strong>: nieuwe paragraaf over service-updates per e-mail. §2 aangevuld met de categorie 'communicatievoorkeuren' (opt-in vlag, landcode, uitschrijftoken). §3 nieuwe tabelrij voor service-updates op basis van toestemming (art. 6.1.a AVG, niet-vooraangevinkte opt-in). §5 verwerker Resend Inc. (VS) toegevoegd voor het verzenden van service-updates en transactionele e-mails. Geen marketing of commerciële nieuwsbrieven.</li>
     <li><strong>v2.3 · 20 april 2026</strong>: §5a aangevuld met twee nieuwe punten over de buurtverkoop-flow: (1) de organisator kan een optioneel, uitsluitend voor hemzelf zichtbaar herkenningslabel per adres opslaan (bv. een voornaam of "nr. 14"), en (2) het optionele e-mailadres van de buur wordt uitsluitend in de browser gebruikt voor een voorgevulde mailto-link en wordt niet op onze server opgeslagen.</li>
     <li><strong>v2.2 · 19 april 2026</strong>: contactgegevens verwerkingsverantwoordelijke vereenvoudigd; vestigingsadres en KvK-nummer worden vermeld zodra de inschrijving bij de Kamer van Koophandel definitief is.</li>
     <li><strong>v2.1 · 18 april 2026</strong>: nieuwe §5a over buurtverkopen met verplichte bevestigingslink voor adressen van andere bewoners (AVG art. 6a); pending-entries worden na 7 dagen automatisch gewist.</li>

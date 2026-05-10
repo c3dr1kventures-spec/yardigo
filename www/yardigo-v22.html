@@ -841,7 +841,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           </label>
           <label for="ob-newsletter" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
             <input type="checkbox" id="ob-newsletter" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
-            <span data-i18n="ob.s4.newsletter">Stuur me af en toe nieuws en updates over YardiGo (optioneel, je kunt je later altijd uitschrijven).</span>
+            <span data-i18n="ob.s4.updates_optin">Houd me per e-mail op de hoogte van YardiGo-updates en belangrijke mededelingen (optioneel, altijd uit te schakelen via je instellingen).</span>
           </label>
           <button class="ob-btn ob-btn-primary" onclick="obRegister()" data-i18n="ob.s4.create_account">Account aanmaken</button>
         </div>
@@ -1404,13 +1404,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           </div>
         </div>
 
-        <!-- Nieuwsbrief / e-mail updates (marketing_email_opt_in) -->
+        <!-- YardiGo updates per e-mail (service-communicatie, marketing_email_opt_in kolom) -->
         <div class="settings-card" style="margin-bottom:4px;">
           <div class="srow">
             <div class="srow-icon" style="background:#FDF0E7;">📧</div>
             <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.notif.newsletter_title">YardiGo nieuwsbrief</div>
-              <div class="srow-sub" id="newsletter-sub" data-i18n="settings.notif.newsletter_sub">E-mailupdates met tips, nieuwe features en evenementen</div>
+              <div class="srow-title" data-i18n="settings.notif.updates_title">YardiGo updates per e-mail</div>
+              <div class="srow-sub" id="newsletter-sub" data-i18n="settings.notif.updates_sub">Releasenotes, nieuwe features en belangrijke mededelingen over de dienst</div>
             </div>
             <div class="srow-right">
               <div class="toggle-wrap off" id="newsletter-toggle" onclick="toggleNewsletterPref(this)"><div class="toggle-ball"></div></div>
@@ -2609,6 +2609,11 @@ var I18N = {
     'toast.delete_only_own': "Je kunt alleen je eigen advertenties verwijderen",
     'toast.welcome_user': "Welkom, {name}! 🎉",
     'toast.welcome_back': "Welkom! 🎉",
+    'toast.updates_on': "✓ Je ontvangt voortaan YardiGo updates per e-mail",
+    'toast.updates_off': "✓ Je ontvangt geen YardiGo updates meer per e-mail",
+    'toast.unsubscribe_failed': "❌ Uitschrijven mislukt, probeer opnieuw",
+    'toast.unsubscribed_ok': "✓ Je bent uitgeschreven voor YardiGo updates",
+    'toast.unsubscribe_invalid': "Uitschrijflink is verlopen of ongeldig",
     'toast.route_planned': "✅ Route gepland met {count} stops!",
     'toast.address_visible_in': "🔒 Volledig adres zichtbaar {when}",
     'toast.address_visible_soon': "binnenkort",
@@ -2657,6 +2662,8 @@ var I18N = {
     'settings.notif.master_title': "Alle meldingen",
     'settings.notif.master_on': "Ingeschakeld",
     'settings.notif.master_off': "Uitgeschakeld",
+    'settings.notif.updates_title': "YardiGo updates per e-mail",
+    'settings.notif.updates_sub': "Releasenotes, nieuwe features en belangrijke mededelingen over de dienst",
     'settings.notif.card1_title': "Nieuwe verkopen in de buurt",
     'settings.notif.label_distance': "Afstand",
     'settings.notif.label_timing': "Timing",
@@ -2900,6 +2907,7 @@ var I18N = {
     'ob.s4.ph_email': 'E-mailadres',
     'ob.s4.ph_pass': 'Wachtwoord',
     'ob.s4.terms': 'Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.',
+    'ob.s4.updates_optin': 'Houd me per e-mail op de hoogte van YardiGo-updates en belangrijke mededelingen (optioneel, altijd uit te schakelen via je instellingen).',
     'ob.s4.have_account': 'Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span>',
     'ob.s4.guest_btn': 'Beperkt verder als gast →',
     'ob.s4.guest_note': 'Je kunt later alsnog een gratis account aanmaken',
@@ -3136,6 +3144,11 @@ var I18N = {
     'toast.delete_only_own': "You can only delete your own listings",
     'toast.welcome_user': "Welcome, {name}! 🎉",
     'toast.welcome_back': "Welcome! 🎉",
+    'toast.updates_on': "✓ You will now receive YardiGo updates by e-mail",
+    'toast.updates_off': "✓ You will no longer receive YardiGo updates by e-mail",
+    'toast.unsubscribe_failed': "❌ Unsubscribe failed, please try again",
+    'toast.unsubscribed_ok': "✓ You have been unsubscribed from YardiGo updates",
+    'toast.unsubscribe_invalid': "Unsubscribe link is expired or invalid",
     'toast.route_planned': "✅ Route planned with {count} stops!",
     'toast.address_visible_in': "🔒 Full address visible {when}",
     'toast.address_visible_soon': "soon",
@@ -3182,6 +3195,8 @@ var I18N = {
     'settings.showdist.title': "Show distance",
     'settings.showdist.sub': "Show kilometer distance for each sale",
     'settings.notif.master_title': "All notifications",
+    'settings.notif.updates_title': "YardiGo updates by e-mail",
+    'settings.notif.updates_sub': "Release notes, new features and important announcements about the service",
     'settings.notif.master_on': "Enabled",
     'settings.notif.master_off': "Disabled",
     'settings.notif.card1_title': "New sales nearby",
@@ -3427,6 +3442,7 @@ var I18N = {
     'ob.s4.ph_email': 'Email address',
     'ob.s4.ph_pass': 'Password',
     'ob.s4.terms': 'I agree to the <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Terms of use</a> and have read the <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacy statement</a>.',
+    'ob.s4.updates_optin': 'Keep me informed by e-mail about YardiGo updates and important announcements (optional, can be turned off in settings at any time).',
     'ob.s4.have_account': 'Already have an account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Sign in</span>',
     'ob.s4.guest_btn': 'Continue as guest with limits →',
     'ob.s4.guest_note': 'You can still create a free account later',
@@ -3663,6 +3679,11 @@ var I18N = {
     'toast.delete_only_own': "Tu ne peux supprimer que tes propres annonces",
     'toast.welcome_user': "Bienvenue, {name} ! 🎉",
     'toast.welcome_back': "Bienvenue ! 🎉",
+    'toast.updates_on': "✓ Vous recevrez désormais les mises à jour YardiGo par e-mail",
+    'toast.updates_off': "✓ Vous ne recevrez plus les mises à jour YardiGo par e-mail",
+    'toast.unsubscribe_failed': "❌ Échec de la désinscription, veuillez réessayer",
+    'toast.unsubscribed_ok': "✓ Vous êtes désinscrit·e des mises à jour YardiGo",
+    'toast.unsubscribe_invalid': "Le lien de désinscription est expiré ou invalide",
     'toast.route_planned': "✅ Itinéraire planifié avec {count} arrêts !",
     'toast.address_visible_in': "🔒 Adresse complète visible {when}",
     'toast.address_visible_soon': "bientôt",
@@ -3709,6 +3730,8 @@ var I18N = {
     'settings.showdist.title': "Afficher la distance",
     'settings.showdist.sub': "Affiche la distance en kilomètres pour chaque vente",
     'settings.notif.master_title': "Toutes les notifications",
+    'settings.notif.updates_title': "Mises à jour YardiGo par e-mail",
+    'settings.notif.updates_sub': "Notes de version, nouvelles fonctionnalités et annonces importantes sur le service",
     'settings.notif.master_on': "Activées",
     'settings.notif.master_off': "Désactivées",
     'settings.notif.card1_title': "Nouvelles ventes à proximité",
@@ -3954,6 +3977,7 @@ var I18N = {
     'ob.s4.ph_email': 'Adresse e-mail',
     'ob.s4.ph_pass': 'Mot de passe',
     'ob.s4.terms': 'J\'accepte les <a href="/voorwaarden-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Conditions d\'utilisation</a> et j\'ai lu la <a href="/privacy-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Politique de confidentialité</a>.',
+    'ob.s4.updates_optin': 'Tenez-moi informé·e par e-mail des mises à jour YardiGo et des annonces importantes (facultatif, désactivable à tout moment dans les paramètres).',
     'ob.s4.have_account': 'Vous avez déjà un compte ? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Se connecter</span>',
     'ob.s4.guest_btn': 'Continuer en invité (limité) →',
     'ob.s4.guest_note': 'Vous pouvez toujours créer un compte gratuit plus tard',
@@ -4193,6 +4217,11 @@ var I18N = {
     'toast.delete_only_own': "Du kannst nur deine eigenen Anzeigen löschen",
     'toast.welcome_user': "Willkommen, {name}! 🎉",
     'toast.welcome_back': "Willkommen! 🎉",
+    'toast.updates_on': "✓ Du erhältst künftig YardiGo-Updates per E-Mail",
+    'toast.updates_off': "✓ Du erhältst keine YardiGo-Updates mehr per E-Mail",
+    'toast.unsubscribe_failed': "❌ Abmelden fehlgeschlagen, bitte erneut versuchen",
+    'toast.unsubscribed_ok': "✓ Du wurdest von den YardiGo-Updates abgemeldet",
+    'toast.unsubscribe_invalid': "Abmeldelink ist abgelaufen oder ungültig",
     'toast.route_planned': "✅ Route mit {count} Stopps geplant!",
     'toast.address_visible_in': "🔒 Vollständige Adresse sichtbar {when}",
     'toast.address_visible_soon': "bald",
@@ -4239,6 +4268,8 @@ var I18N = {
     'settings.showdist.title': "Entfernung anzeigen",
     'settings.showdist.sub': "Kilometer-Entfernung für jeden Verkauf anzeigen",
     'settings.notif.master_title': "Alle Benachrichtigungen",
+    'settings.notif.updates_title': "YardiGo-Updates per E-Mail",
+    'settings.notif.updates_sub': "Release-Notes, neue Funktionen und wichtige Mitteilungen zum Dienst",
     'settings.notif.master_on': "Aktiviert",
     'settings.notif.master_off': "Deaktiviert",
     'settings.notif.card1_title': "Neue Verkäufe in der Nähe",
@@ -9373,8 +9404,8 @@ async function toggleNewsletterPref(el) {
       return;
     }
     toast(newVal
-      ? i18n('toast.newsletter_on', '✓ Je bent ingeschreven voor de nieuwsbrief')
-      : i18n('toast.newsletter_off', '✓ Je bent uitgeschreven voor de nieuwsbrief'));
+      ? i18n('toast.updates_on', '✓ Je ontvangt voortaan YardiGo updates per e-mail')
+      : i18n('toast.updates_off', '✓ Je ontvangt geen YardiGo updates meer per e-mail'));
   } catch(e) {
     el.classList.toggle('off', !wasOn);
     toast(i18n('toast.save_error', 'Fout bij opslaan'));
@@ -9395,7 +9426,7 @@ async function handleUnsubscribeUrl() {
     if (res && res.error) {
       toast(i18n('toast.unsubscribe_failed', '❌ Uitschrijven mislukt, probeer opnieuw'));
     } else if (res && res.data === true) {
-      toast(i18n('toast.unsubscribed_ok', '✓ Je bent uitgeschreven voor de nieuwsbrief'));
+      toast(i18n('toast.unsubscribed_ok', '✓ Je bent uitgeschreven voor YardiGo updates'));
       // Sync de toggle als de gebruiker tegelijk ingelogd is
       var t = document.getElementById('newsletter-toggle');
       if (t) t.classList.add('off');

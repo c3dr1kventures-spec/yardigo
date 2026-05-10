@@ -517,9 +517,43 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <!-- ════ BERICHTEN (BROADCAST) ════ -->
     <div class="tab-pane" id="tab-broadcast">
 
+      <!-- ── IN-APP AANKONDIGINGEN ── -->
+      <div class="settings-card" style="margin-bottom:14px">
+        <h3>🔔 In-app aankondigingen</h3>
+        <p>Maak berichten aan die ingelogde gebruikers in hun inbox-bellletje zien. Concept = alleen jij, Gepubliceerd = alle gebruikers.</p>
+        <div style="margin-bottom:12px">
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:8px;margin-bottom:8px;align-items:start">
+            <input type="text" id="ann-emoji" maxlength="4" placeholder="📢" value="📢" style="padding:9px 6px;border:1.5px solid var(--border);border-radius:8px;font-size:20px;text-align:center;width:100%">
+            <input type="text" id="ann-title" maxlength="100" placeholder="Titel van het bericht…" style="padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;width:100%">
+          </div>
+          <textarea id="ann-body" rows="4" placeholder="Berichttekst (voor gebruikers zichtbaar in de inbox)…" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;resize:vertical;margin-bottom:8px"></textarea>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <select id="ann-country" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:12px">
+              <option value="">🌍 Alle gebruikers</option>
+              <option value="NL">🇳🇱 Alleen NL</option>
+              <option value="BE">🇧🇪 Alleen BE</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="annSave(false)">💾 Opslaan als concept</button>
+            <button class="btn btn-terra btn-sm" onclick="annSave(true)">🚀 Publiceren</button>
+          </div>
+        </div>
+        <div id="ann-list-wrap">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Bestaande aankondigingen</div>
+          <div id="ann-list"><em style="font-size:12px;color:var(--muted)">Laden…</em></div>
+        </div>
+      </div>
+
+      <!-- ── E-MAIL BROADCAST ── -->
       <div class="settings-card">
-        <h3>📢 Update versturen aan gebruikers</h3>
-        <p>Stuur een service-update (releasenotes, belangrijke mededelingen, nieuwe features) naar alle gebruikers die in hun instellingen <em>YardiGo updates per e-mail</em> hebben aangezet (<code>marketing_email_opt_in = true</code>). Je kunt filteren op land. De ontvangers zien jouw mail onder afzender <code>info@mail.yardigo.nl</code> met een uitschrijflink onderaan. <strong>Geen marketing of promoties</strong> — alleen mededelingen over de dienst zelf, conform onze privacyverklaring.</p>
+        <h3>📧 E-mail sturen aan gebruikers</h3>
+        <p>Stuur een e-mail naar je gebruikers. Kies het type zodat de juiste opt-in-lijst wordt gebruikt.</p>
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Type e-mail</label>
+          <div style="display:flex;gap:8px">
+            <button class="seg-btn active" data-bc-type="service" onclick="setBcType(this)" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--terra);background:#FFF0E8;color:var(--terra);font-size:12px;font-weight:600;cursor:pointer">🛠️ Service-update<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.75">marketing_email_opt_in</div></button>
+            <button class="seg-btn" data-bc-type="promo" onclick="setBcType(this)" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--border);background:white;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer">💌 Promo / reminder<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.75">promo_email_opt_in</div></button>
+          </div>
+        </div>
 
         <div style="margin-top:14px">
           <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Onderwerp</label>
@@ -959,7 +993,7 @@ function switchTab(name,el){
   if(name==='moderation') renderModerationTable();
   if(name==='errors') loadErrors();
   if(name==='analytics') loadAnalytics();
-  if(name==='broadcast') bcRefreshCount();
+  if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
 }
 
 // ══════════════════════════════════════════════════
@@ -1940,16 +1974,32 @@ function bcTogglePreview(){
     b.textContent = '👁️ Voorbeeld tonen';
   }
 }
+function getBcType() {
+  var active = document.querySelector('.seg-btn.active[data-bc-type]');
+  return active ? active.dataset.bcType : 'service';
+}
+function setBcType(btn) {
+  document.querySelectorAll('.seg-btn[data-bc-type]').forEach(function(b) {
+    var active = b === btn;
+    b.style.borderColor = active ? 'var(--terra)' : 'var(--border)';
+    b.style.background  = active ? '#FFF0E8' : 'white';
+    b.style.color       = active ? 'var(--terra)' : 'var(--muted)';
+    b.classList.toggle('active', active);
+  });
+  bcRefreshCount();
+}
 async function bcRefreshCount(){
   var sel = document.getElementById('bc-country');
   if (!sel) return;
   var country = sel.value;
+  var type = getBcType();
+  var col = type === 'promo' ? 'promo_email_opt_in' : 'marketing_email_opt_in';
   var elCount = document.getElementById('bc-count');
   var elSendCount = document.getElementById('bc-send-count');
   if (elCount) elCount.textContent = '…';
   if (elSendCount) elSendCount.textContent = '…';
   try {
-    var q = sb.from('profiles').select('id', { count: 'exact', head: true }).eq('marketing_email_opt_in', true);
+    var q = sb.from('profiles').select('id', { count: 'exact', head: true }).eq(col, true);
     if (country !== 'all') q = q.eq('country', country);
     var res = await q;
     if (res.error) throw res.error;
@@ -1958,14 +2008,83 @@ async function bcRefreshCount(){
     if (elSendCount) elSendCount.textContent = String(n);
     var sub = document.getElementById('bc-count-sub');
     if (sub) {
-      sub.textContent = (country === 'all' ? 'gebruikers met updates aan' :
-                         country === 'NL' ? 'NL-gebruikers met updates aan' :
-                         'BE-gebruikers met updates aan');
+      var typeLabel = type === 'promo' ? 'met promo opt-in' : 'met service-updates aan';
+      sub.textContent = (country === 'all' ? 'gebruikers ' : country + '-gebruikers ') + typeLabel;
     }
   } catch (e) {
     if (elCount) elCount.textContent = '?';
     if (elSendCount) elSendCount.textContent = '?';
   }
+}
+
+// ══════════════════════════════════════════════════
+// IN-APP AANKONDIGINGEN
+// ══════════════════════════════════════════════════
+async function annLoadList() {
+  var list = document.getElementById('ann-list');
+  if (!list) return;
+  list.innerHTML = '<em style="font-size:12px;color:var(--muted)">Laden…</em>';
+  try {
+    var res = await sb.from('announcements').select('id,emoji,title,body,published_at,target_country').order('created_at', { ascending: false }).limit(20);
+    if (res.error) throw res.error;
+    if (!res.data || !res.data.length) { list.innerHTML = '<em style="font-size:12px;color:var(--muted)">Nog geen aankondigingen.</em>'; return; }
+    list.innerHTML = '';
+    res.data.forEach(function(ann) {
+      var isPublished = !!ann.published_at && new Date(ann.published_at) <= new Date();
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:6px;background:white;';
+      row.innerHTML =
+        '<div style="font-size:20px;flex-shrink:0">' + (ann.emoji || '📢') + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + bcEscape(ann.title) + '</div>' +
+          '<div style="font-size:10px;color:var(--muted)">' + (isPublished ? '🟢 Gepubliceerd' : '🟡 Concept') + (ann.target_country ? ' · ' + ann.target_country : ' · Iedereen') + '</div>' +
+        '</div>' +
+        '<button onclick="annTogglePublish(\'' + ann.id + '\',' + (isPublished ? 'true' : 'false') + ')" class="btn btn-ghost btn-sm">' + (isPublished ? '⏸ Concept' : '🚀 Publiceer') + '</button>' +
+        '<button onclick="annDelete(\'' + ann.id + '\')" class="btn btn-sm" style="background:#FDE8E8;color:#C0392B;border:none">🗑</button>';
+      list.appendChild(row);
+    });
+  } catch(e) {
+    list.innerHTML = '<em style="font-size:12px;color:#C0392B">Fout bij laden: ' + bcEscape(String(e)) + '</em>';
+  }
+}
+async function annSave(publish) {
+  var emoji   = (document.getElementById('ann-emoji').value || '📢').trim();
+  var title   = (document.getElementById('ann-title').value || '').trim();
+  var body    = (document.getElementById('ann-body').value || '').trim();
+  var country = (document.getElementById('ann-country').value || '') || null;
+  if (!title) { alert('Titel is verplicht.'); return; }
+  if (!body)  { alert('Berichttekst is verplicht.'); return; }
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    var payload = { emoji: emoji, title: title, body: body, target_country: country, created_by: session.user.id };
+    if (publish) payload.published_at = new Date().toISOString();
+    var res = await sb.from('announcements').insert(payload);
+    if (res.error) throw res.error;
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-body').value = '';
+    document.getElementById('ann-emoji').value = '📢';
+    document.getElementById('ann-country').value = '';
+    toast(publish ? '✅ Aankondiging gepubliceerd!' : '✅ Concept opgeslagen!');
+    annLoadList();
+  } catch(e) { toast('❌ Fout: ' + bcEscape(String(e))); }
+}
+async function annTogglePublish(id, currentlyPublished) {
+  try {
+    var update = currentlyPublished ? { published_at: null } : { published_at: new Date().toISOString() };
+    var res = await sb.from('announcements').update(update).eq('id', id);
+    if (res.error) throw res.error;
+    toast(currentlyPublished ? '⏸ Teruggezet naar concept' : '🚀 Gepubliceerd!');
+    annLoadList();
+  } catch(e) { toast('❌ Fout: ' + bcEscape(String(e))); }
+}
+async function annDelete(id) {
+  if (!confirm('Aankondiging definitief verwijderen?')) return;
+  try {
+    var res = await sb.from('announcements').delete().eq('id', id);
+    if (res.error) throw res.error;
+    toast('🗑 Verwijderd');
+    annLoadList();
+  } catch(e) { toast('❌ Fout: ' + bcEscape(String(e))); }
 }
 async function bcSendBroadcast(){
   var btn = document.getElementById('bc-send-btn');
@@ -2003,6 +2122,7 @@ async function bcSendBroadcast(){
         subject: subject,
         body: body,
         country: country,
+        type: getBcType(),
       }),
     });
     var data = null;

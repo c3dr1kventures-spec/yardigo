@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>YardiGo: Ontdek garagesales bij jou in de buurt</title>
-<meta name="description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.">
+<meta name="description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.">
 <meta name="theme-color" content="#E07B39">
 <link rel="canonical" href="https://www.yardigo.nl/">
 
@@ -24,7 +24,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.yardigo.nl/">
 <meta property="og:title" content="YardiGo: Ontdek garagesales bij jou in de buurt">
-<meta property="og:description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.">
+<meta property="og:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.">
 <meta property="og:image" content="https://www.yardigo.nl/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -34,7 +34,7 @@
 <!-- Twitter/X -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="YardiGo: Ontdek garagesales bij jou in de buurt">
-<meta name="twitter:description" content="Vind rommelmarkten, buurtverkopen en garagesales op de kaart.">
+<meta name="twitter:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart.">
 <meta name="twitter:image" content="https://www.yardigo.nl/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -310,6 +310,27 @@ body.lang-en .lang-ball{left:21px;}
 /* Inloggen knop (zelfde basis als voorheen) */
 .btn-login{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;}
 .btn-settings-gear{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-inbox{position:relative;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:6px 8px;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;line-height:1;}
+.inbox-badge{position:absolute;top:-5px;right:-5px;background:#E07B39;color:white;border-radius:10px;font-size:9px;font-weight:800;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--forest);}
+/* Inbox panel */
+#inbox-panel{position:fixed;inset:0;z-index:3100;display:none;flex-direction:column;background:var(--bg);}
+#inbox-panel.open{display:flex;}
+.inbox-header{background:var(--forest);color:white;padding:14px 16px 10px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.inbox-header-title{flex:1;font-size:16px;font-weight:700;}
+.inbox-close-btn{background:rgba(255,255,255,.15);border:none;color:white;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600;}
+.inbox-list{flex:1;overflow-y:auto;padding:14px;}
+.inbox-item{background:var(--card-bg,white);border-radius:14px;border:1.5px solid var(--border);margin-bottom:10px;padding:14px 16px;cursor:pointer;transition:opacity .2s;}
+.inbox-item.read{opacity:.6;}
+.inbox-item-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.inbox-item-emoji{font-size:24px;flex-shrink:0;}
+.inbox-item-title{font-size:14px;font-weight:700;color:var(--text);flex:1;}
+.inbox-item-date{font-size:10px;color:var(--muted);white-space:nowrap;}
+.inbox-item-body{font-size:13px;color:var(--muted);line-height:1.6;}
+.inbox-unread-dot{width:8px;height:8px;background:#E07B39;border-radius:50%;flex-shrink:0;}
+.inbox-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.inbox-empty-icon{font-size:48px;margin-bottom:12px;}
+body.dark .inbox-item{background:var(--bg2);}
+body.dark #inbox-panel{background:var(--bg);}
 .btn-login-icon{display:none;font-size:13px;line-height:1;}
 
 /* Mobiele header: tekst verbergen, icoon-alleen knoppen op smalle schermen */
@@ -697,7 +718,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           Ontdek verkopen<br>bij jou in de buurt
         </div>
         <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:32px;max-width:280px" data-i18n="ob.s1.sub">
-          Garageverkopen, buurtverkopen en vlooienmarkten, allemaal op de kaart.
+          Garageverkopen, rommelroutes en vlooienmarkten, allemaal op de kaart.
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;width:100%">
@@ -783,11 +804,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
         <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px" data-i18n="ob.s3.title">Wat zoek jij?</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px" data-i18n="ob.s3.sub">Kies je favoriete categorieën voor betere aanbevelingen.</div>
-        <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#3A6B4A;margin-bottom:18px" id="ob-cat-count">1 categorie geselecteerd</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px" data-i18n="ob.s3.sub">Kies minimaal 3 categorieën voor betere aanbevelingen.</div>
+        <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#A04A18;margin-bottom:18px" id="ob-cat-count">Nog 3 categorieën nodig (minimaal 3)</div>
 
         <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
-          <div class="ob-cat-tile active" data-cat="Kleding" onclick="obToggleCat(this)"><span class="cat-icon">👗</span><div class="cat-name">Kleding</div></div>
+          <div class="ob-cat-tile" data-cat="Kleding" onclick="obToggleCat(this)"><span class="cat-icon">👗</span><div class="cat-name">Kleding</div></div>
           <div class="ob-cat-tile" data-cat="Schoenen" onclick="obToggleCat(this)"><span class="cat-icon">👟</span><div class="cat-name">Schoenen</div></div>
           <div class="ob-cat-tile" data-cat="Tassen" onclick="obToggleCat(this)"><span class="cat-icon">👜</span><div class="cat-name">Tassen</div></div>
           <div class="ob-cat-tile" data-cat="Sieraden" onclick="obToggleCat(this)"><span class="cat-icon">💍</span><div class="cat-name">Sieraden</div></div>
@@ -812,7 +833,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         </div>
 
         <div class="ob-anim-4">
-          <button class="ob-btn ob-btn-primary" onclick="obNext()" data-i18n="publish.btn_next">Volgende →</button>
+          <button class="ob-btn ob-btn-primary" id="ob-cats-next-btn" disabled style="opacity:0.55;cursor:not-allowed" onclick="obNextFromCats()" data-i18n="publish.btn_next">Volgende →</button>
         </div>
       </div>
     </div>
@@ -842,9 +863,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <input class="form-input" id="ob-email" type="email" placeholder="E-mailadres" data-i18n-placeholder="ob.s4.ph_email" autocomplete="email">
             <input class="form-input" id="ob-pass" type="password" placeholder="Wachtwoord" data-i18n-placeholder="ob.s4.ph_pass" autocomplete="new-password">
           </div>
-          <label for="ob-terms" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
+          <label for="ob-terms" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
             <input type="checkbox" id="ob-terms" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
             <span data-i18n-html="ob.s4.terms">Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.</span>
+          </label>
+          <label for="ob-news" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
+            <input type="checkbox" id="ob-news" checked style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
+            <span data-i18n="ob.s4.news_opt_in">Houd me op de hoogte van nieuwe features en service-updates van YardiGo (optioneel)</span>
+          </label>
+          <label for="ob-promo" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer;font-size:12px;color:#4A3E32;line-height:1.5">
+            <input type="checkbox" id="ob-promo" style="margin-top:2px;accent-color:#E07B39;flex-shrink:0">
+            <span data-i18n="ob.s4.promo_opt_in">Stuur mij tips over verkopen bij mij in de buurt (optioneel)</span>
           </label>
           <button class="ob-btn ob-btn-primary" onclick="obRegister()" data-i18n="ob.s4.create_account">Account aanmaken</button>
         </div>
@@ -889,6 +918,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </div>
 </div><!-- /onboarding -->
+
+<!-- ── Registratie-bevestiging (toont na succesvolle obRegister) ── -->
+<div id="ob-signup-success" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(44,36,22,.55);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#F9F5EF;border-radius:18px;max-width:440px;width:100%;padding:28px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3);font-family:'Poppins',sans-serif;box-sizing:border-box;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">🎉</div>
+    <div id="ob-signup-success-title" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px">Account aangemaakt!</div>
+    <div id="ob-signup-success-sub" style="font-size:14px;color:#4A3E32;margin-bottom:16px;line-height:1.5">Welkom bij YardiGo!</div>
+    <div id="ob-signup-success-note" style="font-size:13px;color:#2C4A36;background:#EAF2EC;border:1.5px solid #C7DFCF;border-radius:12px;padding:12px 14px;margin-bottom:18px;line-height:1.55;text-align:left"></div>
+    <button onclick="obDismissSignupSuccess()" style="width:100%;padding:14px;border-radius:12px;border:none;background:#E07B39;color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer" data-i18n="ob.success.cta">Aan de slag →</button>
+  </div>
+</div>
 
 <!-- ── Welcome Sheet (verschijnt na 3 sec voor nieuwe gebruikers) ── -->
 <div id="welcome-sheet" style="display:none;position:fixed;inset:0;z-index:9998;align-items:flex-end">
@@ -1017,6 +1057,21 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <button onclick="dismissCookieNotice()" style="background:#E07B39;color:white;border:none;border-radius:10px;padding:9px 16px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="cookie.dismiss">Begrepen</button>
 </div>
 
+<!-- ── INBOX PANEL ── -->
+<div id="inbox-panel">
+  <div class="inbox-header">
+    <button class="inbox-close-btn" onclick="closeInbox()">✕</button>
+    <div class="inbox-header-title" data-i18n="inbox.title">Berichten</div>
+  </div>
+  <div class="inbox-list" id="inbox-list">
+    <div class="inbox-empty" id="inbox-empty">
+      <div class="inbox-empty-icon">📭</div>
+      <div style="font-weight:700;margin-bottom:4px" data-i18n="inbox.empty_title">Geen berichten</div>
+      <div style="font-size:12px" data-i18n="inbox.empty_sub">Nieuws en updates van YardiGo verschijnen hier.</div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════════════════════════ APP ════════════════════════════════════ -->
 
 <!-- Header -->
@@ -1058,6 +1113,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
     </div>
     <button class="dm-toggle" onclick="toggleDark()" title="Licht / donker"><div class="dm-ball" id="dmBall">☀️</div></button>
+    <button class="btn-inbox" onclick="openInbox()" aria-label="Berichten" id="inboxBellBtn" title="Berichten">
+      🔔<span class="inbox-badge" id="inbox-badge" style="display:none">0</span>
+    </button>
     <button class="btn-settings-gear" onclick="openSettings()" aria-label="Instellingen" id="settingsGearBtn" title="Instellingen" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
@@ -1106,8 +1164,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button class="fdd-btn" id="btn-filter" onclick="openDD(event,'filter')"><span data-i18n="filter.label">⚙️ Filter</span></button>
     <div class="fdd-menu" id="dd-filter" style="min-width:200px">
       <div style="padding:12px 16px 8px;font-size:11px;font-weight:700;color:var(--muted)" data-i18n="filter.type">TYPE</div>
-      <div class="fdd-opt" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Particulier</span></div>
-      <div class="fdd-opt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Buurtverkoop</span></div>
+      <div class="fdd-opt" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
+      <div class="fdd-opt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
       <div class="fdd-opt" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
       <div class="fdd-opt" style="color:var(--terra)" onclick="filterType('all')" data-i18n="filter.clear">✕ Wis filter</div>
     </div>
@@ -1118,8 +1176,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <div class="type-row">
   <span style="font-size:10px;font-weight:700;color:var(--muted);margin-right:2px" data-i18n="types.heading">TYPES</span>
   <div class="type-pill active" id="leg-all" onclick="filterType('all')" data-i18n="filter.all">Alle</div>
-  <div class="type-pill p" id="leg-particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Particulier</span></div>
-  <div class="type-pill b" id="leg-buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Buurtverkoop</span></div>
+  <div class="type-pill p" id="leg-particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
+  <div class="type-pill b" id="leg-buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
   <div class="type-pill e" id="leg-evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
 </div>
 <div class="tab-row">
@@ -1348,12 +1406,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="srow-body"><div class="srow-title" style="color:var(--terra)" data-i18n="settings.logout">Uitloggen</div></div>
             <div class="srow-right"><span class="srow-chevron" style="color:var(--terra)">›</span></div>
           </div>
-          <!-- Account verwijderen -->
-          <div class="srow tappable" onclick="openDeleteConfirm()">
-            <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
-            <div class="srow-body"><div class="srow-title" style="color:#C0392B" data-i18n="settings.delete_account">Account verwijderen</div><div class="srow-sub" data-i18n="settings.delete_account_sub">Wis al je data permanent</div></div>
-            <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
-          </div>
         </div>
       </div>
 
@@ -1477,9 +1529,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
               <div class="notif-setting-row" style="border:none">
                 <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_types">Types</span>
                 <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 Particulier</button>
-                  <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ Buurt</button>
-                  <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 Evenement</button>
+                  <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 <span data-i18n="type.particulier">Opritverkoop</span></button>
+                  <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ <span data-i18n="type.buurt">Rommelroute</span></button>
+                  <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 <span data-i18n="type.evenement">Evenement</span></button>
                 </div>
               </div>
             </div>
@@ -1635,7 +1687,64 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
         </div><!-- /notif-cards -->
 
+        <!-- E-mailmelding bij interesse (voor organisatoren) -->
+        <div class="settings-card" style="margin-top:4px;margin-bottom:4px;">
+          <div class="srow">
+            <div class="srow-icon" style="background:#FFF8E8;">📬</div>
+            <div class="srow-body">
+              <div class="srow-title" data-i18n="settings.notif.interest_email_title">E-mailmelding bij interesse</div>
+              <div class="srow-sub" data-i18n="settings.notif.interest_email_sub">Ontvang een e-mail als iemand naar jouw verkoop gaat</div>
+            </div>
+            <div class="srow-right">
+              <div class="toggle-wrap" id="notify-interest-toggle" onclick="toggleNotifyInterestEmail(this)"><div class="toggle-ball"></div></div>
+            </div>
+          </div>
+        </div>
+
         <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px" data-i18n="settings.notif.save_btn">✓ Meldingen opslaan</button>
+      </div>
+
+      <!-- ── E-MAIL VOORKEUREN ── -->
+      <div class="settings-section">
+        <div class="settings-section-header" data-i18n="settings.header_email_prefs">E-mail voorkeuren</div>
+        <div class="settings-card">
+          <!-- Service-updates (marketing_email_opt_in) -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F0F8;">📢</div>
+            <div class="srow-body">
+              <div class="srow-title" data-i18n="settings.email.service_title">YardiGo updates per e-mail</div>
+              <div class="srow-sub" data-i18n="settings.email.service_sub">Service-updates over nieuwe features en mededelingen (geen reclame)</div>
+            </div>
+            <div class="srow-right">
+              <div class="toggle-wrap off" id="service-email-toggle" onclick="toggleServiceEmail(this)"><div class="toggle-ball"></div></div>
+            </div>
+          </div>
+          <!-- Promo opt-in -->
+          <div class="srow">
+            <div class="srow-icon" style="background:#E8F4ED;">💌</div>
+            <div class="srow-body">
+              <div class="srow-title" data-i18n="settings.email.promo_title">Tips over verkopen in de buurt</div>
+              <div class="srow-sub" data-i18n="settings.email.promo_sub">Ontvang gepersonaliseerde reminders per e-mail</div>
+            </div>
+            <div class="srow-right">
+              <div class="toggle-wrap off" id="promo-email-toggle" onclick="togglePromoEmail(this)"><div class="toggle-ball"></div></div>
+            </div>
+          </div>
+          <!-- Frequentie (alleen zichtbaar als opt-in aan) -->
+          <div class="srow" id="email-freq-row" style="display:none;flex-wrap:wrap;gap:8px;">
+            <div class="srow-icon" style="background:#FFF8E8;">📅</div>
+            <div class="srow-body">
+              <div class="srow-title" data-i18n="settings.email.freq_title">Hoe vaak?</div>
+              <div class="srow-sub" id="email-freq-sub" data-i18n="settings.email.freq_weekly">Wekelijks</div>
+            </div>
+            <div style="width:100%;padding-left:44px;">
+              <div class="seg-ctrl" id="seg-emailfreq">
+                <button class="seg-opt active" data-v="weekly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_weekly_btn">Wekelijks</button>
+                <button class="seg-opt" data-v="monthly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_monthly_btn">Maandelijks</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── PRIVACY ── -->
@@ -1712,6 +1821,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
             <div class="srow-body"><div class="srow-title" data-i18n="settings.version">Versie</div></div>
             <div class="srow-right"><span class="srow-value">1.1.0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GEVARENZONE (helemaal onderaan om accidentele kliks te voorkomen) ── -->
+      <div class="settings-section members-only">
+        <div class="settings-section-header" style="color:#C0392B" data-i18n="settings.header_danger">Gevarenzone</div>
+        <div class="settings-card">
+          <!-- Account verwijderen -->
+          <div class="srow tappable" onclick="openDeleteConfirm()">
+            <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
+            <div class="srow-body"><div class="srow-title" style="color:#C0392B" data-i18n="settings.delete_account">Account verwijderen</div><div class="srow-sub" data-i18n="settings.delete_account_sub">Wis al je data permanent</div></div>
+            <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
           </div>
         </div>
       </div>
@@ -1822,7 +1944,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <button id="det-next" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.9);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px" onclick="carouselStep(1)">›</button>
         <div id="det-dots" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px"></div>
       </div>
-      <div id="det-type-badge" style="position:absolute;top:12px;left:12px;background:var(--amber);color:var(--bark);font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:2">Particulier</div>
+      <div id="det-type-badge" style="position:absolute;top:12px;left:12px;background:var(--amber);color:var(--bark);font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:2">Opritverkoop</div>
       <div id="det-sample-badge" style="display:none;position:absolute;top:12px;right:44px;background:rgba(240,235,227,.92);color:#7A6A55;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid #DDD5C8;z-index:3;backdrop-filter:blur(2px)">🏷️ Voorbeeld</div>
       <button onclick="closeDetail()" style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:16px;z-index:2">✕</button>
     </div>
@@ -1976,8 +2098,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="font-size:17px;font-weight:800;margin-bottom:4px" data-i18n="publish.s0.title">Type verkoop</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px" data-i18n="publish.s0.sub">Wat voor soort verkoop is dit?</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span data-i18n="publish.type.particulier">Particulier: eigen spullen</span></div>
-          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span data-i18n="publish.type.buurt">Buurtverkoop: meerdere huizen</span></div>
+          <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span data-i18n="publish.type.particulier">Opritverkoop: eigen spullen</span></div>
+          <div class="type-opt" id="to-buurt" onclick="selType('buurt')">🏘️ <span data-i18n="publish.type.buurt">Rommelroute: meerdere huizen</span></div>
           <div class="type-opt" id="to-evenement" onclick="selType('evenement')">🎪 <span data-i18n="publish.type.evenement">Evenement: kies een type</span></div>
         </div>
         <!-- Evenement subtype dropdown -->
@@ -2491,9 +2613,29 @@ try {
 // ══════════════════════════════════════════════════
 var _errorLogQueue = [];
 var _errorLogBusy = false;
+// Patronen die we NIET in error_logs willen — cross-origin browser-extensies,
+// iOS-bridge ruis, Facebook-tracker false positives en gewenste user-validatie
+// (rate-limit / max-aantal listings) die geen bug zijn maar verwachte feedback.
+var _LOG_IGNORE = [
+  /^Script error\.?$/i,
+  /^Unexpected token ['"]?\}['"]?/i,
+  /^Unexpected end of input/i,
+  /Failed to connect to MetaMask/i,
+  /window\.webkit\.messageHandlers/i,
+  /^NetworkError when attempting to fetch resource\.?$/i,
+  /^Invalid login credentials$/i,
+  /Je hebt het maximale aantal van 10 actieve/i,
+  /Je hebt het afgelopen uur te veel listings/i,
+  // Bekend FB-redirect-incident waarbij een inline-script een el.value leest
+  // op iets dat nog niet in de DOM staat — onschadelijke ruis voor logging
+  /Cannot read properties of undefined \(reading 'value'\)/i
+];
 async function logError(err, context) {
   if (!sbClient) return;
   var msg = (err && err.message) ? err.message : String(err || 'Onbekende fout');
+  for (var _i = 0; _i < _LOG_IGNORE.length; _i++) {
+    if (_LOG_IGNORE[_i].test(msg)) return; // negeer bekende ruis
+  }
   var stack = (err && err.stack) ? err.stack.substring(0, 2000) : null;
   var userId = null;
   try { userId = (currentUser && currentUser.id) || null; } catch(e) {}
@@ -2563,7 +2705,17 @@ function mapSupabaseToSale(item) {
     type: mappedType,
     title: item.title,
     emoji: emojiMap[mappedType],
-    address: item.address ? item.address + ', ' + (item.city || '') : (item.city || 'Nederland'),
+    // Voorkom dat we city duplicaat aan address plakken als city al ergens
+    // in het adres voorkomt (bv. omdat city een postcode is die ook achter
+    // het Nominatim-display_name staat).
+    address: (function(){
+      var a = item.address || '';
+      var c = (item.city || '').trim();
+      if (!a) return c || 'Nederland';
+      if (!c) return a;
+      var has = new RegExp('(^|,\\s*)'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*')+'(\\s*,|\\s*$)', 'i').test(a);
+      return has ? a : (a + ', ' + c);
+    })(),
     lat: lat,
     lng: lng,
     date: item.date_start || item.date || '',
@@ -2705,6 +2857,7 @@ var currentLang = (function(){
 
 var I18N = {
   nl: {
+    'page.title': 'YardiGo: Ontdek garagesales bij jou in de buurt',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Vul een titel in",
     'toast.address_required': "Vul een adres in",
@@ -2748,6 +2901,10 @@ var I18N = {
     'toast.no_connection': "Geen verbinding, probeer opnieuw.",
     'toast.something_wrong': "Er ging iets mis, probeer opnieuw.",
     'toast.save_error': "Fout bij opslaan",
+    'toast.unsubscribed_service': "✓ Je ontvangt geen service-updates meer per e-mail.",
+    'toast.unsubscribed_promo': "✓ Je ontvangt geen gepersonaliseerde herinneringen meer per e-mail.",
+    'toast.unsubscribe_invalid': "Uitschrijflink ongeldig of al gebruikt.",
+    'toast.unsubscribe_error': "Fout bij uitschrijven. Probeer het later opnieuw.",
     'toast.login_failed': "❌ Inloggen mislukt",
     'toast.signup_failed': "❌ Registratie mislukt",
     'toast.publish_failed': "❌ Publiceren mislukt",
@@ -2861,6 +3018,8 @@ var I18N = {
     'settings.notif.freq_daily': "Dagelijks",
     'settings.notif.freq_weekly': "Wekelijks",
     'settings.notif.save_btn': "✓ Meldingen opslaan",
+    'settings.notif.interest_email_title': "E-mailmelding bij interesse",
+    'settings.notif.interest_email_sub': "Ontvang een e-mail als iemand naar jouw verkoop gaat",
     'settings.privacy.addr_title': "Adres van mijn verkopen",
     'settings.privacy.addr_sub_members': "Alleen voor ingelogde gebruikers",
     'settings.privacy.addr_members': "Leden",
@@ -2951,8 +3110,8 @@ var I18N = {
     'nav.route': 'Route',
     'nav.mine': 'Mijn',
     // Types
-    'type.particulier': 'Particulier',
-    'type.buurt': 'Buurtverkoop',
+    'type.particulier': 'Opritverkoop',
+    'type.buurt': 'Rommelroute',
     'type.evenement': 'Evenement',
     // Detail view
     'detail.route': '🧭 Route',
@@ -2974,6 +3133,17 @@ var I18N = {
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profiel',
     'settings.header_about': 'Over YardiGo',
+    'settings.header_email_prefs': 'E-mail voorkeuren',
+    'settings.email.promo_title': 'Tips over verkopen in de buurt',
+    'settings.email.promo_sub': 'Ontvang gepersonaliseerde reminders per e-mail',
+    'settings.email.freq_title': 'Hoe vaak?',
+    'settings.email.freq_weekly': 'Wekelijks',
+    'settings.email.freq_monthly': 'Maandelijks',
+    'settings.email.freq_weekly_btn': 'Wekelijks',
+    'settings.email.freq_monthly_btn': 'Maandelijks',
+    'inbox.title': 'Berichten',
+    'inbox.empty_title': 'Geen berichten',
+    'inbox.empty_sub': 'Nieuws en updates van YardiGo verschijnen hier.',
     'settings.feedback.title': 'Feedback geven',
     'settings.feedback.sub': 'Ideeën of verbeterpunten sturen',
     'settings.report.title': 'Probleem melden',
@@ -3023,8 +3193,8 @@ var I18N = {
     'publish.country.label': '🌍 Land',
     'publish.country.help': 'In welk land staat het adres?',
     'publish.s3.title': "Foto's",
-    'publish.type.particulier': 'Particulier: eigen spullen',
-    'publish.type.buurt': 'Buurtverkoop: meerdere huizen',
+    'publish.type.particulier': 'Opritverkoop: eigen spullen',
+    'publish.type.buurt': 'Rommelroute: meerdere huizen',
     'publish.type.evenement': 'Evenement: kies een type',
     'publish.event.subtype_label': 'WAT VOOR EVENEMENT?',
     'publish.btn_next': 'Volgende →',
@@ -3048,7 +3218,7 @@ var I18N = {
     'welcome.guest': 'Niet nu, als gast verder →',
     // Onboarding screen 1 (Hero)
     'ob.s1.title': 'Ontdek verkopen<br>bij jou in de buurt',
-    'ob.s1.sub': 'Garageverkopen, buurtverkopen en vlooienmarkten, allemaal op de kaart.',
+    'ob.s1.sub': 'Garageverkopen, rommelroutes en vlooienmarkten, allemaal op de kaart.',
     'ob.s1.feat1.title': 'Op de kaart',
     'ob.s1.feat1.sub': 'Zie alle verkopen in jouw buurt',
     'ob.s1.feat2.title': 'Route plannen',
@@ -3078,6 +3248,7 @@ var I18N = {
     'ob.s4.ph_email': 'E-mailadres',
     'ob.s4.ph_pass': 'Wachtwoord',
     'ob.s4.terms': 'Ik ga akkoord met de <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Gebruiksvoorwaarden</a> en heb de <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacyverklaring</a> gelezen.',
+    'ob.s4.promo_opt_in': 'Stuur mij tips over verkopen bij mij in de buurt (optioneel)',
     'ob.s4.have_account': 'Al een account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Inloggen</span>',
     'ob.s4.guest_btn': 'Beperkt verder als gast →',
     'ob.s4.guest_note': 'Je kunt later alsnog een gratis account aanmaken',
@@ -3233,6 +3404,7 @@ var I18N = {
     'lang.switched_fr': '🇫🇷 Français'
   },
   en: {
+    'page.title': 'YardiGo: Discover garage sales near you',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Enter a title",
     'toast.address_required': "Enter an address",
@@ -3276,6 +3448,10 @@ var I18N = {
     'toast.no_connection': "No connection, try again.",
     'toast.something_wrong': "Something went wrong, try again.",
     'toast.save_error': "Save error",
+    'toast.unsubscribed_service': "✓ You'll no longer receive service update emails.",
+    'toast.unsubscribed_promo': "✓ You'll no longer receive personalised reminder emails.",
+    'toast.unsubscribe_invalid': "Unsubscribe link invalid or already used.",
+    'toast.unsubscribe_error': "Error unsubscribing. Please try again later.",
     'toast.login_failed': "❌ Login failed",
     'toast.signup_failed': "❌ Sign-up failed",
     'toast.publish_failed': "❌ Publish failed",
@@ -3389,6 +3565,8 @@ var I18N = {
     'settings.notif.freq_daily': "Daily",
     'settings.notif.freq_weekly': "Weekly",
     'settings.notif.save_btn': "✓ Save notifications",
+    'settings.notif.interest_email_title': "Email notification for interest",
+    'settings.notif.interest_email_sub': "Receive an email when someone is going to your sale",
     'settings.privacy.addr_title': "Address of my sales",
     'settings.privacy.addr_sub_members': "Only for logged-in users",
     'settings.privacy.addr_members': "Members",
@@ -3479,8 +3657,8 @@ var I18N = {
     'nav.route': 'Route',
     'nav.mine': 'My',
     // Types
-    'type.particulier': 'Private',
-    'type.buurt': 'Neighborhood',
+    'type.particulier': 'Driveway sale',
+    'type.buurt': 'Yard sale route',
     'type.evenement': 'Event',
     // Detail view
     'detail.route': '🧭 Route',
@@ -3502,6 +3680,17 @@ var I18N = {
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profile',
     'settings.header_about': 'About YardiGo',
+    'settings.header_email_prefs': 'Email preferences',
+    'settings.email.promo_title': 'Tips about sales near you',
+    'settings.email.promo_sub': 'Receive personalised reminders by email',
+    'settings.email.freq_title': 'How often?',
+    'settings.email.freq_weekly': 'Weekly',
+    'settings.email.freq_monthly': 'Monthly',
+    'settings.email.freq_weekly_btn': 'Weekly',
+    'settings.email.freq_monthly_btn': 'Monthly',
+    'inbox.title': 'Messages',
+    'inbox.empty_title': 'No messages',
+    'inbox.empty_sub': 'News and updates from YardiGo will appear here.',
     'settings.feedback.title': 'Send feedback',
     'settings.feedback.sub': 'Share ideas or improvements',
     'settings.report.title': 'Report a problem',
@@ -3551,8 +3740,8 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
-    'publish.type.particulier': 'Private: your own items',
-    'publish.type.buurt': 'Neighborhood: multiple houses',
+    'publish.type.particulier': 'Driveway sale: your own items',
+    'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
     'publish.event.subtype_label': 'WHAT KIND OF EVENT?',
     'publish.btn_next': 'Next →',
@@ -3606,6 +3795,7 @@ var I18N = {
     'ob.s4.ph_email': 'Email address',
     'ob.s4.ph_pass': 'Password',
     'ob.s4.terms': 'I agree to the <a href="/voorwaarden" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Terms of use</a> and have read the <a href="/privacy" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Privacy statement</a>.',
+    'ob.s4.promo_opt_in': 'Send me tips about sales near me (optional)',
     'ob.s4.have_account': 'Already have an account? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Sign in</span>',
     'ob.s4.guest_btn': 'Continue as guest with limits →',
     'ob.s4.guest_note': 'You can still create a free account later',
@@ -3761,6 +3951,7 @@ var I18N = {
     'lang.switched_fr': '🇫🇷 Français'
   },
   fr: {
+    'page.title': 'YardiGo : Découvrez les vide-greniers près de chez vous',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Saisis un titre",
     'toast.address_required': "Saisis une adresse",
@@ -3804,6 +3995,10 @@ var I18N = {
     'toast.no_connection': "Pas de connexion, réessaie.",
     'toast.something_wrong': "Une erreur s'est produite, réessaie.",
     'toast.save_error': "Erreur d'enregistrement",
+    'toast.unsubscribed_service': "✓ Tu ne recevras plus les mises à jour de service par e-mail.",
+    'toast.unsubscribed_promo': "✓ Tu ne recevras plus les rappels personnalisés par e-mail.",
+    'toast.unsubscribe_invalid': "Lien de désinscription invalide ou déjà utilisé.",
+    'toast.unsubscribe_error': "Erreur lors de la désinscription. Réessaie plus tard.",
     'toast.login_failed': "❌ Échec de la connexion",
     'toast.signup_failed': "❌ Échec de l'inscription",
     'toast.publish_failed': "❌ Échec de la publication",
@@ -3917,6 +4112,8 @@ var I18N = {
     'settings.notif.freq_daily': "Quotidien",
     'settings.notif.freq_weekly': "Hebdomadaire",
     'settings.notif.save_btn': "✓ Enregistrer les notifications",
+    'settings.notif.interest_email_title': "Notification e-mail pour les intérêts",
+    'settings.notif.interest_email_sub': "Recevez un e-mail quand quelqu'un va à votre vente",
     'settings.privacy.addr_title': "Adresse de mes ventes",
     'settings.privacy.addr_sub_members': "Uniquement pour les utilisateurs connectés",
     'settings.privacy.addr_members': "Membres",
@@ -4007,8 +4204,8 @@ var I18N = {
     'nav.route': 'Itinéraire',
     'nav.mine': 'Mes ventes',
     // Types
-    'type.particulier': 'Particulier',
-    'type.buurt': 'Vente de quartier',
+    'type.particulier': 'Vente sur allée',
+    'type.buurt': 'Circuit brocante',
     'type.evenement': 'Événement',
     // Detail view
     'detail.route': '🧭 Itinéraire',
@@ -4030,6 +4227,17 @@ var I18N = {
     'settings.header_privacy': 'Confidentialité',
     'settings.header_profile': 'Profil',
     'settings.header_about': 'À propos de YardiGo',
+    'settings.header_email_prefs': 'Préférences e-mail',
+    'settings.email.promo_title': 'Conseils sur les ventes près de chez vous',
+    'settings.email.promo_sub': 'Recevez des rappels personnalisés par e-mail',
+    'settings.email.freq_title': 'À quelle fréquence ?',
+    'settings.email.freq_weekly': 'Hebdomadaire',
+    'settings.email.freq_monthly': 'Mensuel',
+    'settings.email.freq_weekly_btn': 'Hebdomadaire',
+    'settings.email.freq_monthly_btn': 'Mensuel',
+    'inbox.title': 'Messages',
+    'inbox.empty_title': 'Aucun message',
+    'inbox.empty_sub': 'Les actualités et mises à jour de YardiGo apparaîtront ici.',
     'settings.feedback.title': 'Envoyer un avis',
     'settings.feedback.sub': 'Partagez vos idées ou suggestions',
     'settings.report.title': 'Signaler un problème',
@@ -4079,8 +4287,8 @@ var I18N = {
     'publish.country.label': '🌍 Pays',
     'publish.country.help': "Dans quel pays se trouve l'adresse ?",
     'publish.s3.title': 'Photos',
-    'publish.type.particulier': 'Particulier : vos propres objets',
-    'publish.type.buurt': 'Vente de quartier : plusieurs maisons',
+    'publish.type.particulier': 'Vente sur allée : vos propres objets',
+    'publish.type.buurt': 'Circuit brocante : plusieurs maisons',
     'publish.type.evenement': 'Événement : choisissez un type',
     'publish.event.subtype_label': 'QUEL TYPE D\'ÉVÉNEMENT ?',
     'publish.btn_next': 'Suivant →',
@@ -4134,6 +4342,7 @@ var I18N = {
     'ob.s4.ph_email': 'Adresse e-mail',
     'ob.s4.ph_pass': 'Mot de passe',
     'ob.s4.terms': 'J\'accepte les <a href="/voorwaarden-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Conditions d\'utilisation</a> et j\'ai lu la <a href="/privacy-fr" target="_blank" rel="noopener" style="color:#E07B39;font-weight:600">Politique de confidentialité</a>.',
+    'ob.s4.promo_opt_in': 'Envoyez-moi des conseils sur les ventes près de chez moi (optionnel)',
     'ob.s4.have_account': 'Vous avez déjà un compte ? <span style="color:#E07B39;font-weight:700;cursor:pointer" onclick="obShowLogin()">Se connecter</span>',
     'ob.s4.guest_btn': 'Continuer en invité (limité) →',
     'ob.s4.guest_note': 'Vous pouvez toujours créer un compte gratuit plus tard',
@@ -4289,6 +4498,7 @@ var I18N = {
     'lang.switched_fr': '🇫🇷 Français'
   },
   de: {
+    'page.title': 'YardiGo: Entdecke Garagenverkäufe in deiner Nähe',
     // PLACEHOLDER: DE-vertaling staat klaar als structuur, maar de waarden
     // zijn voorlopig EN. Vul deze later met echte vertalingen voordat we
     // yardigo.de lanceren of DE als optie tonen voor NL-bezoekers.
@@ -4335,6 +4545,10 @@ var I18N = {
     'toast.no_connection': "Keine Verbindung, versuche es erneut.",
     'toast.something_wrong': "Etwas ist schiefgegangen, versuche es erneut.",
     'toast.save_error': "Fehler beim Speichern",
+    'toast.unsubscribed_service': "✓ Du erhältst keine Service-Update-E-Mails mehr.",
+    'toast.unsubscribed_promo': "✓ Du erhältst keine personalisierten Erinnerungs-E-Mails mehr.",
+    'toast.unsubscribe_invalid': "Abmeldelink ungültig oder bereits verwendet.",
+    'toast.unsubscribe_error': "Fehler beim Abmelden. Bitte später erneut versuchen.",
     'toast.login_failed': "❌ Anmeldung fehlgeschlagen",
     'toast.signup_failed': "❌ Registrierung fehlgeschlagen",
     'toast.publish_failed': "❌ Veröffentlichen fehlgeschlagen",
@@ -4448,6 +4662,8 @@ var I18N = {
     'settings.notif.freq_daily': "Täglich",
     'settings.notif.freq_weekly': "Wöchentlich",
     'settings.notif.save_btn': "✓ Benachrichtigungen speichern",
+    'settings.notif.interest_email_title': "E-Mail bei Interesse",
+    'settings.notif.interest_email_sub': "E-Mail erhalten, wenn jemand zu deinem Verkauf geht",
     'settings.privacy.addr_title': "Adresse meiner Verkäufe",
     'settings.privacy.addr_sub_members': "Nur für angemeldete Nutzer",
     'settings.privacy.addr_members': "Mitglieder",
@@ -4535,8 +4751,8 @@ var I18N = {
     'nav.list': 'List',
     'nav.route': 'Route',
     'nav.mine': 'My',
-    'type.particulier': 'Private',
-    'type.buurt': 'Neighborhood',
+    'type.particulier': 'Driveway sale',
+    'type.buurt': 'Yard sale route',
     'type.evenement': 'Event',
     'detail.route': '🧭 Route',
     'detail.fav': '☆ Favorite',
@@ -4555,6 +4771,18 @@ var I18N = {
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profile',
     'settings.header_about': 'About YardiGo',
+    'settings.header_email_prefs': 'E-Mail-Einstellungen',
+    'settings.email.promo_title': 'Tipps über Verkäufe in deiner Nähe',
+    'settings.email.promo_sub': 'Erhalte personalisierte Erinnerungen per E-Mail',
+    'settings.email.freq_title': 'Wie oft?',
+    'settings.email.freq_weekly': 'Wöchentlich',
+    'settings.email.freq_monthly': 'Monatlich',
+    'settings.email.freq_weekly_btn': 'Wöchentlich',
+    'settings.email.freq_monthly_btn': 'Monatlich',
+    'inbox.title': 'Nachrichten',
+    'inbox.empty_title': 'Keine Nachrichten',
+    'inbox.empty_sub': 'Neuigkeiten und Updates von YardiGo erscheinen hier.',
+    'ob.s4.promo_opt_in': 'Sende mir Tipps über Verkäufe in meiner Nähe (optional)',
     'settings.feedback.title': 'Send feedback',
     'settings.feedback.sub': 'Share ideas or improvements',
     'settings.report.title': 'Report a problem',
@@ -4599,8 +4827,8 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
-    'publish.type.particulier': 'Private: your own items',
-    'publish.type.buurt': 'Neighborhood: multiple houses',
+    'publish.type.particulier': 'Driveway sale: your own items',
+    'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
     'publish.event.subtype_label': 'WHAT KIND OF EVENT?',
     'publish.btn_next': 'Next →',
@@ -4678,6 +4906,8 @@ function applyLang() {
       if (t != null) el.innerHTML = t;
     });
     document.documentElement.lang = currentLang;
+    var pageTitle = i18n('page.title', null);
+    if (pageTitle) document.title = pageTitle;
     document.body.classList.toggle('lang-en', currentLang === 'en');
     document.body.classList.toggle('lang-de', currentLang === 'de');
     document.body.classList.toggle('lang-fr', currentLang === 'fr');
@@ -4889,10 +5119,12 @@ function applyCountryToPlaceholders() {
 // ══════════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════════
+// 'particulier' = Opritverkoop (eigen spullen), 'buurt' = Rommelroute (meerdere
+// huizen). DB-categorie-waarden zijn niet aangepast; alleen de UI-labels.
 const TYPES = {
-  particulier: { label:'Particulier', icon:'🏠', color:'#F2A830', textColor:'#2C2416' },
-  buurt:       { label:'Buurtverkoop', icon:'🏘️', color:'#E07B39', textColor:'white' },
-  evenement:   { label:'Evenement', icon:'🎪', color:'#3A6B4A', textColor:'white' }
+  particulier: { label:'Opritverkoop', icon:'🏠', color:'#F2A830', textColor:'#2C2416' },
+  buurt:       { label:'Rommelroute',  icon:'🏘️', color:'#E07B39', textColor:'white' },
+  evenement:   { label:'Evenement',    icon:'🎪', color:'#3A6B4A', textColor:'white' }
 };
 
 // Emoji per evenement-subtype voor differentiatie op de kaart.
@@ -4922,7 +5154,7 @@ let sales = [
   { id:3,  is_sample:true, type:'particulier', title:'Tuinspullen & Meer',         emoji:'🌿', address:'Floralaan 5, Hoogezand',         lat:53.1617, lng:6.7643, date:'2026-03-08', from:'09:00', till:'13:00', tags:['🌿 Tuin','📦 Overig'], interested:8 },
   { id:4,  is_sample:true, type:'particulier', title:'Verhuizing! Alles weg',      emoji:'🏠', address:'Verlengde Hereweg 3, Sappemeer', lat:53.1418, lng:6.8012, date:'2026-03-08', from:'10:00', till:'14:00', tags:['🛋️ Meubels'], interested:22 },
   { id:5,  is_sample:true, type:'evenement',   title:'Vlooienmarkt Assen',         emoji:'🎪', address:'Marktplein 1, Assen',            lat:52.9929, lng:6.5642, date:'2026-03-14', from:'09:00', till:'16:00', tags:['🧸 Speelgoed','👗 Kleding'], interested:87 },
-  { id:6,  is_sample:true, type:'buurt',       title:'Buurtverkoop Paddepoel',     emoji:'🏘️', address:'Zernikelaan 4, Groningen',       lat:53.2310, lng:6.5370, date:'2026-03-15', from:'10:00', till:'15:00', tags:['📦 Overig','🛋️ Meubels'], interested:43 },
+  { id:6,  is_sample:true, type:'buurt',       title:'Rommelroute Paddepoel',      emoji:'🏘️', address:'Zernikelaan 4, Groningen',       lat:53.2310, lng:6.5370, date:'2026-03-15', from:'10:00', till:'15:00', tags:['📦 Overig','🛋️ Meubels'], interested:43 },
   // ── Amsterdam regio ──
   { id:7,  is_sample:true, type:'evenement',   title:'Vlooienmarkt Waterlooplein', emoji:'🎪', address:'Waterlooplein 2, Amsterdam',     lat:52.3686, lng:4.9006, date:'2026-03-07', from:'09:00', till:'17:00', tags:['👗 Kleding','🎨 Kunst'], interested:215 },
   { id:8,  is_sample:true, type:'particulier', title:'Garageverkoop Jordaan',      emoji:'🏠', address:'Bloemgracht 8, Amsterdam',       lat:52.3742, lng:4.8815, date:'2026-03-08', from:'10:00', till:'15:00', tags:['📚 Boeken','📱 Elektronica','🧸 Speelgoed'], interested:56 },
@@ -4985,6 +5217,8 @@ function updateUserUI() {
       btn.setAttribute('onclick', "sv('mijn',document.querySelectorAll('.tab')[3]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-mijn').classList.add('active')");
     }
     if (gearBtn) gearBtn.style.display = 'inline-flex';
+    var bellBtn = document.getElementById('inboxBellBtn');
+    if (bellBtn) bellBtn.style.display = 'inline-flex';
     if (profileName) profileName.textContent = currentUser.name;
     if (profileSub)  profileSub.textContent  = currentUser.email || '';
   } else {
@@ -4995,6 +5229,8 @@ function updateUserUI() {
       btn.setAttribute('onclick', 'openLogin()');
     }
     if (gearBtn) gearBtn.style.display = 'none';
+    var bellBtnGuest = document.getElementById('inboxBellBtn');
+    if (bellBtnGuest) bellBtnGuest.style.display = 'none';
     if (profileName) profileName.textContent = i18n('profile.guest','Gast');
     if (profileSub)  profileSub.textContent  = i18n('profile.guest_sub','Maak een account aan voor meer');
   }
@@ -5057,8 +5293,8 @@ function renderMySales() {
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   list.innerHTML = display.map(function(s) {
     var icon = s.neighborhood_sale_id ? '🏘️' : TYPES[s.type] ? TYPES[s.type].icon : '🏠';
-    var label = s.neighborhood_sale_id ? 'Buurtverkoop' : (TYPES[s.type] ? TYPES[s.type].label : s.type);
-    var addrShort = (s.address || '').split(',').slice(-1)[0].trim();
+    var label = s.neighborhood_sale_id ? i18n('type.buurt', 'Rommelroute') : (TYPES[s.type] ? TYPES[s.type].label : s.type);
+    var addrShort = prettyCity(s.address);
     // Voor buurtverkoop: tel statussen van alle adressen in deze groep
     var bvStatusBadge = '';
     var bvAddressesHtml = '';
@@ -5250,6 +5486,8 @@ async function doMainLogin() {
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
       localStorage.setItem('yg-onboarded', '1');
       ensureProfile(u.id, name, email);
+      loadMyInterests();
+      loadInboxBadge();
       closeLogin(); updateUserUI();
       if (map) renderMarkers(); renderList();
       toast(i18n('toast.welcome_user', 'Welkom, {name}! 🎉').replace('{name}', name.split(' ')[0])); return;
@@ -5269,7 +5507,7 @@ let profilePhotoData = null;
 let detailSaleId = null, carouselIdx = 0, detailMiniMap = null;
 let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelected = new Set(), nextId = 10;
 var addFloorplanFile = null; // geselecteerde plattegrond voor buurtverkoop aanmaakflow
-let obStep = 0, obSelectedCats = ['Kleding'];
+let obStep = 0, obSelectedCats = [];
 let searchSuggestTimer = null;
 let attendanceData = { visited:4, total:5 };
 
@@ -5283,7 +5521,10 @@ function obGoTo(n) {
   document.getElementById('onboarding').classList.toggle('ob-dark', n === 0);
   // Blobs only on screen 1
   document.querySelectorAll('.ob-blob').forEach(function(b) { b.style.display = n === 0 ? '' : 'none'; });
-  document.getElementById('ob-skip').style.display = n === 3 ? 'none' : '';
+  // Skip overslaan op categorieën-scherm: voorkomt dat min-3 wordt gepasseerd
+  document.getElementById('ob-skip').style.display = (n === 2 || n === 3) ? 'none' : '';
+  // Teller bijwerken zodra we het categoriescherm tonen, zodat de knop direct correct staat
+  if (n === 2) obUpdateCatCount();
   // Re-trigger fade-up animations on new screen
   var screens = document.querySelectorAll('.ob-screen');
   if (screens[n]) {
@@ -5297,71 +5538,242 @@ function obGoTo(n) {
 }
 function obNext()   { if (obStep < 3) obGoTo(obStep + 1); }
 function obSkip()   { obGoTo(3); }
+// Toon visuele feedback op de toestemmingskaart (granted / denied / skipped)
+function obSetPermStatus(cardId, kind, label) {
+  var card = document.getElementById(cardId);
+  if (!card) return;
+  card.classList.remove('granted', 'denied');
+  if (kind === 'granted') card.classList.add('granted');
+  else if (kind === 'denied') card.classList.add('denied');
+  var statusEl = card.querySelector('.ob-perm-status');
+  if (statusEl) statusEl.textContent = label;
+}
 function obRequestLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function() { document.getElementById('ob-loc-card').classList.add('granted'); document.querySelector('#ob-loc-card .ob-perm-status').textContent = '✓ Toegang verleend'; },
-      function() { toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar')); }
-    );
+  if (!navigator.geolocation) {
+    obSetPermStatus('ob-loc-card', 'denied', i18n('ob.s2.loc_unsupported', '⚠️ Niet beschikbaar in deze browser'));
+    toast(i18n('toast.location_unsupported', 'Locatie wordt niet ondersteund in deze browser'));
+    return;
   }
+  // Directe visuele feedback dat er iets gebeurt
+  obSetPermStatus('ob-loc-card', '', i18n('ob.s2.loc_requesting', 'Toestemming vragen…'));
+  // Eerst Permissions API checken — dat geeft directe state zonder OS-prompt te triggeren bij denied
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+      if (result.state === 'denied') {
+        obSetPermStatus('ob-loc-card', 'denied', i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+        toast(i18n('toast.location_denied', 'Locatie is geblokkeerd. Wijzig dit in je browserinstellingen.'));
+        return;
+      }
+      _obDoLocationRequest();
+    }).catch(function() { _obDoLocationRequest(); });
+  } else {
+    _obDoLocationRequest();
+  }
+}
+function _obDoLocationRequest() {
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      try { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; } catch(e) {}
+      obSetPermStatus('ob-loc-card', 'granted', i18n('ob.s2.loc_granted', '✓ Toegang verleend'));
+    },
+    function(err) {
+      var msg = (err && err.code === 1)
+        ? i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen')
+        : i18n('ob.s2.loc_unavailable', '⚠️ Locatie niet beschikbaar');
+      obSetPermStatus('ob-loc-card', 'denied', msg);
+      toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar'));
+    },
+    { timeout: 8000, maximumAge: 60000 }
+  );
 }
 function obRequestNotif() {
   // In Capacitor (native app): meldingen via iOS Instellingen
   if (window.Capacitor) {
-    document.getElementById('ob-notif-card').classList.add('granted');
-    document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Ingesteld via Instellingen';
+    obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_ios', '✓ Ingesteld via Instellingen'));
     toast(i18n('toast.notif_ios_settings', 'Meldingen kun je beheren via iOS Instellingen'));
     return;
   }
   // In browser/PWA: gebruik web Notification API
-  if ('Notification' in window) {
-    Notification.requestPermission().then(function(p) {
-      if (p === 'granted') { document.getElementById('ob-notif-card').classList.add('granted'); document.querySelector('#ob-notif-card .ob-perm-status').textContent = '✓ Meldingen aan'; }
-      else toast(i18n('toast.notif_browser_settings', 'Meldingen kun je later aanzetten via je browserinstellingen'));
-    });
-  } else {
+  if (!('Notification' in window)) {
+    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_unsupported', '⚠️ Niet beschikbaar in deze browser'));
     toast(i18n('toast.notif_unsupported', 'Meldingen worden niet ondersteund in deze browser'));
+    return;
+  }
+  // iOS Safari ondersteunt Web Push alleen voor PWA's die op het beginscherm zijn toegevoegd
+  var isIOSStandalone = (window.navigator.standalone === true);
+  var ua = (navigator.userAgent || '').toLowerCase();
+  var isIOS = /iphone|ipad|ipod/.test(ua);
+  if (isIOS && !isIOSStandalone) {
+    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_ios_pwa', 'ℹ️ Voeg eerst toe aan beginscherm'));
+    toast(i18n('toast.notif_ios_install_first', 'Op iPhone werken meldingen pas nadat je YardiGo aan je beginscherm hebt toegevoegd.'));
+    return;
+  }
+  // Reeds bekende state direct verwerken
+  if (Notification.permission === 'granted') {
+    obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+    toast(i18n('toast.notif_browser_settings', 'Meldingen kun je later aanzetten via je browserinstellingen'));
+    return;
+  }
+  obSetPermStatus('ob-notif-card', '', i18n('ob.s2.notif_requesting', 'Toestemming vragen…'));
+  try {
+    var p = Notification.requestPermission(function(legacy) {
+      // Safari oude API roept callback aan ipv promise
+      if (legacy === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+      else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+    });
+    if (p && typeof p.then === 'function') {
+      p.then(function(perm) {
+        if (perm === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+        else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+      }).catch(function() {
+        obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_unavailable', '⚠️ Niet beschikbaar'));
+      });
+    }
+  } catch (e) {
+    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_unavailable', '⚠️ Niet beschikbaar'));
   }
 }
+var OB_MIN_CATS = 3;
 function obToggleCat(el) {
   var cat = el.dataset.cat;
   var idx = obSelectedCats.indexOf(cat);
   if (idx >= 0) {
-    if (obSelectedCats.length <= 1) { toast(i18n('toast.category_min_required', 'Kies minimaal 1 categorie')); return; }
     obSelectedCats.splice(idx, 1); el.classList.remove('active');
   } else {
     obSelectedCats.push(cat); el.classList.add('active');
   }
-  document.getElementById('ob-cat-count').textContent = obSelectedCats.length + ' categorie' + (obSelectedCats.length === 1 ? '' : 'ën') + ' geselecteerd';
+  obUpdateCatCount();
+}
+function obUpdateCatCount() {
+  var n = obSelectedCats.length;
+  var countEl = document.getElementById('ob-cat-count');
+  if (countEl) {
+    if (n < OB_MIN_CATS) {
+      countEl.textContent = i18n('ob.s3.count_progress', 'Nog {remaining} categorie{plural} nodig (minimaal {min})')
+        .replace('{remaining}', String(OB_MIN_CATS - n))
+        .replace('{plural}', (OB_MIN_CATS - n) === 1 ? '' : 'ën')
+        .replace('{min}', String(OB_MIN_CATS));
+      countEl.style.color = '#A04A18';
+    } else {
+      countEl.textContent = i18n('ob.s3.count_ok', '✓ {n} categorieën geselecteerd').replace('{n}', String(n));
+      countEl.style.color = '#3A6B4A';
+    }
+  }
+  var nextBtn = document.getElementById('ob-cats-next-btn');
+  if (nextBtn) {
+    var ok = n >= OB_MIN_CATS;
+    nextBtn.disabled = !ok;
+    nextBtn.style.opacity = ok ? '1' : '0.55';
+    nextBtn.style.cursor = ok ? 'pointer' : 'not-allowed';
+  }
+}
+function obNextFromCats() {
+  if (obSelectedCats.length < OB_MIN_CATS) {
+    toast(i18n('toast.category_min_3', 'Kies minimaal 3 categorieën om verder te gaan'));
+    return;
+  }
+  obNext();
 }
 async function obRegister() {
   var name  = document.getElementById('ob-name').value.trim();
   var email = document.getElementById('ob-email').value.trim();
   var pass  = document.getElementById('ob-pass').value;
   var termsEl = document.getElementById('ob-terms');
+  var btn = document.querySelector('#onboarding button[onclick="obRegister()"]');
   if (!name) { toast(i18n('toast.name_required', 'Vul je naam in')); return; }
   if (!email.includes('@')) { toast(i18n('toast.email_required', 'Vul een geldig e-mailadres in')); return; }
   if (pass.length < 6) { toast(i18n('toast.password_min_length', 'Wachtwoord minimaal 6 tekens')); return; }
   if (termsEl && !termsEl.checked) { toast(i18n('toast.terms_required', 'Ga akkoord met de voorwaarden en privacyverklaring')); return; }
+  // Voorkom dubbele registraties bij driftige klikken
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = i18n('ob.s4.creating', 'Account aanmaken…'); }
   if (sbClient) {
     try {
       var res = await sbClient.auth.signUp({
         email: email, password: pass,
         options: { data: { display_name: name } }
       });
-      if (res.error) { toast('❌ ' + res.error.message); return; }
-      var signedUpId = res.data.user ? res.data.user.id : null;
+      if (res.error) {
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = i18n('ob.s4.create_account', 'Account aanmaken'); }
+        toast('❌ ' + res.error.message);
+        return;
+      }
+      var signedUpId = res.data && res.data.user ? res.data.user.id : null;
+      var hasSession = !!(res.data && res.data.session);
       isGuest = false;
       currentUser = { name: name, email: email, id: signedUpId };
       localStorage.setItem('yg-user', JSON.stringify(currentUser));
+      var promoEl = document.getElementById('ob-promo');
+      var promoOptIn = promoEl ? promoEl.checked : false;
+      // Service-update opt-in (e-mail over nieuwe features) — standaard aan voor net geregistreerden
+      var newsEl = document.getElementById('ob-news');
+      var newsOptIn = newsEl ? newsEl.checked : true;
       ensureProfile(signedUpId, name, email);
-      obFinish(); return;
-    } catch(e) { toast(i18n('toast.signup_failed', '❌ Registratie mislukt')); return; }
+      if (sbClient && signedUpId) {
+        var prefPayload = {};
+        if (promoOptIn) prefPayload.promo_email_opt_in = true;
+        prefPayload.marketing_email_opt_in = !!newsOptIn;
+        if (Object.keys(prefPayload).length) {
+          sbClient.from('profiles').update(prefPayload).eq('id', signedUpId).then(function() {}).catch(function() {});
+        }
+      }
+      loadMyInterests();
+      loadInboxBadge();
+      // Toon expliciete bevestiging — eerst sluiten we de onboarding netjes af, dan de modal
+      obShowSignupSuccess(name, email, hasSession);
+      return;
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = i18n('ob.s4.create_account', 'Account aanmaken'); }
+      toast(i18n('toast.signup_failed', '❌ Registratie mislukt'));
+      return;
+    }
   }
-  // Fallback
+  // Fallback (geen Supabase — demo)
   isGuest = false;
   currentUser = { name: name, email: email };
   localStorage.setItem('yg-user', JSON.stringify(currentUser));
+  obShowSignupSuccess(name, email, true);
+}
+
+// Bevestigingsmodal na registratie. Toont duidelijk dat het gelukt is, plus
+// aanvullende e-mail-bevestig-instructie als Supabase nog geen sessie gaf.
+function obShowSignupSuccess(name, email, hasSession) {
+  var modal = document.getElementById('ob-signup-success');
+  if (!modal) {
+    // Fallback als modal-DOM mist: gewone toast + obFinish
+    toast(i18n('toast.welcome_user', 'Welkom, {name}! 🎉').replace('{name}', (name || '').split(' ')[0]));
+    obFinish();
+    return;
+  }
+  var firstName = (name || '').split(' ')[0] || '';
+  var titleEl = document.getElementById('ob-signup-success-title');
+  var subEl = document.getElementById('ob-signup-success-sub');
+  var noteEl = document.getElementById('ob-signup-success-note');
+  if (titleEl) titleEl.textContent = i18n('ob.success.title', '🎉 Account aangemaakt!').replace('{name}', firstName);
+  if (subEl) subEl.textContent = firstName
+    ? i18n('ob.success.sub_named', 'Welkom bij YardiGo, {name}!').replace('{name}', firstName)
+    : i18n('ob.success.sub', 'Welkom bij YardiGo!');
+  if (noteEl) {
+    if (hasSession) {
+      noteEl.innerHTML = i18n('ob.success.note_logged_in', 'Je bent direct ingelogd. Veel plezier met YardiGo!');
+      noteEl.style.background = '#EAF2EC';
+      noteEl.style.color = '#2C4A36';
+      noteEl.style.borderColor = '#C7DFCF';
+    } else {
+      noteEl.innerHTML = i18n('ob.success.note_confirm_email_html', '📧 We hebben een bevestigingsmail naar <strong>{email}</strong> gestuurd. Klik op de link in die mail om je account te activeren.').replace('{email}', email);
+      noteEl.style.background = '#FFF8E8';
+      noteEl.style.color = '#7A5A2E';
+      noteEl.style.borderColor = '#F4D7B0';
+    }
+  }
+  modal.style.display = 'flex';
+}
+function obDismissSignupSuccess() {
+  var modal = document.getElementById('ob-signup-success');
+  if (modal) modal.style.display = 'none';
   obFinish();
 }
 function obShowLogin()  { document.getElementById('ob-login-modal').style.display = 'flex'; }
@@ -5754,8 +6166,9 @@ function buildBuurtClusterPopup(bv, cluster) {
   var totalInBv = listings.length;
   var confirmed = listings.filter(function(l) { return l.confirmation_status === 'confirmed'; }).length;
   // Titel: gebruik info.title indien aanwezig, anders "Buurtverkoop {city}".
-  var city = (bv.info && bv.info.city) || (listings[0] && (listings[0].address || '').split(',').slice(-1)[0].trim()) || '';
-  var title = (bv.info && bv.info.title) ? bv.info.title : ('Buurtverkoop' + (city ? ' ' + city : ''));
+  var rawCity = (bv.info && bv.info.city) || (listings[0] && prettyCity(listings[0].address)) || '';
+  var city = (/^\d{4}\s?[A-Z]{0,2}$/i.test(rawCity)) ? (listings[0] ? prettyCity(listings[0].address) : '') : rawCity;
+  var title = (bv.info && bv.info.title) ? bv.info.title : (i18n('type.buurt', 'Rommelroute') + (city ? ' ' + city : ''));
   // Datum: buurtverkopen delen meestal dezelfde datum, maar val terug op
   // eerste listing als info.date ontbreekt.
   var dateVal = (bv.info && bv.info.date) || (listings[0] && listings[0].date) || '';
@@ -5778,7 +6191,7 @@ function buildBuurtClusterPopup(bv, cluster) {
   // dat dit niet alles is.
   var otherInGroup = Math.max(0, totalInBv - count);
   var head = '<div style="background:#E07B39;color:white;padding:14px 16px">'
-    + '<div style="font-size:11px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🏘️ Buurtverkoop</div>'
+    + '<div style="font-size:11px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🏘️ ' + i18n('type.buurt', 'Rommelroute') + '</div>'
     + '<div style="font-size:15px;font-weight:800;line-height:1.25;margin-bottom:6px">' + escapeHtml(title) + '</div>'
     + '<div style="font-size:12px;opacity:.95">' + count + ' huis' + (count === 1 ? '' : 'jes') + ' in deze cluster'
     + (otherInGroup > 0 ? ' <span style="opacity:.75">· totaal ' + totalInBv + '</span>' : '')
@@ -5832,7 +6245,7 @@ function groupByNeighborhoodSale(listings) {
     if (l.neighborhood_sale_id) {
       if (!groups[l.neighborhood_sale_id]) {
         groups[l.neighborhood_sale_id] = {
-          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: (l.address || '').split(',').slice(-1)[0].trim() || 'Onbekend', date: l.date },
+          info: l.neighborhood_sale || { id: l.neighborhood_sale_id, title: l.title, city: prettyCity(l.address) || 'Onbekend', date: l.date },
           listings: []
         };
       }
@@ -6234,7 +6647,7 @@ function renderBvCard(bv) {
     + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
     + '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">' + bv.listings.length + ' adressen</span>'
     + '</div>'
-    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ Buurtverkoop</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">📅 ' + bvDate + ' · 🏘️ ' + i18n('type.buurt', 'Rommelroute') + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'
     + headerTags
     + '</div>'
@@ -6607,7 +7020,7 @@ function openDetail(id) {
     document.getElementById('det-addr').style.display = 'none';
     document.getElementById('det-addr-guest').style.display = 'flex';
     document.getElementById('det-addr-pending').style.display = 'none';
-    var city = s.address.split(',').slice(-1)[0].trim();
+    var city = prettyCity(s.address);
     document.getElementById('det-addr-city').textContent = '📍 ' + city + ' · ';
     document.getElementById('det-route-btn').onclick = function() { guestGate('route'); };
     document.getElementById('det-route-btn').style.opacity = '0.5';
@@ -6621,7 +7034,7 @@ function openDetail(id) {
     document.getElementById('det-addr').style.display = 'none';
     document.getElementById('det-addr-guest').style.display = 'none';
     document.getElementById('det-addr-pending').style.display = 'block';
-    var _pcity = (s.address || '').split(',').slice(-1)[0].trim();
+    var _pcity = prettyCity(s.address);
     document.getElementById('det-addr-pending-city').textContent = '📍 ' + _pcity + ' · ';
     startDetailCountdown(s.address_visible_at);
     var _rb = document.getElementById('det-route-btn');
@@ -6844,14 +7257,64 @@ function detailRoute() {
 // ══════════════════════════════════════════════════
 // INTEREST
 // ══════════════════════════════════════════════════
-function toggleInterest() {
+
+// Laad eigen interesses uit de DB en vul goingSet.
+// Wordt aangeroepen na login/sessie-herstel.
+async function loadMyInterests() {
+  if (!sbClient || isGuest || !currentUser.id) return;
+  try {
+    var res = await sbClient.from('listing_interests')
+      .select('listing_id')
+      .eq('user_id', currentUser.id);
+    if (res.error) return;
+    res.data.forEach(function(row) { goingSet.add(row.listing_id); });
+    localStorage.setItem('yg-going', JSON.stringify(Array.from(goingSet)));
+  } catch(e) {}
+}
+
+async function toggleInterest() {
   if (isGuest) { guestGate('interesse'); return; }
   var s = sales.find(function(x) { return x.id === detailSaleId; });
   if (!s) return;
-  if (goingSet.has(s.id)) { goingSet.delete(s.id); s.interested = Math.max(0, s.interested - 1); }
-  else { goingSet.add(s.id); s.interested++; }
+  var wasGoing = goingSet.has(s.id);
+  // Optimistische UI-update
+  if (wasGoing) { goingSet.delete(s.id); s.interested = Math.max(0, s.interested - 1); }
+  else          { goingSet.add(s.id);    s.interested++; }
   localStorage.setItem('yg-going', JSON.stringify(Array.from(goingSet)));
   updateInterestUI(s); renderList();
+
+  // Persist naar Supabase op de achtergrond
+  if (sbClient && currentUser.id) {
+    try {
+      if (wasGoing) {
+        await sbClient.from('listing_interests')
+          .delete()
+          .eq('listing_id', s.id)
+          .eq('user_id', currentUser.id);
+      } else {
+        await sbClient.from('listing_interests')
+          .insert({ listing_id: s.id, user_id: currentUser.id });
+        // Stuur notificatie naar de organisator (fire-and-forget)
+        notifyOrganizerInterest(s.id);
+      }
+    } catch(e) {}
+  }
+}
+
+// Roept de Edge Function aan om de organisator te mailen.
+async function notifyOrganizerInterest(listingId) {
+  if (!sbClient || !currentUser.id) return;
+  try {
+    var sessionRes = await sbClient.auth.getSession();
+    var token = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+    if (!token) return;
+    var projectRef = 'fwehqudhwzcnkcuypuqw';
+    fetch('https://' + projectRef + '.supabase.co/functions/v1/notify-interest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ listing_id: listingId })
+    }).catch(function() {}); // fire-and-forget, geen await
+  } catch(e) {}
 }
 function updateInterestUI(s) {
   if (!s) return;
@@ -7323,7 +7786,7 @@ function showBuurtSharesModal(items) {
     // Mailto: als email bekend is, vullen we "To" voor; anders laat leeg zodat de gebruiker zelf kiest.
     var mailTo = (item.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) ? encodeURIComponent(item.email) : '';
     var mailUrl = 'mailto:' + mailTo
-      + '?subject=' + encodeURIComponent('Buurtverkoop: bevestig je adres')
+      + '?subject=' + encodeURIComponent(i18n('type.buurt', 'Rommelroute') + ': bevestig je adres')
       + '&body=' + encodeURIComponent(msg);
     var labelTxt = (item.label || '').trim();
     var labelHtml = labelTxt
@@ -8665,17 +9128,39 @@ async function publishSale() {
       return { urls: publicUrls, errors: errors };
     }
 
-    // Helper: haal stadsnaam uit adresstring (fallback)
+    // Helper: haal stadsnaam uit adresstring (fallback). Verbeterd: skip
+    // trailing land-tokens én losse postcodes (kale "2260" of "1234 AB")
+    // die soms achteraan staan in Nominatim-display_names of door dubbele
+    // postcode-append zijn ontstaan.
     function extractCity(addr) {
       if (!addr) return 'Onbekend';
       var parts = addr.split(',').map(function(s){return s.trim();}).filter(Boolean);
       if (parts.length < 2) return 'Onbekend';
-      var last = parts[parts.length - 1];
-      if (/nederland|netherlands|belgi[eë]|belgium|belgique|france|frankrijk|deutschland|duitsland/i.test(last)) {
-        last = parts[parts.length - 2] || 'Onbekend';
+      var countryRe = /^(nederland|netherlands|belgi[eë]|belgium|belgique|france|frankrijk|deutschland|duitsland)$/i;
+      var pureZipRe = /^\d{4}\s?[A-Z]{0,2}$/i; // "2260" of "1234 AB"
+      var i = parts.length - 1;
+      while (i >= 0 && (countryRe.test(parts[i]) || pureZipRe.test(parts[i]))) i--;
+      if (i < 0) return 'Onbekend';
+      var cand = parts[i];
+      // Strip eventuele postcode-prefix zoals "1234 AB Stadsnaam"
+      cand = cand.replace(/^\d{4}\s?[A-Z]{0,2}\s+/i, '').trim();
+      return cand || 'Onbekend';
+    }
+    // Verwijder dubbele trailing postcode (bv. "..., 2260, België, 2260")
+    function dedupTrailingZip(addr) {
+      if (!addr) return addr;
+      var parts = addr.split(',').map(function(s){return s.trim();});
+      var pureZipRe = /^\d{4}\s?[A-Z]{0,2}$/i;
+      // Loop naar achter en verwijder duplicate of overbodige zip-segmenten
+      while (parts.length >= 2) {
+        var last = parts[parts.length - 1];
+        if (!pureZipRe.test(last)) break;
+        // Check of dezelfde zip ergens eerder al voorkomt of of de previous een land is met zip ervoor
+        var earlier = parts.slice(0, parts.length - 1).some(function(p) { return p.replace(/\s+/g,'') === last.replace(/\s+/g,''); });
+        if (earlier) parts.pop();
+        else break;
       }
-      last = last.replace(/^\d{4}\s?[A-Z]{0,2}\s+/i, '').trim();
-      return last || 'Onbekend';
+      return parts.join(', ');
     }
 
     // Geocode hoofd-adres (met addressdetails voor city). Country-aware:
@@ -8848,7 +9333,7 @@ async function publishSale() {
           var dl = +rowEl.dataset.lat, dn = +rowEl.dataset.lng;
           if (!isNaN(dl) && !isNaN(dn)) return Promise.resolve({ lat: dl, lng: dn });
         }
-        var _bvQuery = encodeURIComponent(a.addr + (a.pc ? ', ' + a.pc : '') + ', ' + _geoCountry);
+        var _bvQuery = encodeURIComponent(((function(_addr,_pc){ if (!_addr) return _pc || ''; if (!_pc) return _addr; return new RegExp('(^|,\\s*)'+_pc.replace(/\s+/g,'\\s*')+'(\\s*,|\\s*$)','i').test(_addr) ? _addr : (_addr + ', ' + _pc); })(a.addr, a.pc)) + ', ' + _geoCountry);
         var _bvHdr = { 'Accept-Language': 'nl,fr,de,en' };
         return fetch('https://nominatim.openstreetmap.org/search?q=' + _bvQuery + '&format=json&limit=1&countrycodes=' + _geoCC, { headers: _bvHdr })
           .then(function(r) { return r.json(); })
@@ -8870,11 +9355,13 @@ async function publishSale() {
 
       var allCoords = [{ lat: lat, lng: lng }].concat(extraCoords);
       var totalBuurtAddrs = buurtAdressen.length;
+      // Helper: zorg dat we geen dubbele trailing postcode opslaan
+      var _normAddr = function(s) { try { return dedupTrailingZip(s || ''); } catch(e) { return s; } };
 
       var preconsentDeclaredCount = 0;
       var declaredAtTs = new Date().toISOString();
       for (var bi = 0; bi < buurtAdressen.length; bi++) {
-        setPublishStatus('🏘️ Buurtverkoop aanmaken... (' + (bi + 1) + '/' + totalBuurtAddrs + ')');
+        setPublishStatus('🏘️ ' + i18n('type.buurt', 'Rommelroute') + ' aanmaken... (' + (bi + 1) + '/' + totalBuurtAddrs + ')');
         var a = buurtAdressen[bi];
         var coords = allCoords[bi] || { lat: lat, lng: lng };
         var isOwnAddr = (bi === 0);
@@ -8887,9 +9374,11 @@ async function publishSale() {
         var confMethod = (!isOwnAddr && hasPreconsent) ? 'organizer_declared' : 'self_confirmed';
         var addrLabelLocal = (!isOwnAddr && a.label) ? String(a.label).trim().substring(0, 60) : '';
         if (hasPreconsent) preconsentDeclaredCount++;
+        var _bvAddrRaw = ((function(_addr,_pc){ if (!_addr) return _pc || ''; if (!_pc) return _addr; return new RegExp('(^|,\\s*)'+_pc.replace(/\s+/g,'\\s*')+'(\\s*,|\\s*$)','i').test(_addr) ? _addr : (_addr + ', ' + _pc); })(a.addr, a.pc));
+        var _bvAddr = _normAddr(_bvAddrRaw);
         var newSale = {
           id: nextId++, type: 'buurt', title: title.value.trim(),
-          emoji: '🏘️', address: a.addr + (a.pc ? ', ' + a.pc : ''),
+          emoji: '🏘️', address: _bvAddr,
           lat: coords.lat, lng: coords.lng,
           date: dateVal, from: fromVal, till: tillVal,
           tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
@@ -9019,6 +9508,8 @@ async function publishSale() {
           eventSubtype = _evVal;
         }
       }
+      var _normMainAddr = (function(){ try { return dedupTrailingZip(mainAddr || ''); } catch(e) { return mainAddr; } })();
+      mainAddr = _normMainAddr;
       var newSale = {
         id: nextId++, type: selTypeVal, title: title.value.trim(),
         emoji: TYPES[selTypeVal].icon, address: mainAddr,
@@ -9285,7 +9776,7 @@ var APP_BADGES = [
   {key:'pionier',    emoji:'🔭', label:'Pionier',         desc:'Eerste advertentie geplaatst',    type:'auto'},
   {key:'top',        emoji:'⭐', label:'Top verkoper',     desc:'3 of meer advertenties geplaatst',type:'auto'},
   {key:'photographer',emoji:'📸',label:'Fotograaf',        desc:"Advertentie met foto's geplaatst", type:'auto'},
-  {key:'connector',  emoji:'🏘️', label:'Buurtconnector',   desc:'Buurtverkoop georganiseerd',      type:'auto'},
+  {key:'connector',  emoji:'🏘️', label:'Buurtconnector',   desc:'Rommelroute georganiseerd',       type:'auto'},
   {key:'eventmaker', emoji:'🎪', label:'Evenementmaker',   desc:'Evenement aangemaakt',            type:'auto'},
   // Manual badges — toegewezen door admin
   {key:'beta',       emoji:'🧪', label:'Beta tester',     desc:'Vroege beta tester van YardiGo', type:'manual'},
@@ -9522,7 +10013,7 @@ async function loadSettingsTab() {
   // Naam, stad, bio uit Supabase profiles
   if (!isGuest && sbClient && currentUser) {
     try {
-      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,name_display_mode').eq('id', currentUser.id).maybeSingle();
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,name_display_mode,notify_interest_email,promo_email_opt_in,marketing_email_opt_in,email_frequency').eq('id', currentUser.id).maybeSingle();
       if (res.data) {
         var n = document.getElementById('set-name');
         var c = document.getElementById('set-city');
@@ -9547,6 +10038,32 @@ async function loadSettingsTab() {
           if (emoji) emoji.style.display = 'none';
           if (img) { img.src = res.data.avatar_url; img.style.display = 'block'; }
         }
+        // Interesse e-mailmelding toggle
+        var nit = document.getElementById('notify-interest-toggle');
+        if (nit) {
+          var notifOn = res.data.notify_interest_email !== false; // default true
+          nit.classList.toggle('off', !notifOn);
+        }
+        // Service-update e-mail toggle (marketing_email_opt_in)
+        var set = document.getElementById('service-email-toggle');
+        if (set) {
+          var serviceOn = !!res.data.marketing_email_opt_in;
+          set.classList.toggle('off', !serviceOn);
+        }
+        // Promo e-mail toggle + frequentie
+        var pet = document.getElementById('promo-email-toggle');
+        if (pet) {
+          var promoOn = !!res.data.promo_email_opt_in;
+          pet.classList.toggle('off', !promoOn);
+          var freqRow = document.getElementById('email-freq-row');
+          if (freqRow) freqRow.style.display = promoOn ? 'flex' : 'none';
+        }
+        var freq = res.data.email_frequency || 'weekly';
+        document.querySelectorAll('#seg-emailfreq .seg-opt').forEach(function(b) {
+          b.classList.toggle('active', b.dataset.v === freq);
+        });
+        var freqSubEl = document.getElementById('email-freq-sub');
+        if (freqSubEl) freqSubEl.setAttribute('data-i18n', 'settings.email.freq_' + freq);
       }
     } catch(e) {}
   }
@@ -9674,6 +10191,175 @@ function togglePref(key, el) {
   localStorage.setItem('yg-pref-' + key, isOn ? '0' : '1');
 }
 
+// ══════════════════════════════════════════════════
+// INBOX (in-app berichten)
+// ══════════════════════════════════════════════════
+function openInbox() {
+  var panel = document.getElementById('inbox-panel');
+  if (panel) panel.classList.add('open');
+  loadInboxMessages();
+}
+function closeInbox() {
+  var panel = document.getElementById('inbox-panel');
+  if (panel) panel.classList.remove('open');
+}
+async function loadInboxMessages() {
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.from('announcements')
+      .select('id,title,body,emoji,published_at')
+      .not('published_at', 'is', null)
+      .lte('published_at', new Date().toISOString())
+      .order('published_at', { ascending: false })
+      .limit(30);
+    if (res.error || !res.data) return;
+    var readRes = { data: [] };
+    if (!isGuest && currentUser && currentUser.id) {
+      readRes = await sbClient.from('announcement_reads').select('announcement_id').eq('user_id', currentUser.id);
+    }
+    var readSet = new Set((readRes.data || []).map(function(r) { return r.announcement_id; }));
+    var list = document.getElementById('inbox-list');
+    var empty = document.getElementById('inbox-empty');
+    if (!list) return;
+    // Remove old items (keep empty placeholder)
+    list.querySelectorAll('.inbox-item').forEach(function(el) { el.remove(); });
+    if (!res.data.length) { if (empty) empty.style.display = 'block'; return; }
+    if (empty) empty.style.display = 'none';
+    var unread = 0;
+    res.data.forEach(function(msg) {
+      var isRead = readSet.has(msg.id);
+      if (!isRead) unread++;
+      var dateStr = msg.published_at ? new Date(msg.published_at).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : currentLang === 'de' ? 'de-DE' : 'nl-NL', { day: 'numeric', month: 'short' }) : '';
+      var item = document.createElement('div');
+      item.className = 'inbox-item' + (isRead ? ' read' : '');
+      item.dataset.id = msg.id;
+      item.innerHTML =
+        '<div class="inbox-item-head">' +
+          (isRead ? '' : '<div class="inbox-unread-dot"></div>') +
+          '<div class="inbox-item-emoji">' + (msg.emoji || '📢') + '</div>' +
+          '<div class="inbox-item-title">' + escapeHtml(msg.title) + '</div>' +
+          '<div class="inbox-item-date">' + dateStr + '</div>' +
+        '</div>' +
+        '<div class="inbox-item-body">' + escapeHtml(msg.body) + '</div>';
+      item.onclick = function() { markAnnouncementRead(msg.id, item); };
+      list.appendChild(item);
+    });
+    updateInboxBadge(unread);
+  } catch(e) {}
+}
+async function markAnnouncementRead(announcementId, el) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  if (el && !el.classList.contains('read')) {
+    el.classList.add('read');
+    el.querySelector('.inbox-unread-dot') && el.querySelector('.inbox-unread-dot').remove();
+    try {
+      await sbClient.from('announcement_reads').upsert(
+        { announcement_id: announcementId, user_id: currentUser.id },
+        { onConflict: 'announcement_id,user_id', ignoreDuplicates: true }
+      );
+    } catch(e) {}
+    // Decrease badge
+    var badge = document.getElementById('inbox-badge');
+    if (badge) {
+      var cur = parseInt(badge.textContent) || 0;
+      updateInboxBadge(Math.max(0, cur - 1));
+    }
+  }
+}
+function updateInboxBadge(count) {
+  var badge = document.getElementById('inbox-badge');
+  var bellBtn = document.getElementById('inboxBellBtn');
+  if (!badge || !bellBtn) return;
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+async function loadInboxBadge() {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  try {
+    var totalRes = await sbClient.from('announcements').select('id', { count: 'exact', head: false })
+      .not('published_at', 'is', null).lte('published_at', new Date().toISOString());
+    var readRes  = await sbClient.from('announcement_reads').select('announcement_id', { count: 'exact', head: false }).eq('user_id', currentUser.id);
+    var total = (totalRes.data || []).length;
+    var read  = (readRes.data || []).length;
+    updateInboxBadge(Math.max(0, total - read));
+    var bellBtn = document.getElementById('inboxBellBtn');
+    if (bellBtn) bellBtn.style.display = 'inline-flex';
+  } catch(e) {}
+}
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════
+// SERVICE-UPDATE E-MAIL VOORKEUR (marketing_email_opt_in)
+// ══════════════════════════════════════════════════
+async function toggleServiceEmail(el) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  var isOn = !el.classList.contains('off');
+  var newVal = !isOn;
+  el.classList.toggle('off', !newVal);
+  try {
+    await sbClient.from('profiles').update({ marketing_email_opt_in: newVal }).eq('id', currentUser.id);
+    toast(i18n('toast.saved', '✓ Opgeslagen'));
+  } catch(e) {
+    el.classList.toggle('off', !isOn);
+    toast(i18n('toast.save_error', 'Fout bij opslaan'));
+  }
+}
+
+// ══════════════════════════════════════════════════
+// PROMO E-MAIL VOORKEUR
+// ══════════════════════════════════════════════════
+async function togglePromoEmail(el) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  var isOn = !el.classList.contains('off');
+  var newVal = !isOn;
+  el.classList.toggle('off', !newVal);
+  var freqRow = document.getElementById('email-freq-row');
+  if (freqRow) freqRow.style.display = newVal ? 'flex' : 'none';
+  try {
+    await sbClient.from('profiles').update({ promo_email_opt_in: newVal }).eq('id', currentUser.id);
+    toast(i18n('toast.saved', '✓ Opgeslagen'));
+  } catch(e) {
+    el.classList.toggle('off', !isOn);
+    if (freqRow) freqRow.style.display = isOn ? 'flex' : 'none';
+    toast(i18n('toast.save_error', 'Fout bij opslaan'));
+  }
+}
+async function setEmailFreq(btn) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  var freq = btn.dataset.v;
+  document.querySelectorAll('#seg-emailfreq .seg-opt').forEach(function(b) { b.classList.toggle('active', b === btn); });
+  var freqSubEl = document.getElementById('email-freq-sub');
+  if (freqSubEl) freqSubEl.setAttribute('data-i18n', 'settings.email.freq_' + freq);
+  applyLang(); // re-apply to update text
+  try {
+    await sbClient.from('profiles').update({ email_frequency: freq }).eq('id', currentUser.id);
+    toast(i18n('toast.saved', '✓ Opgeslagen'));
+  } catch(e) {
+    toast(i18n('toast.save_error', 'Fout bij opslaan'));
+  }
+}
+
+async function toggleNotifyInterestEmail(el) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  var isOn = !el.classList.contains('off');
+  var newVal = !isOn; // toggle
+  el.classList.toggle('off', !newVal);
+  try {
+    await sbClient.from('profiles').update({ notify_interest_email: newVal }).eq('id', currentUser.id);
+    toast(i18n('toast.saved', '✓ Opgeslagen'));
+  } catch(e) {
+    el.classList.toggle('off', !isOn); // revert on error
+    toast(i18n('toast.save_error', 'Fout bij opslaan'));
+  }
+}
+
 // Laad alle localStorage-voorkeuren terug in de UI
 function loadPrefToggles() {
   // Radius
@@ -9725,6 +10411,21 @@ function toggleDark() {
   if (row) row.classList.toggle('off', !isDark);
   localStorage.setItem('yg-dark', isDark ? '1' : '0');
   if (map) setTimeout(function() { map.invalidateSize(); }, 50);
+}
+// Geeft de "leesbare" stadsnaam terug voor weergave. Skipt achteraan in het
+// adres zowel land-tokens als kale postcode-segmenten ("2260", "1234 AB"),
+// zodat we niet langer per ongeluk "2260" als plaatsnaam tonen.
+function prettyCity(addr) {
+  if (!addr) return '';
+  var parts = String(addr).split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if (!parts.length) return '';
+  var countryRe = /^(nederland|netherlands|belgi[eë]|belgium|belgique|france|frankrijk|deutschland|duitsland)$/i;
+  var pureZipRe = /^\d{4}\s?[A-Z]{0,2}$/i;
+  var i = parts.length - 1;
+  while (i >= 0 && (countryRe.test(parts[i]) || pureZipRe.test(parts[i]))) i--;
+  if (i < 0) return parts[parts.length - 1] || '';
+  var cand = parts[i].replace(/^\d{4}\s?[A-Z]{0,2}\s+/i, '').trim();
+  return cand || (parts[parts.length - 1] || '');
 }
 function toast(msg) {
   var el = document.getElementById('toast');
@@ -9949,6 +10650,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         localStorage.setItem('yg-user', JSON.stringify(currentUser));
         localStorage.setItem('yg-onboarded', '1');
         ensureProfile(u.id, name, u.email);
+        loadMyInterests(); // laad interesses vanuit DB na sessie-herstel
+        loadInboxBadge(); // laad ongelezen berichten-badge
       }
     } catch(e) {}
   }
@@ -9968,6 +10671,42 @@ document.addEventListener('DOMContentLoaded', async function() {
   updateUserUI();
   loadAvatarFromProfile();
   initMap();
+
+  // ─── Uitschrijf-handlers ─────────────────────────────────
+  (async function handleUnsubscribeParams() {
+    var params = new URLSearchParams(location.search);
+    var token = params.get('token');
+
+    // Service-update uitschrijving: ?uitschrijven=1&token=<uuid>
+    if (params.get('uitschrijven') === '1' && token && sbClient) {
+      try {
+        var res = await sbClient.rpc('unsubscribe_marketing_via_token', { p_token: token });
+        if (res.data === true) {
+          toast(i18n('toast.unsubscribed_service', '✓ Je ontvangt geen service-updates meer per e-mail.'));
+        } else {
+          toast(i18n('toast.unsubscribe_invalid', 'Uitschrijflink ongeldig of al gebruikt.'));
+        }
+      } catch(e) {
+        toast(i18n('toast.unsubscribe_error', 'Fout bij uitschrijven. Probeer het later opnieuw.'));
+      }
+      history.replaceState(null, '', location.pathname);
+    }
+
+    // Promo/herinnering uitschrijving: ?uitschrijven-promo=1&token=<uuid>
+    if (params.get('uitschrijven-promo') === '1' && token && sbClient) {
+      try {
+        var res2 = await sbClient.rpc('unsubscribe_promo_via_token', { p_token: token });
+        if (res2.data === true) {
+          toast(i18n('toast.unsubscribed_promo', '✓ Je ontvangt geen gepersonaliseerde herinneringen meer per e-mail.'));
+        } else {
+          toast(i18n('toast.unsubscribe_invalid', 'Uitschrijflink ongeldig of al gebruikt.'));
+        }
+      } catch(e) {
+        toast(i18n('toast.unsubscribe_error', 'Fout bij uitschrijven. Probeer het later opnieuw.'));
+      }
+      history.replaceState(null, '', location.pathname);
+    }
+  })();
 
   // Toon welcome sheet na 3 sec voor nieuwe gebruikers
   if (!localStorage.getItem('yg-onboarded')) {

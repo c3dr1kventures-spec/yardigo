@@ -30,7 +30,7 @@
   <span class="lang-switch"><a href="/privacy">🇳🇱 Nederlandse versie</a></span>
 
   <h1>Politique de confidentialité</h1>
-  <p class="last-updated">Version 2.3 · Dernière mise à jour : 20 avril 2026</p>
+  <p class="last-updated">Version 2.4 · Dernière mise à jour : 2 mai 2026</p>
 
   <div class="note">Cette traduction est fournie à titre informatif. En cas de divergence avec la version néerlandaise, la version néerlandaise fait foi pour les utilisateurs établis aux Pays-Bas. Pour les utilisateurs résidant en Belgique, vos droits sous le RGPD restent intégralement applicables.</div>
 
@@ -55,6 +55,7 @@
     <li><strong>Localisation précise (GPS)</strong> – pour afficher les ventes près de chez vous et placer votre propre annonce sur la carte. Uniquement après autorisation explicite via votre appareil. Cette localisation n'est pas stockée de manière persistante dans notre base de données ; nous l'utilisons en temps réel pour afficher la carte.</li>
     <li><strong>Contenu de l'annonce</strong> – photos, adresse, date/heure, catégories et description que vous saisissez vous-même lors de la publication d'une vente.</li>
     <li><strong>Logs techniques</strong> – adresse IP, type de navigateur, système d'exploitation et horodatages ; enregistrés automatiquement par Supabase et Vercel pour la sécurité et le diagnostic des erreurs.</li>
+    <li><strong>Préférences de communication</strong> – deux opt-ins séparés : (1) un indicateur on/off pour les mises à jour de service YardiGo par e-mail (notes de version, annonces), et (2) un indicateur on/off pour les rappels personnalisés par e-mail concernant les ventes à proximité. Pour les rappels, nous stockons également votre fréquence de livraison préférée (hebdomadaire ou mensuelle). Nous conservons également un code pays pour le filtrage (NL ou BE) et un jeton de désinscription aléatoire pour les deux types d'e-mails, vous permettant de vous désinscrire via le lien dans un e-mail sans vous connecter.</li>
   </ul>
 
   <h2>3. Finalités, bases juridiques et durées de conservation</h2>
@@ -95,10 +96,27 @@
         <td>art. 6.1.b – exécution du contrat</td>
         <td>Durée de la relation contractuelle</td>
       </tr>
+      <tr>
+        <td>Opt-in mises à jour de service (indicateur, code pays, jeton de désinscription) et votre adresse e-mail</td>
+        <td>Envoi des mises à jour de service YardiGo par e-mail (notes de version, nouvelles fonctionnalités, annonces importantes) et possibilité de désinscription</td>
+        <td>art. 6.1.a – consentement, donné via un opt-in non pré-coché lors de l'inscription ou dans les paramètres</td>
+        <td>Jusqu'à ce que vous retiriez votre consentement ou supprimiez votre compte. En cas de retrait, l'indicateur reste sur 'off' ; en cas de suppression du compte, tout est effacé dans les 30 jours (sauvegardes incluses)</td>
+      </tr>
+      <tr>
+        <td>Opt-in rappels personnalisés (indicateur, fréquence, jeton de désinscription) et votre adresse e-mail</td>
+        <td>Envoi de rappels par e-mail sur les ventes de garage actives dans votre ville, à la fréquence choisie par vous (hebdomadaire ou mensuelle)</td>
+        <td>art. 6.1.a – consentement, donné via une case à cocher non pré-cochée lors de l'inscription ou dans <em>Paramètres → Préférences e-mail</em></td>
+        <td>Jusqu'à ce que vous retiriez votre consentement ou supprimiez votre compte. L'horodatage du dernier rappel est conservé pour éviter les doublons.</td>
+      </tr>
     </tbody>
   </table>
 
-  <p>YardiGo n'utilise actuellement <strong>aucun</strong> mailing marketing ni newsletter. Si cela devait changer à l'avenir, ce serait uniquement sur la base d'un opt-in séparé et non pré-coché (art. 6.1.a RGPD).</p>
+  <p><strong>E-mails de YardiGo — deux types, deux opt-ins séparés.</strong> YardiGo n'envoie <strong>aucun</strong> e-mail marketing non sollicité. Les e-mails envoyés sont de deux types :</p>
+  <ul>
+    <li><strong>Mises à jour de service</strong> — notes de version, nouvelles fonctionnalités, annonces importantes concernant le service. Envoyées uniquement aux utilisateurs ayant coché la case correspondante lors de l'inscription ou dans <em>Paramètres → Notifications</em>.</li>
+    <li><strong>Rappels personnalisés</strong> — un récapitulatif des ventes de garage actives dans votre ville, envoyé à la fréquence que vous choisissez (hebdomadaire ou mensuelle). Disponibles uniquement aux utilisateurs ayant coché la case correspondante lors de l'inscription ou dans <em>Paramètres → Préférences e-mail</em>.</li>
+  </ul>
+  <p>Les deux cases sont <strong>non pré-cochées</strong>. Vous pouvez retirer votre consentement à tout moment via les paramètres, via le lien de désinscription en bas de chaque e-mail, ou par demande à <a href="mailto:privacy@yardigo.nl">privacy@yardigo.nl</a>. Nous n'ajoutons pas votre adresse e-mail à d'autres listes et ne la partageons pas avec des tiers en dehors de notre sous-traitant e-mail (voir §5).</p>
 
   <h2>4. Conséquences si vous ne fournissez pas les données</h2>
   <ul>
@@ -144,6 +162,12 @@
         <td>Enregistrement de domaine et redirection e-mail pour privacy@yardigo.nl</td>
         <td>États-Unis</td>
         <td>EU-US Data Privacy Framework + clauses contractuelles types</td>
+      </tr>
+      <tr>
+        <td><strong>Resend Inc.</strong> (États-Unis)</td>
+        <td>Envoi des e-mails transactionnels (par ex. réinitialisation du mot de passe) et des mises à jour de service aux utilisateurs ayant donné leur opt-in ; reçoit votre adresse e-mail et le contenu du message</td>
+        <td>États-Unis, avec région UE pour l'envoi depuis Francfort</td>
+        <td>EU-US Data Privacy Framework + clauses contractuelles types ; accord de sous-traitance sous le DPA standard de Resend</td>
       </tr>
     </tbody>
   </table>
@@ -226,6 +250,8 @@
 
   <h3>Historique des versions</h3>
   <ul>
+    <li><strong>v2.5 · 9 mai 2026</strong> : ajout d'un deuxième type d'e-mail opt-in : rappels personnalisés sur les ventes à proximité (art. 6.1.a RGPD). §2 complété par la description des deux opt-ins et de la fréquence préférée (hebdomadaire/mensuelle). §3 nouvelle ligne dans le tableau pour l'opt-in rappels personnalisés. Paragraphe e-mail restructuré pour décrire clairement les deux types.</li>
+    <li><strong>v2.4 · 2 mai 2026</strong> : nouveau paragraphe sur les mises à jour de service par e-mail. §2 complété par la catégorie 'préférences de communication' (indicateur opt-in, code pays, jeton de désinscription). §3 nouvelle ligne dans le tableau pour les mises à jour de service basées sur le consentement (art. 6.1.a RGPD, opt-in non pré-coché). §5 sous-traitant Resend Inc. (États-Unis) ajouté pour l'envoi des mises à jour de service et des e-mails transactionnels. Aucun marketing ni newsletter commerciale.</li>
     <li><strong>v2.3 · 20 avril 2026</strong> : §5a complété par deux nouveaux points concernant le processus de vente de quartier : (1) l'organisateur peut enregistrer une étiquette de reconnaissance facultative et exclusivement visible pour lui-même par adresse (par ex. un prénom ou "n° 14"), et (2) l'adresse e-mail facultative du voisin est utilisée uniquement dans le navigateur pour un lien mailto pré-rempli et n'est pas stockée sur notre serveur.</li>
     <li><strong>v2.2 · 19 avril 2026</strong> : coordonnées du responsable du traitement simplifiées ; l'adresse d'établissement et le numéro KvK seront indiqués dès que l'inscription auprès de la Chambre de Commerce sera définitive.</li>
     <li><strong>v2.1 · 18 avril 2026</strong> : nouveau §5a sur les ventes de quartier avec lien de confirmation obligatoire pour les adresses d'autres résidents (RGPD art. 6.1.a) ; les entrées en attente sont automatiquement supprimées après 7 jours.</li>

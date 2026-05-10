@@ -17,12 +17,12 @@ const PRECACHE_ASSETS = [
 ];
 
 // CDN assets die gecached worden
-const CDN_CACHE_NAME = 'yardigo-cdn-v1';
+const CDN_CACHE_NAME = 'yardigo-cdn-v2';
 const CDN_DOMAINS = [
   'unpkg.com',
   'fonts.googleapis.com',
   'fonts.gstatic.com',
-  'tile.openstreetmap.org',
+  'basemaps.cartocdn.com',
 ];
 
 // Afbeeldingen cache (Unsplash foto's)
@@ -83,8 +83,8 @@ self.addEventListener('fetch', function(event) {
   // Negeer browser-extensions
   if (!url.protocol.startsWith('http')) return;
 
-  // ── OSM kaart tiles: Cache First (tiles veranderen zelden) ──
-  if (url.hostname.includes('tile.openstreetmap.org')) {
+  // ── CARTO kaart tiles: Cache First (tiles veranderen zelden) ──
+  if (url.hostname.includes('basemaps.cartocdn.com')) {
     event.respondWith(cacheFirst(event.request, CDN_CACHE_NAME));
     return;
   }
