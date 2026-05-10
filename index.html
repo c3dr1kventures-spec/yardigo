@@ -6127,17 +6127,19 @@ function createListingPopup(sale) {
       var dots = sale.photos.map(function(_, i) {
         return '<div style="width:6px;height:6px;border-radius:50%;background:' + (i===0?'white':'rgba(255,255,255,.45)') + ';transition:background .2s"></div>';
       }).join('');
+      // Vergrootknop linksonder zodat hij niet botst met Leaflet's
+      // close-kruisje rechtsboven én niet met de foto-teller rechtsonder.
       photoHtml = '<div id="' + popId + '" data-idx="0" data-count="' + photoCount + '" style="position:relative;height:130px;overflow:hidden;background:#1a1a1a">'
         + '<div class="pop-slides" style="display:flex;height:130px;transition:transform .3s;will-change:transform">' + imgs + '</div>'
         + '<div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:4px;pointer-events:none;z-index:3">' + dots + '</div>'
-        + '<div aria-hidden="true" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;pointer-events:none;z-index:3">⤢</div>'
+        + '<div aria-hidden="true" style="position:absolute;bottom:7px;left:8px;background:rgba(0,0,0,.55);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;pointer-events:none;z-index:3">⤢</div>'
         + '</div>';
     } else {
       var _safeSrc = escapeHtml(sale.photos[0]);
       photoHtml = '<div class="smart-photo-cell" onclick="event.stopPropagation();openPhotoLightboxBySale(\'' + saleIdAttrPop + '\',0)"'
         + ' style="position:relative;height:130px;overflow:hidden;background:#1a1a1a;cursor:zoom-in">'
         + '<img src="' + _safeSrc + '" onload="applySmartFit(this)" style="width:100%;height:130px;object-fit:cover;display:block" loading="lazy">'
-        + '<div aria-hidden="true" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;pointer-events:none;z-index:2">⤢</div>'
+        + '<div aria-hidden="true" style="position:absolute;bottom:7px;left:8px;background:rgba(0,0,0,.55);color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;pointer-events:none;z-index:2">⤢</div>'
         + (photoCount > 1 ? '<div style="position:absolute;bottom:7px;right:8px;background:rgba(44,36,22,.65);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;z-index:2">&#128247; ' + photoCount + '</div>' : '')
         + '</div>';
     }
@@ -6638,10 +6640,21 @@ function renderBvCard(bv) {
     });
   });
   var headerTags = renderTagChips(allTags, 'buurt');
+  // Cover-foto: pak de eerste deelnemer met foto's. Als geen enkele deelnemer
+  // foto's heeft val terug op de oranje 🏘️-tegel zodat oude rommelroutes niet
+  // suddenly leeg ogen.
+  var coverPhoto = '';
+  for (var pi = 0; pi < bv.listings.length; pi++) {
+    var lp = bv.listings[pi];
+    if (lp && lp.photos && lp.photos.length) { coverPhoto = lp.photos[0]; break; }
+  }
+  var iconHtml = coverPhoto
+    ? '<div class="bv-list-icon" style="padding:0;overflow:hidden;background:#F0EBE3"><img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>'
+    : '<div class="bv-list-icon">🏘️</div>';
   return '<div class="card bv-list-card">'
     // Klik-header (toggle)
     + '<div class="bv-list-header" id="bv-' + bvId + '" onclick="toggleBvCard(\'' + bvId + '\')">'
-    + '<div class="bv-list-icon">🏘️</div>'
+    + iconHtml
     + '<div style="flex:1;min-width:0">'
     + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
     + '<span style="font-size:14px;font-weight:700;color:var(--text)">' + escapeHtml(bv.info.title) + '</span>'
@@ -6916,7 +6929,7 @@ function openDetail(id) {
       return '<div class="smart-photo-cell" onclick="openPhotoLightboxBySale(\'' + saleIdAttr + '\',' + idx + ')"'
         + ' style="position:relative;min-width:100%;width:100%;height:200px;overflow:hidden;flex-shrink:0;background:#1a1a1a;cursor:zoom-in">'
         + '<img src="' + safe + '" onload="applySmartFit(this)" style="width:100%;height:200px;object-fit:cover;display:block">'
-        + '<div aria-hidden="true" style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none;z-index:2">⤢</div>'
+        + '<div aria-hidden="true" style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.55);color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;pointer-events:none;z-index:2">⤢</div>'
         + '</div>';
     }).join('');
     photos.style.transform = 'translateX(0)';
