@@ -242,6 +242,11 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 .ob-compare-row div:last-child{background:#F0FAF2;color:var(--forest);}
 .ob-compare-row.has-both div:first-child{color:var(--forest);}
 
+/* ── CEDRIK MASCOT BUBBLE ── */
+.cedrik-bubble{display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;}
+.cedrik-speech{flex:1;background:white;border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:12px;color:#2C2416;line-height:1.55;box-shadow:0 2px 10px rgba(44,36,22,.10);border:1.5px solid #EDE8DF;font-family:'Poppins',sans-serif;font-weight:500;}
+.cedrik-speech-dark{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.28);color:rgba(255,255,255,.93);}
+
 /* ── HEADER ── */
 .header{position:sticky;top:0;z-index:500;background:var(--forest);padding:10px 14px 8px;display:flex;align-items:center;gap:10px;}
 .logo-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0;}
@@ -693,8 +698,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="ob-anim-2" style="font-size:30px;font-weight:800;color:white;text-align:center;margin-bottom:10px;line-height:1.2;letter-spacing:-.5px" data-i18n-html="ob.s1.title">
           Ontdek verkopen<br>bij jou in de buurt
         </div>
-        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:32px;max-width:280px" data-i18n="ob.s1.sub">
+        <div class="ob-anim-3" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;line-height:1.7;margin-bottom:16px;max-width:280px" data-i18n="ob.s1.sub">
           Garageverkopen, rommelroutes en vlooienmarkten, allemaal op de kaart.
+        </div>
+
+        <!-- Cedrik – Screen 1: wuivend / blij -->
+        <div class="cedrik-bubble ob-anim-4" style="max-width:320px;width:100%;align-self:center;margin-bottom:18px">
+          <img src="cedrik-ob-s1.png" alt="Cedrik" style="width:90px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))">
+          <div class="cedrik-speech cedrik-speech-dark" data-i18n="ob.cedrik.s1">Hoi! Ik ben Cedrik. Samen sporen we de beste vondsten in jouw buurt op!</div>
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;width:100%">
@@ -734,9 +745,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
         <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:6px" data-i18n="ob.s2.title">Jouw ervaring instellen</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:24px;line-height:1.6" data-i18n="ob.s2.sub">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:12px;line-height:1.6" data-i18n="ob.s2.sub">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
 
-        <div class="ob-perm-card ob-anim-3" id="ob-loc-card" onclick="obRequestLocation()">
+        <!-- Cedrik – Screen 2: wijzend / nieuwsgierig -->
+        <div class="cedrik-bubble ob-anim-3" style="margin-bottom:14px">
+          <img src="cedrik-ob-s2.png" alt="Cedrik" style="width:72px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="ob.cedrik.s2">Met je locatie vind ik verkopen vlakbij. Meldingen zorgen dat je niets mist!</div>
+        </div>
+
+        <div class="ob-perm-card ob-anim-4" id="ob-loc-card" onclick="obRequestLocation()">
           <div class="ob-perm-icon">📍</div>
           <div style="flex:1">
             <div style="font-size:13px;font-weight:700;color:#2C2416" data-i18n="ob.s2.loc">Locatie</div>
@@ -780,8 +797,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px))">
         <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px" data-i18n="ob.s3.title">Wat zoek jij?</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:4px" data-i18n="ob.s3.sub">Kies minimaal 3 categorieën voor betere aanbevelingen.</div>
-        <div class="ob-anim-2" style="font-size:11px;font-weight:700;color:#A04A18;margin-bottom:18px" id="ob-cat-count">Nog 3 categorieën nodig (minimaal 3)</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:10px" data-i18n="ob.s3.sub">Kies minimaal 3 categorieën voor betere aanbevelingen.</div>
+
+        <!-- Cedrik – Screen 3: denkend / nieuwsgierig -->
+        <div class="cedrik-bubble ob-anim-2" style="margin-bottom:10px">
+          <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:70px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="ob.cedrik.s3">Wat vind jij leuk? Kies je favorieten en ik zoek precies wat jij zoekt!</div>
+        </div>
+
+        <div class="ob-anim-3" style="font-size:11px;font-weight:700;color:#A04A18;margin-bottom:14px" id="ob-cat-count">Nog 3 categorieën nodig (minimaal 3)</div>
 
         <div class="ob-anim-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px">
           <div class="ob-cat-tile" data-cat="Kleding" onclick="obToggleCat(this)"><span class="cat-icon">👗</span><div class="cat-name">Kleding</div></div>
@@ -830,7 +854,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
       <div style="padding:0 24px max(24px,env(safe-area-inset-bottom,24px));overflow-y:auto">
         <div class="ob-anim-1" style="font-size:22px;font-weight:800;color:#2C2416;margin-bottom:4px" data-i18n="ob.s4.title">Welkom bij YardiGo</div>
-        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:16px;line-height:1.6" data-i18n="ob.s4.sub">Maak een gratis account aan voor de volledige ervaring.</div>
+        <div class="ob-anim-2" style="font-size:13px;color:#7A6E62;margin-bottom:10px;line-height:1.6" data-i18n="ob.s4.sub">Maak een gratis account aan voor de volledige ervaring.</div>
+
+        <!-- Cedrik – Screen 4: duim omhoog / enthousiast -->
+        <div class="cedrik-bubble ob-anim-2" style="margin-bottom:14px">
+          <img src="cedrik-ob-s4.png" alt="Cedrik" style="width:72px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <div class="cedrik-speech" data-i18n="ob.cedrik.s4">Bijna klaar! Met een gratis account zie je adressen en kun je alles opslaan.</div>
+        </div>
 
         <div class="ob-anim-3" style="background:white;border-radius:16px;border:1.5px solid #EDE8DF;padding:16px;margin-bottom:14px;box-shadow:0 4px 16px rgba(44,36,22,.06)">
           <div style="font-size:13px;font-weight:700;color:#2C2416;margin-bottom:12px" data-i18n="ob.s4.create_account">Account aanmaken</div>
@@ -3202,6 +3232,10 @@ var I18N = {
     'ob.s1.feat3.title': 'Meldingen',
     'ob.s1.feat3.sub': 'Nooit meer een verkoop missen',
     'ob.s1.cta': 'Aan de slag →',
+    'ob.cedrik.s1': 'Hoi! Ik ben Cedrik. Samen sporen we de beste vondsten in jouw buurt op!',
+    'ob.cedrik.s2': 'Met je locatie vind ik verkopen vlakbij. Meldingen zorgen dat je niets mist!',
+    'ob.cedrik.s3': 'Wat vind jij leuk? Kies je favorieten en ik zoek precies wat jij zoekt!',
+    'ob.cedrik.s4': 'Bijna klaar! Met een gratis account zie je adressen en kun je alles opslaan.',
     // Onboarding screen 2 (Permissions)
     'ob.s2.heading': 'Toestemmingen',
     'ob.s2.title': 'Jouw ervaring instellen',
@@ -3749,6 +3783,10 @@ var I18N = {
     'ob.s1.feat3.title': 'Notifications',
     'ob.s1.feat3.sub': 'Never miss a sale again',
     'ob.s1.cta': 'Get started →',
+    'ob.cedrik.s1': 'Hi! I\'m Cedrik. Together we\'ll find the best deals in your neighborhood!',
+    'ob.cedrik.s2': 'With your location I find sales nearby. Notifications make sure you miss nothing!',
+    'ob.cedrik.s3': 'What do you like? Pick your favorites and I\'ll find exactly what you\'re after!',
+    'ob.cedrik.s4': 'Almost there! With a free account you\'ll see addresses and save everything.',
     // Onboarding screen 2 (Permissions)
     'ob.s2.heading': 'Permissions',
     'ob.s2.title': 'Set up your experience',
@@ -4296,6 +4334,10 @@ var I18N = {
     'ob.s1.feat3.title': 'Notifications',
     'ob.s1.feat3.sub': 'Ne ratez plus aucune vente',
     'ob.s1.cta': 'Commencer →',
+    'ob.cedrik.s1': 'Salut ! Je suis Cedrik. Ensemble on va trouver les meilleures ventes du coin !',
+    'ob.cedrik.s2': 'Avec ta position, je trouve les ventes près de chez toi. Active les notifs !',
+    'ob.cedrik.s3': 'Qu\'est-ce qui te plaît ? Choisis tes favoris et je cherche pour toi !',
+    'ob.cedrik.s4': 'Presque fini ! Avec un compte gratuit tu vois les adresses et gardes tout.',
     // Onboarding screen 2 (Permissions)
     'ob.s2.heading': 'Autorisations',
     'ob.s2.title': 'Configurez votre expérience',
@@ -4758,6 +4800,10 @@ var I18N = {
     'inbox.title': 'Nachrichten',
     'inbox.empty_title': 'Keine Nachrichten',
     'inbox.empty_sub': 'Neuigkeiten und Updates von YardiGo erscheinen hier.',
+    'ob.cedrik.s1': 'Hallo! Ich bin Cedrik. Gemeinsam finden wir die besten Schnäppchen in deiner Nähe!',
+    'ob.cedrik.s2': 'Mit deinem Standort finde ich Verkäufe in der Nähe. Benachrichtigungen halten dich auf dem Laufenden!',
+    'ob.cedrik.s3': 'Was magst du? Wähle deine Favoriten und ich suche genau das für dich!',
+    'ob.cedrik.s4': 'Fast geschafft! Mit einem kostenlosen Konto siehst du Adressen und kannst alles speichern.',
     'ob.s4.promo_opt_in': 'Sende mir Tipps über Verkäufe in meiner Nähe (optional)',
     'settings.feedback.title': 'Send feedback',
     'settings.feedback.sub': 'Share ideas or improvements',
