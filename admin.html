@@ -1594,7 +1594,16 @@ async function deleteFromListingDrawer(){
 // USERS
 // ══════════════════════════════════════════════════
 async function loadUsers(){
-  var{data,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  // Gebruik admin-only RPC die profile + e-mail (uit auth.users) joint.
+  // Fallback naar profiles-only als de RPC nog niet beschikbaar is.
+  var data, error;
+  var rpcRes = await sb.rpc('admin_list_users');
+  if (rpcRes && !rpcRes.error) {
+    data = rpcRes.data; error = null;
+  } else {
+    var fb = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+    data = fb.data; error = fb.error;
+  }
   if(error){
     document.getElementById('users-table-body').innerHTML='<div class="empty"><div class="e-icon">👥</div><div class="e-text">Gebruikersdata niet beschikbaar.<br><br><a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" style="color:var(--terra)">Bekijk via Supabase Auth →</a></div></div>';
     document.getElementById('users-count').textContent='—'; return;
