@@ -1066,16 +1066,18 @@ function renderAnalyticsDaily(rows){
   var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.views)||0; }));
   // Toon max 30 labels; bij meer dagen elk 2e
   var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
+  var todayStr = new Date().toISOString().split('T')[0];
   el.innerHTML = rows.map(function(r, i){
     var v = Number(r.views)||0;
     var u = Number(r.unique_sessions)||0;
     var h = Math.max(2, Math.round((v/maxV)*110));
-    var day = new Date(r.day);
+    var day = new Date(r.day + 'T12:00:00'); // middaguur voorkomt tijdzone-verschuiving
     var short = (day.getDate()) + '/' + (day.getMonth()+1);
     var lbl = (i % showEvery === 0) ? short : '';
-    return '<div class="bar-col" title="' + short + ': ' + v + ' views · ' + u + ' uniek">' +
+    var isToday = (r.day === todayStr);
+    return '<div class="bar-col" title="' + short + (isToday?' (vandaag)':'') + ': ' + v + ' views · ' + u + ' uniek">' +
              '<div class="bar-val">' + (v||'') + '</div>' +
-             '<div class="bar ' + (i===rows.length-1?'primary':'secondary') + '" style="height:' + h + 'px"></div>' +
+             '<div class="bar ' + (isToday?'primary':(i===rows.length-1?'primary':'secondary')) + '" style="height:' + h + 'px' + (isToday?';opacity:1':'') + '"></div>' +
              '<div class="bar-label">' + lbl + '</div>' +
            '</div>';
   }).join('');
@@ -1103,10 +1105,11 @@ function renderAnalyticsListings(rows){
   if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen data.</div>'; return; }
   var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.count)||0; }));
   var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
+  var todayStrLg = new Date().toISOString().split('T')[0];
   el.innerHTML = rows.map(function(r, i){
     var c = Number(r.count)||0;
     var h = Math.max(2, Math.round((c/maxV)*110));
-    var day = new Date(r.day);
+    var day = new Date(r.day + 'T12:00:00');
     var short = (day.getDate()) + '/' + (day.getMonth()+1);
     var lbl = (i % showEvery === 0) ? short : '';
     return '<div class="bar-col" title="' + short + ': ' + c + ' nieuwe advertenties">' +
@@ -1298,12 +1301,24 @@ function weekNum(d){
   return Math.ceil((((date-ys)/86400000)+1)/7);
 }
 
+function extractCityFromAddress(addr){
+  if(!addr) return null;
+  var parts=addr.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if(parts.length<2) return null;
+  var skipRe=/^(nederland|netherlands|belgi[eë]|belgium|belgique|france|frankrijk|deutschland|duitsland)$/i;
+  var zipRe=/^\d{4}\s?[A-Z]{0,2}$/i;
+  var i=parts.length-1;
+  while(i>=0&&(skipRe.test(parts[i])||zipRe.test(parts[i]))) i--;
+  if(i<0) return null;
+  var cand=parts[i].replace(/^\d{4}\s?[A-Z]{0,2}\s+/i,'').trim();
+  return cand.length>1?cand:null;
+}
 function renderCityChart(listings){
   var cities={};
   listings.forEach(function(l){
     if(!l.address)return;
-    var parts=l.address.split(','); var city=parts[parts.length-1].trim().replace(/\d/g,'').trim();
-    if(city.length>1) cities[city]=(cities[city]||0)+1;
+    var city=extractCityFromAddress(l.address);
+    if(city) cities[city]=(cities[city]||0)+1;
   });
   var sorted=Object.entries(cities).sort(function(a,b){return b[1]-a[1];}).slice(0,6);
   var mx=sorted.length?sorted[0][1]:1;

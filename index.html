@@ -558,6 +558,16 @@ body.dark .feedback-card{background:var(--bg2);}
 /* ── LOADING BAR ── */
 .lbar{position:fixed;top:0;left:0;height:3px;background:var(--terra);width:0;transition:width .4s;z-index:9999;}
 
+/* ── ONDERHOUDSBANNER ── */
+#maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
+#maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+#maintenance-banner img{width:44px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(44,36,22,.15));}
+#maintenance-banner .mb-text{flex:1;font-size:12px;font-weight:600;color:#2C2416;line-height:1.4;}
+#maintenance-banner .mb-title{font-size:13px;font-weight:800;color:#C5611A;margin-bottom:1px;}
+body.dark #maintenance-banner{background:#2A2010;border-color:#C5611A;}
+body.dark #maintenance-banner .mb-text{color:#F0E8DC;}
+body.dark #maintenance-banner .mb-title{color:#F2A830;}
+
 /* ── SETTINGS ── */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
 .settings-row:last-child{border-bottom:none;}
@@ -666,6 +676,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </head>
 <body>
 
+<!-- Onderhoudsbanner -->
+<div id="maintenance-banner">
+  <img src="cedrik-ob-s2.png" alt="Cedrik">
+  <div class="mb-text">
+    <div class="mb-title">🔧 Even geduld!</div>
+    <div id="maintenance-msg">We voeren onderhoud uit. Terug zo!</div>
+  </div>
+</div>
 <!-- Loading bar -->
 <div class="lbar" id="lbar"></div>
 <!-- Toast -->
@@ -9546,8 +9564,15 @@ async function publishSale() {
         ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
         : (mainAddr + ', ' + _geoCountry);
       var _geoHeaders = { 'Accept-Language': 'nl,fr,de,en' };
-      var geoRes  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC, { headers: _geoHeaders });
+      var _nominatimUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC;
+      var geoRes  = await fetch(_nominatimUrl, { headers: _geoHeaders });
       geoData = await geoRes.json();
+      // Retry eenmalig na 1.2s bij lege resultaten (Nominatim rate-limit of tijdelijke storing)
+      if (!geoData.length) {
+        await new Promise(function(r) { setTimeout(r, 1200); });
+        var _geoRetry = await fetch(_nominatimUrl, { headers: _geoHeaders });
+        geoData = await _geoRetry.json();
+      }
       // Als het volledige adres geen resultaat geeft, probeer een vereenvoudigde
       // query met alleen postcode + stad. Dit helpt bij Belgische adressen waarbij
       // schrijfwijzen, sub-gemeenten (bv. Wondelgem = deelgemeente Gent) of
@@ -10974,6 +10999,25 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   } catch(e) {
     console.log('Supabase laden mislukt, gebruik demo-data:', e);
+  }
+
+  // Onderhoudsbanner: laad app_settings en toon banner indien actief
+  if (sbClient) {
+    try {
+      var _msRes = await sbClient.from('app_settings').select('key,value').in('key', ['maintenance_mode', 'banner_text']);
+      if (_msRes.data) {
+        var _msMap = {};
+        _msRes.data.forEach(function(r) { _msMap[r.key] = r.value; });
+        if (_msMap.maintenance_mode === 'true') {
+          var _banner = document.getElementById('maintenance-banner');
+          var _msg = document.getElementById('maintenance-msg');
+          if (_banner) {
+            if (_msg && _msMap.banner_text) _msg.textContent = _msMap.banner_text;
+            _banner.classList.add('active');
+          }
+        }
+      }
+    } catch(e) {}
   }
 
   // Herstel sessie: eerst Supabase, dan localStorage als fallback
