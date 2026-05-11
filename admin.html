@@ -1139,7 +1139,7 @@ async function loadSettings(){
 async function saveSetting(key,value){
   var sv=String(value); settings[key]=sv;
   var{error}=await sb.from('app_settings').upsert({key,value:sv},{onConflict:'key'});
-  if(error) localStorage.setItem('yardigo_admin_'+key,sv);
+  if(error){ toast('❌ Opslaan mislukt: ' + error.message); console.error('saveSetting fout:', error); return; }
   if(key==='show_samples'||key==='sample_threshold') updateSampleInfo();
   if(key==='maintenance_mode') toast(value===true||value==='true'?'🔧 Onderhoudsmodus aan':'✅ Onderhoudsmodus uit');
   if(key==='notify_new_listing') toast(value===true||value==='true'?'🔔 Notificaties aan':'🔕 Notificaties uit');
