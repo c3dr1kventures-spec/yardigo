@@ -542,6 +542,14 @@ body.dark .feedback-card{background:var(--bg2);}
 .btn-feedback-send{flex:1;background:var(--forest);color:white;border:none;border-radius:12px;padding:13px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-feedback-cancel{padding:13px 18px;background:var(--bg2);color:var(--muted);border:none;border-radius:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
 
+/* ── REVIEWS ── */
+.rv-star{font-size:38px;cursor:pointer;color:#DDD;transition:color .15s;}
+.rv-star.active{color:#F2A830;}
+.review-card{background:white;border-radius:14px;border:1.5px solid var(--border);padding:14px;margin-bottom:8px;box-shadow:var(--shadow);}
+body.dark .review-card{background:var(--bg2);}
+.review-stars-display{color:#F2A830;font-size:14px;letter-spacing:1px;}
+.pending-checkin-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+
 /* ── BOTTOM NAV ── */
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:white;border-top:1px solid var(--border);display:flex;z-index:500;padding-bottom:env(safe-area-inset-bottom,0);}
 .bni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:9px;font-weight:600;color:var(--muted);cursor:pointer;gap:3px;}
@@ -1371,11 +1379,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
     </div>
     <div class="pp" id="pp-2">
-      <div class="empty-state">
-          <div class="empty-icon">💬</div>
-          <div class="empty-title" data-i18n="empty.no_reviews_title">Nog geen reviews</div>
-          <div class="empty-sub" data-i18n="empty.no_reviews_sub">Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.</div>
-        </div>
+      <!-- Nog te beoordelen -->
+      <div id="pp2-pending-wrap" style="display:none;margin-bottom:4px">
+        <div class="section-label" style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:14px 4px 8px">Nog te beoordelen</div>
+        <div id="pp2-pending-list"></div>
+      </div>
+      <!-- Ontvangen reviews -->
+      <div class="section-label" style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:14px 4px 8px">Ontvangen reviews</div>
+      <div id="pp2-reviews-list"></div>
+      <div id="pp2-empty" class="empty-state">
+        <div class="empty-icon">💬</div>
+        <div class="empty-title" data-i18n="empty.no_reviews_title">Nog geen reviews</div>
+        <div class="empty-sub" data-i18n="empty.no_reviews_sub">Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.</div>
+      </div>
+      <div id="pp2-loading" style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Laden...</div>
     </div>
     <div class="pp" id="pp-3"></div>
 
@@ -1888,6 +1905,37 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
   <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()" data-i18n="publish.title">＋ Verkoop plaatsen</button>
+</div>
+
+<!-- ═══════════ REVIEW SHEET ═══════════ -->
+<div class="overlay" id="review-overlay" onclick="closeReviewSheet()">
+  <div class="sheet" id="review-sheet" onclick="event.stopPropagation()" style="padding:0 0 max(24px,env(safe-area-inset-bottom,24px))">
+    <div class="sheet-handle"></div>
+    <div style="padding:16px 20px 8px;text-align:center;border-bottom:1px solid var(--border)">
+      <div style="font-size:16px;font-weight:800;color:var(--text)" data-i18n="review.title">Review schrijven</div>
+      <div id="review-sale-title" style="font-size:12px;color:var(--muted);margin-top:3px"></div>
+    </div>
+    <div style="padding:20px 20px 8px">
+      <!-- Sterren -->
+      <div style="display:flex;justify-content:center;gap:10px;margin-bottom:18px" id="review-stars-row">
+        <span class="rv-star" data-v="1" onclick="setReviewStar(1)">★</span>
+        <span class="rv-star" data-v="2" onclick="setReviewStar(2)">★</span>
+        <span class="rv-star" data-v="3" onclick="setReviewStar(3)">★</span>
+        <span class="rv-star" data-v="4" onclick="setReviewStar(4)">★</span>
+        <span class="rv-star" data-v="5" onclick="setReviewStar(5)">★</span>
+      </div>
+      <div id="review-star-label" style="text-align:center;font-size:12px;color:var(--muted);margin-top:-12px;margin-bottom:14px;min-height:16px"></div>
+      <!-- Tekstje -->
+      <textarea id="review-body" placeholder="Vertel meer over je ervaring (optioneel)" maxlength="500" rows="3"
+        oninput="var c=document.getElementById('review-body-count');if(c)c.textContent=this.value.length"
+        style="width:100%;box-sizing:border-box;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:13px;color:var(--text);background:var(--bg2);resize:none;outline:none;margin-bottom:4px"></textarea>
+      <div style="text-align:right;font-size:10px;color:var(--muted);margin-bottom:14px"><span id="review-body-count">0</span>/500</div>
+      <button onclick="submitReview()" id="review-submit-btn" disabled
+        style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--muted);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:not-allowed;margin-bottom:8px;transition:background .2s" data-i18n="review.save_btn">✓ Review opslaan</button>
+      <button onclick="closeReviewSheet()"
+        style="width:100%;padding:10px;border-radius:12px;border:none;background:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="review.skip_btn">Overslaan</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ NAVIGATIE SHEET ═══════════ -->
@@ -5378,6 +5426,7 @@ function updateUserUI() {
   applyAuthVisibility();
   renderMySales();
   loadAndRenderUserBadges();
+  if (!isGuest) loadCheckinState();
 }
 
 // Zet body.is-guest klasse zodat leden-only UI (meld-knoppen) kan verbergen
@@ -5650,7 +5699,9 @@ let selTypeVal = 'particulier', addStep = 0, uploadedPhotos = [], addTagsSelecte
 var addFloorplanFile = null; // geselecteerde plattegrond voor buurtverkoop aanmaakflow
 let obStep = 0, obSelectedCats = [];
 let searchSuggestTimer = null;
-let attendanceData = { visited:4, total:5 };
+let attendanceData = { visited:0, total:0 };
+let pendingCheckinListingId = null, pendingCheckinSellerId = null;
+let reviewStars = 0, reviewListingId = null, reviewSellerId = null;
 
 // ══════════════════════════════════════════════════
 // ONBOARDING
@@ -7168,6 +7219,7 @@ function sv(name, tabEl) {
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
   if (name === 'instellingen') loadSettingsTab();
+  if (name === 'mijn') loadCheckinState();
   var fabRow = document.getElementById('fab-row');
   if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart');
 }
@@ -7176,6 +7228,7 @@ function ptab(i) {
   document.getElementById('pp-' + i).classList.add('active');
   document.querySelectorAll('.ptab').forEach(function(t, j) { t.classList.toggle('active', j === i); });
   if (i === 1) updateFavProfile();
+  if (i === 2) loadReviewsTab();
 }
 function openSettings() {
   var instTab = document.querySelectorAll('.tab')[4];
@@ -10190,12 +10243,186 @@ function updateAttendanceUI() {
   var tot = document.getElementById('att-total'); if (tot) tot.textContent = attendanceData.total;
   loadAndRenderUserBadges();
 }
-function doCheckin(attended) {
-  attendanceData.total++;
-  if (attended) { attendanceData.visited++; toast(i18n('toast.attendance_recorded', '✓ Aanwezigheid geregistreerd! 🎉')); }
-  else toast(i18n('toast.attendance_skipped', 'Jammer! Score bijgewerkt.'));
-  document.getElementById('checkin-card').style.display = 'none';
-  updateAttendanceUI();
+async function loadCheckinState() {
+  if (isGuest || !sbClient || !currentUser) return;
+  var card = document.getElementById('checkin-card');
+  if (!card) return;
+  var today = new Date().toISOString().slice(0, 10);
+  var weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  try {
+    // Favorieten ophalen met listing-data
+    var favRes = await sbClient.from('favorites')
+      .select('listing_id, listings!inner(id, title, date_start, user_id)')
+      .eq('user_id', currentUser.id)
+      .lte('listings.date_start', today)
+      .gte('listings.date_start', weekAgo);
+    var favs = favRes.data || [];
+    if (!favs.length) { card.style.display = 'none'; return; }
+    var ids = favs.map(function(f) { return f.listing_id; });
+    // Bestaande check-ins ophalen
+    var ciRes = await sbClient.from('checkins').select('listing_id').eq('user_id', currentUser.id).in('listing_id', ids);
+    var checkedIds = new Set((ciRes.data || []).map(function(c) { return c.listing_id; }));
+    var pending = favs.filter(function(f) { return !checkedIds.has(f.listing_id); });
+    // Attendance-score bijwerken
+    var allCiRes = await sbClient.from('checkins').select('attended').eq('user_id', currentUser.id);
+    var allCi = allCiRes.data || [];
+    attendanceData.total = allCi.length;
+    attendanceData.visited = allCi.filter(function(c) { return c.attended; }).length;
+    updateAttendanceUI();
+    if (!pending.length) { card.style.display = 'none'; return; }
+    var p = pending[0];
+    var listing = p.listings;
+    document.getElementById('checkin-sale-name').textContent = listing.title;
+    pendingCheckinListingId = listing.id;
+    pendingCheckinSellerId = listing.user_id;
+    card.style.display = 'flex';
+  } catch(e) { console.warn('loadCheckinState', e); }
+}
+
+async function doCheckin(attended) {
+  var card = document.getElementById('checkin-card');
+  if (card) card.style.display = 'none';
+  if (!isGuest && sbClient && currentUser && pendingCheckinListingId) {
+    try {
+      await sbClient.from('checkins').upsert(
+        { user_id: currentUser.id, listing_id: pendingCheckinListingId, attended: attended },
+        { onConflict: 'user_id,listing_id' }
+      );
+      attendanceData.total++;
+      if (attended) attendanceData.visited++;
+      updateAttendanceUI();
+    } catch(e) { console.warn('doCheckin save', e); }
+  }
+  if (attended) {
+    toast(i18n('toast.attendance_recorded', '✓ Aanwezigheid geregistreerd! 🎉'));
+    var lid = pendingCheckinListingId, sid = pendingCheckinSellerId;
+    pendingCheckinListingId = null; pendingCheckinSellerId = null;
+    setTimeout(function() { openReviewSheet(lid, sid); }, 450);
+  } else {
+    toast(i18n('toast.attendance_skipped', 'Jammer! Score bijgewerkt.'));
+    pendingCheckinListingId = null; pendingCheckinSellerId = null;
+  }
+}
+
+// ── REVIEW SHEET ──────────────────────────────────────────────────────────
+function openReviewSheet(listingId, sellerId) {
+  reviewListingId = listingId; reviewSellerId = sellerId; reviewStars = 0;
+  var sale = sales.find(function(s) { return String(s.id) === String(listingId); });
+  var titleEl = document.getElementById('review-sale-title');
+  if (titleEl) titleEl.textContent = sale ? sale.title : '';
+  document.querySelectorAll('.rv-star').forEach(function(s) { s.classList.remove('active'); });
+  var lbl = document.getElementById('review-star-label'); if (lbl) lbl.textContent = '';
+  var body = document.getElementById('review-body'); if (body) body.value = '';
+  var cnt = document.getElementById('review-body-count'); if (cnt) cnt.textContent = '0';
+  var btn = document.getElementById('review-submit-btn');
+  if (btn) { btn.disabled = true; btn.style.background = 'var(--muted)'; btn.style.cursor = 'not-allowed'; }
+  var overlay = document.getElementById('review-overlay');
+  if (overlay) { overlay.classList.add('open'); }
+}
+function closeReviewSheet() {
+  var overlay = document.getElementById('review-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+var STAR_LABELS = ['', 'Slecht', 'Matig', 'Goed', 'Heel goed', 'Uitstekend'];
+function setReviewStar(n) {
+  reviewStars = n;
+  document.querySelectorAll('.rv-star').forEach(function(s) {
+    s.classList.toggle('active', parseInt(s.dataset.v) <= n);
+  });
+  var lbl = document.getElementById('review-star-label'); if (lbl) lbl.textContent = STAR_LABELS[n] || '';
+  var btn = document.getElementById('review-submit-btn');
+  if (btn) { btn.disabled = false; btn.style.background = 'var(--forest)'; btn.style.cursor = 'pointer'; }
+}
+async function submitReview() {
+  if (!reviewStars || !reviewListingId || !reviewSellerId) return;
+  if (isGuest || !sbClient || !currentUser) return;
+  var btn = document.getElementById('review-submit-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Opslaan...'; }
+  var body = (document.getElementById('review-body') || {}).value || '';
+  try {
+    var res = await sbClient.from('reviews').insert({
+      listing_id: reviewListingId,
+      reviewer_id: currentUser.id,
+      seller_id: reviewSellerId,
+      stars: reviewStars,
+      body: body.trim() || null
+    });
+    if (res.error) throw res.error;
+    toast('⭐ Review opgeslagen, bedankt!');
+    closeReviewSheet();
+    reviewListingId = null; reviewSellerId = null; reviewStars = 0;
+  } catch(e) {
+    toast('❌ Review opslaan mislukt');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Review opslaan'; }
+  }
+}
+
+// ── REVIEWS TAB ───────────────────────────────────────────────────────────
+async function loadReviewsTab() {
+  if (isGuest || !sbClient || !currentUser) return;
+  var loadingEl = document.getElementById('pp2-loading');
+  var emptyEl   = document.getElementById('pp2-empty');
+  var listEl    = document.getElementById('pp2-reviews-list');
+  var pendWrap  = document.getElementById('pp2-pending-wrap');
+  var pendList  = document.getElementById('pp2-pending-list');
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (emptyEl)   emptyEl.style.display   = 'none';
+  if (listEl)    listEl.innerHTML = '';
+  if (pendWrap)  pendWrap.style.display  = 'none';
+  try {
+    // ── Nog te beoordelen ──────────────────────────────────────────────
+    var ciRes = await sbClient.from('checkins')
+      .select('listing_id, listings!inner(id, title, date_start)')
+      .eq('user_id', currentUser.id)
+      .eq('attended', true);
+    var attended = ciRes.data || [];
+    if (attended.length) {
+      var attIds = attended.map(function(c) { return c.listing_id; });
+      var rvRes  = await sbClient.from('reviews').select('listing_id').eq('reviewer_id', currentUser.id).in('listing_id', attIds);
+      var revved = new Set((rvRes.data || []).map(function(r) { return r.listing_id; }));
+      var pending = attended.filter(function(c) { return !revved.has(c.listing_id); });
+      if (pending.length && pendWrap && pendList) {
+        pendList.innerHTML = pending.map(function(c) {
+          var l = c.listings;
+          var safe = escapeHtml;
+          return '<div class="pending-checkin-card">'
+            + '<div style="font-size:24px">🏪</div>'
+            + '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--text)">' + safe(l.title) + '</div>'
+            + '<div style="font-size:11px;color:var(--muted)">' + fmtDate(l.date_start) + '</div></div>'
+            + '<button onclick="openReviewSheet(\'' + safe(String(l.id)) + '\',\'\')" '
+            + 'style="padding:8px 14px;border-radius:9px;border:none;background:var(--terra);color:white;font-family:\'Poppins\',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Review schrijven</button>'
+            + '</div>';
+        }).join('');
+        pendWrap.style.display = 'block';
+      }
+    }
+    // ── Ontvangen reviews ──────────────────────────────────────────────
+    var rvListRes = await sbClient.from('reviews')
+      .select('id, stars, body, created_at, listings!inner(title), reviewer:reviewer_id(display_name, avatar_url)')
+      .eq('seller_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    var received = rvListRes.data || [];
+    if (loadingEl) loadingEl.style.display = 'none';
+    if (!received.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+    listEl.innerHTML = received.map(function(r) {
+      var stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+      var name  = (r.reviewer && r.reviewer.display_name) || 'Anoniem';
+      var title = (r.listings && r.listings.title) || '';
+      var date  = r.created_at ? new Date(r.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short' }) : '';
+      return '<div class="review-card">'
+        + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+        + '<div style="width:34px;height:34px;border-radius:50%;background:var(--terra);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700;flex-shrink:0">'
+        + escapeHtml(name.charAt(0).toUpperCase()) + '</div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text)">' + escapeHtml(name) + '</div>'
+        + '<div style="font-size:10px;color:var(--muted)">' + escapeHtml(title) + ' · ' + date + '</div></div>'
+        + '<div class="review-stars-display">' + stars + '</div></div>'
+        + (r.body ? '<div style="font-size:12px;color:var(--text);line-height:1.5">' + escapeHtml(r.body) + '</div>' : '')
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    console.warn('loadReviewsTab', e);
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
 }
 
 
