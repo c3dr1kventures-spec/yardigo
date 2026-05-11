@@ -1154,9 +1154,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button class="btn-inbox" onclick="openInbox()" aria-label="Berichten" id="inboxBellBtn" title="Berichten">
       🔔<span class="inbox-badge" id="inbox-badge" style="display:none">0</span>
     </button>
-    <button class="btn-settings-gear" onclick="openSettings()" aria-label="Instellingen" id="settingsGearBtn" title="Instellingen" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    </button>
+
     <button class="btn-login" onclick="openLogin()" id="loginBtn" aria-label="Inloggen"><span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text" data-i18n="header.login">Inloggen</span></button>
     <button class="btn-publish" onclick="isGuest ? guestGate('plaatsen') : openAdd()" aria-label="Plaatsen"><span class="btn-publish-icon" aria-hidden="true">+</span><span class="btn-publish-text" data-i18n="header.publish">Plaatsen</span></button>
   </div>
@@ -1223,6 +1221,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="tab" onclick="sv('lijst',this)">📋 <span data-i18n="nav.list">Lijst</span></div>
   <div class="tab" onclick="sv('route',this)">🧭 <span data-i18n="nav.route">Route</span></div>
   <div class="tab" onclick="sv('mijn',this)">⭐ <span data-i18n="nav.mine">Mijn</span></div>
+  <div class="tab" onclick="sv('instellingen',this)">⚙️ <span data-i18n="nav.settings">Instellingen</span></div>
 </div>
 
 <!-- Views -->
@@ -1355,7 +1354,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div class="ptab active" id="pt-0" onclick="ptab(0)" data-i18n="profile.tab_sales">Mijn verkopen</div>
       <div class="ptab" id="pt-1" onclick="ptab(1)" data-i18n="profile.tab_favorites">Favorieten</div>
       <div class="ptab" id="pt-2" onclick="ptab(2)" data-i18n="profile.tab_reviews">Reviews</div>
-      <div class="ptab" id="pt-3" onclick="ptab(3)" data-i18n="profile.tab_settings">Instellingen</div>
     </div>
     <div class="pp active" id="pp-0">
       <div id="my-sales-list"></div>
@@ -1379,521 +1377,486 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div class="empty-sub" data-i18n="empty.no_reviews_sub">Reviews verschijnen hier nadat bezoekers jouw verkopen hebben beoordeeld.</div>
         </div>
     </div>
-    <div class="pp" id="pp-3">
+    <div class="pp" id="pp-3"></div>
 
-      <!-- ── ACCOUNT ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_account">Account</div>
-        <div class="settings-card">
-          <!-- Naam -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#FFF0E8;">✏️</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.name">Naam</div></div>
-            <div class="srow-right">
-              <input class="srow-input" id="set-name" placeholder="Jouw naam" data-i18n-placeholder="settings.name_ph" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
-            </div>
-          </div>
-          <!-- Naam weergeven als -->
-          <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px">
-            <div style="display:flex;align-items:center;gap:12px;width:100%">
-              <div class="srow-icon" style="background:#F0EBF8;">👤</div>
-              <div class="srow-body">
-                <div class="srow-title" data-i18n="settings.name_in_ads">Naam in advertenties</div>
-                <div class="srow-sub" data-i18n="settings.name_in_ads_sub">Hoe verschijn je bij je verkopen</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:6px;padding-left:44px;width:100%;box-sizing:border-box">
-              <button id="ndm-first" onclick="setNameDisplayMode('first')" style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.first_name">Voornaam</button>
-              <button id="ndm-full"  onclick="setNameDisplayMode('full')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--forest);background:#E8F4ED;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--forest)" data-i18n="settings.full_name">Volledig</button>
-              <button id="ndm-last"  onclick="setNameDisplayMode('last')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.last_name">Achternaam</button>
-            </div>
-            <div id="ndm-preview" style="padding-left:44px;font-size:11px;color:var(--muted)"></div>
-          </div>
-          <!-- Stad -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F4ED;">📍</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.city">Woonplaats</div></div>
-            <div class="srow-right">
-              <input class="srow-input" id="set-city" placeholder="Bijv. Amsterdam" data-i18n-placeholder="settings.city_ph" maxlength="40" onblur="saveProfileField('city',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
-            </div>
-          </div>
-          <!-- Bio -->
-          <div class="srow" style="flex-direction:column;align-items:flex-start;">
-            <div style="display:flex;align-items:center;gap:12px;width:100%;">
-              <div class="srow-icon" style="background:#F0EBF8;">💬</div>
-              <div class="srow-body"><div class="srow-title" data-i18n="settings.bio">Bio</div><div class="srow-sub" data-i18n="settings.bio_sub">Korte beschrijving over jezelf</div></div>
-            </div>
-            <textarea class="srow-textarea" id="set-bio" rows="2" placeholder="Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️" data-i18n-placeholder="settings.bio_ph" maxlength="120" onblur="saveProfileField('bio',this.value)"></textarea>
-            <div style="font-size:10px;color:var(--muted);text-align:right;width:100%;margin-top:2px"><span id="bio-count">0</span>/120</div>
-          </div>
-          <!-- Scheidslijn -->
-          <div style="height:1px;background:var(--border);margin:4px 0"></div>
-          <!-- E-mail (readonly) -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F0F8;">📧</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.email">E-mailadres</div><div class="srow-sub" id="set-email-display">—</div></div>
-          </div>
-          <!-- Wachtwoord wijzigen -->
-          <div class="srow tappable" onclick="openChangePassword()">
-            <div class="srow-icon" style="background:#F0EBF8;">🔑</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.password_change">Wachtwoord wijzigen</div><div class="srow-sub" data-i18n="settings.password_change_sub">Stuur een herstel-e-mail</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- Uitloggen -->
-          <div class="srow tappable" onclick="doLogout()">
-            <div class="srow-icon" style="background:#FFF0E8;">🚪</div>
-            <div class="srow-body"><div class="srow-title" style="color:var(--terra)" data-i18n="settings.logout">Uitloggen</div></div>
-            <div class="srow-right"><span class="srow-chevron" style="color:var(--terra)">›</span></div>
+
+  </div>
+</div>
+
+<!-- VIEW-INSTELLINGEN -->
+<div class="view" id="view-instellingen">
+  <div class="profile-header">
+    <div style="font-size:28px;margin-bottom:8px">⚙️</div>
+    <div style="font-size:20px;font-weight:800;color:white;" data-i18n="nav.settings">Instellingen</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:4px" data-i18n="settings.subtitle">Pas je YardiGo ervaring aan</div>
+  </div>
+  <div style="padding:0 14px 100px;margin-top:-20px">
+
+    <!-- ── ACCOUNT ── -->
+    <div class="settings-section">
+      <div class="settings-section-header" data-i18n="settings.header_account">👤 Account</div>
+      <div class="settings-card">
+        <div class="srow">
+          <div class="srow-icon" style="background:#FFF0E8;">✏️</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.name">Naam</div></div>
+          <div class="srow-right">
+            <input class="srow-input" id="set-name" placeholder="Jouw naam" data-i18n-placeholder="settings.name_ph" maxlength="40" onblur="saveProfileField('display_name',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
           </div>
         </div>
-      </div>
-
-      <!-- ── VOORKEUREN ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_app">Voorkeuren</div>
-        <div class="settings-card">
-          <!-- Taal -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F4ED;">🌐</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.language.title">Taal</div><div class="srow-sub" data-i18n="settings.language.sub">Nederlands of Engels</div></div>
-            <div class="srow-right">
-              <div class="seg-ctrl" style="min-width:auto">
-                <button class="seg-opt" data-lang="nl" onclick="if(currentLang!=='nl')toggleLang()">NL</button>
-                <button class="seg-opt" data-lang="en" onclick="if(currentLang!=='en')toggleLang()">EN</button>
-              </div>
-            </div>
-          </div>
-          <!-- Donkere modus -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#1A1A2E;">🌙</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.darkmode.title">Donkere modus</div><div class="srow-sub" data-i18n="settings.darkmode.sub">Schakel tussen licht en donker thema</div></div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-          <!-- Standaard zoekradius -->
-          <div class="srow" style="flex-wrap:wrap;gap:8px;">
-            <div class="srow-icon" style="background:#E8F4ED;">🔍</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.radius.title">Standaard zoekradius</div><div class="srow-sub" id="radius-sub" data-i18n="settings.radius.sub_default">10 km rondom jouw locatie</div></div>
-            <div style="width:100%;padding-left:44px;">
-              <div class="seg-ctrl" id="seg-radius">
-                <button class="seg-opt" data-v="5" onclick="setRadiusPref(this)">5 km</button>
-                <button class="seg-opt active" data-v="10" onclick="setRadiusPref(this)">10 km</button>
-                <button class="seg-opt" data-v="25" onclick="setRadiusPref(this)">25 km</button>
-                <button class="seg-opt" data-v="50" onclick="setRadiusPref(this)">50 km</button>
-              </div>
-            </div>
-          </div>
-          <!-- Kaarttype -->
-          <div class="srow" style="flex-wrap:wrap;gap:8px;">
-            <div class="srow-icon" style="background:#E8F0F8;">🗺️</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.maptype.title">Kaarttype</div><div class="srow-sub" id="maptype-sub" data-i18n="settings.maptype.sub_default">Standaard kaartweergave</div></div>
-            <div style="width:100%;padding-left:44px;">
-              <div class="seg-ctrl" id="seg-maptype">
-                <button class="seg-opt active" data-v="roadmap" onclick="setMapTypePref(this)" data-i18n="settings.maptype.roadmap">Standaard</button>
-                <button class="seg-opt" data-v="satellite" onclick="setMapTypePref(this)" data-i18n="settings.maptype.satellite">Satelliet</button>
-                <button class="seg-opt" data-v="terrain" onclick="setMapTypePref(this)" data-i18n="settings.maptype.terrain">Terrein</button>
-              </div>
-            </div>
-          </div>
-          <!-- Kaart auto-centreren -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#FFF8E8;">🎯</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.autocenter.title">Auto-centreren</div><div class="srow-sub" data-i18n="settings.autocenter.sub">Kaart centreert op jouw locatie bij openen</div></div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="autocenter-toggle" onclick="togglePref('autocenter',this)"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-          <!-- Afstand tonen -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F4ED;">📏</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.showdist.title">Afstand tonen</div><div class="srow-sub" data-i18n="settings.showdist.sub">Toon kilometer-afstand bij elke verkoop</div></div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="showdist-toggle" onclick="togglePref('showdist',this)"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── MELDINGEN ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_notif">Meldingen</div>
-
-        <!-- Master toggle -->
-        <div class="settings-card" style="margin-bottom:4px;">
-          <div class="srow">
-            <div class="srow-icon" style="background:#FFF8E8;">🔔</div>
-            <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.notif.master_title">Alle meldingen</div>
-              <div class="srow-sub" id="notif-master-lbl" data-i18n="settings.notif.master_on">Ingeschakeld</div>
-            </div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="notif-master" onclick="toggleMaster()"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Notificatiekaarten -->
-        <div id="notif-cards">
-
-          <!-- 1. Nieuwe verkopen in de buurt -->
-          <div class="notif-card" id="nc-0">
-            <div class="notif-card-head" onclick="toggleNotifCard(0)">
-              <div style="font-size:22px">🏠</div>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card1_title">Nieuwe verkopen in de buurt</div>
-                <div class="notif-card-sub" id="ncs-0">Direct · binnen 2 km</div>
-              </div>
-              <div class="toggle-wrap" id="nt-0" onclick="event.stopPropagation();toggleNotifType(0)"><div class="toggle-ball"></div></div>
-              <div class="notif-chevron" id="nch-0">›</div>
-            </div>
-            <div class="notif-card-body" id="nb-0">
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_distance">Afstand</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill active" data-g="0" data-v="1" onclick="pickNotifPill(this)">1 km</button>
-                  <button class="notif-pill active" data-g="0" data-v="2" onclick="pickNotifPill(this)">2 km</button>
-                  <button class="notif-pill" data-g="0" data-v="5" onclick="pickNotifPill(this)">5 km</button>
-                  <button class="notif-pill" data-g="0" data-v="10" onclick="pickNotifPill(this)">10 km</button>
-                  <button class="notif-pill" data-g="0" data-v="25" onclick="pickNotifPill(this)">25 km</button>
-                </div>
-              </div>
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_timing">Timing</span>
-                <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
-                  <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_daily_overview">Dagelijks overzicht</button>
-                </div>
-              </div>
-              <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_types">Types</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 <span data-i18n="type.particulier">Opritverkoop</span></button>
-                  <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ <span data-i18n="type.buurt">Rommelroute</span></button>
-                  <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 <span data-i18n="type.evenement">Evenement</span></button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Herinneringen favorieten -->
-          <div class="notif-card" id="nc-1">
-            <div class="notif-card-head" onclick="toggleNotifCard(1)">
-              <div style="font-size:22px">⭐</div>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card2_title">Herinneringen favorieten</div>
-                <div class="notif-card-sub" id="ncs-1">20 min van tevoren</div>
-              </div>
-              <div class="toggle-wrap" id="nt-1" onclick="event.stopPropagation();toggleNotifType(1)"><div class="toggle-ball"></div></div>
-              <div class="notif-chevron" id="nch-1">›</div>
-            </div>
-            <div class="notif-card-body" id="nb-1">
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_advance">Hoe ver van tevoren?</span>
-                <div style="padding:0 4px">
-                  <input type="range" min="5" max="120" step="5" value="20" id="fav-slider"
-                    oninput="updateSliderLabel('fav-slider','fav-lbl',this.value+' min voor aanvang')"
-                    style="width:100%;accent-color:var(--terra)">
-                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                    <span>5 min</span><span id="fav-lbl" style="font-weight:700;color:var(--terra)">20 min</span><span>2 uur</span>
-                  </div>
-                </div>
-              </div>
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_extra">Extra opties</span>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                    <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> <span data-i18n="settings.notif.morning_overview">Ochtendoverzicht om 08:00</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
-                    <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> <span data-i18n="settings.notif.route_reminder">Routeherinnering meesturen</span>
-                  </label>
-                </div>
-              </div>
-              <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_quiet_hours">Stilte-uren</span>
-                <div style="padding:0 4px">
-                  <input type="range" min="0" max="1440" step="30" value="480" id="quiet-start"
-                    oninput="updateTimeSlider('quiet-start','qs-lbl')"
-                    style="width:100%;accent-color:var(--forest)">
-                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                    <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)" data-i18n="settings.notif.no_quiet_hours">Geen stilte-uren</span><span>23:30</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. Ochtendroute-overzicht -->
-          <div class="notif-card" id="nc-2">
-            <div class="notif-card-head" onclick="toggleNotifCard(2)">
-              <div style="font-size:22px">🌅</div>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card3_title">Ochtendroute-overzicht</div>
-                <div class="notif-card-sub" id="ncs-2">Za & zo · om 08:00</div>
-              </div>
-              <div class="toggle-wrap" id="nt-2" onclick="event.stopPropagation();toggleNotifType(2)"><div class="toggle-ball"></div></div>
-              <div class="notif-chevron" id="nch-2">›</div>
-            </div>
-            <div class="notif-card-body" id="nb-2">
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_time">Tijdstip</span>
-                <div style="padding:0 4px">
-                  <input type="range" min="300" max="720" step="15" value="480" id="route-time"
-                    oninput="updateTimeSlider('route-time','rt-lbl')"
-                    style="width:100%;accent-color:var(--terra)">
-                  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
-                    <span>05:00</span><span id="rt-lbl" style="font-weight:700;color:var(--terra)">08:00</span><span>12:00</span>
-                  </div>
-                </div>
-              </div>
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_days">Op welke dagen?</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)" data-i18n="settings.day.mon">Ma</button>
-                  <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)" data-i18n="settings.day.tue">Di</button>
-                  <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)" data-i18n="settings.day.wed">Wo</button>
-                  <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)" data-i18n="settings.day.thu">Do</button>
-                  <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)" data-i18n="settings.day.fri">Vr</button>
-                  <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)" data-i18n="settings.day.sat">Za</button>
-                  <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)" data-i18n="settings.day.sun">Zo</button>
-                </div>
-              </div>
-              <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_send_when">Sturen als</span>
-                <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_always">Altijd</button>
-                  <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_only_favs">Alleen met favorieten</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. Nieuwe items in categorieën -->
-          <div class="notif-card" id="nc-3">
-            <div class="notif-card-head" onclick="toggleNotifCard(3)">
-              <div style="font-size:22px">🏷️</div>
-              <div style="flex:1">
-                <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card4_title">Nieuwe items in categorieën</div>
-                <div class="notif-card-sub" id="ncs-3">Kleding · binnen 25 km</div>
-              </div>
-              <div class="toggle-wrap" id="nt-3" onclick="event.stopPropagation();toggleNotifType(3)"><div class="toggle-ball"></div></div>
-              <div class="notif-chevron" id="nch-3">›</div>
-            </div>
-            <div class="notif-card-body" id="nb-3">
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_categories">Categorieën</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)">👗 Kleding data-i18n="cat.kleding">👗 Kleding</button>
-                  <button class="notif-pill" data-g="5" data-v="Schoenen" onclick="toggleNotifPill(this)">👟 Schoenen data-i18n="cat.schoenen">👟 Schoenen</button>
-                  <button class="notif-pill" data-g="5" data-v="Antiek & Vintage" onclick="toggleNotifPill(this)" data-i18n="cat.antiek">🏺 Antiek & Vintage</button>
-                  <button class="notif-pill" data-g="5" data-v="Retro" onclick="toggleNotifPill(this)">📻 Retro data-i18n="cat.retro">📻 Retro</button>
-                  <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)">🛋️ Meubels data-i18n="cat.meubels">🛋️ Meubels</button>
-                  <button class="notif-pill" data-g="5" data-v="Huishoudspullen" onclick="toggleNotifPill(this)">🏠 Huishoudspullen data-i18n="cat.huishoud">🏠 Huishoudspullen</button>
-                  <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)">🧸 Speelgoed data-i18n="cat.speelgoed">🧸 Speelgoed</button>
-                  <button class="notif-pill" data-g="5" data-v="Baby & Kind" onclick="toggleNotifPill(this)" data-i18n="cat.babykind">👶 Baby & Kind</button>
-                  <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)">📱 Elektronica data-i18n="cat.elektro">📱 Elektronica</button>
-                  <button class="notif-pill" data-g="5" data-v="Films & Games" onclick="toggleNotifPill(this)" data-i18n="cat.films">🎮 Films & Games</button>
-                  <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)">📚 Boeken data-i18n="cat.boeken">📚 Boeken</button>
-                  <button class="notif-pill" data-g="5" data-v="Vinyl & Muziek" onclick="toggleNotifPill(this)" data-i18n="cat.vinyl">🎵 Vinyl & Muziek</button>
-                  <button class="notif-pill" data-g="5" data-v="Sport" onclick="toggleNotifPill(this)">⚽ Sport & Fitness data-i18n="cat.sport">⚽ Sport & Fitness</button>
-                  <button class="notif-pill" data-g="5" data-v="Fietsen" onclick="toggleNotifPill(this)">🚲 Fietsen & Steps data-i18n="cat.fietsen">🚲 Fietsen & Steps</button>
-                  <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)">🌿 Tuin & Buiten data-i18n="cat.tuin">🌿 Tuin & Buiten</button>
-                  <button class="notif-pill" data-g="5" data-v="Gereedschap" onclick="toggleNotifPill(this)">🔧 Gereedschap data-i18n="cat.gereedschap">🔧 Gereedschap</button>
-                  <button class="notif-pill" data-g="5" data-v="Kunst & Deco" onclick="toggleNotifPill(this)" data-i18n="cat.kunst">🎨 Kunst & Deco</button>
-                  <button class="notif-pill" data-g="5" data-v="Verzamelaars" onclick="toggleNotifPill(this)">🔭 Verzamelaars data-i18n="cat.verzamel">🔭 Verzamelaars</button>
-                </div>
-              </div>
-              <div class="notif-setting-row">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_radius">Zoekradius</span>
-                <div style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="notif-pill" data-g="6" data-v="5" onclick="pickNotifPill(this)">5 km</button>
-                  <button class="notif-pill" data-g="6" data-v="10" onclick="pickNotifPill(this)">10 km</button>
-                  <button class="notif-pill active" data-g="6" data-v="25" onclick="pickNotifPill(this)">25 km</button>
-                  <button class="notif-pill" data-g="6" data-v="50" onclick="pickNotifPill(this)">50 km</button>
-                </div>
-              </div>
-              <div class="notif-setting-row" style="border:none">
-                <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_freq">Frequentie</span>
-                <div style="display:flex;gap:6px">
-                  <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
-                  <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_daily">Dagelijks</button>
-                  <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_weekly">Wekelijks</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- /notif-cards -->
-
-        <!-- E-mailmelding bij interesse (voor organisatoren) -->
-        <div class="settings-card" style="margin-top:4px;margin-bottom:4px;">
-          <div class="srow">
-            <div class="srow-icon" style="background:#FFF8E8;">📬</div>
-            <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.notif.interest_email_title">E-mailmelding bij interesse</div>
-              <div class="srow-sub" data-i18n="settings.notif.interest_email_sub">Ontvang een e-mail als iemand naar jouw verkoop gaat</div>
-            </div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="notify-interest-toggle" onclick="toggleNotifyInterestEmail(this)"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px" data-i18n="settings.notif.save_btn">✓ Meldingen opslaan</button>
-      </div>
-
-      <!-- ── E-MAIL VOORKEUREN ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_email_prefs">E-mail voorkeuren</div>
-        <div class="settings-card">
-          <!-- Service-updates (marketing_email_opt_in) -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F0F8;">📢</div>
-            <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.email.service_title">YardiGo updates per e-mail</div>
-              <div class="srow-sub" data-i18n="settings.email.service_sub">Service-updates over nieuwe features en mededelingen (geen reclame)</div>
-            </div>
-            <div class="srow-right">
-              <div class="toggle-wrap off" id="service-email-toggle" onclick="toggleServiceEmail(this)"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-          <!-- Promo opt-in -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#E8F4ED;">💌</div>
-            <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.email.promo_title">Tips over verkopen in de buurt</div>
-              <div class="srow-sub" data-i18n="settings.email.promo_sub">Ontvang gepersonaliseerde reminders per e-mail</div>
-            </div>
-            <div class="srow-right">
-              <div class="toggle-wrap off" id="promo-email-toggle" onclick="togglePromoEmail(this)"><div class="toggle-ball"></div></div>
-            </div>
-          </div>
-          <!-- Frequentie (alleen zichtbaar als opt-in aan) -->
-          <div class="srow" id="email-freq-row" style="display:none;flex-wrap:wrap;gap:8px;">
-            <div class="srow-icon" style="background:#FFF8E8;">📅</div>
-            <div class="srow-body">
-              <div class="srow-title" data-i18n="settings.email.freq_title">Hoe vaak?</div>
-              <div class="srow-sub" id="email-freq-sub" data-i18n="settings.email.freq_weekly">Wekelijks</div>
-            </div>
-            <div style="width:100%;padding-left:44px;">
-              <div class="seg-ctrl" id="seg-emailfreq">
-                <button class="seg-opt active" data-v="weekly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_weekly_btn">Wekelijks</button>
-                <button class="seg-opt" data-v="monthly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_monthly_btn">Maandelijks</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── PRIVACY ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_privacy">Privacy</div>
-        <div class="settings-card">
-          <!-- Adres zichtbaarheid -->
-          <div class="srow" style="flex-wrap:wrap;gap:8px;">
-            <div class="srow-icon" style="background:#E8F4ED;">🏠</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.addr_title">Adres van mijn verkopen</div><div class="srow-sub" id="addr-pref-sub" data-i18n="settings.privacy.addr_sub_members">Alleen voor ingelogde gebruikers</div></div>
-            <div style="width:100%;padding-left:44px;">
-              <div class="seg-ctrl" id="seg-addrpref">
-                <button class="seg-opt active" data-v="members" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_members">Leden</button>
-                <button class="seg-opt" data-v="all" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_all">Iedereen</button>
-                <button class="seg-opt" data-v="none" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_none">Niemand</button>
-              </div>
-            </div>
-          </div>
-          <!-- Profiel zichtbaarheid -->
-          <div class="srow">
+        <div class="srow" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div style="display:flex;align-items:center;gap:12px;width:100%">
             <div class="srow-icon" style="background:#F0EBF8;">👤</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.profile_title">Profiel publiek zichtbaar</div><div class="srow-sub" data-i18n="settings.privacy.profile_sub">Anderen kunnen jouw profiel bekijken</div></div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="pubprofile-toggle" onclick="togglePref('pubprofile',this)"><div class="toggle-ball"></div></div>
+            <div class="srow-body">
+              <div class="srow-title" data-i18n="settings.name_in_ads">Naam in advertenties</div>
+              <div class="srow-sub" data-i18n="settings.name_in_ads_sub">Hoe verschijn je bij je verkopen</div>
             </div>
           </div>
-          <!-- Statistieken tonen -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#FFF0E8;">📊</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.stats_title">Statistieken tonen</div><div class="srow-sub" data-i18n="settings.privacy.stats_sub">Weergaven en interesses op jouw profiel</div></div>
-            <div class="srow-right">
-              <div class="toggle-wrap" id="showstats-toggle" onclick="togglePref('showstats',this)"><div class="toggle-ball"></div></div>
-            </div>
+          <div style="display:flex;gap:6px;padding-left:44px;width:100%;box-sizing:border-box">
+            <button id="ndm-first" onclick="setNameDisplayMode('first')" style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.first_name">Voornaam</button>
+            <button id="ndm-full"  onclick="setNameDisplayMode('full')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--forest);background:#E8F4ED;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--forest)" data-i18n="settings.full_name">Volledig</button>
+            <button id="ndm-last"  onclick="setNameDisplayMode('last')"  style="flex:1;padding:7px 4px;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)" data-i18n="settings.last_name">Achternaam</button>
           </div>
+          <div id="ndm-preview" style="padding-left:44px;font-size:11px;color:var(--muted)"></div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F4ED;">📍</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.city">Woonplaats</div></div>
+          <div class="srow-right">
+            <input class="srow-input" id="set-city" placeholder="Bijv. Amsterdam" data-i18n-placeholder="settings.city_ph" maxlength="40" onblur="saveProfileField('city',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+          </div>
+        </div>
+        <div class="srow" style="flex-direction:column;align-items:flex-start;">
+          <div style="display:flex;align-items:center;gap:12px;width:100%;">
+            <div class="srow-icon" style="background:#F0EBF8;">💬</div>
+            <div class="srow-body"><div class="srow-title" data-i18n="settings.bio">Bio</div><div class="srow-sub" data-i18n="settings.bio_sub">Korte beschrijving over jezelf</div></div>
+          </div>
+          <textarea class="srow-textarea" id="set-bio" rows="2" placeholder="Bijv. Regelmatige garagesale-ganger uit Utrecht 🛍️" data-i18n-placeholder="settings.bio_ph" maxlength="120" onblur="saveProfileField('bio',this.value)"></textarea>
+          <div style="font-size:10px;color:var(--muted);text-align:right;width:100%;margin-top:2px"><span id="bio-count">0</span>/120</div>
+        </div>
+        <div style="height:1px;background:var(--border);margin:4px 0"></div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F0F8;">📧</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.email">E-mailadres</div><div class="srow-sub" id="set-email-display">—</div></div>
+        </div>
+        <div class="srow tappable" onclick="openChangePassword()">
+          <div class="srow-icon" style="background:#F0EBF8;">🔑</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.password_change">Wachtwoord wijzigen</div><div class="srow-sub" data-i18n="settings.password_change_sub">Stuur een herstel-e-mail</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow tappable" onclick="doLogout()">
+          <div class="srow-icon" style="background:#FFF0E8;">🚪</div>
+          <div class="srow-body"><div class="srow-title" style="color:var(--terra)" data-i18n="settings.logout">Uitloggen</div></div>
+          <div class="srow-right"><span class="srow-chevron" style="color:var(--terra)">›</span></div>
         </div>
       </div>
-
-      <!-- ── OVER ── -->
-      <div class="settings-section">
-        <div class="settings-section-header" data-i18n="settings.header_about">Over</div>
-        <div class="settings-card">
-          <!-- Feedback -->
-          <div class="srow tappable" onclick="openFeedback()">
-            <div class="srow-icon" style="background:#FFF0E8;">💌</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.feedback.title">Feedback geven</div><div class="srow-sub" data-i18n="settings.feedback.sub">Ideeën of verbeterpunten sturen</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- Probleem melden (alleen leden) -->
-          <div class="srow tappable members-only" id="srow-report" onclick="openReport()">
-            <div class="srow-icon" style="background:#FDE8E8;">🚨</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.report.title">Probleem melden</div><div class="srow-sub" data-i18n="settings.report.sub">Fout of misbruik rapporteren</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- Privacy beleid -->
-          <div class="srow tappable" onclick="window.open('https://yardigo.nl/privacy','_blank')">
-            <div class="srow-icon" style="background:#E8F4ED;">🔒</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy">Privacybeleid</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- Gebruiksvoorwaarden -->
-          <div class="srow tappable" onclick="window.open('https://yardigo.nl/voorwaarden','_blank')">
-            <div class="srow-icon" style="background:#E8F0F8;">📋</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.terms">Gebruiksvoorwaarden</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- iPhone app (App Store) -->
-          <div class="srow tappable" onclick="window.open('https://apps.apple.com/us/app/yardigo/id6761503009','_blank')">
-            <div class="srow-icon" style="background:#000;color:white;">🍎</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.ios.title">Download de iPhone-app</div><div class="srow-sub" data-i18n="settings.ios.sub">YardiGo voor iOS in de App Store</div></div>
-            <div class="srow-right"><span class="srow-chevron">›</span></div>
-          </div>
-          <!-- Versie -->
-          <div class="srow">
-            <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
-            <div class="srow-body"><div class="srow-title" data-i18n="settings.version">Versie</div></div>
-            <div class="srow-right"><span class="srow-value">1.1.0</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── GEVARENZONE (helemaal onderaan om accidentele kliks te voorkomen) ── -->
-      <div class="settings-section members-only">
-        <div class="settings-section-header" style="color:#C0392B" data-i18n="settings.header_danger">Gevarenzone</div>
-        <div class="settings-card">
-          <!-- Account verwijderen -->
-          <div class="srow tappable" onclick="openDeleteConfirm()">
-            <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
-            <div class="srow-body"><div class="srow-title" style="color:#C0392B" data-i18n="settings.delete_account">Account verwijderen</div><div class="srow-sub" data-i18n="settings.delete_account_sub">Wis al je data permanent</div></div>
-            <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══════════ YardiGo FOOTER ═══════════ -->
-      <footer class="yg-footer">
-        <a class="yg-footer-appstore" href="https://apps.apple.com/us/app/yardigo/id6761503009" target="_blank" rel="noopener" aria-label="Download YardiGo in de App Store">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.564 12.742c.016-1.93 1.58-2.85 1.65-2.895-.9-1.315-2.3-1.495-2.797-1.518-1.19-.12-2.326.7-2.932.7-.618 0-1.548-.682-2.546-.664-1.31.02-2.515.762-3.19 1.935-1.363 2.36-.348 5.847.974 7.76.645.94 1.41 1.99 2.41 1.95.97-.04 1.34-.625 2.517-.625 1.17 0 1.51.625 2.55.604 1.055-.018 1.72-.95 2.36-1.895.745-1.086 1.05-2.14 1.068-2.197-.024-.01-2.046-.786-2.063-3.155zM15.63 6.75c.534-.653.894-1.553.795-2.456-.77.033-1.71.517-2.263 1.16-.497.573-.93 1.494-.815 2.38.86.068 1.745-.436 2.282-1.084z"/></svg>
-          <span data-i18n="footer.appstore">Download in de App Store</span>
-        </a>
-        <div class="yg-footer-links">
-          <a href="https://yardigo.nl/privacy" target="_blank" rel="noopener" data-i18n="footer.privacy">Privacy</a>·
-          <a href="https://yardigo.nl/voorwaarden" target="_blank" rel="noopener" data-i18n="footer.terms">Voorwaarden</a>·
-          <a href="#" onclick="event.preventDefault();openFeedback();" data-i18n="footer.feedback">Feedback</a>
-        </div>
-        <div style="margin-top:8px;opacity:.8;">© 2026 YardiGo · <span data-i18n="footer.tagline">Find · Sell · Go</span></div>
-      </footer>
-
-      <div style="height:16px;"></div>
-
     </div>
+
+    <!-- ── WEERGAVE ── -->
+    <div class="settings-section">
+      <div class="settings-section-header" data-i18n="settings.header_app">🎨 Weergave</div>
+      <div class="settings-card">
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F4ED;">🌐</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.language.title">Taal</div><div class="srow-sub" data-i18n="settings.language.sub">Nederlands of Engels</div></div>
+          <div class="srow-right">
+            <div class="seg-ctrl" style="min-width:auto">
+              <button class="seg-opt" data-lang="nl" onclick="if(currentLang!=='nl')toggleLang()">NL</button>
+              <button class="seg-opt" data-lang="en" onclick="if(currentLang!=='en')toggleLang()">EN</button>
+            </div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#1A1A2E;">🌙</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.darkmode.title">Donkere modus</div><div class="srow-sub" data-i18n="settings.darkmode.sub">Schakel tussen licht en donker thema</div></div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="dm-toggle-row" onclick="toggleDark();this.classList.toggle('off')"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+        <div class="srow" style="flex-wrap:wrap;gap:8px;">
+          <div class="srow-icon" style="background:#E8F4ED;">🔍</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.radius.title">Standaard zoekradius</div><div class="srow-sub" id="radius-sub" data-i18n="settings.radius.sub_default">10 km rondom jouw locatie</div></div>
+          <div style="width:100%;padding-left:44px;">
+            <div class="seg-ctrl" id="seg-radius">
+              <button class="seg-opt" data-v="5" onclick="setRadiusPref(this)">5 km</button>
+              <button class="seg-opt active" data-v="10" onclick="setRadiusPref(this)">10 km</button>
+              <button class="seg-opt" data-v="25" onclick="setRadiusPref(this)">25 km</button>
+              <button class="seg-opt" data-v="50" onclick="setRadiusPref(this)">50 km</button>
+            </div>
+          </div>
+        </div>
+        <div class="srow" style="flex-wrap:wrap;gap:8px;">
+          <div class="srow-icon" style="background:#E8F0F8;">🗺️</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.maptype.title">Kaarttype</div><div class="srow-sub" id="maptype-sub" data-i18n="settings.maptype.sub_default">Standaard kaartweergave</div></div>
+          <div style="width:100%;padding-left:44px;">
+            <div class="seg-ctrl" id="seg-maptype">
+              <button class="seg-opt active" data-v="roadmap" onclick="setMapTypePref(this)" data-i18n="settings.maptype.roadmap">Standaard</button>
+              <button class="seg-opt" data-v="satellite" onclick="setMapTypePref(this)" data-i18n="settings.maptype.satellite">Satelliet</button>
+              <button class="seg-opt" data-v="terrain" onclick="setMapTypePref(this)" data-i18n="settings.maptype.terrain">Terrein</button>
+            </div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#FFF8E8;">🎯</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.autocenter.title">Auto-centreren</div><div class="srow-sub" data-i18n="settings.autocenter.sub">Kaart centreert op jouw locatie bij openen</div></div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="autocenter-toggle" onclick="togglePref('autocenter',this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F4ED;">📏</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.showdist.title">Afstand tonen</div><div class="srow-sub" data-i18n="settings.showdist.sub">Toon kilometer-afstand bij elke verkoop</div></div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="showdist-toggle" onclick="togglePref('showdist',this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MELDINGEN ── -->
+    <div class="settings-section">
+      <div class="settings-section-header" data-i18n="settings.header_notif">🔔 Meldingen</div>
+      <div class="settings-card" style="margin-bottom:4px;">
+        <div class="srow">
+          <div class="srow-icon" style="background:#FFF8E8;">🔔</div>
+          <div class="srow-body">
+            <div class="srow-title" data-i18n="settings.notif.master_title">Alle meldingen</div>
+            <div class="srow-sub" id="notif-master-lbl" data-i18n="settings.notif.master_on">Ingeschakeld</div>
+          </div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="notif-master" onclick="toggleMaster()"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+      </div>
+      <div id="notif-cards">
+        <div class="notif-card" id="nc-0">
+          <div class="notif-card-head" onclick="toggleNotifCard(0)">
+            <div style="font-size:22px">🏠</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card1_title">Nieuwe verkopen in de buurt</div>
+              <div class="notif-card-sub" id="ncs-0">Direct · binnen 2 km</div>
+            </div>
+            <div class="toggle-wrap" id="nt-0" onclick="event.stopPropagation();toggleNotifType(0)"><div class="toggle-ball"></div></div>
+            <div class="notif-chevron" id="nch-0">›</div>
+          </div>
+          <div class="notif-card-body" id="nb-0">
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_distance">Afstand</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="notif-pill active" data-g="0" data-v="1" onclick="pickNotifPill(this)">1 km</button>
+                <button class="notif-pill active" data-g="0" data-v="2" onclick="pickNotifPill(this)">2 km</button>
+                <button class="notif-pill" data-g="0" data-v="5" onclick="pickNotifPill(this)">5 km</button>
+                <button class="notif-pill" data-g="0" data-v="10" onclick="pickNotifPill(this)">10 km</button>
+                <button class="notif-pill" data-g="0" data-v="25" onclick="pickNotifPill(this)">25 km</button>
+              </div>
+            </div>
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_timing">Timing</span>
+              <div style="display:flex;gap:6px">
+                <button class="notif-pill active" data-g="1" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
+                <button class="notif-pill" data-g="1" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_daily_overview">Dagelijks overzicht</button>
+              </div>
+            </div>
+            <div class="notif-setting-row" style="border:none">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_types">Types</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="notif-pill active" data-g="2" data-v="particulier" onclick="toggleNotifPill(this)">🏠 <span data-i18n="type.particulier">Opritverkoop</span></button>
+                <button class="notif-pill active" data-g="2" data-v="buurt" onclick="toggleNotifPill(this)">🏘️ <span data-i18n="type.buurt">Rommelroute</span></button>
+                <button class="notif-pill active" data-g="2" data-v="evenement" onclick="toggleNotifPill(this)">🎪 <span data-i18n="type.evenement">Evenement</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-card" id="nc-1">
+          <div class="notif-card-head" onclick="toggleNotifCard(1)">
+            <div style="font-size:22px">⭐</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card2_title">Herinneringen favorieten</div>
+              <div class="notif-card-sub" id="ncs-1">20 min van tevoren</div>
+            </div>
+            <div class="toggle-wrap" id="nt-1" onclick="event.stopPropagation();toggleNotifType(1)"><div class="toggle-ball"></div></div>
+            <div class="notif-chevron" id="nch-1">›</div>
+          </div>
+          <div class="notif-card-body" id="nb-1">
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_advance">Hoe ver van tevoren?</span>
+              <div style="padding:0 4px">
+                <input type="range" min="5" max="120" step="5" value="20" id="fav-slider"
+                  oninput="updateSliderLabel('fav-slider','fav-lbl',this.value+' min voor aanvang')"
+                  style="width:100%;accent-color:var(--terra)">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                  <span>5 min</span><span id="fav-lbl" style="font-weight:700;color:var(--terra)">20 min</span><span>2 uur</span>
+                </div>
+              </div>
+            </div>
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_extra">Extra opties</span>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+                  <input type="checkbox" id="fav-morning" style="accent-color:var(--terra)"> <span data-i18n="settings.notif.morning_overview">Ochtendoverzicht om 08:00</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+                  <input type="checkbox" id="fav-route" style="accent-color:var(--terra)" checked> <span data-i18n="settings.notif.route_reminder">Routeherinnering meesturen</span>
+                </label>
+              </div>
+            </div>
+            <div class="notif-setting-row" style="border:none">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_quiet_hours">Stilte-uren</span>
+              <div style="padding:0 4px">
+                <input type="range" min="0" max="1440" step="30" value="480" id="quiet-start"
+                  oninput="updateTimeSlider('quiet-start','qs-lbl')"
+                  style="width:100%;accent-color:var(--forest)">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                  <span>00:00</span><span id="qs-lbl" style="font-weight:700;color:var(--forest)" data-i18n="settings.notif.no_quiet_hours">Geen stilte-uren</span><span>23:30</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-card" id="nc-2">
+          <div class="notif-card-head" onclick="toggleNotifCard(2)">
+            <div style="font-size:22px">🌅</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card3_title">Ochtendroute-overzicht</div>
+              <div class="notif-card-sub" id="ncs-2">Za & zo · om 08:00</div>
+            </div>
+            <div class="toggle-wrap" id="nt-2" onclick="event.stopPropagation();toggleNotifType(2)"><div class="toggle-ball"></div></div>
+            <div class="notif-chevron" id="nch-2">›</div>
+          </div>
+          <div class="notif-card-body" id="nb-2">
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_time">Tijdstip</span>
+              <div style="padding:0 4px">
+                <input type="range" min="300" max="720" step="15" value="480" id="route-time"
+                  oninput="updateTimeSlider('route-time','rt-lbl')"
+                  style="width:100%;accent-color:var(--terra)">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+                  <span>05:00</span><span id="rt-lbl" style="font-weight:700;color:var(--terra)">08:00</span><span>12:00</span>
+                </div>
+              </div>
+            </div>
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_days">Op welke dagen?</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="notif-pill" data-g="3" data-v="ma" onclick="toggleNotifPill(this)" data-i18n="settings.day.mon">Ma</button>
+                <button class="notif-pill" data-g="3" data-v="di" onclick="toggleNotifPill(this)" data-i18n="settings.day.tue">Di</button>
+                <button class="notif-pill" data-g="3" data-v="wo" onclick="toggleNotifPill(this)" data-i18n="settings.day.wed">Wo</button>
+                <button class="notif-pill" data-g="3" data-v="do" onclick="toggleNotifPill(this)" data-i18n="settings.day.thu">Do</button>
+                <button class="notif-pill" data-g="3" data-v="vr" onclick="toggleNotifPill(this)" data-i18n="settings.day.fri">Vr</button>
+                <button class="notif-pill active" data-g="3" data-v="za" onclick="toggleNotifPill(this)" data-i18n="settings.day.sat">Za</button>
+                <button class="notif-pill active" data-g="3" data-v="zo" onclick="toggleNotifPill(this)" data-i18n="settings.day.sun">Zo</button>
+              </div>
+            </div>
+            <div class="notif-setting-row" style="border:none">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_send_when">Sturen als</span>
+              <div style="display:flex;gap:6px">
+                <button class="notif-pill active" data-g="4" data-v="altijd" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_always">Altijd</button>
+                <button class="notif-pill" data-g="4" data-v="favorieten" onclick="pickNotifPill(this)" data-i18n="settings.notif.send_only_favs">Alleen met favorieten</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-card" id="nc-3">
+          <div class="notif-card-head" onclick="toggleNotifCard(3)">
+            <div style="font-size:22px">🏷️</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700" data-i18n="settings.notif.card4_title">Nieuwe items in categorieën</div>
+              <div class="notif-card-sub" id="ncs-3">Kleding · binnen 25 km</div>
+            </div>
+            <div class="toggle-wrap" id="nt-3" onclick="event.stopPropagation();toggleNotifType(3)"><div class="toggle-ball"></div></div>
+            <div class="notif-chevron" id="nch-3">›</div>
+          </div>
+          <div class="notif-card-body" id="nb-3">
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_categories">Categorieën</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="notif-pill active" data-g="5" data-v="Kleding" onclick="toggleNotifPill(this)" data-i18n="cat.kleding">👗 Kleding</button>
+                <button class="notif-pill" data-g="5" data-v="Schoenen" onclick="toggleNotifPill(this)" data-i18n="cat.schoenen">👟 Schoenen</button>
+                <button class="notif-pill" data-g="5" data-v="Antiek & Vintage" onclick="toggleNotifPill(this)" data-i18n="cat.antiek">🏺 Antiek & Vintage</button>
+                <button class="notif-pill" data-g="5" data-v="Retro" onclick="toggleNotifPill(this)" data-i18n="cat.retro">📻 Retro</button>
+                <button class="notif-pill" data-g="5" data-v="Meubels" onclick="toggleNotifPill(this)" data-i18n="cat.meubels">🛋️ Meubels</button>
+                <button class="notif-pill" data-g="5" data-v="Huishoudspullen" onclick="toggleNotifPill(this)" data-i18n="cat.huishoud">🏠 Huishoudspullen</button>
+                <button class="notif-pill" data-g="5" data-v="Speelgoed" onclick="toggleNotifPill(this)" data-i18n="cat.speelgoed">🧸 Speelgoed</button>
+                <button class="notif-pill" data-g="5" data-v="Baby & Kind" onclick="toggleNotifPill(this)" data-i18n="cat.babykind">👶 Baby & Kind</button>
+                <button class="notif-pill" data-g="5" data-v="Elektronica" onclick="toggleNotifPill(this)" data-i18n="cat.elektro">📱 Elektronica</button>
+                <button class="notif-pill" data-g="5" data-v="Films & Games" onclick="toggleNotifPill(this)" data-i18n="cat.films">🎮 Films & Games</button>
+                <button class="notif-pill" data-g="5" data-v="Boeken" onclick="toggleNotifPill(this)" data-i18n="cat.boeken">📚 Boeken</button>
+                <button class="notif-pill" data-g="5" data-v="Vinyl & Muziek" onclick="toggleNotifPill(this)" data-i18n="cat.vinyl">🎵 Vinyl & Muziek</button>
+                <button class="notif-pill" data-g="5" data-v="Sport" onclick="toggleNotifPill(this)" data-i18n="cat.sport">⚽ Sport & Fitness</button>
+                <button class="notif-pill" data-g="5" data-v="Fietsen" onclick="toggleNotifPill(this)" data-i18n="cat.fietsen">🚲 Fietsen & Steps</button>
+                <button class="notif-pill" data-g="5" data-v="Tuin" onclick="toggleNotifPill(this)" data-i18n="cat.tuin">🌿 Tuin & Buiten</button>
+                <button class="notif-pill" data-g="5" data-v="Gereedschap" onclick="toggleNotifPill(this)" data-i18n="cat.gereedschap">🔧 Gereedschap</button>
+                <button class="notif-pill" data-g="5" data-v="Kunst & Deco" onclick="toggleNotifPill(this)" data-i18n="cat.kunst">🎨 Kunst & Deco</button>
+                <button class="notif-pill" data-g="5" data-v="Verzamelaars" onclick="toggleNotifPill(this)" data-i18n="cat.verzamel">🔭 Verzamelaars</button>
+              </div>
+            </div>
+            <div class="notif-setting-row">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_radius">Zoekradius</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="notif-pill" data-g="6" data-v="5" onclick="pickNotifPill(this)">5 km</button>
+                <button class="notif-pill" data-g="6" data-v="10" onclick="pickNotifPill(this)">10 km</button>
+                <button class="notif-pill active" data-g="6" data-v="25" onclick="pickNotifPill(this)">25 km</button>
+                <button class="notif-pill" data-g="6" data-v="50" onclick="pickNotifPill(this)">50 km</button>
+              </div>
+            </div>
+            <div class="notif-setting-row" style="border:none">
+              <span style="font-size:12px;font-weight:600;color:var(--muted)" data-i18n="settings.notif.label_freq">Frequentie</span>
+              <div style="display:flex;gap:6px">
+                <button class="notif-pill active" data-g="7" data-v="direct" onclick="pickNotifPill(this)" data-i18n="settings.notif.timing_direct">Direct</button>
+                <button class="notif-pill" data-g="7" data-v="dagelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_daily">Dagelijks</button>
+                <button class="notif-pill" data-g="7" data-v="wekelijks" onclick="pickNotifPill(this)" data-i18n="settings.notif.freq_weekly">Wekelijks</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-card" style="margin-top:4px;margin-bottom:4px;">
+        <div class="srow">
+          <div class="srow-icon" style="background:#FFF8E8;">📬</div>
+          <div class="srow-body">
+            <div class="srow-title" data-i18n="settings.notif.interest_email_title">E-mailmelding bij interesse</div>
+            <div class="srow-sub" data-i18n="settings.notif.interest_email_sub">Ontvang een e-mail als iemand naar jouw verkoop gaat</div>
+          </div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="notify-interest-toggle" onclick="toggleNotifyInterestEmail(this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+      </div>
+      <button onclick="saveNotifSettings()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;margin-bottom:4px" data-i18n="settings.notif.save_btn">✓ Meldingen opslaan</button>
+      <!-- E-mail voorkeuren (binnen Meldingen) -->
+      <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:14px 4px 6px;" data-i18n="settings.header_email_prefs">E-mail voorkeuren</div>
+      <div class="settings-card">
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F0F8;">📢</div>
+          <div class="srow-body">
+            <div class="srow-title" data-i18n="settings.email.service_title">YardiGo updates per e-mail</div>
+            <div class="srow-sub" data-i18n="settings.email.service_sub">Service-updates over nieuwe features en mededelingen (geen reclame)</div>
+          </div>
+          <div class="srow-right">
+            <div class="toggle-wrap off" id="service-email-toggle" onclick="toggleServiceEmail(this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#E8F4ED;">💌</div>
+          <div class="srow-body">
+            <div class="srow-title" data-i18n="settings.email.promo_title">Tips over verkopen in de buurt</div>
+            <div class="srow-sub" data-i18n="settings.email.promo_sub">Ontvang gepersonaliseerde reminders per e-mail</div>
+          </div>
+          <div class="srow-right">
+            <div class="toggle-wrap off" id="promo-email-toggle" onclick="togglePromoEmail(this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+        <div class="srow" id="email-freq-row" style="display:none;flex-wrap:wrap;gap:8px;">
+          <div class="srow-icon" style="background:#FFF8E8;">📅</div>
+          <div class="srow-body">
+            <div class="srow-title" data-i18n="settings.email.freq_title">Hoe vaak?</div>
+            <div class="srow-sub" id="email-freq-sub" data-i18n="settings.email.freq_weekly">Wekelijks</div>
+          </div>
+          <div style="width:100%;padding-left:44px;">
+            <div class="seg-ctrl" id="seg-emailfreq">
+              <button class="seg-opt active" data-v="weekly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_weekly_btn">Wekelijks</button>
+              <button class="seg-opt" data-v="monthly" onclick="setEmailFreq(this)" data-i18n="settings.email.freq_monthly_btn">Maandelijks</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRIVACY ── -->
+    <div class="settings-section">
+      <div class="settings-section-header" data-i18n="settings.header_privacy">🔒 Privacy</div>
+      <div class="settings-card">
+        <div class="srow" style="flex-wrap:wrap;gap:8px;">
+          <div class="srow-icon" style="background:#E8F4ED;">🏠</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.addr_title">Adres van mijn verkopen</div><div class="srow-sub" id="addr-pref-sub" data-i18n="settings.privacy.addr_sub_members">Alleen voor ingelogde gebruikers</div></div>
+          <div style="width:100%;padding-left:44px;">
+            <div class="seg-ctrl" id="seg-addrpref">
+              <button class="seg-opt active" data-v="members" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_members">Leden</button>
+              <button class="seg-opt" data-v="all" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_all">Iedereen</button>
+              <button class="seg-opt" data-v="none" onclick="setAddrPref(this)" data-i18n="settings.privacy.addr_none">Niemand</button>
+            </div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#F0EBF8;">👤</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.profile_title">Profiel publiek zichtbaar</div><div class="srow-sub" data-i18n="settings.privacy.profile_sub">Anderen kunnen jouw profiel bekijken</div></div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="pubprofile-toggle" onclick="togglePref('pubprofile',this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#FFF0E8;">📊</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy.stats_title">Statistieken tonen</div><div class="srow-sub" data-i18n="settings.privacy.stats_sub">Weergaven en interesses op jouw profiel</div></div>
+          <div class="srow-right">
+            <div class="toggle-wrap" id="showstats-toggle" onclick="togglePref('showstats',this)"><div class="toggle-ball"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OVER & APP ── -->
+    <div class="settings-section">
+      <div class="settings-section-header" data-i18n="settings.header_about">ℹ️ Over &amp; App</div>
+      <div class="settings-card">
+        <div class="srow tappable" onclick="openFeedback()">
+          <div class="srow-icon" style="background:#FFF0E8;">💌</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.feedback.title">Feedback geven</div><div class="srow-sub" data-i18n="settings.feedback.sub">Ideeën of verbeterpunten sturen</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow tappable members-only" id="srow-report" onclick="openReport()">
+          <div class="srow-icon" style="background:#FDE8E8;">🚨</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.report.title">Probleem melden</div><div class="srow-sub" data-i18n="settings.report.sub">Fout of misbruik rapporteren</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow tappable" onclick="window.open('https://yardigo.nl/privacy','_blank')">
+          <div class="srow-icon" style="background:#E8F4ED;">🔒</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.privacy">Privacybeleid</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow tappable" onclick="window.open('https://yardigo.nl/voorwaarden','_blank')">
+          <div class="srow-icon" style="background:#E8F0F8;">📋</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.terms">Gebruiksvoorwaarden</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow tappable" onclick="window.open('https://apps.apple.com/us/app/yardigo/id6761503009','_blank')">
+          <div class="srow-icon" style="background:#000;color:white;">🍎</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.ios.title">Download de iPhone-app</div><div class="srow-sub" data-i18n="settings.ios.sub">YardiGo voor iOS in de App Store</div></div>
+          <div class="srow-right"><span class="srow-chevron">›</span></div>
+        </div>
+        <div class="srow">
+          <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
+          <div class="srow-body"><div class="srow-title" data-i18n="settings.version">Versie</div></div>
+          <div class="srow-right"><span class="srow-value">1.1.0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GEVARENZONE ── -->
+    <div class="settings-section members-only">
+      <div class="settings-section-header" style="color:#C0392B" data-i18n="settings.header_danger">⚠️ Gevarenzone</div>
+      <div class="settings-card">
+        <div class="srow tappable" onclick="openDeleteConfirm()">
+          <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
+          <div class="srow-body"><div class="srow-title" style="color:#C0392B" data-i18n="settings.delete_account">Account verwijderen</div><div class="srow-sub" data-i18n="settings.delete_account_sub">Wis al je data permanent</div></div>
+          <div class="srow-right"><span class="srow-chevron" style="color:#C0392B">›</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="yg-footer">
+      <a class="yg-footer-appstore" href="https://apps.apple.com/us/app/yardigo/id6761503009" target="_blank" rel="noopener" aria-label="Download YardiGo in de App Store">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.564 12.742c.016-1.93 1.58-2.85 1.65-2.895-.9-1.315-2.3-1.495-2.797-1.518-1.19-.12-2.326.7-2.932.7-.618 0-1.548-.682-2.546-.664-1.31.02-2.515.762-3.19 1.935-1.363 2.36-.348 5.847.974 7.76.645.94 1.41 1.99 2.41 1.95.97-.04 1.34-.625 2.517-.625 1.17 0 1.51.625 2.55.604 1.055-.018 1.72-.95 2.36-1.895.745-1.086 1.05-2.14 1.068-2.197-.024-.01-2.046-.786-2.063-3.155zM15.63 6.75c.534-.653.894-1.553.795-2.456-.77.033-1.71.517-2.263 1.16-.497.573-.93 1.494-.815 2.38.86.068 1.745-.436 2.282-1.084z"/></svg>
+        <span data-i18n="footer.appstore">Download in de App Store</span>
+      </a>
+      <div class="yg-footer-links">
+        <a href="https://yardigo.nl/privacy" target="_blank" rel="noopener" data-i18n="footer.privacy">Privacy</a>·
+        <a href="https://yardigo.nl/voorwaarden" target="_blank" rel="noopener" data-i18n="footer.terms">Voorwaarden</a>·
+        <a href="#" onclick="event.preventDefault();openFeedback();" data-i18n="footer.feedback">Feedback</a>
+      </div>
+      <div style="margin-top:8px;opacity:.8;">© 2026 YardiGo · <span data-i18n="footer.tagline">Find · Sell · Go</span></div>
+    </footer>
+    <div style="height:16px;"></div>
+
   </div>
 </div>
 
@@ -1914,6 +1877,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="bni" id="bni-mijn" onclick="sv('mijn',document.querySelectorAll('.tab')[3]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
     <span data-i18n="nav.mine">Mijn</span>
+  </div>
+  <div class="bni" id="bni-instellingen" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span data-i18n="nav.settings">Instellingen</span>
   </div>
 </nav>
 <div class="fab-row" id="fab-row">
@@ -3212,6 +3179,8 @@ var I18N = {
     'nav.list': 'Lijst',
     'nav.route': 'Route',
     'nav.mine': 'Mijn',
+    'nav.settings': 'Instellingen',
+    'settings.subtitle': 'Pas je YardiGo ervaring aan',
     // Types
     'type.particulier': 'Opritverkoop',
     'type.buurt': 'Rommelroute',
@@ -3232,10 +3201,10 @@ var I18N = {
     'profile.tab_sales': 'Mijn verkopen',
     'profile.tab_settings': 'Instellingen',
     // Settings section headers
-    'settings.header_app': 'App-voorkeuren',
+    'settings.header_app': 'Weergave',
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profiel',
-    'settings.header_about': 'Over YardiGo',
+    'settings.header_about': 'Over & App',
     'settings.header_email_prefs': 'E-mail voorkeuren',
     'settings.email.promo_title': 'Tips over verkopen in de buurt',
     'settings.email.promo_sub': 'Ontvang gepersonaliseerde reminders per e-mail',
@@ -3778,6 +3747,8 @@ var I18N = {
     'nav.list': 'List',
     'nav.route': 'Route',
     'nav.mine': 'My',
+    'nav.settings': 'Settings',
+    'settings.subtitle': 'Customize your YardiGo experience',
     // Types
     'type.particulier': 'Driveway sale',
     'type.buurt': 'Yard sale route',
@@ -3798,10 +3769,10 @@ var I18N = {
     'profile.tab_sales': 'My sales',
     'profile.tab_settings': 'Settings',
     // Settings
-    'settings.header_app': 'App preferences',
+    'settings.header_app': 'Display',
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profile',
-    'settings.header_about': 'About YardiGo',
+    'settings.header_about': 'About & App',
     'settings.header_email_prefs': 'Email preferences',
     'settings.email.promo_title': 'Tips about sales near you',
     'settings.email.promo_sub': 'Receive personalised reminders by email',
@@ -4344,6 +4315,8 @@ var I18N = {
     'nav.list': 'Liste',
     'nav.route': 'Itinéraire',
     'nav.mine': 'Mes ventes',
+    'nav.settings': 'Paramètres',
+    'settings.subtitle': 'Personnalisez votre expérience YardiGo',
     // Types
     'type.particulier': 'Vente sur allée',
     'type.buurt': 'Circuit brocante',
@@ -4364,7 +4337,7 @@ var I18N = {
     'profile.tab_sales': 'Mes ventes',
     'profile.tab_settings': 'Paramètres',
     // Settings
-    'settings.header_app': 'Préférences',
+    'settings.header_app': 'Affichage',
     'settings.header_privacy': 'Confidentialité',
     'settings.header_profile': 'Profil',
     'settings.header_about': 'À propos de YardiGo',
@@ -4909,6 +4882,8 @@ var I18N = {
     'nav.list': 'List',
     'nav.route': 'Route',
     'nav.mine': 'My',
+    'nav.settings': 'Settings',
+    'settings.subtitle': 'Customize your YardiGo experience',
     'type.particulier': 'Driveway sale',
     'type.buurt': 'Yard sale route',
     'type.evenement': 'Event',
@@ -4925,10 +4900,10 @@ var I18N = {
     'profile.tab_stats': 'Stats',
     'profile.tab_sales': 'My sales',
     'profile.tab_settings': 'Settings',
-    'settings.header_app': 'App preferences',
+    'settings.header_app': 'Display',
     'settings.header_privacy': 'Privacy',
     'settings.header_profile': 'Profile',
-    'settings.header_about': 'About YardiGo',
+    'settings.header_about': 'About & App',
     'settings.header_email_prefs': 'E-Mail-Einstellungen',
     'settings.email.promo_title': 'Tipps über Verkäufe in deiner Nähe',
     'settings.email.promo_sub': 'Erhalte personalisierte Erinnerungen per E-Mail',
@@ -5377,7 +5352,6 @@ function updateUserUI() {
   var btn = document.getElementById('loginBtn');
   var profileName = document.getElementById('profile-name');
   var profileSub  = document.getElementById('profile-subtitle');
-  var gearBtn = document.getElementById('settingsGearBtn');
   if (!isGuest && currentUser.name) {
     var firstName = currentUser.name.split(' ')[0];
     if (btn) {
@@ -5385,7 +5359,6 @@ function updateUserUI() {
       btn.setAttribute('aria-label', firstName);
       btn.setAttribute('onclick', "sv('mijn',document.querySelectorAll('.tab')[3]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-mijn').classList.add('active')");
     }
-    if (gearBtn) gearBtn.style.display = 'inline-flex';
     var bellBtn = document.getElementById('inboxBellBtn');
     if (bellBtn) bellBtn.style.display = 'inline-flex';
     if (profileName) profileName.textContent = currentUser.name;
@@ -5397,7 +5370,6 @@ function updateUserUI() {
       btn.setAttribute('aria-label', loginLabel);
       btn.setAttribute('onclick', 'openLogin()');
     }
-    if (gearBtn) gearBtn.style.display = 'none';
     var bellBtnGuest = document.getElementById('inboxBellBtn');
     if (bellBtnGuest) bellBtnGuest.style.display = 'none';
     if (profileName) profileName.textContent = i18n('profile.guest','Gast');
@@ -7195,6 +7167,7 @@ function sv(name, tabEl) {
   if (vEl) vEl.classList.add('active');
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
+  if (name === 'instellingen') loadSettingsTab();
   var fabRow = document.getElementById('fab-row');
   if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart');
 }
@@ -7203,16 +7176,13 @@ function ptab(i) {
   document.getElementById('pp-' + i).classList.add('active');
   document.querySelectorAll('.ptab').forEach(function(t, j) { t.classList.toggle('active', j === i); });
   if (i === 1) updateFavProfile();
-  if (i === 3) loadSettingsTab();
 }
 function openSettings() {
-  // Navigeer naar Mijn-tab en open direct de Instellingen sub-tab
-  var mijnTab = document.querySelectorAll('.tab')[3];
-  sv('mijn', mijnTab);
+  var instTab = document.querySelectorAll('.tab')[4];
+  sv('instellingen', instTab);
   document.querySelectorAll('.bni').forEach(function(b) { b.classList.remove('active'); });
-  var bniMijn = document.getElementById('bni-mijn');
-  if (bniMijn) bniMijn.classList.add('active');
-  setTimeout(function() { ptab(3); }, 50);
+  var bniInst = document.getElementById('bni-instellingen');
+  if (bniInst) bniInst.classList.add('active');
 }
 
 // ══════════════════════════════════════════════════
