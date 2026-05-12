@@ -10851,11 +10851,6 @@ async function loadInboxBadge() {
     if (bellBtn) bellBtn.style.display = 'inline-flex';
   } catch(e) {}
 }
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 // ══════════════════════════════════════════════════
 // SERVICE-UPDATE E-MAIL VOORKEUR (marketing_email_opt_in)
 // ══════════════════════════════════════════════════
