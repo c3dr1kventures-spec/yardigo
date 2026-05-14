@@ -272,6 +272,21 @@ textarea.setting-input{min-height:72px;resize:vertical;}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bark);color:white;padding:10px 22px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;white-space:nowrap;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+/* ── REVIEWS ── */
+.stars-gold{color:#F2A830;letter-spacing:1px;font-size:13px;}
+.stars-empty{color:#DDD;letter-spacing:1px;font-size:13px;}
+/* ── BUURTVERKOPEN ── */
+.buurt-card{background:white;border-radius:14px;border:1.5px solid var(--border);padding:18px;margin-bottom:12px;}
+.buurt-progress{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-top:8px;}
+.buurt-progress-fill{height:100%;border-radius:4px;background:var(--green);transition:width .5s;}
+/* ── BULK USERS ── */
+.bulk-bar-users{background:var(--bark);color:white;border-radius:10px;padding:10px 14px;display:none;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;font-weight:600;}
+.bulk-bar-users.visible{display:flex;}
+/* ── MINI MAP ── */
+.mini-map{width:100%;height:140px;border-radius:10px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:14px;}
+.mini-map iframe{width:100%;height:100%;border:none;}
+/* ── STAT ALERT ── */
+.stat-card.blue{border-color:#3B82F6;}.stat-card.blue .s-value{color:#3B82F6;}
 @media(max-width:640px){
   .content{padding:12px 10px;}
   .nav-tab{padding:11px 10px;font-size:11px;}
@@ -323,6 +338,9 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="nav-tab" onclick="switchTab('log',this)">📜 Log</div>
     <div class="nav-tab" onclick="switchTab('errors',this)">🐛 Fouten <span class="tab-badge" id="error-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('broadcast',this)">📢 Berichten</div>
+    <div class="nav-tab" onclick="switchTab('reviews',this)">⭐ Reviews</div>
+    <div class="nav-tab" onclick="switchTab('buurt',this)">🏘️ Buurtverkopen</div>
+    <div class="nav-tab" onclick="switchTab('reminders',this)">📅 Herinneringen</div>
     <div class="nav-tab" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
   </div>
 
@@ -336,7 +354,8 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel"><div class="panel-title">Gebruikersgroei per week <span>laatste 8 weken</span></div><div class="bar-chart" id="user-chart"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Top steden <span>op basis van adres</span></div><div id="city-chart"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Gezondheidscheck</div><div id="health-list"><div class="spinner"></div></div></div>
-        <div class="panel" style="grid-column:1/-1"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
+        <div class="panel"><div class="panel-title">Top favorieten <span>meest opgeslagen</span></div><div id="fav-list"><div class="spinner"></div></div></div>
+        <div class="panel"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -428,6 +447,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
             <option value="expired">Verlopen</option>
             <option value="featured">⭐ Uitgelicht</option>
             <option value="duplicate">⚠️ Duplicaat</option>
+            <option value="problemen">🔴 Problemen</option>
           </select>
         </div>
         <div class="table-scroll"><div id="listings-table-body"><div class="loading"><div class="spinner"></div>Laden…</div></div></div>
@@ -443,9 +463,21 @@ textarea.setting-input{min-height:72px;resize:vertical;}
           <button class="btn btn-ghost btn-sm" onclick="exportUsersCSV()">⬇️ CSV</button>
         </div>
       </div>
+      <div class="bulk-bar-users" id="bulk-bar-users">
+        <span id="bulk-users-label">0 geselecteerd</span>
+        <select id="bulk-badge-sel" style="padding:5px 8px;border:none;border-radius:6px;font-size:12px;font-weight:600">
+          <option value="">— Kies badge —</option>
+          <option value="beta">🧪 Beta</option>
+          <option value="vip">💎 VIP</option>
+          <option value="ambassador">👑 Ambassadeur</option>
+          <option value="pro">🛒 Rommelmarkt Pro</option>
+        </select>
+        <button class="btn btn-amber btn-sm" onclick="bulkAddBadge()">+ Toewijzen</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearUserSelection()">Annuleer</button>
+      </div>
       <div class="table-wrap">
         <div class="table-toolbar">
-          <input class="search-input" type="text" id="users-search" placeholder="Zoek op e-mail of naam…" oninput="filterUsers()">
+          <input class="search-input" type="text" id="users-search" placeholder="Zoek op naam of e-mail…" oninput="filterUsers()">
           <select class="filter-sel" id="users-filter" onchange="filterUsers()">
             <option value="all">Alle gebruikers</option>
             <option value="active">Met advertenties</option>
@@ -676,6 +708,12 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       </div>
 
       <div class="settings-card">
+        <h3>💾 Storage statistieken</h3>
+        <p>Overzicht van foto-gebruik in Supabase Storage op basis van de listings in de database.</p>
+        <div id="storage-stats"><button class="btn btn-ghost btn-sm" onclick="loadStorageStats()">📊 Bereken gebruik</button></div>
+      </div>
+
+      <div class="settings-card">
         <h3>🔗 Snelkoppelingen</h3>
         <div style="display:flex;flex-direction:column;gap:7px">
           <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/editor" target="_blank" class="quicklink">🗄️ Supabase SQL Editor</a>
@@ -687,6 +725,61 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       </div>
 
     </div><!-- /settings -->
+
+    <!-- ════ REVIEWS ════ -->
+    <div class="tab-pane" id="tab-reviews">
+      <div class="section-header">
+        <span class="section-title">⭐ Reviews</span>
+        <div class="section-actions">
+          <span class="section-count" id="reviews-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadReviews()">🔄 Ververs</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportReviewsCSV()">⬇️ CSV</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="reviews-stat-grid" style="margin-bottom:14px"></div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <input class="search-input" type="text" id="reviews-search" placeholder="Zoek op verkoper of reviewer…" oninput="filterReviews()">
+          <select class="filter-sel" id="reviews-stars-filter" onchange="filterReviews()">
+            <option value="all">Alle sterren</option>
+            <option value="5">★★★★★ 5</option>
+            <option value="4">★★★★☆ 4</option>
+            <option value="3">★★★☆☆ 3</option>
+            <option value="2">★★☆☆☆ 2</option>
+            <option value="1">★☆☆☆☆ 1</option>
+          </select>
+        </div>
+        <div class="table-scroll"><div id="reviews-table-body"><div class="loading"><div class="spinner"></div>Laden…</div></div></div>
+      </div>
+    </div>
+
+    <!-- ════ BUURTVERKOPEN ════ -->
+    <div class="tab-pane" id="tab-buurt">
+      <div class="section-header">
+        <span class="section-title">🏘️ Buurtverkopen</span>
+        <div class="section-actions">
+          <span class="section-count" id="buurt-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadBuurt()">🔄 Ververs</button>
+        </div>
+      </div>
+      <div id="buurt-grid"><div class="loading"><div class="spinner"></div>Laden…</div></div>
+    </div>
+
+    <!-- ════ HERINNERINGEN ════ -->
+    <div class="tab-pane" id="tab-reminders">
+      <div class="section-header">
+        <span class="section-title">📅 Geplande herinneringen</span>
+        <div class="section-actions">
+          <span class="section-count" id="reminders-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadReminders()">🔄 Ververs</button>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:14px">Listings die binnen 7 dagen plaatsvinden waarbij de herinneringsmail nog niet verstuurd is. De app stuurt automatisch herinneringen via Edge Functions. Hier zie je de status.</div>
+      <div class="table-wrap">
+        <div class="table-scroll"><div id="reminders-table-body"><div class="loading"><div class="spinner"></div>Laden…</div></div></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /app -->
 
@@ -700,6 +793,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     </div>
     <div class="drawer-body">
       <div id="ld-photo-wrap"></div>
+      <div id="ld-map-wrap" class="mini-map" style="display:none"></div>
       <div class="drawer-meta-grid">
         <div class="drawer-meta-item"><div class="m-label">Views</div><div class="m-val" id="ld-views">—</div></div>
         <div class="drawer-meta-item"><div class="m-label">Status</div><div class="m-val" id="ld-status-val">—</div></div>
@@ -787,6 +881,14 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div id="ud-badges-wrap" style="margin-top:10px"></div>
       </div>
       <div class="drawer-section">
+        <div class="drawer-section-title">📊 Activiteitsstatistieken</div>
+        <div id="ud-stats-wrap" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+          <div class="drawer-meta-item"><div class="m-label">Check-ins</div><div class="m-val" id="ud-checkins">—</div></div>
+          <div class="drawer-meta-item"><div class="m-label">Reviews gegeven</div><div class="m-val" id="ud-reviews-given">—</div></div>
+          <div class="drawer-meta-item"><div class="m-label">Reviews ontvangen</div><div class="m-val" id="ud-reviews-received">—</div></div>
+        </div>
+      </div>
+      <div class="drawer-section">
         <div class="drawer-section-title">📋 Advertenties van deze gebruiker</div>
         <div id="ud-listings-list"></div>
       </div>
@@ -795,6 +897,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="drawer-footer">
       <button class="btn btn-terra" onclick="saveUserEdit()" style="flex:1">💾 Opslaan</button>
       <button class="btn btn-ghost btn-sm" onclick="openEmailModal()">📧 Mail</button>
+      <button class="btn btn-ghost btn-sm" onclick="sendPasswordReset()">🔑 Reset</button>
       <button class="btn btn-sm" id="ud-block-btn" onclick="toggleBlockFromDrawer()">🚫 Blokkeer</button>
       <button class="btn btn-danger btn-sm" onclick="deleteUserFromDrawer()">🗑️</button>
     </div>
@@ -994,6 +1097,9 @@ function switchTab(name,el){
   if(name==='errors') loadErrors();
   if(name==='analytics') loadAnalytics();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
+  if(name==='reviews') loadReviews();
+  if(name==='buurt') loadBuurt();
+  if(name==='reminders') loadReminders();
 }
 
 // ══════════════════════════════════════════════════
@@ -1247,7 +1353,8 @@ async function loadDashboard(){
     statCard('Totaal verkopen',totalUniek,'Unieke verkopen (buurtverkoop = 1)','')+
     statCard('Actief',activeUniek,'Komende verkopen','accent')+
     statCard('Wachtrij',pending.length,pending.length>0?'⚠️ Wacht op goedkeuring':'Geen pending',pending.length>0?'warn':'')+
-    statCard('Vandaag',countUniqueVerkopen(today24),today24.length===0?'⚠️ Geen nieuwe ads':'Nieuw',today24.length>0?'green':'');
+    statCard('Vandaag',countUniqueVerkopen(today24),today24.length===0?'⚠️ Geen nieuwe ads':'Nieuw',today24.length>0?'green':'')+
+    '<div class="stat-card blue"><div class="s-label">Actief nu</div><div class="s-value" id="active-now-val">…</div><div class="s-sub">Sessies (30 min)</div></div>';
 
   // Update moderatie badge
   var badge=document.getElementById('pending-badge');
@@ -1259,6 +1366,7 @@ async function loadDashboard(){
   renderCityChart(listings);
   renderHealthCheck(listings,active,pending,today24);
   renderRecentFeed(listings.slice(0,6));
+  loadDashboardExtras();
 }
 
 function statCard(l,v,s,c){return '<div class="stat-card '+c+'"><div class="s-label">'+l+'</div><div class="s-value">'+v+'</div><div class="s-sub">'+s+'</div></div>';}
@@ -1468,9 +1576,13 @@ function filterListings(){
     var mq=!q||(l.title||'').toLowerCase().includes(q)||(l.address||'').toLowerCase().includes(q);
     var mt=ft==='all'||(tg[ft]||[]).includes(l.category);
     var isActive=l.status==='active'&&l.date_start>=today;
+    var hasPhoto=(l.images||l.photos||[]).length>0;
+    var threeDaysAgo=new Date(Date.now()-3*86400000).toISOString();
+    var isProbleem=(!hasPhoto)||(l.status==='active'&&(l.view_count||0)===0&&l.created_at<threeDaysAgo);
     var ms=fs==='all'
       ||(fs==='active'&&isActive)||(fs==='expired'&&!isActive&&l.status!=='pending')
-      ||(fs==='featured'&&l.is_featured)||(fs==='duplicate'&&dupes.has(l.id));
+      ||(fs==='featured'&&l.is_featured)||(fs==='duplicate'&&dupes.has(l.id))
+      ||(fs==='problemen'&&isProbleem);
     return mq&&mt&&ms;
   });
   renderListingsTable(rows);
@@ -1571,6 +1683,7 @@ function openListingDetail(id){
   document.getElementById('ld-desc').value=l.description||l.desc||'';
   document.getElementById('ld-featured').checked=!!l.is_featured;
   document.getElementById('ld-note').value=l.admin_note||'';
+  showListingMap(l.latitude,l.longitude,l.title);
   document.getElementById('listing-overlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1633,12 +1746,16 @@ function renderUsersTable(rows){
   if(!rows.length){tbody.innerHTML='<div class="empty"><div class="e-icon">👥</div><div class="e-text">Geen gebruikers gevonden</div></div>';return;}
   var lbu=listingsPerUser(allListings);
   var mx=Math.max(1,...Object.values(lbu));
-  tbody.innerHTML='<table><thead><tr><th>Naam</th><th>Badges</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
+  tbody.innerHTML='<table><thead><tr>'
+    +'<th class="check-col"><input type="checkbox" onchange="toggleSelectAllUsers(this.checked)"></th>'
+    +'<th>Naam</th><th>Badges</th><th>E-mail</th><th>Ads</th><th>Geregistreerd</th><th>Status</th><th></th></tr></thead>'
     +'<tbody>'+rows.map(function(u){
       var cnt=lbu[u.id]||0, isBlocked=u.is_blocked;
       var initials=(u.display_name||u.name||u.email||'?').charAt(0).toUpperCase();
       var badgeStrip=renderBadgeStrip(u,true);
+      var checked=selectedUserIds.has(u.id)?'checked':'';
       return '<tr class="clickable-row" onclick="openUserDetail(\''+u.id+'\')">'
+        +'<td class="check-col" onclick="event.stopPropagation()"><input type="checkbox" '+checked+' onchange="toggleUserSelect(\''+u.id+'\',this.checked)"></td>'
         +'<td style="font-weight:600"><span style="width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:8px">'+initials+'</span>'
         +(u.display_name||u.name||'—')+'</td>'
         +'<td>'+(badgeStrip||'<span style="color:var(--muted);font-size:11px">—</span>')+'</td>'
@@ -1649,6 +1766,14 @@ function renderUsersTable(rows){
         +'<td onclick="event.stopPropagation()"><button class="btn btn-sm '+(isBlocked?'btn-green':'btn-danger')+'" onclick="toggleBlock(\''+u.id+'\','+!isBlocked+')">'+(isBlocked?'✅ Deblok':'🚫 Blokkeer')+'</button></td>'
         +'</tr>';
     }).join('')+'</tbody></table>';
+}
+function toggleSelectAllUsers(checked){
+  document.querySelectorAll('#users-table-body tbody input[type=checkbox]').forEach(function(cb){
+    cb.checked=checked;
+    var oc=cb.getAttribute('onchange');
+    if(oc){var m=oc.match(/toggleUserSelect\('([^']+)'/);if(m){if(checked)selectedUserIds.add(m[1]);else selectedUserIds.delete(m[1]);}}
+  });
+  updateBulkUsersBar();
 }
 
 function filterUsers(){
@@ -1727,6 +1852,7 @@ function openUserDetail(id){
     }).join('');
   }
   renderBadgePanelInDrawer(u.id);
+  loadUserStats(u.id);
   document.getElementById('user-overlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -2182,6 +2308,309 @@ async function bcSendBroadcast(){
     btn.disabled = false;
     btn.innerHTML = originalLabel;
   }
+}
+
+// ══════════════════════════════════════════════════
+// HELPER: HTML escape
+// ══════════════════════════════════════════════════
+function esc(s){if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ══════════════════════════════════════════════════
+// REVIEWS
+// ══════════════════════════════════════════════════
+var allReviews = [];
+async function loadReviews(){
+  var el=document.getElementById('reviews-table-body'); if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res=await sb.from('reviews').select('*').order('created_at',{ascending:false}).limit(500);
+  if(res.error){el.innerHTML='<div class="log-empty">Fout: '+esc(res.error.message)+'<br><small>Controleer of de reviews-tabel bestaat.</small></div>';return;}
+  allReviews=res.data||[];
+  // Stat cards
+  var total=allReviews.length;
+  var avg=total?Math.round(allReviews.reduce(function(s,r){return s+(r.stars||0);},0)/total*10)/10:0;
+  var dist={1:0,2:0,3:0,4:0,5:0};
+  allReviews.forEach(function(r){if(r.stars>=1&&r.stars<=5)dist[r.stars]++;});
+  document.getElementById('reviews-stat-grid').innerHTML=
+    statCard('Totaal reviews',total,'Geverifieerde reviews','accent')+
+    statCard('Gemiddeld',avg+'★','Op basis van '+total+' reviews','green')+
+    statCard('5 sterren',dist[5],'4★: '+dist[4]+' · 3★: '+dist[3],'');
+  document.getElementById('reviews-count').textContent=total+' reviews';
+  filterReviews();
+}
+function renderReviewsTable(rows){
+  var el=document.getElementById('reviews-table-body');
+  if(!rows.length){el.innerHTML='<div class="empty"><div class="e-icon">⭐</div><div class="e-text">Geen reviews gevonden</div></div>';return;}
+  function stars(n){var s='';for(var i=1;i<=5;i++)s+=(i<=n?'★':'☆');return s;}
+  el.innerHTML='<table><thead><tr><th>Sterren</th><th>Reviewer</th><th>Verkoper</th><th>Review</th><th>Datum</th><th></th></tr></thead><tbody>'
+    +rows.map(function(r){
+      var reviewer=allUsers.find(function(u){return u.id===r.reviewer_id;})||{};
+      var seller=allUsers.find(function(u){return u.id===r.seller_id;})||{};
+      var listing=allListings.find(function(l){return l.id===r.listing_id;})||{};
+      return '<tr>'
+        +'<td style="color:#F2A830;font-size:14px;white-space:nowrap" title="'+r.stars+' sterren">'+stars(r.stars||0)+'</td>'
+        +'<td style="font-weight:600;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(reviewer.display_name||r.reviewer_id||'—')+'</td>'
+        +'<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(seller.display_name||r.seller_id||'—')+'</td>'
+        +'<td style="font-size:12px;color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.body||'')+'">'+esc(r.body||'—')+'</td>'
+        +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtRelTime(r.created_at)+'</td>'
+        +'<td onclick="event.stopPropagation()"><button class="btn btn-sm btn-danger" onclick="deleteReview(\''+r.id+'\')">🗑️</button></td>'
+        +'</tr>';
+    }).join('')+'</tbody></table>';
+}
+function filterReviews(){
+  var q=(document.getElementById('reviews-search').value||'').toLowerCase();
+  var sf=document.getElementById('reviews-stars-filter').value;
+  var rows=allReviews.filter(function(r){
+    var reviewer=allUsers.find(function(u){return u.id===r.reviewer_id;})||{};
+    var seller=allUsers.find(function(u){return u.id===r.seller_id;})||{};
+    var mq=!q||(reviewer.display_name||'').toLowerCase().includes(q)||(seller.display_name||'').toLowerCase().includes(q)||(r.body||'').toLowerCase().includes(q);
+    var ms=sf==='all'||String(r.stars)===sf;
+    return mq&&ms;
+  });
+  renderReviewsTable(rows);
+}
+async function deleteReview(id){
+  if(!confirm('Review definitief verwijderen?'))return;
+  var{error}=await sb.from('reviews').delete().eq('id',id);
+  if(error){toast('❌ '+error.message);return;}
+  allReviews=allReviews.filter(function(r){return r.id!==id;});
+  document.getElementById('reviews-count').textContent=allReviews.length+' reviews';
+  filterReviews(); toast('✅ Review verwijderd');
+}
+function exportReviewsCSV(){
+  if(!allReviews.length){toast('Geen reviews');return;}
+  var csv='id;reviewer;verkoper;sterren;review;datum\n';
+  allReviews.forEach(function(r){
+    var reviewer=allUsers.find(function(u){return u.id===r.reviewer_id;})||{};
+    var seller=allUsers.find(function(u){return u.id===r.seller_id;})||{};
+    csv+=[r.id,reviewer.display_name||'',seller.display_name||'',r.stars||0,(r.body||'').replace(/;/g,' '),r.created_at||''].join(';')+'\n';
+  });
+  var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='yardigo_reviews_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+  toast('⬇️ CSV gedownload');
+}
+
+// ══════════════════════════════════════════════════
+// BUURTVERKOPEN
+// ══════════════════════════════════════════════════
+async function loadBuurt(){
+  var el=document.getElementById('buurt-grid'); if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res=await sb.from('listings').select('id,title,city,date_start,confirmation_status,neighborhood_group_id,user_id').not('neighborhood_group_id','is',null).order('date_start',{ascending:false});
+  if(res.error){el.innerHTML='<div class="log-empty">Fout: '+esc(res.error.message)+'</div>';return;}
+  var listings=res.data||[];
+  var groups={};
+  listings.forEach(function(l){
+    var gid=l.neighborhood_group_id;
+    if(!groups[gid]) groups[gid]={id:gid,title:l.title,city:l.city,date_start:l.date_start,confirmed:0,pending:0,declined:0,total:0};
+    groups[gid].total++;
+    if(l.confirmation_status==='confirmed') groups[gid].confirmed++;
+    else if(l.confirmation_status==='pending') groups[gid].pending++;
+    else groups[gid].declined++;
+  });
+  var sorted=Object.values(groups).sort(function(a,b){return new Date(b.date_start)-new Date(a.date_start);});
+  document.getElementById('buurt-count').textContent=sorted.length+' buurtverkopen';
+  if(!sorted.length){el.innerHTML='<div class="empty"><div class="e-icon">🏘️</div><div class="e-text">Geen buurtverkopen gevonden</div></div>';return;}
+  var today=new Date().toISOString().split('T')[0];
+  el.innerHTML=sorted.map(function(g){
+    var pct=g.total>0?Math.round((g.confirmed/g.total)*100):0;
+    var isPast=g.date_start<today;
+    return '<div class="buurt-card">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div><div style="font-size:15px;font-weight:800">'+esc(g.title)+'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:2px">📍 '+esc(g.city)+' · 📅 '+fmtDate(g.date_start)+(isPast?' <span style="background:#FEF0F0;color:var(--red);padding:1px 6px;border-radius:20px;font-size:10px">Verlopen</span>':' <span style="background:#EAF2EC;color:var(--green);padding:1px 6px;border-radius:20px;font-size:10px">Komend</span>')+'</div></div>'
+      +(g.pending>0&&!isPast?'<button class="btn btn-green btn-sm" onclick="confirmAllPending(\''+g.id+'\','+g.pending+')">✓ '+g.pending+' pending bevestigen</button>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">'
+      +'<div><div style="font-size:24px;font-weight:800;color:var(--green)">'+g.confirmed+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Bevestigd</div></div>'
+      +'<div><div style="font-size:24px;font-weight:800;color:var(--amber)">'+g.pending+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Pending</div></div>'
+      +'<div><div style="font-size:24px;font-weight:800;color:var(--muted)">'+g.declined+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Overig</div></div>'
+      +'<div><div style="font-size:24px;font-weight:800;color:var(--bark)">'+g.total+'</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Totaal</div></div>'
+      +'</div>'
+      +'<div class="buurt-progress" style="margin-top:10px"><div class="buurt-progress-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px"><span>'+pct+'% bevestigd</span><span style="font-size:10px;word-break:break-all;text-align:right">'+g.id+'</span></div>'
+      +'</div>';
+  }).join('');
+}
+async function confirmAllPending(groupId,count){
+  if(!confirm('Alle '+count+' pending deelnemers van deze buurtverkoop bevestigen?'))return;
+  var{error}=await sb.from('listings').update({confirmation_status:'confirmed'}).eq('neighborhood_group_id',groupId).eq('confirmation_status','pending');
+  if(error){toast('❌ '+error.message);return;}
+  addLog('approve','✓ Bulk bevestigd: '+count+' deelnemers van buurtverkoop '+groupId);
+  toast('✅ '+count+' deelnemers bevestigd');
+  loadBuurt();
+}
+
+// ══════════════════════════════════════════════════
+// HERINNERINGEN
+// ══════════════════════════════════════════════════
+async function loadReminders(){
+  var el=document.getElementById('reminders-table-body'); if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var in7=new Date(); in7.setDate(in7.getDate()+7);
+  var today=new Date().toISOString().split('T')[0];
+  var in7str=in7.toISOString().split('T')[0];
+  var res=await sb.from('listings').select('id,title,city,date_start,time_start,reminder_3d_sent_at,reminder_7d_sent_at,confirmation_status')
+    .eq('status','active').gte('date_start',today).lte('date_start',in7str).order('date_start',{ascending:true});
+  if(res.error){el.innerHTML='<div class="log-empty">Fout: '+esc(res.error.message)+'</div>';return;}
+  var rows=res.data||[];
+  document.getElementById('reminders-count').textContent=rows.length+' aankomend';
+  if(!rows.length){el.innerHTML='<div class="empty"><div class="e-icon">📅</div><div class="e-text">Geen listings in de komende 7 dagen</div></div>';return;}
+  var now=new Date(); var nowStr=now.toISOString().split('T')[0];
+  el.innerHTML='<table><thead><tr><th>Advertentie</th><th>Stad</th><th>Datum</th><th>7d herinnering</th><th>3d herinnering</th><th>Status</th></tr></thead><tbody>'
+    +rows.map(function(l){
+      var d=new Date(l.date_start+'T12:00:00');
+      var daysLeft=Math.round((d-now)/86400000);
+      var r7=l.reminder_7d_sent_at?'<span style="color:var(--green)">✓ Verstuurd</span>':'<span style="color:var(--muted)">— Nog niet</span>';
+      var r3=l.reminder_3d_sent_at?'<span style="color:var(--green)">✓ Verstuurd</span>':'<span style="color:var(--muted)">— Nog niet</span>';
+      var dayBadge=daysLeft<=1?'<span style="background:#FEF0F0;color:var(--red);padding:1px 7px;border-radius:20px;font-size:10px">Morgen</span>':daysLeft<=3?'<span style="background:#FEF9E4;color:#8A6A00;padding:1px 7px;border-radius:20px;font-size:10px">Over '+daysLeft+'d</span>':'<span style="color:var(--muted);font-size:11px">Over '+daysLeft+'d</span>';
+      return '<tr>'
+        +'<td style="font-weight:600;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(l.title||'—')+'</td>'
+        +'<td style="font-size:12px;color:var(--muted)">'+esc(l.city||'—')+'</td>'
+        +'<td style="white-space:nowrap;font-size:12px">'+fmtDate(l.date_start)+'</td>'
+        +'<td>'+r7+'</td>'
+        +'<td>'+r3+'</td>'
+        +'<td>'+dayBadge+'</td>'
+        +'</tr>';
+    }).join('')+'</tbody></table>';
+}
+
+// ══════════════════════════════════════════════════
+// MINI-MAP IN LISTING DRAWER
+// ══════════════════════════════════════════════════
+function showListingMap(lat,lon,title){
+  var wrap=document.getElementById('ld-map-wrap');
+  if(!wrap||!lat||!lon){if(wrap)wrap.style.display='none';return;}
+  wrap.style.display='block';
+  var q=encodeURIComponent(title||'');
+  wrap.innerHTML='<iframe src="https://www.openstreetmap.org/export/embed.html?bbox='+(lon-.005)+'%2C'+(lat-.005)+'%2C'+(lon+.005)+'%2C'+(lat+.005)+'&layer=mapnik&marker='+lat+'%2C'+lon+'" loading="lazy" title="Locatie '+esc(title||'')+'" style="width:100%;height:140px;border:none"></iframe>';
+}
+
+// ══════════════════════════════════════════════════
+// WACHTWOORD RESET
+// ══════════════════════════════════════════════════
+async function sendPasswordReset(){
+  var u=allUsers.find(function(x){return x.id===currentUserId;});
+  if(!u||!u.email){toast('Geen e-mailadres bekend');return;}
+  if(!confirm('Wachtwoord reset-link sturen naar '+u.email+'?'))return;
+  var{error}=await sb.auth.resetPasswordForEmail(u.email,{redirectTo:'https://www.yardigo.nl'});
+  if(error){toast('❌ '+error.message);return;}
+  addLog('info','🔑 Wachtwoord reset verstuurd naar '+u.email);
+  toast('✅ Reset-link verstuurd naar '+u.email);
+}
+
+// ══════════════════════════════════════════════════
+// GEBRUIKER STATS (check-ins + reviews)
+// ══════════════════════════════════════════════════
+async function loadUserStats(userId){
+  document.getElementById('ud-checkins').textContent='…';
+  document.getElementById('ud-reviews-given').textContent='…';
+  document.getElementById('ud-reviews-received').textContent='…';
+  try{
+    var[ci,rg,rr]=await Promise.all([
+      sb.from('checkins').select('id',{count:'exact',head:true}).eq('user_id',userId),
+      sb.from('reviews').select('id',{count:'exact',head:true}).eq('reviewer_id',userId),
+      sb.from('reviews').select('id',{count:'exact',head:true}).eq('seller_id',userId)
+    ]);
+    document.getElementById('ud-checkins').textContent=typeof ci.count==='number'?ci.count:'—';
+    document.getElementById('ud-reviews-given').textContent=typeof rg.count==='number'?rg.count:'—';
+    document.getElementById('ud-reviews-received').textContent=typeof rr.count==='number'?rr.count:'—';
+  }catch(e){
+    document.getElementById('ud-checkins').textContent='—';
+    document.getElementById('ud-reviews-given').textContent='—';
+    document.getElementById('ud-reviews-received').textContent='—';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// BULK BADGE TOEWIJZEN (gebruikers)
+// ══════════════════════════════════════════════════
+var selectedUserIds=new Set();
+function toggleUserSelect(id,checked){if(checked)selectedUserIds.add(id);else selectedUserIds.delete(id);updateBulkUsersBar();}
+function updateBulkUsersBar(){
+  var bar=document.getElementById('bulk-bar-users'),lbl=document.getElementById('bulk-users-label');
+  if(selectedUserIds.size>0){bar.classList.add('visible');lbl.textContent=selectedUserIds.size+' geselecteerd';}
+  else bar.classList.remove('visible');
+}
+function clearUserSelection(){
+  selectedUserIds.clear();
+  document.querySelectorAll('#users-table-body input[type=checkbox]').forEach(function(cb){cb.checked=false;});
+  updateBulkUsersBar();
+}
+async function bulkAddBadge(){
+  var sel=document.getElementById('bulk-badge-sel');
+  var badgeKey=sel.value; if(!badgeKey){toast('Kies eerst een badge');return;}
+  var bd=MANUAL_BADGES.find(function(b){return b.key===badgeKey;});
+  if(!selectedUserIds.size){toast('Selecteer eerst gebruikers');return;}
+  if(!confirm('Badge '+(bd?bd.emoji+' '+bd.label:badgeKey)+' toewijzen aan '+selectedUserIds.size+' gebruikers?'))return;
+  var ids=Array.from(selectedUserIds);
+  var errors=0;
+  for(var i=0;i<ids.length;i++){
+    var uid=ids[i]; var u=allUsers.find(function(x){return x.id===uid;});
+    if(!u)continue;
+    var badges=getManualBadges(u);
+    if(!badges.includes(badgeKey)) badges.push(badgeKey);
+    var res=await sb.from('profiles').update({admin_badges:JSON.stringify(badges)}).eq('id',uid);
+    if(res.error) errors++;
+    else allUsers=allUsers.map(function(x){return x.id===uid?Object.assign({},x,{admin_badges:JSON.stringify(badges)}):x;});
+  }
+  addLog('edit','🏅 Bulk badge '+(bd?bd.label:badgeKey)+' toegewezen aan '+ids.length+' gebruikers'+(errors?' ('+errors+' fouten)':''));
+  clearUserSelection(); sel.value=''; filterUsers();
+  toast(errors?'⚠️ Klaar met '+errors+' fouten':'✅ Badge toegewezen aan '+ids.length+' gebruikers');
+}
+
+// ══════════════════════════════════════════════════
+// STORAGE STATISTIEKEN
+// ══════════════════════════════════════════════════
+function loadStorageStats(){
+  var el=document.getElementById('storage-stats'); if(!el) return;
+  var totalPhotos=0;
+  allListings.forEach(function(l){var p=l.images||l.photos||[];totalPhotos+=p.length;});
+  var listingsWithPhotos=allListings.filter(function(l){var p=l.images||l.photos||[];return p.length>0;}).length;
+  var listingsWithout=allListings.filter(function(l){var p=l.images||l.photos||[];return p.length===0;}).length;
+  var avgPhotos=allListings.length?Math.round(totalPhotos/allListings.length*10)/10:0;
+  el.innerHTML='<div class="stat-grid" style="margin-top:8px">'
+    +statCard('Totaal foto\'s',totalPhotos,'Verspreid over '+allListings.length+' listings','')+
+    statCard('Gem. per listing',avgPhotos,'Foto\'s per advertentie','')+
+    statCard('Met foto\'s',listingsWithPhotos,'Listings','green')+
+    statCard('Zonder foto\'s',listingsWithout,'Listings'+(listingsWithout>0?' — missen afbeelding':''),listingsWithout>0?'warn':'')
+    +'</div>'
+    +'<div class="info-box" style="margin-top:8px">Supabase Storage bucket <code>listings</code>. Gebruik de <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/storage/buckets/listings" target="_blank" style="color:var(--terra)">Supabase Storage dashboard →</a> voor exacte schijfruimte.</div>';
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD: ACTIEVE GEBRUIKERS + FAVORIETEN
+// ══════════════════════════════════════════════════
+async function loadDashboardExtras(){
+  // Actieve gebruikers (analytics page_views laatste 30 min)
+  try{
+    var since30m=new Date(Date.now()-30*60000).toISOString();
+    var res=await sb.from('page_views').select('user_id',{count:'exact',head:true}).gte('created_at',since30m);
+    if(!res.error){
+      var el=document.getElementById('active-now-val');
+      if(el) el.textContent=typeof res.count==='number'?res.count:'—';
+    }
+  }catch(e){}
+  // Top favorieten
+  try{
+    var fav=await sb.from('favorites').select('listing_id');
+    if(!fav.error&&fav.data){
+      var counts={};
+      fav.data.forEach(function(f){counts[f.listing_id]=(counts[f.listing_id]||0)+1;});
+      var top=Object.entries(counts).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+      var el=document.getElementById('fav-list');
+      if(el){
+        if(!top.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">Nog geen favorieten.</div>';return;}
+        var mx=top[0][1];
+        el.innerHTML=top.map(function(e){
+          var l=allListings.find(function(x){return x.id===e[0];})||{};
+          var pct=Math.round((e[1]/mx)*100);
+          return '<div class="city-row"><div class="city-name" title="'+(l.title||'')+'">'+esc(l.title||e[0].slice(0,8)+'…')+'</div>'
+            +'<div class="city-bar-wrap"><div class="city-bar-fill" style="width:'+pct+'%"></div></div>'
+            +'<div class="city-count">'+e[1]+'</div></div>';
+        }).join('');
+      }
+    }
+  }catch(e){}
 }
 
 document.addEventListener('keydown',function(e){
