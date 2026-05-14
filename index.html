@@ -2733,13 +2733,14 @@ var _LOG_IGNORE = [
   /^Unexpected end of input/i,
   /Failed to connect to MetaMask/i,
   /window\.webkit\.messageHandlers/i,
-  /^NetworkError when attempting to fetch resource\.?$/i,
+  /NetworkError when attempting to fetch resource/i,
+  /^Failed to fetch\.?$/i,
+  /TypeError: Failed to fetch/i,
   /^Invalid login credentials$/i,
   /Je hebt het maximale aantal van 10 actieve/i,
   /Je hebt het afgelopen uur te veel listings/i,
-  // Bekend FB-redirect-incident waarbij een inline-script een el.value leest
-  // op iets dat nog niet in de DOM staat — onschadelijke ruis voor logging
-  /Cannot read properties of undefined \(reading 'value'\)/i
+  /Cannot read properties of undefined \(reading 'value'\)/i,
+  /Load failed/i
 ];
 async function logError(err, context) {
   if (!sbClient) return;
@@ -9588,13 +9589,19 @@ async function publishSale() {
         : (mainAddr + ', ' + _geoCountry);
       var _geoHeaders = { 'Accept-Language': 'nl,fr,de,en' };
       var _nominatimUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC;
-      var geoRes  = await fetch(_nominatimUrl, { headers: _geoHeaders });
-      geoData = await geoRes.json();
-      // Retry eenmalig na 1.2s bij lege resultaten (Nominatim rate-limit of tijdelijke storing)
-      if (!geoData.length) {
-        await new Promise(function(r) { setTimeout(r, 1200); });
-        var _geoRetry = await fetch(_nominatimUrl, { headers: _geoHeaders });
-        geoData = await _geoRetry.json();
+      try {
+        var geoRes  = await fetch(_nominatimUrl, { headers: _geoHeaders });
+        geoData = await geoRes.json();
+        // Retry eenmalig na 1.2s bij lege resultaten (Nominatim rate-limit of tijdelijke storing)
+        if (!geoData.length) {
+          await new Promise(function(r) { setTimeout(r, 1200); });
+          var _geoRetry = await fetch(_nominatimUrl, { headers: _geoHeaders });
+          geoData = await _geoRetry.json();
+        }
+      } catch(_geoNetErr) {
+        hideL();
+        toast('📡 Locatie ophalen mislukt. Controleer je internetverbinding en probeer opnieuw.');
+        return;
       }
       // Als het volledige adres geen resultaat geeft, probeer een vereenvoudigde
       // query met alleen postcode + stad. Dit helpt bij Belgische adressen waarbij
