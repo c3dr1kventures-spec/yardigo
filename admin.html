@@ -285,6 +285,14 @@ textarea.setting-input{min-height:72px;resize:vertical;}
 /* ── MINI MAP ── */
 .mini-map{width:100%;height:140px;border-radius:10px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:14px;}
 .mini-map iframe{width:100%;height:100%;border:none;}
+/* ── CONVERSION FUNNEL ── */
+.funnel-step{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--bg2);border-radius:6px;overflow:hidden;position:relative;}
+.funnel-bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;font-size:11px;font-weight:700;color:white;transition:width .6s cubic-bezier(.4,0,.2,1);white-space:nowrap;overflow:hidden;}
+.funnel-label{font-size:12px;font-weight:600;width:140px;flex-shrink:0;}
+.funnel-val{font-size:12px;font-weight:800;width:42px;text-align:right;flex-shrink:0;}
+.funnel-pct{font-size:10px;color:var(--muted);width:34px;text-align:right;flex-shrink:0;}
+.funnel-arrow{font-size:10px;color:var(--muted);text-align:center;margin:-4px 0 2px 150px;}
 /* ── STAT ALERT ── */
 .stat-card.blue{border-color:#3B82F6;}.stat-card.blue .s-value{color:#3B82F6;}
 @media(max-width:640px){
@@ -355,7 +363,8 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel"><div class="panel-title">Top steden <span>op basis van adres</span></div><div id="city-chart"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Gezondheidscheck</div><div id="health-list"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Top favorieten <span>meest opgeslagen</span></div><div id="fav-list"><div class="spinner"></div></div></div>
-        <div class="panel"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
+        <div class="panel"><div class="panel-title">Conversietrechter <span>gebruikersreis</span></div><div id="funnel-list"><div class="spinner"></div></div></div>
+        <div class="panel" style="grid-column:1/-1"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -2580,9 +2589,52 @@ function loadStorageStats(){
 }
 
 // ══════════════════════════════════════════════════
+// CONVERSIETRECHTER
+// ══════════════════════════════════════════════════
+function renderConversionFunnel(){
+  var el=document.getElementById('funnel-list'); if(!el) return;
+  // Stap 1: totaal geregistreerde gebruikers
+  var totalUsers=allUsers.length;
+  // Stap 2: gebruikers met minimaal 1 listing
+  var lbu=listingsPerUser(allListings);
+  var usersWithListing=Object.keys(lbu).filter(function(uid){return(lbu[uid]||0)>=1;}).length;
+  // Stap 3: gebruikers met 2+ listings (terugkerend)
+  var usersRepeat=Object.keys(lbu).filter(function(uid){return(lbu[uid]||0)>=2;}).length;
+  // Stap 4: gebruikers met 5+ listings (actieve verkopers)
+  var usersActive=Object.keys(lbu).filter(function(uid){return(lbu[uid]||0)>=5;}).length;
+
+  var steps=[
+    {label:'Geregistreerd',     val:totalUsers,       color:'#E07B39', top:true},
+    {label:'1e listing geplaatst', val:usersWithListing, color:'#F2A830'},
+    {label:'Terugkerend (2+)',   val:usersRepeat,       color:'#3A9B6A'},
+    {label:'Actieve verkoper (5+)',val:usersActive,     color:'#2C7A4B'},
+  ];
+
+  var max=Math.max(1,totalUsers);
+  var html='';
+  steps.forEach(function(s,i){
+    var pct=max>0?Math.round((s.val/max)*100):0;
+    var convPct=i===0?100:(steps[0].val>0?Math.round((s.val/steps[0].val)*100):0);
+    var barW=Math.max(4,pct);
+    html+='<div class="funnel-step">'
+      +'<div class="funnel-label">'+s.label+'</div>'
+      +'<div class="funnel-bar-wrap">'
+      +'<div class="funnel-bar-fill" style="width:'+barW+'%;background:'+s.color+'">'+( barW>18?s.val:'' )+'</div>'
+      +(barW<=18?'<span style="position:absolute;left:'+(barW+2)+'%;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--bark)">'+s.val+'</span>':'')
+      +'</div>'
+      +'<div class="funnel-val">'+s.val+'</div>'
+      +'<div class="funnel-pct" title="'+convPct+'% van totaal registraties">'+convPct+'%</div>'
+      +'</div>'
+      +(i<steps.length-1?'<div class="funnel-arrow">▼ '+( steps[0].val>0?Math.round((steps[i+1].val/Math.max(1,s.val))*100):0 )+'% door</div>':'');
+  });
+  el.innerHTML=html||'<div style="font-size:12px;color:var(--muted)">Geen data</div>';
+}
+
+// ══════════════════════════════════════════════════
 // DASHBOARD: ACTIEVE GEBRUIKERS + FAVORIETEN
 // ══════════════════════════════════════════════════
 async function loadDashboardExtras(){
+  renderConversionFunnel();
   // Actieve gebruikers (analytics page_views laatste 30 min)
   try{
     var since30m=new Date(Date.now()-30*60000).toISOString();
