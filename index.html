@@ -10586,7 +10586,7 @@ async function loadSettingsTab() {
         var n = document.getElementById('set-name');
         var c = document.getElementById('set-city');
         var b = document.getElementById('set-bio');
-        if (n && res.data.display_name) n.value = res.data.display_name;
+        if (n && res.data.display_name) { n.value = res.data.display_name; n.defaultValue = res.data.display_name; }
         if (c && res.data.city) c.value = res.data.city;
         if (b && res.data.bio) {
           b.value = res.data.bio;
@@ -10683,15 +10683,30 @@ function setNameDisplayMode(mode) {
 async function saveProfileField(field, value) {
   if (isGuest || !sbClient || !currentUser) return;
   value = value.trim();
+
+  if (field === 'display_name' && value) {
+    var isSingleWord = !value.includes(' ');
+    if (isSingleWord) {
+      var dupCheck = await sbClient.from('profiles').select('id').ilike('display_name', value).neq('id', currentUser.id).limit(1);
+      if (dupCheck.data && dupCheck.data.length > 0) {
+        toast('⚠️ "' + value + '" is al in gebruik. Voeg je achternaam toe om je te onderscheiden.');
+        var inp = document.getElementById('set-name');
+        if (inp) inp.value = inp.defaultValue || '';
+        return;
+      }
+    }
+  }
+
   try {
     var upd = {};
     upd[field] = value;
     await sbClient.from('profiles').update(upd).eq('id', currentUser.id);
     toast('✓ ' + (field === 'display_name' ? 'Naam' : field === 'city' ? 'Woonplaats' : 'Bio') + ' opgeslagen');
-    // Update header-naam als naam wordt gewijzigd
     if (field === 'display_name') {
       var el = document.getElementById('profile-name');
       if (el && value) el.textContent = value;
+      var inp2 = document.getElementById('set-name');
+      if (inp2) inp2.defaultValue = value;
     }
   } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); }
 }
