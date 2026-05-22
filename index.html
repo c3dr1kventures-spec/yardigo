@@ -1263,7 +1263,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <span style="font-size:11px;color:var(--muted);font-weight:600" data-i18n="list.sort_by">Sorteer op:</span>
         <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
           <option value="newest" data-i18n="list.sort.newest">🆕 Nieuwste eerst</option>
-          <option value="date-asc" data-i18n="list.sort.date_asc">📅 Vroegste eerst</option>
+          <option value="date-asc" data-i18n="list.sort.date_asc" selected>📅 Op datum</option>
           <option value="date-desc" data-i18n="list.sort.date_desc">📅 Laatste eerst</option>
           <option value="nearby" data-i18n="list.sort.nearby">📍 Dichtstbijzijnde</option>
           <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
@@ -3330,7 +3330,7 @@ var I18N = {
     'types.heading': 'TYPES',
     'list.sort_by': 'Sorteer op:',
     'list.sort.newest': '🆕 Nieuwste eerst',
-    'list.sort.date_asc': '📅 Vroegste eerst',
+    'list.sort.date_asc': '📅 Op datum',
     'list.sort.date_desc': '📅 Laatste eerst',
     'list.sort.nearby': '📍 Dichtstbijzijnde',
     'list.sort.interest': '🔥 Meest populair',
@@ -3898,7 +3898,7 @@ var I18N = {
     'types.heading': 'TYPES',
     'list.sort_by': 'Sort by:',
     'list.sort.newest': '🆕 Newest first',
-    'list.sort.date_asc': '📅 Earliest first',
+    'list.sort.date_asc': '📅 By date',
     'list.sort.date_desc': '📅 Latest first',
     'list.sort.nearby': '📍 Nearest',
     'list.sort.interest': '🔥 Most popular',
@@ -4466,7 +4466,7 @@ var I18N = {
     'types.heading': 'TYPES',
     'list.sort_by': 'Trier par :',
     'list.sort.newest': '🆕 Plus récents',
-    'list.sort.date_asc': '📅 Plus tôt',
+    'list.sort.date_asc': '📅 Par date',
     'list.sort.date_desc': '📅 Plus tard',
     'list.sort.nearby': '📍 Plus proches',
     'list.sort.interest': '🔥 Plus populaires',
@@ -5028,7 +5028,7 @@ var I18N = {
     'types.heading': 'TYPES',
     'list.sort_by': 'Sort by:',
     'list.sort.newest': '🆕 Newest first',
-    'list.sort.date_asc': '📅 Earliest first',
+    'list.sort.date_asc': '📅 By date',
     'list.sort.date_desc': '📅 Latest first',
     'list.sort.nearby': '📍 Nearest',
     'list.sort.interest': '🔥 Most popular',
@@ -6657,7 +6657,7 @@ function getDateRange(key) {
   }
   return null;
 }
-var listSortMode = 'newest';
+var listSortMode = 'date-asc';
 var userLocation = null;
 function applyListSort(mode) {
   listSortMode = mode;
