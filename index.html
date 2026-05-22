@@ -424,6 +424,8 @@ body.dark .ctag.tag-more,body.dark .pop-tag.tag-more{background:#2A2418 !importa
 .c-time.buurt{color:var(--terra);}
 .c-time.evenement{color:var(--forest);}
 .c-fav{background:none;border:none;font-size:16px;cursor:pointer;padding:2px;}
+.c-route{background:none;border:none;font-size:15px;cursor:pointer;padding:2px;opacity:.35;transition:opacity .15s;}
+.c-route.active{opacity:1;}
 
 /* ── POPUP ── */
 .pop-head{padding:12px 14px 10px;color:white;}
@@ -1289,7 +1291,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="empty-state">
       <div class="empty-icon">🧭</div>
       <div class="empty-title" data-i18n="route.empty_title">Nog geen route</div>
-      <div class="empty-sub" data-i18n="route.empty_sub">Voeg verkopen toe via de "Route" knop op een verkoop.</div>
+      <div class="empty-sub" data-i18n="route.empty_sub">Tik 🚗 op een kaartje in de lijst, of open een advertentie en tik "Route".</div>
       <button class="empty-btn primary" onclick="document.querySelectorAll('.tab')[0].click();document.querySelectorAll('.bni')[1].click()" data-i18n="route.empty_cta">Verkopen bekijken →</button>
     </div>
   </div>
@@ -3492,7 +3494,7 @@ var I18N = {
     'route.optimize': '✨ Optimaliseer',
     'route.clear': '🗑️ Wissen',
     'route.empty_title': 'Nog geen route',
-    'route.empty_sub': 'Voeg verkopen toe via de "Route" knop op een verkoop.',
+    'route.empty_sub': 'Tik 🚗 op een kaartje in de lijst, of open een advertentie en tik "Route".',
     'route.empty_cta': 'Verkopen bekijken →',
     'nav.sheet.cedrik': 'Super! Kies je vervoermiddel en navigatie-app, dan zet ik alles voor je klaar! 🗺️',
     'nav.sheet.transport': 'Vervoermiddel',
@@ -4060,7 +4062,7 @@ var I18N = {
     'route.optimize': '✨ Optimize',
     'route.clear': '🗑️ Clear',
     'route.empty_title': 'No route yet',
-    'route.empty_sub': 'Add sales via the "Route" button on a listing.',
+    'route.empty_sub': 'Tap 🚗 on a card in the list, or open a listing and tap "Route".',
     'route.empty_cta': 'View sales →',
     'nav.sheet.cedrik': 'Great! Choose your transport and navigation app, and I\'ll get everything ready for you! 🗺️',
     'nav.sheet.transport': 'Transport',
@@ -4628,7 +4630,7 @@ var I18N = {
     'route.optimize': '✨ Optimiser',
     'route.clear': '🗑️ Effacer',
     'route.empty_title': "Pas encore d'itinéraire",
-    'route.empty_sub': 'Ajoutez des ventes via le bouton "Itinéraire" sur une annonce.',
+    'route.empty_sub': 'Appuyez sur 🚗 sur une carte dans la liste, ou ouvrez une annonce et appuyez sur "Itinéraire".',
     'route.empty_cta': 'Voir les ventes →',
     'nav.sheet.cedrik': 'Super ! Choisissez votre moyen de transport et votre application, je prépare tout pour vous ! 🗺️',
     'nav.sheet.transport': 'Transport',
@@ -6955,7 +6957,7 @@ function toggleBvCard(bvId) {
 }
 
 function createListingCard(s, i) {
-  var t = TYPES[s.type], fav = favorites.has(s.id);
+  var t = TYPES[s.type], fav = favorites.has(s.id), inRoute = routeSet.has(s.id);
   // Bij evenementen tonen we het subtype (bijv. "Braderie") in het chip-label
   // en gebruiken we het subtype-icoon als thumb-emoji zodat de lijst aansluit op de kaart.
   var _typeLabelI = i18n('type.' + s.type, t.label);
@@ -6986,10 +6988,11 @@ function createListingCard(s, i) {
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
     + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
-    + '<div class="card-addr">' + addr + (s.date ? ' · ' + fmtDate(s.date) : '') + '</div>'
+    + '<div class="card-addr">' + addr + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
-    + '<div class="card-foot"><span class="c-time ' + s.type + '">🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
+    + '<div class="card-foot"><span class="c-time ' + s.type + '">' + (s.date ? '📅 ' + fmtDate(s.date) + ' · ' : '') + '🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
     + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
+    + '<button class="c-route' + (inRoute ? ' active' : '') + '" onclick="event.stopPropagation();toggleRouteCard(' + idAttr + ')" title="' + (inRoute ? 'Verwijder uit route' : 'Voeg toe aan route') + '">🚗</button>'
     + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + idAttr + ')">' + (fav ? '⭐' : '☆') + '</button>'
     + '</div></div></div>';
 }
@@ -7012,6 +7015,21 @@ function toggleFav(id) {
   if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
   localStorage.setItem('yg-favorites', JSON.stringify(Array.from(favorites)));
   renderMarkers(); renderList(); updateFavProfile();
+}
+function toggleRouteCard(id) {
+  if (isGuest) { guestGate('route'); return; }
+  var s = sales.find(function(x) { return String(x.id) === String(id); });
+  if (!s) return;
+  if (routeSet.has(s.id)) {
+    routeSet.delete(s.id);
+    routeOrder = routeOrder.filter(function(x) { return String(x) !== String(s.id); });
+    saveRoute(); updateRouteView(); renderList();
+    toast(i18n('toast.removed_from_route', '🗑️ Verwijderd uit route'));
+  } else {
+    routeSet.add(s.id);
+    saveRoute(); updateRouteView(); renderList();
+    toast(i18n('toast.added_to_route', '📍 Toegevoegd aan route!'));
+  }
 }
 function updateFavProfile() {
   var list = document.getElementById('fav-list'), empty = document.getElementById('fav-empty');
