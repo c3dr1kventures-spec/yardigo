@@ -6473,6 +6473,10 @@ function groupByNeighborhoodSale(listings) {
 }
 
 function renderMarkers() {
+  // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
+  // Als Leaflet niet beschikbaar is (CDN-fout, offline), is de fallback-kaart actief
+  // en hoeven we geen markers te renderen.
+  if (typeof L === 'undefined' || !map) return;
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
   clusterGroups.forEach(function(g) { map.removeLayer(g); });
