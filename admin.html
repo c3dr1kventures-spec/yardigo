@@ -939,6 +939,12 @@ const ADMIN_EMAIL   = 'admin@yardigo.nl';
 const WEB3FORMS_KEY = 'd773551b-e958-449f-b60a-5aab393f6c0a';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+// ── Universele HTML-escape (voorkomt XSS in alle innerHTML-toewijzingen) ──
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 let allListings=[], allUsers=[], currentAdmin=null, settings={};
 let selectedIds=new Set(), currentListingId=null, currentUserId=null;
 
@@ -1467,7 +1473,7 @@ function renderRecentFeed(items){
     var tc=typeMap[l.category]||'particulier';
     return '<div class="feed-item" onclick="openListingDetail(\''+l.id+'\')">'
       +'<div class="feed-icon">'+(typeEmoji[tc]||'📦')+'</div>'
-      +'<div class="feed-body"><div class="feed-title">'+(l.title||'—')+'</div><div class="feed-sub">'+(l.address||'')+'</div></div>'
+      +'<div class="feed-body"><div class="feed-title">'+escapeHtml(l.title||'—')+'</div><div class="feed-sub">'+escapeHtml(l.address||'')+'</div></div>'
       +'<div class="feed-time">'+fmtRelTime(l.created_at)+'</div></div>';
   }).join('')||'<div class="empty"><div class="e-icon">📋</div><div class="e-text">Nog geen advertenties</div></div>';
   document.getElementById('recent-subtitle').textContent='laatste '+items.length;
@@ -1487,9 +1493,9 @@ function renderModerationTable(){
     +pending.map(function(l){
       var tc=typeMap[l.category]||'particulier';
       return '<tr class="clickable-row" onclick="openListingDetail(\''+l.id+'\')">'
-        +'<td style="font-weight:600">'+(l.title||'—')+'</td>'
+        +'<td style="font-weight:600">'+escapeHtml(l.title||'—')+'</td>'
         +'<td><span class="badge badge-'+tc+'">'+typeEmoji[tc]+' '+typeLabel[tc]+'</span></td>'
-        +'<td style="font-size:12px;color:var(--muted)">'+(l.address||'—')+'</td>'
+        +'<td style="font-size:12px;color:var(--muted)">'+escapeHtml(l.address||'—')+'</td>'
         +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtRelTime(l.created_at)+'</td>'
         +'<td onclick="event.stopPropagation()" style="white-space:nowrap">'
         +'<button class="btn btn-sm mod-approve" onclick="moderateListing(\''+l.id+'\',\'active\')">✓ Goedkeuren</button> '
@@ -1557,12 +1563,12 @@ function renderListingsTable(rows){
       return '<tr class="clickable-row" onclick="handleListingRowClick(event,\''+idStr+'\')">'
         +'<td class="check-col" onclick="event.stopPropagation()"><input type="checkbox" '+checked+' onchange="toggleSelect(\''+idStr+'\',this.checked)"></td>'
         +'<td style="font-weight:600;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-        +(isFeatured?'⭐ ':'')+( l.title||'—')
+        +(isFeatured?'⭐ ':'')+escapeHtml(l.title||'—')
         +(isDupe?' <span class="badge badge-dupe" title="Mogelijk duplicaat">⚠️ Dupe</span>':'')
         +'</td>'
         +'<td><span class="badge badge-'+tc+'">'+tl+'</span></td>'
         +'<td style="white-space:nowrap;font-size:12px">'+fmtDate(l.date_start)+'</td>'
-        +'<td style="font-size:12px;color:var(--muted);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(l.address||'—')+'</td>'
+        +'<td style="font-size:12px;color:var(--muted);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(l.address||'—')+'</td>'
         +'<td>'+statusBadge+'</td>'
         +'<td style="font-size:12px;text-align:center">'+(l.view_count||0)+'</td>'
         +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtRelTime(l.created_at)+'</td>'
@@ -2193,7 +2199,7 @@ async function annLoadList() {
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin-bottom:6px;background:white;';
       row.innerHTML =
-        '<div style="font-size:20px;flex-shrink:0">' + (ann.emoji || '📢') + '</div>' +
+        '<div style="font-size:20px;flex-shrink:0">' + bcEscape(ann.emoji || '📢') + '</div>' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + bcEscape(ann.title) + '</div>' +
           '<div style="font-size:10px;color:var(--muted)">' + (isPublished ? '🟢 Gepubliceerd' : '🟡 Concept') + (ann.target_country ? ' · ' + ann.target_country : ' · Iedereen') + '</div>' +

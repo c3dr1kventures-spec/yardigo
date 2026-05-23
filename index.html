@@ -10837,7 +10837,7 @@ async function loadInboxMessages() {
       item.innerHTML =
         '<div class="inbox-item-head">' +
           (isRead ? '' : '<div class="inbox-unread-dot"></div>') +
-          '<div class="inbox-item-emoji">' + (msg.emoji || '📢') + '</div>' +
+          '<div class="inbox-item-emoji">' + escapeHtml(msg.emoji || '📢') + '</div>' +
           '<div class="inbox-item-title">' + escapeHtml(msg.title) + '</div>' +
           '<div class="inbox-item-date">' + dateStr + '</div>' +
         '</div>' +
