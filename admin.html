@@ -1126,6 +1126,15 @@ async function loadAnalytics(){
   document.getElementById('an-daily-range').textContent    = 'laatste ' + days + ' dagen';
   document.getElementById('an-listings-range').textContent = 'laatste ' + days + ' dagen';
 
+  // Vernieuw-knop: loading-state
+  var refreshBtn = document.querySelector('#tab-analytics .btn-ghost');
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '⏳ Laden…'; }
+  var spinner = '<div class="spinner" style="margin:20px auto"></div>';
+  document.getElementById('an-stat-grid').innerHTML = spinner;
+  document.getElementById('an-daily-chart').innerHTML = spinner;
+  document.getElementById('an-top-paths').innerHTML = spinner;
+  document.getElementById('an-listings-chart').innerHTML = spinner;
+
   // 1) Samenvatting (KPI's)
   try{
     var s = await sb.rpc('analytics_summary');
@@ -1135,7 +1144,7 @@ async function loadAnalytics(){
   } catch(e){
     document.getElementById('an-stat-grid').innerHTML =
       '<div class="info-box warn" style="grid-column:1/-1">Kon analytics-samenvatting niet laden: ' +
-      (e.message||e) + '<br><small>Controleer of <code>analytics-schema.sql</code> is uitgevoerd en je profiel <code>is_admin=true</code> heeft.</small></div>';
+      escapeHtml(e.message||String(e)) + '<br><small>Controleer of <code>analytics-schema.sql</code> is uitgevoerd en je profiel <code>is_admin=true</code> heeft.</small></div>';
   }
 
   // 2) Bezoekers per dag
@@ -1145,7 +1154,7 @@ async function loadAnalytics(){
     renderAnalyticsDaily(d.data || []);
   } catch(e){
     document.getElementById('an-daily-chart').innerHTML =
-      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon dagtellingen niet laden.</div>';
+      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon dagtellingen niet laden: ' + escapeHtml(e.message||String(e)) + '</div>';
   }
 
   // 3) Top paden
@@ -1155,7 +1164,7 @@ async function loadAnalytics(){
     renderAnalyticsTopPaths(t.data || []);
   } catch(e){
     document.getElementById('an-top-paths').innerHTML =
-      '<div style="color:var(--muted);font-size:11px">Geen data — of RPC mist.</div>';
+      '<div style="color:var(--muted);font-size:11px">Geen data: ' + escapeHtml(e.message||String(e)) + '</div>';
   }
 
   // 4) Listings per dag (groei-indicator)
@@ -1165,8 +1174,11 @@ async function loadAnalytics(){
     renderAnalyticsListings(lg.data || []);
   } catch(e){
     document.getElementById('an-listings-chart').innerHTML =
-      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon advertentietellingen niet laden.</div>';
+      '<div style="color:var(--muted);font-size:11px;padding:10px">Kon advertentietellingen niet laden: ' + escapeHtml(e.message||String(e)) + '</div>';
   }
+
+  // Vernieuw-knop herstellen
+  if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '🔄 Vernieuw'; }
 }
 
 function renderAnalyticsSummary(r){
@@ -1185,20 +1197,22 @@ function renderAnalyticsDaily(rows){
   var el = document.getElementById('an-daily-chart');
   if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen bezoekersdata.</div>'; return; }
   var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.views)||0; }));
-  // Toon max 30 labels; bij meer dagen elk 2e
+  // Toon max 30 labels; bij meer dagen elke 2e (bij 7d: altijd tonen)
   var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
   var todayStr = new Date().toISOString().split('T')[0];
   el.innerHTML = rows.map(function(r, i){
     var v = Number(r.views)||0;
     var u = Number(r.unique_sessions)||0;
-    var h = Math.max(2, Math.round((v/maxV)*110));
+    var h = Math.max(4, Math.round((v/maxV)*110));
     var day = new Date(r.day + 'T12:00:00'); // middaguur voorkomt tijdzone-verschuiving
     var short = (day.getDate()) + '/' + (day.getMonth()+1);
-    var lbl = (i % showEvery === 0) ? short : '';
-    var isToday = (r.day === todayStr);
+    var isToday = (String(r.day).slice(0,10) === todayStr);
+    // Label: bij vandaag altijd "Vandaag" tonen, anders datum
+    var lbl = isToday ? '<span style="font-weight:700;color:var(--terra)">Vandaag</span>'
+                      : (i % showEvery === 0 ? short : '');
     return '<div class="bar-col" title="' + short + (isToday?' (vandaag)':'') + ': ' + v + ' views · ' + u + ' uniek">' +
-             '<div class="bar-val">' + (v||'') + '</div>' +
-             '<div class="bar ' + (isToday?'primary':(i===rows.length-1?'primary':'secondary')) + '" style="height:' + h + 'px' + (isToday?';opacity:1':'') + '"></div>' +
+             '<div class="bar-val" style="' + (v===0?'color:var(--muted)':'') + '">' + v + '</div>' +
+             '<div class="bar ' + (isToday?'primary':'secondary') + '" style="height:' + h + 'px' + (isToday?';opacity:1;background:var(--terra)':'') + '"></div>' +
              '<div class="bar-label">' + lbl + '</div>' +
            '</div>';
   }).join('');
@@ -1358,7 +1372,7 @@ async function loadDashboard(){
   var active=listings.filter(function(l){return l.status==='active'&&l.date_start>=today;});
   var pending=listings.filter(function(l){return l.status==='pending';});
   var thisWeek=listings.filter(function(l){return(Date.now()-new Date(l.created_at))<7*86400000;});
-  var today24=listings.filter(function(l){return(Date.now()-new Date(l.created_at))<86400000;});
+  var today24=listings.filter(function(l){return l.created_at&&l.created_at.slice(0,10)===today;});
   var lastWeek=listings.filter(function(l){var a=Date.now()-new Date(l.created_at);return a>=7*86400000&&a<14*86400000;});
   var weekDiff=thisWeek.length-lastWeek.length;
 
@@ -2055,11 +2069,21 @@ async function loadErrors() {
   if (badge) { badge.textContent = _errorsData.length; badge.style.display = _errorsData.length > 0 ? 'inline-flex' : 'none'; }
   if (count) count.textContent = _errorsData.length + ' fout' + (_errorsData.length !== 1 ? 'en' : '');
   if (_errorsData.length === 0) { el.innerHTML = '<div class="log-empty">Geen fouten gevonden in deze periode 🎉</div>'; return; }
-  // Groepeer op message voor overzicht
+  // Groepeer op genormaliseerde message (strip variabele delen zoals UUIDs, nummers, URLs)
+  function normalizeErrMsg(msg) {
+    if (!msg) return 'Onbekend';
+    return String(msg)
+      .replace(/https?:\/\/[^\s"')]+/g, '<url>')           // URLs
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '<uuid>') // UUIDs
+      .replace(/\b\d{4,}\b/g, '<n>')                        // grote getallen
+      .replace(/^Error:\s*/i, '')                           // "Error: " prefix van String(err)
+      .trim()
+      .substring(0, 200);
+  }
   var groups = {};
   _errorsData.forEach(function(e) {
-    var key = e.message || 'Onbekend';
-    if (!groups[key]) groups[key] = { msg: key, count: 0, latest: e.created_at, entries: [] };
+    var key = normalizeErrMsg(e.message);
+    if (!groups[key]) groups[key] = { msg: e.message || 'Onbekend', normKey: key, count: 0, latest: e.created_at, entries: [] };
     groups[key].count++;
     if (e.created_at > groups[key].latest) groups[key].latest = e.created_at;
     groups[key].entries.push(e);
