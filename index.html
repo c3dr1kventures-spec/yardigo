@@ -2275,7 +2275,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Cedrik – Stap 2: kaart tonen -->
         <div class="cedrik-bubble" style="margin-bottom:12px">
           <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
-          <div class="cedrik-speech" data-i18n="publish.cedrik.s2">Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt — niet je exacte adres.</div>
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s2">Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt, niet je exacte adres.</div>
         </div>
         <!-- Land-keuze: standaard hetzelfde land als het TLD waarmee de
              bezoeker binnenkomt, maar overrideable zodat een NL-bezoeker op
@@ -2353,12 +2353,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Cedrik – Stap 2: vriendelijk aanmoedigen -->
         <div class="cedrik-bubble" style="margin-bottom:12px">
           <img src="cedrik-ob-s4.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
-          <div class="cedrik-speech" data-i18n="publish.cedrik.s3">Bijna klaar! Voeg je mooiste spullen in beeld — of sla over als je liever geen foto's deelt.</div>
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s3">Bijna klaar! Voeg je mooiste spullen in beeld, of sla over als je liever geen foto's deelt.</div>
         </div>
         <!-- Nudge-banner: alleen zichtbaar voor opritverkoop (JS toont/verbergt) -->
         <div id="add-photo-nudge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:10px;margin-bottom:12px;font-size:12px;color:#7A5A2E;line-height:1.4">
           <span style="font-size:20px;flex-shrink:0">📸</span>
-          <span data-i18n-html="publish.photos.nudge">Foto's geven bezoekers een idee van wat je verkoopt — zo komen de <strong>juiste mensen</strong> langs.</span>
+          <span data-i18n-html="publish.photos.nudge">Foto's geven bezoekers een idee van wat je verkoopt, zodat de <strong>juiste mensen</strong> langskomen.</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
@@ -3081,7 +3081,7 @@ var I18N = {
     'toast.search_radius': "Zoekradius: {km} km",
     'toast.map_type': "Kaarttype: {label}",
     'toast.recovery_email_sent': "✉️ Herstel-e-mail verstuurd naar {email}",
-    'toast.country_switched': "{flag} Land: {name} — adres opnieuw invoeren",
+    'toast.country_switched': "{flag} Land gewijzigd naar {name}. Vul het adres opnieuw in.",
     // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
     'publish.buurt.row_own': "🏠 JOUW EIGEN ADRES",
     'publish.buurt.row_neighbor': "👤 ADRES BUUR {idx}",
@@ -3325,11 +3325,11 @@ var I18N = {
     'publish.country.label': '🌍 Land',
     'publish.country.help': 'In welk land staat het adres?',
     'publish.s3.title': "Foto's",
-    'publish.photos.nudge': "Foto's geven bezoekers een idee van wat je verkoopt — zo komen de <strong>juiste mensen</strong> langs.",
+    'publish.photos.nudge': "Foto's geven bezoekers een idee van wat je verkoopt, zodat de <strong>juiste mensen</strong> langskomen.",
     'publish.cedrik.s0': 'Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!',
     'publish.cedrik.s1': 'Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!',
-    'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt — niet je exacte adres.',
-    'publish.cedrik.s3': "Bijna klaar! Voeg je mooiste spullen in beeld — of sla over als je liever geen foto's deelt.",
+    'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt, niet je exacte adres.',
+    'publish.cedrik.s3': "Bijna klaar! Voeg je mooiste spullen in beeld, of sla over als je liever geen foto's deelt.",
     'publish.type.particulier': 'Opritverkoop: eigen spullen',
     'publish.type.buurt': 'Rommelroute: meerdere huizen',
     'publish.type.evenement': 'Evenement: kies een type',
@@ -3650,7 +3650,7 @@ var I18N = {
     'toast.search_radius': "Search radius: {km} km",
     'toast.map_type': "Map type: {label}",
     'toast.recovery_email_sent': "✉️ Recovery email sent to {email}",
-    'toast.country_switched': "{flag} Country: {name} — re-enter the address",
+    'toast.country_switched': "{flag} Country changed to {name}. Re-enter the address.",
     // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
     'publish.buurt.row_own': "🏠 YOUR OWN ADDRESS",
     'publish.buurt.row_neighbor': "👤 NEIGHBOR ADDRESS {idx}",
@@ -3662,7 +3662,7 @@ var I18N = {
     'publish.buurt.addr_placeholder': "Street + house number",
     'publish.buurt.pc_placeholder_prefix': "Postcode e.g. {ex}",
     'sharebuurt.title': "📨 Send these links to your neighbors",
-    'sharebuurt.intro': "Your own address is already online. For the other addresses, YardiGo first asks the resident for permission — required under GDPR. A ready-made message with a personal greeting is prepared for each neighbor. Click \"Copy text + link\" or send directly via WhatsApp, SMS or email. Their address only appears on the map after confirmation.",
+    'sharebuurt.intro': "Your own address is already online. For the other addresses, YardiGo first asks the resident for permission, as required under GDPR. A ready-made message with a personal greeting is prepared for each neighbor. Click \"Copy text + link\" or send directly via WhatsApp, SMS or email. Their address only appears on the map after confirmation.",
     'sharebuurt.warn_expire': "⏳ <strong>Note:</strong> unconfirmed addresses expire automatically after 7 days.",
     'sharebuurt.tip_later': "💾 No rush? You can also find these links later under <strong>My sales</strong> → click your neighborhood sale.",
     'sharebuurt.btn_close': "Done, close",
@@ -3894,11 +3894,11 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
-    'publish.photos.nudge': "Photos give visitors an idea of what you're selling — so the <strong>right people</strong> show up.",
+    'publish.photos.nudge': "Photos give visitors an idea of what you're selling, so the <strong>right people</strong> show up.",
     'publish.cedrik.s0': 'Welcome! Choose the type that fits your sale best. Driveway sale is the most popular!',
     'publish.cedrik.s1': 'Give your sale a catchy title and clear date. The more info, the more visitors!',
-    'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood — not your exact address.',
-    'publish.cedrik.s3': "Almost done! Show off your best items — or skip if you'd rather not share photos.",
+    'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood, not your exact address.',
+    'publish.cedrik.s3': "Almost done! Show off your best items, or skip if you'd rather not share photos.",
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
@@ -4219,7 +4219,7 @@ var I18N = {
     'toast.search_radius': "Rayon de recherche : {km} km",
     'toast.map_type': "Type de carte : {label}",
     'toast.recovery_email_sent': "✉️ E-mail de récupération envoyé à {email}",
-    'toast.country_switched': "{flag} Pays : {name} — saisis à nouveau l’adresse",
+    ‘toast.country_switched’: "{flag} Pays changé en {name}. Saisis à nouveau l’adresse.",
     // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
     'publish.buurt.row_own': "🏠 TON ADRESSE",
     'publish.buurt.row_neighbor': "👤 ADRESSE VOISIN·E {idx}",
@@ -4463,11 +4463,11 @@ var I18N = {
     'publish.country.label': '🌍 Pays',
     'publish.country.help': "Dans quel pays se trouve l'adresse ?",
     'publish.s3.title': 'Photos',
-    'publish.photos.nudge': "Les photos donnent aux visiteurs une idée de ce que vous vendez — les <strong>bonnes personnes</strong> viendront.",
+    'publish.photos.nudge': "Les photos donnent aux visiteurs une idée de ce que vous vendez, et les <strong>bonnes personnes</strong> viendront.",
     'publish.cedrik.s0': 'Bienvenue ! Choisissez le type qui correspond le mieux à votre vente. La vente sur allée est la plus populaire !',
     'publish.cedrik.s1': 'Donnez un titre accrocheur et une date claire. Plus d\'infos = plus de visiteurs !',
-    'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord que le quartier — pas votre adresse exacte.',
-    'publish.cedrik.s3': "Presque fini ! Mettez vos plus belles affaires en image — ou ignorez si vous préférez.",
+    'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord votre quartier, pas votre adresse exacte.',
+    'publish.cedrik.s3': "Presque fini ! Mettez vos plus belles affaires en image, ou ignorez si vous préférez.",
     'publish.type.particulier': 'Vente sur allée : vos propres objets',
     'publish.type.buurt': 'Circuit brocante : plusieurs maisons',
     'publish.type.evenement': 'Événement : choisissez un type',
@@ -4789,7 +4789,7 @@ var I18N = {
     'toast.search_radius': "Suchradius: {km} km",
     'toast.map_type': "Kartentyp: {label}",
     'toast.recovery_email_sent': "✉️ Wiederherstellungs-E-Mail an {email} gesendet",
-    'toast.country_switched': "{flag} Land: {name} — Adresse erneut eingeben",
+    'toast.country_switched': "{flag} Land geändert zu {name}. Adresse erneut eingeben.",
     // Renderers (buurtverkoop, share-modal, bulk, plattegrond)
     'publish.buurt.row_own': "🏠 DEINE EIGENE ADRESSE",
     'publish.buurt.row_neighbor': "👤 NACHBAR-ADRESSE {idx}",
@@ -4801,7 +4801,7 @@ var I18N = {
     'publish.buurt.addr_placeholder': "Straße + Hausnummer",
     'publish.buurt.pc_placeholder_prefix': "PLZ z. B. {ex}",
     'sharebuurt.title': "📨 Sende diese Links an deine Nachbarn",
-    'sharebuurt.intro': "Deine eigene Adresse ist bereits online. Für die anderen Adressen fragt YardiGo zuerst die Bewohner um Erlaubnis — laut DSGVO Pflicht. Für jeden Nachbarn liegt eine vorbereitete Nachricht mit persönlicher Anrede bereit. Klicke auf \"Text + Link kopieren\" oder sende direkt via WhatsApp, SMS oder E-Mail. Ihre Adresse erscheint erst nach Bestätigung auf der Karte.",
+    'sharebuurt.intro': "Deine eigene Adresse ist bereits online. Für die anderen Adressen fragt YardiGo zuerst die Bewohner um Erlaubnis, wie es die DSGVO vorschreibt. Für jeden Nachbarn liegt eine vorbereitete Nachricht mit persönlicher Anrede bereit. Klicke auf \"Text + Link kopieren\" oder sende direkt via WhatsApp, SMS oder E-Mail. Ihre Adresse erscheint erst nach Bestätigung auf der Karte.",
     'sharebuurt.warn_expire': "⏳ <strong>Hinweis:</strong> unbestätigte Adressen verfallen nach 7 Tagen automatisch.",
     'sharebuurt.tip_later': "💾 Keine Eile? Du findest diese Links auch später unter <strong>Meine Verkäufe</strong> → klicke auf deinen Nachbarschaftsverkauf.",
     'sharebuurt.btn_close': "Fertig, schließen",
@@ -5027,11 +5027,11 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
-    'publish.photos.nudge': "Fotos zeigen Besuchern, was du verkaufst — so kommen die <strong>richtigen Leute</strong> vorbei.",
+    'publish.photos.nudge': "Fotos zeigen Besuchern, was du verkaufst, damit die <strong>richtigen Leute</strong> vorbeikommen.",
     'publish.cedrik.s0': 'Willkommen! Wähle den Typ, der am besten zu deinem Verkauf passt. Hofverkauf ist am beliebtesten!',
     'publish.cedrik.s1': 'Gib deinem Verkauf einen einprägsamen Titel und ein klares Datum. Mehr Infos = mehr Besucher!',
-    'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel — nicht deine genaue Adresse.',
-    'publish.cedrik.s3': 'Fast fertig! Zeig deine schönsten Stücke — oder überspring es, wenn du keine Fotos teilen möchtest.',
+    'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel, nicht deine genaue Adresse.',
+    'publish.cedrik.s3': 'Fast fertig! Zeig deine schönsten Stücke, oder überspring es, wenn du keine Fotos teilen möchtest.',
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
@@ -5768,7 +5768,7 @@ function obRequestLocation() {
   if (navigator.permissions && navigator.permissions.query) {
     navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
       if (result.state === 'denied') {
-        obSetPermStatus('ob-loc-card', 'denied', i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+        obSetPermStatus('ob-loc-card', 'denied', i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
         toast(i18n('toast.location_denied', 'Locatie is geblokkeerd. Wijzig dit in je browserinstellingen.'));
         return;
       }
@@ -5786,7 +5786,7 @@ function _obDoLocationRequest() {
     },
     function(err) {
       var msg = (err && err.code === 1)
-        ? i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen')
+        ? i18n('ob.s2.loc_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.')
         : i18n('ob.s2.loc_unavailable', '⚠️ Locatie niet beschikbaar');
       obSetPermStatus('ob-loc-card', 'denied', msg);
       toast(i18n('toast.location_unavailable', 'Locatie niet beschikbaar'));
@@ -5822,7 +5822,7 @@ function obRequestNotif() {
     return;
   }
   if (Notification.permission === 'denied') {
-    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+    obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
     toast(i18n('toast.notif_browser_settings', 'Meldingen kun je later aanzetten via je browserinstellingen'));
     return;
   }
@@ -5831,12 +5831,12 @@ function obRequestNotif() {
     var p = Notification.requestPermission(function(legacy) {
       // Safari oude API roept callback aan ipv promise
       if (legacy === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
-      else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+      else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
     });
     if (p && typeof p.then === 'function') {
       p.then(function(perm) {
         if (perm === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
-        else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd — wijzig in browserinstellingen'));
+        else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
       }).catch(function() {
         obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_unavailable', '⚠️ Niet beschikbaar'));
       });
@@ -8159,7 +8159,7 @@ function setListingCountry(country, opts) {
     }
     var flagMap = { NL:'🇳🇱', BE:'🇧🇪', FR:'🇫🇷', DE:'🇩🇪' };
     var nameMap = { NL:'Nederland', BE:'België', FR:'France', DE:'Deutschland' };
-    toast(i18n('toast.country_switched', '{flag} Land: {name} — adres opnieuw invoeren').replace('{flag}', flagMap[c] || '🌍').replace('{name}', nameMap[c] || c));
+    toast(i18n('toast.country_switched', '{flag} Land gewijzigd naar {name}. Vul het adres opnieuw in.').replace('{flag}', flagMap[c] || '🌍').replace('{name}', nameMap[c] || c));
   }
 }
 function generateConfirmationToken() {
