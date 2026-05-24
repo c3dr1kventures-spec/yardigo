@@ -9527,29 +9527,56 @@ async function publishSale() {
     var tillVal = (document.getElementById('aTill')||{}).value || '15:00';
     var descVal = (document.getElementById('aDesc')||{}).value || '';
 
+    // Converteert een data URL naar een Blob zonder fetch() te gebruiken.
+    // fetch('data:...') is onbetrouwbaar op iOS Safari (faalt bij geheugendruk
+    // na meerdere grote foto's). atob() is synchroon, werkt in alle browsers.
+    function dataUrlToBlob(dataUrl) {
+      try {
+        var parts = dataUrl.split(',');
+        var mimeMatch = parts[0].match(/:(.*?);/);
+        var mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+        var bstr = atob(parts[1]);
+        var n = bstr.length;
+        var arr = new Uint8Array(n);
+        while (n--) arr[n] = bstr.charCodeAt(n);
+        return new Blob([arr], { type: mime });
+      } catch(e) {
+        throw new Error('Blob-conversie mislukt: ' + (e.message || String(e)));
+      }
+    }
+
     // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
     async function uploadPhotosToStorage(dataUrls, userId) {
       if (!sbClient || !dataUrls || dataUrls.length === 0) return { urls: [], errors: [] };
       if (!userId || typeof userId !== 'string') {
         return { urls: [], errors: ['Niet ingelogd. Log opnieuw in.'] };
       }
+
+      // Ververs de sessie vóór het uploaden: voorkomt auth-fouten als de
+      // gebruiker het formulier langere tijd open had staan.
+      try {
+        await sbClient.auth.getSession();
+      } catch(e) {
+        console.warn('Sessie-refresh mislukt, upload gaat toch door:', e);
+      }
+
       var publicUrls = [];
       var errors = [];
       var total = dataUrls.length;
       for (var i = 0; i < dataUrls.length; i++) {
         setPublishStatus('📷 Foto\'s uploaden... (' + (i + 1) + '/' + total + ')');
         var d = dataUrls[i];
-        // Sla http(s) URL's gewoon door — geen upload nodig
+        // Sla http(s) URL's door: al geüpload in een eerdere sessie
         if (typeof d === 'string' && /^https?:\/\//i.test(d)) { publicUrls.push(d); continue; }
         try {
-          var resp = await fetch(d);
-          var blob = await resp.blob();
+          // Gebruik atob() i.p.v. fetch() voor data URLs: betrouwbaar op alle
+          // browsers incl. iOS Safari (fetch('data:...') faalt daar bij geheugendruk)
+          var blob = dataUrlToBlob(d);
           var contentType = blob.type || 'image/jpeg';
-          var ext = (contentType.split('/')[1] || 'jpg').replace('jpeg','jpg');
-          // Random suffix + index om collisions uit te sluiten (bijv. bij retry na mislukte publicatie)
+          var ext = (contentType.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+          // Uniek pad: user-id / timestamp-index-random.ext
           var rand = Math.random().toString(36).substring(2, 8);
           var path = userId + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
-          // upsert:true zodat hergebruik van pad niet crasht
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
           if (up.error) {
             console.error('Foto upload mislukt:', up.error);
@@ -9561,6 +9588,8 @@ async function publishSale() {
           if (url.data && url.data.publicUrl) publicUrls.push(url.data.publicUrl);
         } catch(e) {
           console.error('Foto upload exception:', e);
+          // Log ook client-side exceptions zodat ze zichtbaar zijn in error_logs
+          logError(e.message || String(e), { action: 'photo_upload_exception', index: i });
           errors.push(e.message || String(e));
         }
       }
