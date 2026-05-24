@@ -2031,7 +2031,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="sheet-handle"></div>
     <div style="position:relative">
       <div id="det-photos-wrap" style="position:relative;overflow:hidden;height:200px;background:#F0EBE3;display:flex;align-items:center;justify-content:center">
-        <div id="det-no-photo" style="font-size:48px">🏠</div>
+        <div id="det-no-photo" style="text-align:center;padding:24px 16px">
+          <div style="font-size:36px;opacity:0.35">📷</div>
+          <div style="font-size:11px;color:#9A8E82;margin-top:6px;font-family:'Poppins',sans-serif">Geen foto's toegevoegd</div>
+        </div>
         <div id="det-photos" style="display:flex;position:absolute;inset:0;transition:transform .3s"></div>
         <button id="det-prev" style="display:none;position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.9);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px" onclick="carouselStep(-1)">‹</button>
         <button id="det-next" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.9);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px" onclick="carouselStep(1)">›</button>
@@ -2342,14 +2345,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <!-- Wordt dynamisch gevuld door updateTagsForType() -->
         </div>
       </div>
-      <!-- Step 3: Photos + (buurtverkoop: plattegrond) -->
+      <!-- Step 3: Photos + (buurtverkoop: sfeerbeelden + plattegrond) -->
+      <!-- NB: in het formulier nu stap 2 (vóór locatie) dankzij de stap-volgorde in addNav -->
       <div id="add-s3" style="display:none">
-        <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title" data-i18n="publish.s3.title">Foto's</div>
-        <div style="font-size:12px;margin-bottom:10px" id="photoCount"><span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10</div>
-        <!-- Cedrik – Stap 3: duim omhoog -->
+        <div style="font-size:17px;font-weight:800;margin-bottom:4px" id="add-s3-title">Foto's</div>
+        <div style="font-size:12px;margin-bottom:10px" id="photoCount"><span style="color:#7A6E62">Foto's zijn optioneel</span> · 0/10</div>
+        <!-- Cedrik – Stap 2: vriendelijk aanmoedigen -->
         <div class="cedrik-bubble" style="margin-bottom:12px">
           <img src="cedrik-ob-s4.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
-          <div class="cedrik-speech" data-i18n="publish.cedrik.s3">Bijna klaar! Voeg minstens 1 foto toe — verkopen met foto's trekken 3× meer bezoekers!</div>
+          <div class="cedrik-speech" data-i18n="publish.cedrik.s3">Foto's trekken meer bezoekers — maar overslaan mag ook!</div>
+        </div>
+        <!-- Nudge-banner: alleen zichtbaar voor opritverkoop (JS toont/verbergt) -->
+        <div id="add-photo-nudge" style="display:none;align-items:center;gap:8px;padding:10px 12px;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:10px;margin-bottom:12px;font-size:12px;color:#7A5A2E;line-height:1.4">
+          <span style="font-size:20px;flex-shrink:0">📸</span>
+          <span data-i18n="publish.photos.nudge">Advertenties <strong>met foto's</strong> krijgen meer bezoekers</span>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="photoGrid"></div>
         <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px">
@@ -3316,10 +3325,11 @@ var I18N = {
     'publish.country.label': '🌍 Land',
     'publish.country.help': 'In welk land staat het adres?',
     'publish.s3.title': "Foto's",
+    'publish.photos.nudge': "Advertenties <strong>met foto's</strong> krijgen meer bezoekers",
     'publish.cedrik.s0': 'Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!',
     'publish.cedrik.s1': 'Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!',
     'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt — niet je exacte adres.',
-    'publish.cedrik.s3': 'Bijna klaar! Voeg minstens 1 foto toe — verkopen met foto\'s trekken 3× meer bezoekers!',
+    'publish.cedrik.s3': "Foto's trekken meer bezoekers — maar overslaan mag ook!",
     'publish.type.particulier': 'Opritverkoop: eigen spullen',
     'publish.type.buurt': 'Rommelroute: meerdere huizen',
     'publish.type.evenement': 'Evenement: kies een type',
@@ -3884,10 +3894,11 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
+    'publish.photos.nudge': 'Listings <strong>with photos</strong> attract more visitors',
     'publish.cedrik.s0': 'Welcome! Choose the type that fits your sale best. Driveway sale is the most popular!',
     'publish.cedrik.s1': 'Give your sale a catchy title and clear date. The more info, the more visitors!',
     'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood — not your exact address.',
-    'publish.cedrik.s3': 'Almost done! Add at least 1 photo — sales with photos attract 3× more visitors!',
+    'publish.cedrik.s3': 'Photos attract more visitors — but skipping is fine too!',
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
@@ -4452,10 +4463,11 @@ var I18N = {
     'publish.country.label': '🌍 Pays',
     'publish.country.help': "Dans quel pays se trouve l'adresse ?",
     'publish.s3.title': 'Photos',
+    'publish.photos.nudge': 'Les annonces <strong>avec photos</strong> attirent plus de visiteurs',
     'publish.cedrik.s0': 'Bienvenue ! Choisissez le type qui correspond le mieux à votre vente. La vente sur allée est la plus populaire !',
     'publish.cedrik.s1': 'Donnez un titre accrocheur et une date claire. Plus d\'infos = plus de visiteurs !',
     'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord que le quartier — pas votre adresse exacte.',
-    'publish.cedrik.s3': 'Presque fini ! Ajoutez au moins 1 photo — les ventes avec photos attirent 3× plus de visiteurs !',
+    'publish.cedrik.s3': 'Les photos attirent plus de visiteurs — mais vous pouvez aussi ignorer !',
     'publish.type.particulier': 'Vente sur allée : vos propres objets',
     'publish.type.buurt': 'Circuit brocante : plusieurs maisons',
     'publish.type.evenement': 'Événement : choisissez un type',
@@ -5015,10 +5027,11 @@ var I18N = {
     'publish.country.label': '🌍 Country',
     'publish.country.help': 'In which country is the address?',
     'publish.s3.title': 'Photos',
+    'publish.photos.nudge': 'Anzeigen <strong>mit Fotos</strong> erhalten mehr Besucher',
     'publish.cedrik.s0': 'Willkommen! Wähle den Typ, der am besten zu deinem Verkauf passt. Hofverkauf ist am beliebtesten!',
     'publish.cedrik.s1': 'Gib deinem Verkauf einen einprägsamen Titel und ein klares Datum. Mehr Infos = mehr Besucher!',
     'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel — nicht deine genaue Adresse.',
-    'publish.cedrik.s3': 'Fast fertig! Füge mindestens 1 Foto hinzu — Verkäufe mit Fotos ziehen 3× mehr Besucher an!',
+    'publish.cedrik.s3': 'Fotos ziehen mehr Besucher an — überspringen ist auch okay!',
     'publish.type.particulier': 'Driveway sale: your own items',
     'publish.type.buurt': 'Yard sale route: multiple houses',
     'publish.type.evenement': 'Event: pick a type',
@@ -6304,6 +6317,13 @@ function createListingPopup(sale) {
     addrHtml = '📍 ' + sale.address;
   }
   var photoHtml = '';
+  // Zachte placeholder voor oprit/buurt zonder foto's
+  if ((!sale.photos || !sale.photos.length) && sale.type !== 'evenement') {
+    photoHtml = '<div style="height:80px;background:#F0EBE3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">'
+      + '<span style="font-size:22px;opacity:0.3">📷</span>'
+      + '<span style="font-size:10px;color:#9A8E82;font-family:Poppins,sans-serif">Geen foto\'s</span>'
+      + '</div>';
+  }
   if (sale.photos && sale.photos.length) {
     var photoCount = sale.photos.length;
     var popId = 'pop-sw-' + sale.id;
@@ -8403,7 +8423,9 @@ function toggleEventAnders(val) {
 }
 
 function addNav(dir) {
-  var steps = ['add-s0','add-s1','add-s2','add-s3'];
+  // Stap-volgorde: type → details → foto's → locatie+categorieën
+  // add-s3 (foto's) komt nu vóór add-s2 (locatie) voor privéverkopen
+  var steps = ['add-s0','add-s1','add-s3','add-s2'];
   addStep = Math.max(0, Math.min(3, addStep + dir));
   steps.forEach(function(id, i) { document.getElementById(id).style.display = i === addStep ? 'block' : 'none'; });
   var dots = document.querySelectorAll('.step-dot');
@@ -8412,12 +8434,18 @@ function addNav(dir) {
   document.getElementById('addNext').style.display = addStep === 3 ? 'none' : 'block';
   document.getElementById('addPublish').style.display = addStep === 3 ? 'block' : 'none';
   if (addStep === 1) updateAddNamePreview();
-  if (addStep === 3) {
+  if (addStep === 2) {
+    // Foto-stap: pas UI aan op type
     var isBuurtNow = selTypeVal === 'buurt';
+    var isOpritNow = selTypeVal === 'particulier';
     var fpSec = document.getElementById('add-floorplan-section');
     if (fpSec) fpSec.style.display = isBuurtNow ? 'block' : 'none';
     var s3t = document.getElementById('add-s3-title');
-    if (s3t) s3t.textContent = isBuurtNow ? "Foto's & plattegrond" : "Foto's";
+    if (s3t) s3t.textContent = isBuurtNow ? "Sfeerbeelden & plattegrond" : "Foto's";
+    // Nudge zichtbaar voor opritverkoop, verborgen voor buurt/evenement
+    var nudge = document.getElementById('add-photo-nudge');
+    if (nudge) nudge.style.display = isOpritNow ? 'flex' : 'none';
+    renderPhotoGrid();
   }
 }
 
@@ -9272,9 +9300,14 @@ function renderPhotoGrid() {
     }).join('');
   }
   var pc = document.getElementById('photoCount');
-  if (pc) pc.innerHTML = uploadedPhotos.length === 0
-    ? '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10'
-    : '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max 10';
+  if (pc) {
+    var _maxPh = (selTypeVal === 'buurt') ? 5 : 10;
+    if (uploadedPhotos.length === 0) {
+      pc.innerHTML = '<span style="color:#7A6E62">Foto\'s zijn optioneel</span> · 0/' + _maxPh;
+    } else {
+      pc.innerHTML = '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max ' + _maxPh;
+    }
+  }
 }
 
 // Client-side beeldcompressie: resize + JPEG-encode.
@@ -9324,8 +9357,9 @@ function handleAddPhotos(input) {
   if (pc) pc.innerHTML = '<span style="color:#888">⏳ Foto\'s voorbereiden...</span>';
   // Verwerk files sequentieel zodat de volgorde behouden blijft
   (async function() {
+    var _maxPhotos = (typeof selTypeVal !== 'undefined' && selTypeVal === 'buurt') ? 5 : 10;
     for (var i = 0; i < files.length; i++) {
-      if (uploadedPhotos.length >= 10) break;
+      if (uploadedPhotos.length >= _maxPhotos) break;
       var file = files[i];
       try {
         var dataUrl = await compressImage(file, 1600, 0.85);
@@ -9379,7 +9413,8 @@ async function publishSale() {
   if (!window.__ygPublishConfirmed) {
     var _title = document.getElementById('aTitle');
     if (!_title || !_title.value.trim()) { toast(i18n('toast.title_required', 'Vul een titel in')); return; }
-    if (uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
+    // Foto is verplicht voor evenementen; voor oprit- en buurtverkoop is het optioneel
+    if (selTypeVal === 'evenement' && uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
     var _isBuurt = selTypeVal === 'buurt';
     var _addrEl = document.getElementById('aAddr');
     var _previewAddr = _isBuurt
@@ -9446,7 +9481,8 @@ async function publishSale() {
 
   var title = document.getElementById('aTitle');
   if (!title || !title.value.trim()) { toast(i18n('toast.title_required', 'Vul een titel in')); return; }
-  if (uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
+  // Foto verplicht voor evenementen; optioneel voor oprit/buurt
+  if (selTypeVal === 'evenement' && uploadedPhotos.length < 1) { toast(i18n('toast.photo_min_required', '📷 Voeg minimaal 1 foto toe')); return; }
 
   // Adres-validatie LOS van button-state, anders blijft de knop op
   // "Bezig..." hangen als de validatie faalt (en heeft `isPublishing` ook
