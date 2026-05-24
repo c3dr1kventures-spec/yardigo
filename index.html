@@ -9415,6 +9415,25 @@ function buildAddPreview() {
 }
 var lastPublishTime = 0; // rate limiting: minimaal 60s tussen publicaties
 var isPublishing = false; // anti-dubbelklik lock
+// Converteert een data URL naar een Blob zonder fetch() te gebruiken.
+// fetch('data:...') is onbetrouwbaar op iOS Safari (faalt bij geheugendruk
+// na meerdere grote foto's). atob() is synchroon, werkt in alle browsers.
+// Module-scope zodat zowel publishSale() als handleEditPhotos() het kunnen gebruiken.
+function dataUrlToBlob(dataUrl) {
+  try {
+    var parts = dataUrl.split(',');
+    var mimeMatch = parts[0].match(/:(.*?);/);
+    var mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    var bstr = atob(parts[1]);
+    var n = bstr.length;
+    var arr = new Uint8Array(n);
+    while (n--) arr[n] = bstr.charCodeAt(n);
+    return new Blob([arr], { type: mime });
+  } catch(e) {
+    throw new Error('Blob-conversie mislukt: ' + (e.message || String(e)));
+  }
+}
+
 async function publishSale() {
   // Anti-dubbelklik: als er al een publicatie bezig is, negeer verdere klikken
   if (isPublishing) {
@@ -9542,24 +9561,6 @@ async function publishSale() {
     var fromVal = (document.getElementById('aFrom')||{}).value || '09:00';
     var tillVal = (document.getElementById('aTill')||{}).value || '15:00';
     var descVal = (document.getElementById('aDesc')||{}).value || '';
-
-    // Converteert een data URL naar een Blob zonder fetch() te gebruiken.
-    // fetch('data:...') is onbetrouwbaar op iOS Safari (faalt bij geheugendruk
-    // na meerdere grote foto's). atob() is synchroon, werkt in alle browsers.
-    function dataUrlToBlob(dataUrl) {
-      try {
-        var parts = dataUrl.split(',');
-        var mimeMatch = parts[0].match(/:(.*?);/);
-        var mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-        var bstr = atob(parts[1]);
-        var n = bstr.length;
-        var arr = new Uint8Array(n);
-        while (n--) arr[n] = bstr.charCodeAt(n);
-        return new Blob([arr], { type: mime });
-      } catch(e) {
-        throw new Error('Blob-conversie mislukt: ' + (e.message || String(e)));
-      }
-    }
 
     // Helper: dataURL → Blob → upload naar Supabase Storage → publieke URL
     async function uploadPhotosToStorage(dataUrls, userId) {
