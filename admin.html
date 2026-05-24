@@ -802,6 +802,16 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     </div>
     <div class="drawer-body">
       <div id="ld-photo-wrap"></div>
+      <!-- Foto's beheren sectie -->
+      <div class="drawer-section" style="margin-bottom:0;padding-bottom:12px">
+        <div class="drawer-section-title" style="margin-bottom:8px">📷 Foto's beheren</div>
+        <div id="ld-photo-strip" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 12px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:var(--bg2)">
+          ➕ Foto('s) toevoegen
+          <input type="file" id="ld-photo-input" accept="image/*" multiple style="display:none" onchange="adminAddPhoto(this)">
+        </label>
+        <div id="ld-photo-status" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px"></div>
+      </div>
       <div id="ld-map-wrap" class="mini-map" style="display:none"></div>
       <div class="drawer-meta-grid">
         <div class="drawer-meta-item"><div class="m-label">Views</div><div class="m-val" id="ld-views">—</div></div>
@@ -1701,6 +1711,12 @@ function openListingDetail(id){
   var pw=document.getElementById('ld-photo-wrap');
   if(photos.length) pw.innerHTML='<img class="drawer-photo" src="'+photos[0]+'" onerror="this.style.display=\'none\'">'+(photos.length>1?'<div style="font-size:11px;color:var(--muted);margin:-8px 0 12px">📷 '+photos.length+' foto\'s</div>':'');
   else pw.innerHTML='<div class="drawer-photo-placeholder">'+(typeEmoji[tc]||'📦')+'</div>';
+  // Reset foto-input en render foto-strip
+  var ldInput=document.getElementById('ld-photo-input');
+  if(ldInput) ldInput.value='';
+  var ldStatus=document.getElementById('ld-photo-status');
+  if(ldStatus) ldStatus.textContent='';
+  renderAdminPhotoStrip();
   document.getElementById('ld-title').value=l.title||'';
   document.getElementById('ld-category').value=l.category||'garagesale';
   document.getElementById('ld-status').value=l.status||'active';
@@ -1733,6 +1749,89 @@ async function saveListingEdit(){
   document.getElementById('ld-header-title').textContent=updates.title;
   toast('✅ Opgeslagen');
 }
+// ── Admin foto-beheer ──
+function renderAdminPhotoStrip(){
+  var l=allListings.find(function(x){return String(x.id)===String(currentListingId);});
+  var strip=document.getElementById('ld-photo-strip');
+  if(!strip)return;
+  var photos=(l&&(l.photos||l.images))||[];
+  if(!photos.length){
+    strip.innerHTML='<div style="font-size:11px;color:var(--muted);padding:4px 0">Geen foto\'s</div>';
+    return;
+  }
+  strip.innerHTML=photos.map(function(url,i){
+    return '<div style="position:relative;flex-shrink:0;width:72px;height:72px;border-radius:8px;overflow:hidden;background:#eee">'
+      +'<img src="'+url+'" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+      +'<button onclick="adminDeletePhoto('+i+')" title="Verwijder" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:white;font-size:12px;cursor:pointer;line-height:1;padding:0">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+async function adminDeletePhoto(index){
+  if(!currentListingId)return;
+  var l=allListings.find(function(x){return String(x.id)===String(currentListingId);});
+  if(!l)return;
+  var photos=(l.photos||l.images||[]).slice();
+  var url=photos[index];
+  if(!url)return;
+  // Verwijder uit storage (admin-delete-policy geeft hiervoor toestemming)
+  var m=url.match(/\/storage\/v1\/object\/public\/listings\/(.+)$/);
+  if(m){try{await sb.storage.from('listings').remove([decodeURIComponent(m[1])]);}catch(e){console.warn(e);}}
+  photos.splice(index,1);
+  var{error}=await sb.from('listings').update({photos:photos}).eq('id',currentListingId);
+  if(error){toast('❌ '+error.message);return;}
+  l.photos=photos;l.images=photos;
+  renderAdminPhotoStrip();
+  // Ververs hero-preview
+  var pw=document.getElementById('ld-photo-wrap');
+  var tc=typeMap[l.category]||'particulier';
+  if(photos.length) pw.innerHTML='<img class="drawer-photo" src="'+photos[0]+'" onerror="this.style.display=\'none\'">'+(photos.length>1?'<div style="font-size:11px;color:var(--muted);margin:-8px 0 12px">📷 '+photos.length+' foto\'s</div>':'');
+  else pw.innerHTML='<div class="drawer-photo-placeholder">'+(typeEmoji[tc]||'📦')+'</div>';
+  addLog('edit','🗑️ Foto verwijderd van listing '+currentListingId);
+  toast('🗑️ Foto verwijderd');
+}
+
+async function adminAddPhoto(input){
+  if(!input.files||!input.files.length||!currentListingId)return;
+  var l=allListings.find(function(x){return String(x.id)===String(currentListingId);});
+  if(!l)return;
+  var currentPhotos=(l.photos||l.images||[]).slice();
+  var maxPhotos=10;
+  var slots=maxPhotos-currentPhotos.length;
+  if(slots<=0){toast('Maximum van '+maxPhotos+' foto\'s bereikt');input.value='';return;}
+  var statusEl=document.getElementById('ld-photo-status');
+  var toProcess=Math.min(input.files.length,slots);
+  var newUrls=[];
+  // Upload naar de map van de listing-eigenaar zodat de user zelf ook kan beheren
+  var uploadFolder=(l.user_id||'admin');
+  for(var i=0;i<toProcess;i++){
+    if(statusEl)statusEl.textContent='📷 Uploaden... ('+(i+1)+'/'+toProcess+')';
+    var file=input.files[i];
+    try{
+      var rand=Math.random().toString(36).substring(2,8);
+      var ext=file.name.split('.').pop().toLowerCase().replace('jpeg','jpg');
+      var path=uploadFolder+'/'+Date.now()+'-'+i+'-'+rand+'.'+ext;
+      var{data,error}=await sb.storage.from('listings').upload(path,file,{contentType:file.type,upsert:true});
+      if(error){toast('⚠️ Foto '+(i+1)+' mislukt: '+error.message);continue;}
+      var urlRes=sb.storage.from('listings').getPublicUrl(path);
+      if(urlRes.data&&urlRes.data.publicUrl)newUrls.push(urlRes.data.publicUrl);
+    }catch(e){toast('⚠️ Foto '+(i+1)+' mislukt');console.error(e);}
+  }
+  if(statusEl)statusEl.textContent='';
+  input.value='';
+  if(!newUrls.length)return;
+  var updatedPhotos=currentPhotos.concat(newUrls);
+  var{error}=await sb.from('listings').update({photos:updatedPhotos}).eq('id',currentListingId);
+  if(error){toast('❌ '+error.message);return;}
+  l.photos=updatedPhotos;l.images=updatedPhotos;
+  renderAdminPhotoStrip();
+  var pw=document.getElementById('ld-photo-wrap');
+  var tc=typeMap[l.category]||'particulier';
+  pw.innerHTML='<img class="drawer-photo" src="'+updatedPhotos[0]+'" onerror="this.style.display=\'none\'">'+(updatedPhotos.length>1?'<div style="font-size:11px;color:var(--muted);margin:-8px 0 12px">📷 '+updatedPhotos.length+' foto\'s</div>':'');
+  addLog('edit','📷 '+newUrls.length+' foto(\'s) toegevoegd aan listing '+currentListingId);
+  toast('✓ '+newUrls.length+' foto'+(newUrls.length>1?"'s":'')+' toegevoegd');
+}
+
 async function deleteFromListingDrawer(){
   if(!currentListingId)return;
   if(!confirm('Advertentie verwijderen?'))return;

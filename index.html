@@ -1299,7 +1299,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </div>
 
 <div class="view" id="view-mijn">
-  <div class="profile-header">
+  <div class="profile-header" style="position:relative">
+    <!-- Bewerken-knop: alleen tonen voor ingelogde gebruikers (JS zet display:flex) -->
+    <button id="profile-edit-btn" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-instellingen').classList.add('active')" style="display:none;position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:white;cursor:pointer;font-family:'Poppins',sans-serif;letter-spacing:.3px;align-items:center;gap:5px">✏️ Bewerken</button>
     <div style="position:relative;width:80px;margin:0 auto 10px;cursor:pointer" onclick="document.getElementById('profilePhotoInput').click()">
       <div id="profile-avatar" style="width:80px;height:80px;border-radius:50%;border:3px solid white;background:var(--terra);display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden">
         <span id="profile-avatar-emoji">😊</span>
@@ -1310,8 +1312,18 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhoto(this)">
     <div id="profile-name" style="font-size:20px;font-weight:800;color:white;margin-bottom:2px" data-i18n="profile.guest">Gast</div>
     <div id="profile-subtitle" style="font-size:12px;color:rgba(255,255,255,.7)" data-i18n="profile.guest_sub">Maak een account aan voor meer</div>
+    <!-- Stad + lid-sinds rij (verborgen tot JS data inlaadt) -->
+    <div id="profile-meta" style="display:none;margin-top:6px;font-size:11px;color:rgba(255,255,255,0.65);justify-content:center;flex-wrap:wrap;gap:10px;line-height:1.6"></div>
   </div>
   <div style="padding:0 14px 100px;margin-top:-36px">
+    <!-- Bio-kaart (verborgen als bio leeg is) -->
+    <div id="profile-bio-card" style="display:none;background:white;border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.55;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07)"></div>
+    <!-- Profielvolledigheid-nudge (verborgen als profiel al compleet is) -->
+    <div id="profile-complete-nudge" style="display:none;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;font-size:12px;color:#7A5A2E;cursor:pointer" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-instellingen').classList.add('active')">
+      <span style="font-size:18px;flex-shrink:0">👤</span>
+      <span style="flex:1;line-height:1.4" id="profile-nudge-text">Voeg een foto, stad en bio toe voor een completer profiel.</span>
+      <span style="font-size:16px;color:#B87A3A">›</span>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
       <div class="stat-card"><div class="stat-num" id="stat-verkopen">0</div><div class="stat-lbl" data-i18n="profile.stat_sales">Verkopen</div></div>
       <div class="stat-card"><div class="stat-num" id="stat-weergaven">0</div><div class="stat-lbl" data-i18n="profile.stat_views">Weergaven</div></div>
@@ -5393,6 +5405,7 @@ let activeRadiusKm = 9999;
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
+var _profileCreatedAt = null; // gecacht zodra profiel geladen is
 let currentNameDisplayMode = 'full'; // 'full' | 'first' | 'last'
 
 // ── Naam-weergave helper ──
@@ -5443,6 +5456,9 @@ function updateUserUI() {
   renderMySales();
   loadAndRenderUserBadges();
   if (!isGuest) loadCheckinState();
+  // Bewerken-knop: tonen voor ingelogde gebruikers, verbergen voor gasten
+  var editBtn = document.getElementById('profile-edit-btn');
+  if (editBtn) editBtn.style.display = isGuest ? 'none' : 'flex';
 }
 
 // Zet body.is-guest klasse zodat leden-only UI (meld-knoppen) kan verbergen
@@ -10668,7 +10684,7 @@ async function loadSettingsTab() {
   // Naam, stad, bio uit Supabase profiles
   if (!isGuest && sbClient && currentUser) {
     try {
-      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,name_display_mode,notify_interest_email,promo_email_opt_in,marketing_email_opt_in,email_frequency').eq('id', currentUser.id).maybeSingle();
+      var res = await sbClient.from('profiles').select('display_name,city,bio,avatar_url,name_display_mode,notify_interest_email,promo_email_opt_in,marketing_email_opt_in,email_frequency,created_at').eq('id', currentUser.id).maybeSingle();
       if (res.data) {
         var n = document.getElementById('set-name');
         var c = document.getElementById('set-city');
@@ -10719,11 +10735,80 @@ async function loadSettingsTab() {
         });
         var freqSubEl = document.getElementById('email-freq-sub');
         if (freqSubEl) freqSubEl.setAttribute('data-i18n', 'settings.email.freq_' + freq);
+
+        // ── Profielpagina elementen bijwerken ──
+        updateProfilePageFromData(res.data);
       }
     } catch(e) {}
   }
   // LocalStorage-voorkeuren
   loadPrefToggles();
+}
+
+// Vult de profielpagina (view-mijn) met geladen profieldata.
+// Wordt aangeroepen vanuit loadSettingsTab() en ook direct na opslaan.
+function updateProfilePageFromData(d) {
+  // Bio-kaart
+  var bioCard = document.getElementById('profile-bio-card');
+  if (bioCard) {
+    if (d.bio && d.bio.trim()) {
+      bioCard.textContent = d.bio.trim();
+      bioCard.style.display = 'block';
+    } else {
+      bioCard.style.display = 'none';
+    }
+  }
+
+  // created_at cachen zodat saveProfileField() het ook kan gebruiken
+  if (d.created_at) _profileCreatedAt = d.created_at;
+
+  // Meta-rij: stad + lid-sinds
+  var metaEl = document.getElementById('profile-meta');
+  if (metaEl) {
+    var parts = [];
+    if (d.city && d.city.trim()) parts.push('📍 ' + d.city.trim());
+    var createdAt = d.created_at || _profileCreatedAt;
+    if (createdAt) {
+      try {
+        var dt = new Date(createdAt);
+        var maanden = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+        parts.push('Lid sinds ' + maanden[dt.getMonth()] + ' ' + dt.getFullYear());
+      } catch(e) {}
+    }
+    if (parts.length) {
+      metaEl.innerHTML = parts.map(function(p) {
+        return '<span>' + p + '</span>';
+      }).join('<span style="opacity:.4">·</span>');
+      metaEl.style.display = 'flex';
+    } else {
+      metaEl.style.display = 'none';
+    }
+  }
+
+  // Bewerken-knop tonen (alleen voor ingelogde gebruikers)
+  var editBtn = document.getElementById('profile-edit-btn');
+  if (editBtn) editBtn.style.display = 'flex';
+
+  // Profielvolledigheid-nudge
+  var nudge = document.getElementById('profile-complete-nudge');
+  var nudgeText = document.getElementById('profile-nudge-text');
+  if (nudge) {
+    var hasPhoto = !!(d.avatar_url && d.avatar_url.trim());
+    var hasBio   = !!(d.bio && d.bio.trim());
+    var hasCity  = !!(d.city && d.city.trim());
+    var missing  = [];
+    if (!hasPhoto) missing.push('profielfoto');
+    if (!hasCity)  missing.push('woonplaats');
+    if (!hasBio)   missing.push('bio');
+    if (missing.length && nudgeText) {
+      var missingStr = missing.length === 1 ? missing[0]
+        : missing.slice(0,-1).join(', ') + ' en ' + missing[missing.length-1];
+      nudgeText.textContent = 'Voeg een ' + missingStr + ' toe voor een completer profiel.';
+      nudge.style.display = 'flex';
+    } else {
+      nudge.style.display = 'none';
+    }
+  }
 }
 
 // Preview in het plaatsformulier bijwerken
@@ -10794,6 +10879,29 @@ async function saveProfileField(field, value) {
       if (el && value) el.textContent = value;
       var inp2 = document.getElementById('set-name');
       if (inp2) inp2.defaultValue = value;
+    }
+    if (field === 'city') {
+      // Meteen zichtbaar op de profielpagina — meta-rij opnieuw opbouwen
+      var cityInp = document.getElementById('set-city');
+      var bioInp  = document.getElementById('set-bio');
+      var avatarImg = document.getElementById('profile-avatar-img');
+      updateProfilePageFromData({
+        city:       value,
+        bio:        bioInp  ? bioInp.value  : '',
+        avatar_url: avatarImg && avatarImg.style.display !== 'none' ? avatarImg.src : '',
+        created_at: null  // geen nieuwe datum nodig, meta-rij gebruikt bestaande waarde
+      });
+      // created_at is niet beschikbaar hier, maar de rij toont stad al
+    }
+    if (field === 'bio') {
+      var cityInp2  = document.getElementById('set-city');
+      var avatarImg2 = document.getElementById('profile-avatar-img');
+      updateProfilePageFromData({
+        city:       cityInp2  ? cityInp2.value  : '',
+        bio:        value,
+        avatar_url: avatarImg2 && avatarImg2.style.display !== 'none' ? avatarImg2.src : '',
+        created_at: null
+      });
     }
   } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); }
 }
@@ -11628,12 +11736,96 @@ function openEditSale(id) {
   if (fpLink && s.floorplan_url) fpLink.href = s.floorplan_url;
   if (fpStatus) fpStatus.textContent = '';
   if (fpFile)   fpFile.value = '';
+  // Reset foto-input en render huidige foto's
+  var epInput = document.getElementById('edit-photo-input');
+  if (epInput) epInput.value = '';
+  var epStatus = document.getElementById('edit-photo-status');
+  if (epStatus) epStatus.textContent = '';
+  renderEditPhotos();
   document.getElementById('editSaleOv').classList.add('open');
 }
 function openEditSaleFromDetail() {
   closeDetail();
   setTimeout(function() { openEditSale(detailSaleId); }, 150);
 }
+
+// ── Foto-beheer in het bewerk-formulier ──
+
+function renderEditPhotos() {
+  var s = sales.find(function(x) { return String(x.id) === String(_editingSaleId); });
+  var photos = (s && s.photos) ? s.photos : [];
+  var grid = document.getElementById('edit-photos-grid');
+  if (!grid) return;
+  if (!photos.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px 4px;font-size:11px;color:var(--muted)">Nog geen foto\'s bij deze advertentie.</div>';
+    return;
+  }
+  grid.innerHTML = photos.map(function(url, i) {
+    return '<div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--bg2)">'
+      + '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
+      + '<button onclick="deleteEditPhoto(' + i + ')" title="Verwijder foto" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.55);border:none;border-radius:50%;width:22px;height:22px;color:white;font-size:13px;cursor:pointer;line-height:1;padding:0">×</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function deleteEditPhoto(index) {
+  if (!_editingSaleId || !sbClient || !currentUser || !currentUser.id) return;
+  var s = sales.find(function(x) { return String(x.id) === String(_editingSaleId); });
+  if (!s || !s.photos || !s.photos[index]) return;
+  var url = s.photos[index];
+  // Verwijder bestand uit storage als het een storage-URL is
+  var m = url.match(/\/storage\/v1\/object\/public\/listings\/(.+)$/);
+  if (m) {
+    try { await sbClient.storage.from('listings').remove([decodeURIComponent(m[1])]); } catch(e) { console.warn('storage remove:', e); }
+  }
+  s.photos = s.photos.filter(function(_, i) { return i !== index; });
+  try {
+    await sbClient.from('listings').update({ photos: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
+  } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); console.error(e); return; }
+  renderEditPhotos();
+  renderList(); if (typeof renderMarkers === 'function') renderMarkers();
+  toast('🗑️ Foto verwijderd');
+}
+
+async function handleEditPhotos(input) {
+  if (!input.files || !input.files.length || !_editingSaleId) return;
+  if (!sbClient || !currentUser || !currentUser.id) { toast(i18n('toast.not_logged_in_simple', 'Niet ingelogd')); return; }
+  var s = sales.find(function(x) { return String(x.id) === String(_editingSaleId); });
+  if (!s) return;
+  var currentPhotos = s.photos ? s.photos.slice() : [];
+  var maxPhotos = 10;
+  var slots = maxPhotos - currentPhotos.length;
+  if (slots <= 0) { toast('Maximum van ' + maxPhotos + ' foto\'s bereikt'); input.value = ''; return; }
+  var statusEl = document.getElementById('edit-photo-status');
+  var toProcess = Math.min(input.files.length, slots);
+  var newUrls = [];
+  for (var i = 0; i < toProcess; i++) {
+    if (statusEl) statusEl.textContent = '📷 Uploaden... (' + (i + 1) + '/' + toProcess + ')';
+    var file = input.files[i];
+    try {
+      var compressed = await compressImage(file, 1200, 0.82);
+      var blob = dataUrlToBlob(compressed);
+      var ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      var rand = Math.random().toString(36).substring(2, 8);
+      var path = currentUser.id + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
+      var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: blob.type, upsert: true });
+      if (up.error) { toast('⚠️ Foto ' + (i + 1) + ' mislukt: ' + up.error.message); logError(up.error.message, { action: 'edit_photo_upload', index: i }); continue; }
+      var urlRes = sbClient.storage.from('listings').getPublicUrl(path);
+      if (urlRes.data && urlRes.data.publicUrl) newUrls.push(urlRes.data.publicUrl);
+    } catch(e) { toast('⚠️ Foto ' + (i + 1) + ' mislukt'); logError(e.message || String(e), { action: 'edit_photo_upload_ex', index: i }); console.error(e); }
+  }
+  if (statusEl) statusEl.textContent = '';
+  input.value = '';
+  if (!newUrls.length) return;
+  s.photos = currentPhotos.concat(newUrls);
+  try {
+    await sbClient.from('listings').update({ photos: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
+    toast('✓ ' + newUrls.length + ' foto' + (newUrls.length > 1 ? '\'s' : '') + ' toegevoegd');
+  } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); console.error(e); return; }
+  renderEditPhotos();
+  renderList(); if (typeof renderMarkers === 'function') renderMarkers();
+}
+
 function closeEditSale() {
   document.getElementById('editSaleOv').classList.remove('open');
   _editingSaleId = null;
@@ -11852,6 +12044,15 @@ async function doDeleteSale() {
         </label>
         <div id="edit-floorplan-status" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
       </div>
+      <!-- Foto's beheren -->
+      <div style="height:1px;background:var(--border);margin:4px 0 10px"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:700">📷 FOTO'S</div>
+      <div id="edit-photos-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px"></div>
+      <label style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:var(--bg2)">
+        📷 Foto's toevoegen
+        <input type="file" id="edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleEditPhotos(this)">
+      </label>
+      <div id="edit-photo-status" style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center;min-height:16px"></div>
       <button onclick="saveEditSale()" style="background:var(--terra);color:white;border:none;border-radius:10px;padding:12px;font-weight:700;font-family:'Poppins',sans-serif;cursor:pointer;margin-top:6px">Opslaan</button>
     </div>
   </div>

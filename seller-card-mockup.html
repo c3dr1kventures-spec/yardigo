@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verkopers-kaart mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #F2EDE6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding: 32px 16px 60px;
+  }
+  h2 { font-size: 13px; font-weight: 700; color: #9A8E82; letter-spacing: .8px; text-transform: uppercase; }
+
+  /* ── HUIDIGE KAART ── */
+  .card {
+    width: 100%;
+    max-width: 360px;
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  }
+
+  /* ── NIEUWE KAART ── */
+  .card-new {
+    width: 100%;
+    max-width: 360px;
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .card-new .hero {
+    background: linear-gradient(160deg, #3A6B4A, #2B5038);
+    padding: 28px 20px 42px;
+    position: relative;
+    text-align: center;
+  }
+  .card-new .hero .avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.9);
+    background: #D4845A;
+    margin: 0 auto 10px;
+    overflow: hidden;
+    font-size: 34px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .card-new .hero .name {
+    font-size: 18px; font-weight: 800; color: white;
+  }
+  .card-new .hero .meta {
+    font-size: 11px; color: rgba(255,255,255,0.65);
+    margin-top: 4px;
+    display: flex; gap: 8px; justify-content: center;
+  }
+  .card-new .hero .close-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(255,255,255,0.18);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    font-size: 16px; color: white; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-new .body {
+    padding: 0 18px 20px;
+    margin-top: -22px;
+    position: relative;
+  }
+  .card-new .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 16px;
+  }
+  .card-new .stat {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .card-new .stat .num { font-size: 18px; font-weight: 800; color: #3A6B4A; }
+  .card-new .stat .lbl { font-size: 9px; color: #9A8E82; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-top: 1px; }
+
+  .card-new .bio {
+    font-size: 12px; color: #5A5248; line-height: 1.55;
+    background: #F7F3EE; border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  .card-new .badges {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+  }
+  .card-new .badge {
+    background: #E8F4ED; border-radius: 20px;
+    padding: 4px 10px; font-size: 11px; font-weight: 700; color: #3A6B4A;
+  }
+  .card-new .badge.gold { background: #FFF3D6; color: #96720A; }
+  .card-new .badge.blue { background: #E8F0F8; color: #2A5080; }
+
+  .card-new .listings-label {
+    font-size: 10px; font-weight: 700; color: #9A8E82;
+    letter-spacing: .8px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .card-new .listing-row {
+    display: flex; align-items: center; gap: 10px;
+    background: #F7F3EE; border-radius: 10px;
+    padding: 10px 12px; cursor: pointer; margin-bottom: 8px;
+  }
+  .card-new .listing-row:last-child { margin-bottom: 0; }
+  .card-new .listing-emoji { font-size: 22px; }
+  .card-new .listing-title { font-size: 13px; font-weight: 700; color: #2D2926; }
+  .card-new .listing-date  { font-size: 11px; color: #9A8E82; }
+
+  /* Stars */
+  .stars { color: #F5B400; font-size: 13px; letter-spacing: 1px; }
+  .stars-label { font-size: 11px; color: #9A8E82; margin-left: 4px; }
+
+  /* OLD card styles */
+  .card-old { padding: 18px; }
+  .card-old .row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .card-old .av { width: 56px; height: 56px; border-radius: 50%; background: #D4845A; font-size: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-old .old-name { font-size: 16px; font-weight: 800; }
+  .card-old .old-city { font-size: 12px; color: #9A8E82; }
+  .card-old .old-bio { font-size: 13px; color: #5A5248; margin-bottom: 10px; }
+  .card-old .old-badge { background: #F2EDE6; border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 600; display: inline-block; margin: 2px; }
+  .card-old .old-listing { display: flex; align-items: center; gap: 10px; background: #F7F3EE; border-radius: 10px; padding: 10px; margin-top: 8px; }
+
+  .label-tag {
+    display: inline-block;
+    background: #3A6B4A;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 3px 8px;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h2>Huidige kaart</h2>
+
+<div class="card">
+  <div class="card-old">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800">Profiel</div>
+      <button style="background:#F2EDE6;border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer">×</button>
+    </div>
+    <div class="row">
+      <div class="av">😊</div>
+      <div>
+        <div class="old-name">Sophie</div>
+        <div class="old-city">📍 Utrecht</div>
+      </div>
+    </div>
+    <div class="old-bio">Regelmatige garagesale-ganger, altijd op zoek naar unieke spullen 🛍️</div>
+    <div>
+      <span class="old-badge">🔭 Pionier</span>
+      <span class="old-badge">📸 Fotograaf</span>
+      <span class="old-badge">⭐ Top verkoper</span>
+    </div>
+    <div style="font-size:13px;font-weight:700;margin:12px 0 8px">Andere verkopen</div>
+    <div class="old-listing">
+      <div style="font-size:22px">🏡</div>
+      <div>
+        <div style="font-size:13px;font-weight:700">Zolder opruiming</div>
+        <div style="font-size:11px;color:#9A8E82">za 7 jun</div>
+      </div>
+    </div>
+    <div class="old-listing">
+      <div style="font-size:22px">👗</div>
+      <div>
+        <div style="font-size:13px;font-weight:700">Kledingverkoop</div>
+        <div style="font-size:11px;color:#9A8E82">zo 15 jun</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Nieuw voorstel ✨</h2>
+
+<div class="card-new">
+  <div class="hero">
+    <div class="close-btn">×</div>
+    <div class="avatar">😊</div>
+    <div class="name">Sophie</div>
+    <div class="meta">
+      <span>📍 Utrecht</span>
+      <span style="opacity:.4">·</span>
+      <span>Lid sinds mrt 2024</span>
+    </div>
+    <div style="margin-top:8px">
+      <span class="stars">★★★★★</span>
+      <span class="stars-label">4.8 · 12 reviews</span>
+    </div>
+  </div>
+  <div class="body">
+    <div class="stats-row">
+      <div class="stat"><div class="num">7</div><div class="lbl">Verkopen</div></div>
+      <div class="stat"><div class="num">142</div><div class="lbl">Weergaven</div></div>
+      <div class="stat"><div class="num">31</div><div class="lbl">Interesses</div></div>
+    </div>
+    <div class="bio">Regelmatige garagesale-ganger, altijd op zoek naar unieke spullen 🛍️</div>
+    <div class="badges">
+      <span class="badge">🔭 Pionier</span>
+      <span class="badge">📸 Fotograaf</span>
+      <span class="badge gold">⭐ Top verkoper</span>
+      <span class="badge blue">🧪 Beta tester</span>
+    </div>
+    <div class="listings-label">Actieve verkopen</div>
+    <div class="listing-row">
+      <div class="listing-emoji">🏡</div>
+      <div>
+        <div class="listing-title">Zolder opruiming</div>
+        <div class="listing-date">za 7 jun · 09:00–15:00</div>
+      </div>
+    </div>
+    <div class="listing-row">
+      <div class="listing-emoji">👗</div>
+      <div>
+        <div class="listing-title">Kledingverkoop</div>
+        <div class="listing-date">zo 15 jun · 10:00–14:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
