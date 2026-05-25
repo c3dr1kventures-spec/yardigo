@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YardiGo – Ontdek garagesales bij jou in de buurt</title>
+<meta name="description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Gratis registreren, gratis ontdekken. Jouw buurt vol verborgen schatten.">
+<meta name="theme-color" content="#E07B39">
+<link rel="canonical" href="https://www.yardigo.nl/home">
+<link rel="icon" href="/icon-192.png">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.yardigo.nl/home">
+<meta property="og:title" content="YardiGo – Ontdek garagesales bij jou in de buurt">
+<meta property="og:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Gratis registreren, gratis ontdekken.">
+<meta property="og:image" content="https://www.yardigo.nl/og-image.png">
+<meta property="og:locale" content="nl_NL">
+<meta property="og:site_name" content="YardiGo">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --terra:    #E07B39;
+  --terra-dk: #C5612A;
+  --green:    #3A6B4A;
+  --green-lt: #EBF4EF;
+  --bg:       #F9F5EF;
+  --bg2:      #F2EADD;
+  --border:   #EDE8DF;
+  --text:     #2C2416;
+  --text-mid: #4A3E32;
+  --muted:    #7A6E62;
+  --white:    #ffffff;
+  --radius:   12px;
+  --shadow:   0 2px 12px rgba(44,36,22,.08);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── NAV ──────────────────────────────────────── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(249,245,239,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--terra);
+}
+.nav-logo img {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-links a {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-mid);
+  padding: 7px 12px;
+  border-radius: 8px;
+  transition: background .15s;
+}
+.nav-links a:hover { background: var(--bg2); }
+.nav-links .btn-nav {
+  background: var(--terra);
+  color: #fff;
+  padding: 7px 16px;
+  font-weight: 600;
+}
+.nav-links .btn-nav:hover { background: var(--terra-dk); }
+
+/* ── HERO ─────────────────────────────────────── */
+.hero {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 20px 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .hero { grid-template-columns: 1fr; padding: 48px 20px 40px; gap: 32px; }
+  .hero-visual { order: -1; }
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FEF0E4;
+  color: var(--terra);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.hero h1 span { color: var(--terra); }
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-mid);
+  margin-bottom: 32px;
+  max-width: 460px;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--terra);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(224,123,57,.3);
+  transition: transform .12s, box-shadow .12s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(224,123,57,.4); }
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  color: var(--text-mid);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  transition: border-color .15s;
+}
+.btn-secondary:hover { border-color: var(--terra); color: var(--terra); }
+
+.hero-visual {
+  display: flex;
+  justify-content: center;
+}
+.phone-frame {
+  width: 240px;
+  height: 480px;
+  background: var(--white);
+  border-radius: 36px;
+  border: 3px solid #DDD5C8;
+  box-shadow: 0 24px 64px rgba(44,36,22,.14);
+  overflow: hidden;
+  position: relative;
+}
+.phone-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.phone-frame .phone-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(160deg, #FEF0E4 0%, #EBF4EF 100%);
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  padding: 20px;
+}
+.phone-frame .phone-placeholder .big-icon { font-size: 56px; line-height: 1; }
+
+/* ── STATS ────────────────────────────────────── */
+.stats-strip {
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stats-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  text-align: center;
+}
+@media (max-width: 480px) {
+  .stats-inner { grid-template-columns: 1fr; gap: 0; }
+  .stat-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .stat-item:last-child { border-bottom: none; }
+}
+.stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--terra);
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── SECTIONS ─────────────────────────────────── */
+section { padding: 72px 20px; }
+.section-inner { max-width: 1080px; margin: 0 auto; }
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 10px;
+}
+.section-title {
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+.section-sub {
+  font-size: 16px;
+  color: var(--text-mid);
+  max-width: 560px;
+  margin-bottom: 40px;
+}
+
+/* ── FEATURES GRID ────────────────────────────── */
+.features { background: var(--bg); }
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+@media (max-width: 700px) { .feat-grid { grid-template-columns: 1fr; } }
+.feat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 22px;
+  box-shadow: var(--shadow);
+  transition: transform .15s, box-shadow .15s;
+}
+.feat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(44,36,22,.1); }
+.feat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+.feat-icon.orange { background: #FEF0E4; }
+.feat-icon.green  { background: var(--green-lt); }
+.feat-icon.yellow { background: #FEF9E4; }
+.feat-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.feat-card p  { font-size: 14px; color: var(--text-mid); line-height: 1.6; }
+
+/* ── HOW IT WORKS ─────────────────────────────── */
+.how { background: var(--bg2); }
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+  position: relative;
+}
+@media (max-width: 700px) { .steps-grid { grid-template-columns: 1fr; } }
+.step-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  position: relative;
+}
+.step-num {
+  width: 36px;
+  height: 36px;
+  background: var(--terra);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.step-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.step-card p  { font-size: 14px; color: var(--text-mid); }
+
+/* ── NEWS ─────────────────────────────────────── */
+.news { background: var(--bg); }
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+.news-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.news-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.badge-update  { background: #FEF0E4; color: var(--terra); }
+.badge-nieuws  { background: var(--green-lt); color: var(--green); }
+.badge-tip     { background: #FEF9E4; color: #8A7020; }
+.badge-vraag   { background: #EDF0FE; color: #3A4A9A; }
+.news-date { font-size: 12px; color: var(--muted); }
+.news-card h3 { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.35; }
+.news-card p  { font-size: 14px; color: var(--text-mid); line-height: 1.6; flex: 1; }
+.news-author  { font-size: 12px; color: var(--muted); font-weight: 500; }
+.news-loading { text-align: center; color: var(--muted); font-size: 15px; padding: 32px 0; }
+.news-empty   { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
+
+/* ── CTA BLOCK ────────────────────────────────── */
+.cta-block {
+  background: linear-gradient(135deg, var(--terra) 0%, #C5612A 100%);
+  color: #fff;
+  text-align: center;
+  padding: 80px 20px;
+}
+.cta-block h2 { font-size: clamp(24px, 4vw, 40px); font-weight: 800; margin-bottom: 14px; }
+.cta-block p  { font-size: 17px; opacity: .88; margin-bottom: 32px; max-width: 480px; margin-left: auto; margin-right: auto; }
+.btn-white {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: var(--terra);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 14px 28px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  transition: transform .12s;
+}
+.btn-white:hover { transform: translateY(-2px); }
+
+/* ── FOOTER ───────────────────────────────────── */
+footer {
+  background: var(--text);
+  color: #BDB3A8;
+  padding: 48px 20px 32px;
+}
+.footer-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.footer-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 24px;
+}
+@media (max-width: 600px) { .footer-top { grid-template-columns: 1fr 1fr; } }
+.footer-brand .logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.footer-brand p { font-size: 13px; line-height: 1.6; }
+.footer-col h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+.footer-col a {
+  display: block;
+  font-size: 13px;
+  color: #BDB3A8;
+  margin-bottom: 8px;
+  transition: color .15s;
+}
+.footer-col a:hover { color: var(--terra); }
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+.footer-bottom a { color: #BDB3A8; }
+.footer-bottom a:hover { color: var(--terra); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/home" class="nav-logo">
+      <img src="/icon-192.png" alt="YardiGo icoon">
+      YardiGo
+    </a>
+    <div class="nav-links">
+      <a href="#features">Functies</a>
+      <a href="#nieuws">Nieuws</a>
+      <a href="/organisatoren">Organisatoren</a>
+      <a href="/" class="btn-nav">Open app →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section style="padding:0">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">🗺️ Nu beschikbaar in Nederland &amp; België</div>
+      <h1>Vind garagesales <span>bij jou in de buurt</span></h1>
+      <p class="hero-sub">Ontdek rommelmarkten, rommelroutes en opritverkopen op de kaart. Gratis registreren, gratis ontdekken.</p>
+      <div class="hero-actions">
+        <a href="/" class="btn-primary">🔍 Open de kaart</a>
+        <a href="/organisatoren" class="btn-secondary">Verkoop registreren</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-frame">
+        <div class="phone-placeholder">
+          <span class="big-icon">🗺️</span>
+          <span>Garagesales op de kaart</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stats-inner" id="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-events">—</div>
+      <div class="stat-label">Verkopen geregistreerd</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-places">NL &amp; BE</div>
+      <div class="stat-label">Landen actief</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">Gratis</div>
+      <div class="stat-label">Altijd, voor iedereen</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <div class="section-label">Wat kan je doen?</div>
+    <h2 class="section-title">Alles op één plek</h2>
+    <p class="section-sub">Van vinden tot verkopen — YardiGo maakt het makkelijk om mee te doen aan de garagesale-cultuur in jouw buurt.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon orange">🔍</div>
+        <h3>Ontdek op de kaart</h3>
+        <p>Bekijk alle garagesales, rommelroutes en evenementen in jouw omgeving op een interactieve kaart. Filter op type en datum.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon green">📌</div>
+        <h3>Registreer gratis</h3>
+        <p>Zet jouw opritverkoop of rommelmarkt gratis op de kaart. Bereik kopers uit de buurt zonder gedoe.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon yellow">🏘️</div>
+        <h3>Rommelroutes</h3>
+        <p>Organiseer of volg een buurtbrede rommelroute. Meerdere adressen op één route, één dag vol ontdekkingen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="section-inner">
+    <div class="section-label">Zo werkt het</div>
+    <h2 class="section-title">In drie stappen aan de slag</h2>
+    <p class="section-sub">Of je nu koopt of verkoopt — binnen een minuut ben je actief.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Open de kaart</h3>
+        <p>Geen account nodig om te bekijken. Zoom in op jouw buurt en ontdek wat er speelt.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Registreer je verkoop</h3>
+        <p>Maak een account, kies een datum en locatie, en zet je verkoop op de kaart. Gratis en in minder dan twee minuten.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Bereik kopers</h3>
+        <p>Mensen in de buurt zien jouw verkoop automatisch verschijnen. Geen advertentiekosten, geen moeite.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NIEUWS & UPDATES -->
+<section class="news" id="nieuws">
+  <div class="section-inner">
+    <div class="section-label">Nieuws &amp; updates</div>
+    <h2 class="section-title">Wat is er nieuw?</h2>
+    <p class="section-sub">Laatste updates, tips en berichten vanuit het YardiGo-team.</p>
+    <div class="news-grid" id="news-grid">
+      <div class="news-loading">Berichten laden…</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BLOCK -->
+<div class="cta-block">
+  <h2>Klaar om te ontdekken?</h2>
+  <p>Open de kaart en zie welke garagesales er bij jou in de buurt zijn. Helemaal gratis.</p>
+  <a href="/" class="btn-white">🗺️ Open YardiGo</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">🗺️ YardiGo</div>
+        <p>Garagesales en rommelmarkten op de kaart in Nederland en België.</p>
+      </div>
+      <div class="footer-col">
+        <h4>App</h4>
+        <a href="/">Kaart openen</a>
+        <a href="/organisatoren">Verkoop registreren</a>
+        <a href="/#over">Over YardiGo</a>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <a href="/privacy">Privacybeleid</a>
+        <a href="/voorwaarden">Gebruiksvoorwaarden</a>
+        <a href="mailto:info@yardigo.nl">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 YardiGo. Alle rechten voorbehouden.</span>
+      <div style="display:flex;gap:16px">
+        <a href="/privacy">Privacy</a>
+        <a href="/voorwaarden">Voorwaarden</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Datum formatteren
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// Badge class op basis van categorie
+function badgeClass(cat) {
+  const map = { update: 'badge-update', nieuws: 'badge-nieuws', tip: 'badge-tip', vraag: 'badge-vraag' };
+  return map[cat] || 'badge-update';
+}
+
+// Nieuws laden
+async function loadNews() {
+  const grid = document.getElementById('news-grid');
+  try {
+    const { data, error } = await sb
+      .from('news_items')
+      .select('*')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false })
+      .limit(9);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="news-empty">Nog geen berichten geplaatst. Kom snel terug!</div>';
+      return;
+    }
+
+    grid.innerHTML = data.map(item => `
+      <div class="news-card">
+        <div class="news-meta">
+          <span class="news-badge ${badgeClass(item.category)}">${item.category}</span>
+          <span class="news-date">${fmtDate(item.published_at)}</span>
+        </div>
+        <h3>${escHtml(item.title)}</h3>
+        ${item.content ? `<p>${escHtml(item.content)}</p>` : ''}
+        <span class="news-author">— ${escHtml(item.author)}</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    grid.innerHTML = '<div class="news-empty">Berichten tijdelijk niet beschikbaar.</div>';
+    console.error('News load error:', e);
+  }
+}
+
+// Stats laden
+async function loadStats() {
+  try {
+    const { count } = await sb
+      .from('events')
+      .select('*', { count: 'exact', head: true });
+    if (count != null) {
+      document.getElementById('stat-events').textContent = count.toLocaleString('nl-NL') + '+';
+    }
+  } catch (_) { /* stil falen, stat blijft op —  */ }
+}
+
+// Eenvoudige HTML-escape
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadNews();
+loadStats();
+</script>
+</body>
+</html>
