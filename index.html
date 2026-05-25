@@ -2147,7 +2147,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <span style="flex:1;font-size:12px;color:var(--muted)" id="share-link-text">yardigo.nl/v/1</span>
         <button id="share-copy-btn" onclick="copyShareLink()" style="background:var(--terra);color:white;border:none;border-radius:7px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer">Kopieer</button>
       </div>
-      <button class="share-action-btn" onclick="shareGoogleMaps()">🗺️ Openen in Google Maps</button>
+      <button class="share-action-btn" id="share-googlemaps-btn" onclick="shareGoogleMaps()">🗺️ Openen in Google Maps</button>
       <button class="share-action-btn" onclick="shareCalendar()">📅 Toevoegen aan kalender</button>
     </div>
   </div>
@@ -3089,6 +3089,7 @@ var I18N = {
     'toast.route_planned': "✅ Route gepland met {count} stops!",
     'toast.address_visible_in': "🔒 Volledig adres zichtbaar {when}",
     'toast.address_visible_soon': "binnenkort",
+    'share.addr_hidden': "Adres nog niet zichtbaar",
     'toast.rate_limit_wait': "Even wachten. Je kunt over {sec} seconden opnieuw publiceren.",
     'toast.search_radius': "Zoekradius: {km} km",
     'toast.map_type': "Kaarttype: {label}",
@@ -3658,6 +3659,7 @@ var I18N = {
     'toast.route_planned': "✅ Route planned with {count} stops!",
     'toast.address_visible_in': "🔒 Full address visible {when}",
     'toast.address_visible_soon': "soon",
+    'share.addr_hidden': "Address not yet visible",
     'toast.rate_limit_wait': "Please wait. You can publish again in {sec} seconds.",
     'toast.search_radius': "Search radius: {km} km",
     'toast.map_type': "Map type: {label}",
@@ -4227,6 +4229,7 @@ var I18N = {
     'toast.route_planned': "✅ Itinéraire planifié avec {count} arrêts !",
     'toast.address_visible_in': "🔒 Adresse complète visible {when}",
     'toast.address_visible_soon': "bientôt",
+    'share.addr_hidden': "Adresse pas encore visible",
     'toast.rate_limit_wait': "Patiente. Tu pourras publier à nouveau dans {sec} secondes.",
     'toast.search_radius': "Rayon de recherche : {km} km",
     'toast.map_type': "Type de carte : {label}",
@@ -4797,6 +4800,7 @@ var I18N = {
     'toast.route_planned': "✅ Route mit {count} Stopps geplant!",
     'toast.address_visible_in': "🔒 Vollständige Adresse sichtbar {when}",
     'toast.address_visible_soon': "bald",
+    'share.addr_hidden': "Adresse noch nicht sichtbar",
     'toast.rate_limit_wait': "Bitte warte. Du kannst in {sec} Sekunden wieder veröffentlichen.",
     'toast.search_radius': "Suchradius: {km} km",
     'toast.map_type': "Kartentyp: {label}",
@@ -7776,19 +7780,59 @@ function updateInterestUI(s) {
 // ══════════════════════════════════════════════════
 // SHARE
 // ══════════════════════════════════════════════════
+// ── Deel-helper: geeft het deelbare adres terug ──────────────────────────────
+// Wanneer het adres verborgen is (timer loopt nog), mag alleen de plaatsnaam
+// worden gedeeld — nooit de exacte straat, coördinaten of .ics-locatie.
+function _shareAddr(s) {
+  if (!s) return '';
+  if (s.address_hidden) {
+    // Geef alleen stad terug; haal die uit het adres of gebruik een fallback
+    var parts = (s.address || '').split(',');
+    var city = parts[parts.length - 1].trim();
+    return city || i18n('share.addr_hidden', 'Adres nog niet zichtbaar');
+  }
+  return s.address || '';
+}
+
 function detailShare() {
   var s = sales.find(function(x) { return x.id === detailSaleId; });
   if (!s) return;
+  var addrLine = s.address_hidden
+    ? '🔒 ' + i18n('share.addr_hidden', 'Adres nog niet zichtbaar')
+    : s.address;
   document.getElementById('share-title-text').textContent = s.title;
-  document.getElementById('share-sub-text').textContent = s.address + ' · ' + s.date;
+  document.getElementById('share-sub-text').textContent = addrLine + ' · ' + fmtDate(s.date);
   document.getElementById('share-link-text').textContent = 'yardigo.nl/v/' + s.id;
+  // Verberg Google Maps-knop wanneer adres nog verborgen is (coördinaten lekken anders het adres)
+  var gmBtn = document.getElementById('share-googlemaps-btn');
+  if (gmBtn) gmBtn.style.display = s.address_hidden ? 'none' : '';
   document.getElementById('shareOv').classList.add('open');
 }
 function closeShare() { document.getElementById('shareOv').classList.remove('open'); }
-function shareWhatsApp() { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s) window.open('https://wa.me/?text='+encodeURIComponent('Kijk eens bij '+s.title+'! '+s.address+' - yardigo.nl/v/'+s.id)); closeShare(); }
-function shareSMS()      { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s) window.open('sms:?body='+encodeURIComponent(s.title+' op '+s.address+' - yardigo.nl/v/'+s.id)); closeShare(); }
-function shareEmail()    { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s) window.open('mailto:?subject='+encodeURIComponent(s.title)+'&body='+encodeURIComponent(s.address+'\nyardigo.nl/v/'+s.id)); closeShare(); }
-function shareNative()   { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s && navigator.share) navigator.share({title:s.title,url:'https://yardigo.nl/v/'+s.id}); else copyShareLink(); closeShare(); }
+function shareWhatsApp() {
+  var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
+  var addr = _shareAddr(s);
+  window.open('https://wa.me/?text='+encodeURIComponent('Kijk eens bij '+s.title+'! '+addr+' - yardigo.nl/v/'+s.id));
+  closeShare();
+}
+function shareSMS() {
+  var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
+  var addr = _shareAddr(s);
+  window.open('sms:?body='+encodeURIComponent(s.title+' op '+addr+' - yardigo.nl/v/'+s.id));
+  closeShare();
+}
+function shareEmail() {
+  var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
+  var addr = _shareAddr(s);
+  window.open('mailto:?subject='+encodeURIComponent(s.title)+'&body='+encodeURIComponent(addr+'\nyardigo.nl/v/'+s.id));
+  closeShare();
+}
+function shareNative() {
+  var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
+  if (navigator.share) navigator.share({title:s.title, url:'https://yardigo.nl/v/'+s.id});
+  else copyShareLink();
+  closeShare();
+}
 function copyShareLink() {
   var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
   var link = 'https://yardigo.nl/v/' + s.id;
@@ -7801,15 +7845,32 @@ function copyShareLink() {
 function shareFacebook() {
   var s = sales.find(function(x) { return x.id === detailSaleId; });
   if (!s) return;
-  var pageUrl = encodeURIComponent(window.location.href.split('?')[0]);
-  var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + pageUrl + '&quote=' + encodeURIComponent(s.title + ': ' + s.address + ' op ' + fmtDate(s.date));
+  var addr = _shareAddr(s);
+  var pageUrl = encodeURIComponent('https://yardigo.nl/v/' + s.id);
+  var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + pageUrl + '&quote=' + encodeURIComponent(s.title + ': ' + addr + ' op ' + fmtDate(s.date));
   window.open(fbUrl, '_blank', 'width=600,height=400');
   closeShare();
 }
-function shareGoogleMaps() { var s = sales.find(function(x){return x.id===detailSaleId;}); if(s) window.open('https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng); closeShare(); }
+function shareGoogleMaps() {
+  var s = sales.find(function(x){return x.id===detailSaleId;});
+  if (!s) return;
+  // Blokkeer als adres nog verborgen is — coördinaten onthullen anders het exacte adres
+  if (s.address_hidden) {
+    var when = formatCountdownDetail(s.address_visible_at);
+    toast(i18n('toast.address_visible_in', '🔒 Volledig adres zichtbaar {when}').replace('{when}', when || i18n('toast.address_visible_soon', 'binnenkort')));
+    return;
+  }
+  window.open('https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng);
+  closeShare();
+}
 function shareCalendar() {
   var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
-  var d = s.date.replace(/-/g,''), ics = ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT','DTSTART:'+d+'T090000','DTEND:'+d+'T150000','SUMMARY:'+s.title,'LOCATION:'+s.address,'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  var addr = _shareAddr(s);
+  var d = s.date.replace(/-/g,'');
+  var ics = ['BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+    'DTSTART:'+d+'T090000','DTEND:'+d+'T150000',
+    'SUMMARY:'+s.title,'LOCATION:'+addr,
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download = 'yardigo-'+s.id+'.ics'; a.click();
   toast(i18n('toast.calendar_downloaded', '📅 Kalenderbestand gedownload!')); closeShare();
 }
