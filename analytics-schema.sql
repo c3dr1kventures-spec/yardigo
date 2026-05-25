@@ -241,19 +241,32 @@ BEGIN
   v_today := (now() AT TIME ZONE v_tz)::date;
 
   RETURN QUERY
-  WITH days AS (
-    -- Genereer datums in Amsterdam-tijd zodat de reeks consistent is
+  WITH
+  -- Genereer de datumreeks in Amsterdam-tijd (meest recente dag eerst, dan ASC sorteren)
+  days AS (
     SELECT (v_today - gs)::date AS d
     FROM generate_series(0, p_days - 1) AS gs
+  ),
+  -- Pre-filter page_views op de hele periode met een range-conditie zodat
+  -- de index op created_at wordt gebruikt. Vervolgens vertalen we elke
+  -- UTC-timestamp naar de lokale Amsterdam-datum voor de GROUP BY.
+  pv_local AS (
+    SELECT
+      (created_at AT TIME ZONE v_tz)::date AS local_day,
+      id,
+      session_id,
+      user_id
+    FROM public.page_views
+    WHERE created_at >= ((v_today - (p_days - 1))::timestamp AT TIME ZONE v_tz)
+      AND created_at <  ((v_today + 1)::timestamp AT TIME ZONE v_tz)
   )
   SELECT
     d.d AS day,
-    COALESCE(count(pv.id), 0)::bigint                  AS views,
-    COALESCE(count(DISTINCT pv.session_id), 0)::bigint AS unique_sessions,
-    COALESCE(count(DISTINCT pv.user_id), 0)::bigint    AS logged_in_users
+    COALESCE(count(pv.id),                 0)::bigint AS views,
+    COALESCE(count(DISTINCT pv.session_id),0)::bigint AS unique_sessions,
+    COALESCE(count(DISTINCT pv.user_id),   0)::bigint AS logged_in_users
   FROM days d
-  LEFT JOIN public.page_views pv
-         ON (pv.created_at AT TIME ZONE v_tz)::date = d.d
+  LEFT JOIN pv_local pv ON pv.local_day = d.d
   GROUP BY d.d
   ORDER BY d.d ASC;
 END;
