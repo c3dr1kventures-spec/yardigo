@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════
 -- YardiGo – Analytics schema (pageviews + admin-dashboard RPC's)
--- Versie: 1.0 · 18 april 2026
+-- Versie: 1.1 · 25 mei 2026 — tijdzone Europe/Amsterdam in alle RPC's
 --
 -- Doel:
 --   * Inzicht krijgen in hoeveel bezoekers de website/app gebruiken.
@@ -148,6 +148,9 @@ END $$;
 -- ──────────────────────────────────────────────────────────────
 
 -- 5a. Overzicht vandaag / gisteren / week / maand + groei
+-- TIJDZONE: alle datumvergelijkingen gebruiken 'Europe/Amsterdam' zodat
+-- bezoeken tussen middernacht en 02:00 AM lokale tijd correct worden
+-- geteld — ook als de Supabase-server op UTC draait.
 CREATE OR REPLACE FUNCTION public.analytics_summary()
 RETURNS TABLE (
   views_today          bigint,
@@ -167,28 +170,39 @@ AS $$
 DECLARE
   v_admin boolean;
   v_prev7 bigint;
+  v_tz    constant text := 'Europe/Amsterdam';
+  v_today date;
 BEGIN
   SELECT COALESCE(is_admin, false) INTO v_admin FROM public.profiles WHERE id = auth.uid();
   IF NOT COALESCE(v_admin, false) THEN RAISE EXCEPTION 'Not authorized'; END IF;
 
-  SELECT count(*) INTO views_today     FROM public.page_views WHERE created_at::date = current_date;
-  SELECT count(*) INTO views_yesterday FROM public.page_views WHERE created_at::date = current_date - 1;
-  SELECT count(*) INTO views_7d        FROM public.page_views WHERE created_at >= current_date - interval '6 days';
-  SELECT count(*) INTO views_30d       FROM public.page_views WHERE created_at >= current_date - interval '29 days';
+  -- "Vandaag" in Amsterdam-tijd (CET/CEST), niet UTC
+  v_today := (now() AT TIME ZONE v_tz)::date;
+
+  SELECT count(*) INTO views_today
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date = v_today;
+  SELECT count(*) INTO views_yesterday
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date = v_today - 1;
+  SELECT count(*) INTO views_7d
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 6;
+  SELECT count(*) INTO views_30d
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 29;
 
   SELECT count(DISTINCT session_id) INTO unique_sessions_7d
-    FROM public.page_views WHERE created_at >= current_date - interval '6 days';
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 6;
   SELECT count(DISTINCT session_id) INTO unique_sessions_30d
-    FROM public.page_views WHERE created_at >= current_date - interval '29 days';
+    FROM public.page_views WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 29;
 
-  SELECT count(*) INTO new_users_7d  FROM auth.users WHERE created_at >= current_date - interval '6 days';
-  SELECT count(*) INTO new_users_30d FROM auth.users WHERE created_at >= current_date - interval '29 days';
+  SELECT count(*) INTO new_users_7d
+    FROM auth.users WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 6;
+  SELECT count(*) INTO new_users_30d
+    FROM auth.users WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 29;
 
   -- Groei week-op-week: (afgelopen 7 dagen) vs (7 dagen daarvoor)
   SELECT count(*) INTO v_prev7
     FROM public.page_views
-    WHERE created_at >= current_date - interval '13 days'
-      AND created_at <  current_date - interval '6 days';
+    WHERE (created_at AT TIME ZONE v_tz)::date >= v_today - 13
+      AND (created_at AT TIME ZONE v_tz)::date <  v_today - 6;
   IF v_prev7 > 0 THEN
     growth_wow_pct := round(((views_7d - v_prev7)::numeric / v_prev7::numeric) * 100.0, 1);
   ELSE
@@ -203,6 +217,7 @@ REVOKE ALL ON FUNCTION public.analytics_summary() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.analytics_summary() TO authenticated;
 
 -- 5b. Bezoekers per dag (laatste N dagen) — voor grafiek
+-- TIJDZONE: consistent met analytics_summary; gebruikt 'Europe/Amsterdam'.
 CREATE OR REPLACE FUNCTION public.analytics_daily(p_days int DEFAULT 30)
 RETURNS TABLE (
   day             date,
@@ -216,24 +231,29 @@ SET search_path = public
 AS $$
 DECLARE
   v_admin boolean;
+  v_tz    constant text := 'Europe/Amsterdam';
+  v_today date;
 BEGIN
   SELECT COALESCE(is_admin, false) INTO v_admin FROM public.profiles WHERE id = auth.uid();
   IF NOT COALESCE(v_admin, false) THEN RAISE EXCEPTION 'Not authorized'; END IF;
 
-  p_days := GREATEST(1, LEAST(COALESCE(p_days, 30), 365));
+  p_days  := GREATEST(1, LEAST(COALESCE(p_days, 30), 365));
+  v_today := (now() AT TIME ZONE v_tz)::date;
 
   RETURN QUERY
   WITH days AS (
-    SELECT (current_date - (gs || ' days')::interval)::date AS d
+    -- Genereer datums in Amsterdam-tijd zodat de reeks consistent is
+    SELECT (v_today - gs)::date AS d
     FROM generate_series(0, p_days - 1) AS gs
   )
   SELECT
     d.d AS day,
-    COALESCE(count(pv.id), 0)::bigint AS views,
+    COALESCE(count(pv.id), 0)::bigint                  AS views,
     COALESCE(count(DISTINCT pv.session_id), 0)::bigint AS unique_sessions,
-    COALESCE(count(DISTINCT pv.user_id), 0)::bigint AS logged_in_users
+    COALESCE(count(DISTINCT pv.user_id), 0)::bigint    AS logged_in_users
   FROM days d
-  LEFT JOIN public.page_views pv ON pv.created_at::date = d.d
+  LEFT JOIN public.page_views pv
+         ON (pv.created_at AT TIME ZONE v_tz)::date = d.d
   GROUP BY d.d
   ORDER BY d.d ASC;
 END;
@@ -255,12 +275,15 @@ SET search_path = public
 AS $$
 DECLARE
   v_admin boolean;
+  v_tz    constant text := 'Europe/Amsterdam';
+  v_today date;
 BEGIN
   SELECT COALESCE(is_admin, false) INTO v_admin FROM public.profiles WHERE id = auth.uid();
   IF NOT COALESCE(v_admin, false) THEN RAISE EXCEPTION 'Not authorized'; END IF;
 
   p_days  := GREATEST(1, LEAST(COALESCE(p_days, 30), 365));
   p_limit := GREATEST(1, LEAST(COALESCE(p_limit, 10), 50));
+  v_today := (now() AT TIME ZONE v_tz)::date;
 
   RETURN QUERY
   SELECT
@@ -268,7 +291,7 @@ BEGIN
     count(*)::bigint                           AS views,
     count(DISTINCT pv.session_id)::bigint      AS unique_sessions
   FROM public.page_views pv
-  WHERE pv.created_at >= current_date - (p_days || ' days')::interval
+  WHERE (pv.created_at AT TIME ZONE v_tz)::date >= v_today - p_days
   GROUP BY pv.path
   ORDER BY views DESC
   LIMIT p_limit;
@@ -290,22 +313,26 @@ SET search_path = public
 AS $$
 DECLARE
   v_admin boolean;
+  v_tz    constant text := 'Europe/Amsterdam';
+  v_today date;
 BEGIN
   SELECT COALESCE(is_admin, false) INTO v_admin FROM public.profiles WHERE id = auth.uid();
   IF NOT COALESCE(v_admin, false) THEN RAISE EXCEPTION 'Not authorized'; END IF;
 
-  p_days := GREATEST(1, LEAST(COALESCE(p_days, 30), 365));
+  p_days  := GREATEST(1, LEAST(COALESCE(p_days, 30), 365));
+  v_today := (now() AT TIME ZONE v_tz)::date;
 
   RETURN QUERY
   WITH days AS (
-    SELECT (current_date - (gs || ' days')::interval)::date AS d
+    SELECT (v_today - gs)::date AS d
     FROM generate_series(0, p_days - 1) AS gs
   )
   SELECT
     d.d AS day,
     COALESCE(count(l.id), 0)::bigint AS count
   FROM days d
-  LEFT JOIN public.listings l ON l.created_at::date = d.d
+  LEFT JOIN public.listings l
+         ON (l.created_at AT TIME ZONE v_tz)::date = d.d
   GROUP BY d.d
   ORDER BY d.d ASC;
 END;

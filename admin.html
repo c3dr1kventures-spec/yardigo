@@ -80,8 +80,29 @@ body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);min
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 
 /* ── CHARTS ── */
-.bar-chart{display:flex;align-items:flex-end;gap:5px;height:100px;}
-.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:100px;overflow:visible;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;}
+
+/* Custom hover-tooltip op staafgrafiek */
+.bar-tip{
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--bark);color:white;font-size:10px;font-weight:600;
+  white-space:nowrap;padding:5px 9px;border-radius:7px;pointer-events:none;
+  opacity:0;transition:opacity .12s;z-index:30;line-height:1.5;text-align:center;
+  box-shadow:0 3px 10px rgba(44,36,22,.22);
+}
+.bar-tip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:var(--bark);
+}
+.bar-col:hover .bar-tip{opacity:1;}
+
+/* Dagelijkse detail-tabel */
+.an-tbl-scroll{overflow-y:auto;max-height:300px;}
+.an-tbl-scroll table{min-width:0;}
+.an-tbl-scroll th{font-size:9px;position:sticky;top:0;z-index:2;background:var(--bg);}
+.an-tbl-scroll td{font-size:12px;padding:7px 12px;}
+.an-tbl-today td{background:#FDF5EF !important;}
 .bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;transition:height .5s cubic-bezier(.4,0,.2,1);}
 .bar.primary{background:var(--terra);}
 .bar.secondary{background:var(--amber);opacity:.65;}
@@ -396,6 +417,13 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel" style="grid-column:1/-1">
           <div class="panel-title">Bezoekers per dag <span id="an-daily-range">laatste 30 dagen</span></div>
           <div class="bar-chart" id="an-daily-chart" style="height:140px"><div class="spinner"></div></div>
+          <!-- Dagelijks overzicht tabel (laatste 30 dagen, meest recent bovenaan) -->
+          <div id="an-daily-table-wrap" style="margin-top:16px;display:none">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Dagelijks overzicht</div>
+            <div class="table-wrap" style="border-radius:10px">
+              <div class="an-tbl-scroll"><div id="an-daily-table"></div></div>
+            </div>
+          </div>
         </div>
         <div class="panel">
           <div class="panel-title">Top bezochte pagina's <span>unieke sessies</span></div>
@@ -1204,28 +1232,70 @@ function renderAnalyticsSummary(r){
 }
 
 function renderAnalyticsDaily(rows){
-  var el = document.getElementById('an-daily-chart');
-  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen bezoekersdata.</div>'; return; }
+  var el       = document.getElementById('an-daily-chart');
+  var tblWrap  = document.getElementById('an-daily-table-wrap');
+  var tblEl    = document.getElementById('an-daily-table');
+  if (!rows.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:10px">Nog geen bezoekersdata.</div>';
+    if(tblWrap) tblWrap.style.display = 'none';
+    return;
+  }
   var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.views)||0; }));
-  // Toon max 30 labels; bij meer dagen elke 2e (bij 7d: altijd tonen)
+  // Toon max 30 labels; bij meer dagen elke 2e
   var showEvery = rows.length > 30 ? Math.ceil(rows.length/30) : 1;
   var todayStr = new Date().toISOString().split('T')[0];
+
+  // ── Staafgrafiek met gestylede tooltip ──
   el.innerHTML = rows.map(function(r, i){
     var v = Number(r.views)||0;
     var u = Number(r.unique_sessions)||0;
     var h = Math.max(4, Math.round((v/maxV)*110));
-    var day = new Date(r.day + 'T12:00:00'); // middaguur voorkomt tijdzone-verschuiving
-    var short = (day.getDate()) + '/' + (day.getMonth()+1);
-    var isToday = (String(r.day).slice(0,10) === todayStr);
-    // Label: bij vandaag altijd "Vandaag" tonen, anders datum
-    var lbl = isToday ? '<span style="font-weight:700;color:var(--terra)">Vandaag</span>'
-                      : (i % showEvery === 0 ? short : '');
-    return '<div class="bar-col" title="' + short + (isToday?' (vandaag)':'') + ': ' + v + ' views · ' + u + ' uniek">' +
+    var day = new Date(r.day + 'T12:00:00'); // middaguur voorkomt tijdzone-shift
+    var short    = day.getDate() + '/' + (day.getMonth()+1);
+    var fullDate = day.toLocaleDateString('nl-NL', {weekday:'short', day:'numeric', month:'long'});
+    var isToday  = (String(r.day).slice(0,10) === todayStr);
+    var tipLabel = isToday ? 'Vandaag' : fullDate;
+    var lbl = isToday
+      ? '<span style="font-weight:700;color:var(--terra)">Vandaag</span>'
+      : (i % showEvery === 0 ? short : '');
+    return '<div class="bar-col">' +
+             '<div class="bar-tip">' + escapeHtml(tipLabel) + '<br>' + v + ' bezoekers · ' + u + ' uniek</div>' +
              '<div class="bar-val" style="' + (v===0?'color:var(--muted)':'') + '">' + v + '</div>' +
-             '<div class="bar ' + (isToday?'primary':'secondary') + '" style="height:' + h + 'px' + (isToday?';opacity:1;background:var(--terra)':'') + '"></div>' +
+             '<div class="bar ' + (isToday?'primary':'secondary') + '" style="height:' + h + 'px' +
+               (isToday?';opacity:1;background:var(--terra)':'') + '"></div>' +
              '<div class="bar-label">' + lbl + '</div>' +
            '</div>';
   }).join('');
+
+  // ── Dagelijkse tabel: meest recente dag bovenaan ──
+  if(tblWrap && tblEl){
+    tblWrap.style.display = '';
+    var rev = rows.slice().reverse();
+    tblEl.innerHTML =
+      '<table>' +
+        '<thead><tr>' +
+          '<th>Datum</th>' +
+          '<th style="text-align:right">Bezoekers</th>' +
+          '<th style="text-align:right">Unieke sessies</th>' +
+        '</tr></thead>' +
+        '<tbody>' +
+        rev.map(function(r){
+          var v = Number(r.views)||0;
+          var u = Number(r.unique_sessions)||0;
+          var day = new Date(r.day + 'T12:00:00');
+          var isToday = (String(r.day).slice(0,10) === todayStr);
+          var dateStr = isToday
+            ? '<strong style="color:var(--terra)">Vandaag</strong>'
+            : day.toLocaleDateString('nl-NL', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+          return '<tr class="' + (isToday?'an-tbl-today':'') + '">' +
+            '<td>' + dateStr + '</td>' +
+            '<td style="text-align:right;font-weight:700">' + v + '</td>' +
+            '<td style="text-align:right;color:var(--muted)">' + u + '</td>' +
+            '</tr>';
+        }).join('') +
+        '</tbody>' +
+      '</table>';
+  }
 }
 
 function renderAnalyticsTopPaths(rows){
