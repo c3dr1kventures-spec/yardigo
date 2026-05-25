@@ -397,6 +397,13 @@ body.dark .yg-footer{border-top-color:var(--border);}
 /* ── LIST ── */
 .list-wrap{padding:12px;}
 .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted);}
+.cat-filter-row{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;-ms-overflow-style:none;white-space:nowrap;margin-bottom:2px;}
+.cat-filter-row::-webkit-scrollbar{display:none;}
+.cat-chip{flex-shrink:0;padding:5px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.cat-chip:hover{border-color:var(--forest);color:var(--forest);}
+.cat-chip.active{background:var(--forest);color:white;border-color:var(--forest);}
+body.dark .cat-chip{background:var(--bg2);border-color:var(--border);}
+body.dark .cat-chip.active{background:var(--forest);color:white;}
 .card{background:white;border-radius:14px;border:1.5px solid var(--border);margin-bottom:10px;overflow:hidden;display:flex;box-shadow:var(--shadow);}
 .card-thumb{width:80px;min-height:90px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;position:relative;cursor:pointer;}
 .card-thumb.particulier{background:var(--amber-light);}
@@ -1231,7 +1238,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="tab" onclick="sv('lijst',this)">📋 <span data-i18n="nav.list">Lijst</span></div>
   <div class="tab" onclick="sv('route',this)">🧭 <span data-i18n="nav.route">Route</span></div>
   <div class="tab" onclick="sv('mijn',this)">⭐ <span data-i18n="nav.mine">Mijn</span></div>
-  <div class="tab" onclick="sv('instellingen',this)">⚙️ <span data-i18n="nav.settings">Instellingen</span></div>
+  <div class="tab" onclick="sv('instellingen',this)" title="Instellingen">⚙️</div>
 </div>
 
 <!-- Views -->
@@ -1250,6 +1257,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div id="fb-zoom" style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:2px">
       <button onclick="fbZoom(1)" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:16px;cursor:pointer;line-height:1">+</button>
       <button onclick="fbZoom(-1)" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:16px;cursor:pointer;line-height:1">−</button>
+      <button id="fb-fs-btn" onclick="toggleMapFullscreen()" title="Volledig scherm" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:14px;cursor:pointer;line-height:1;margin-top:2px">⛶</button>
     </div>
   </div>
 </div>
@@ -1269,6 +1277,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
         </select>
       </div>
+    </div>
+    <!-- Categorie-filterchips -->
+    <div class="cat-filter-row" id="catFilterRow">
+      <button class="cat-chip active" data-cat="" onclick="filterByCat(null)" data-i18n="filter.all">Alle</button>
+      <button class="cat-chip" data-cat="👗 Kleding" onclick="filterByCat('👗 Kleding')" data-i18n="cat.kleding">👗 Kleding</button>
+      <button class="cat-chip" data-cat="🧸 Speelgoed" onclick="filterByCat('🧸 Speelgoed')" data-i18n="cat.speelgoed">🧸 Speelgoed</button>
+      <button class="cat-chip" data-cat="🛋️ Meubels" onclick="filterByCat('🛋️ Meubels')" data-i18n="cat.meubels">🛋️ Meubels</button>
+      <button class="cat-chip" data-cat="📚 Boeken" onclick="filterByCat('📚 Boeken')" data-i18n="cat.boeken">📚 Boeken</button>
+      <button class="cat-chip" data-cat="📱 Elektronica" onclick="filterByCat('📱 Elektronica')" data-i18n="cat.elektro">📱 Elektronica</button>
+      <button class="cat-chip" data-cat="🌿 Tuin" onclick="filterByCat('🌿 Tuin')" data-i18n="cat.tuin">🌿 Tuin</button>
+      <button class="cat-chip" data-cat="🎨 Kunst" onclick="filterByCat('🎨 Kunst')" data-i18n="cat.kunst">🎨 Kunst</button>
+      <button class="cat-chip" data-cat="🏺 Antiek & Vintage" onclick="filterByCat('🏺 Antiek & Vintage')" data-i18n="cat.antiek">🏺 Antiek</button>
+      <button class="cat-chip" data-cat="📦 Overig" onclick="filterByCat('📦 Overig')" data-i18n="cat.overig">📦 Overig</button>
     </div>
     <div id="cardList"></div>
   </div>
@@ -1992,6 +2013,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- ═══════════ FEEDBACK MODAL ═══════════ -->
 <div class="feedback-overlay" id="feedbackOv" onclick="if(event.target===this)closeFeedback()">
   <div class="feedback-card">
+    <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:16px">
+      <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
+      <div style="background:var(--bg2);border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:12px;line-height:1.5;color:var(--text)" data-i18n="feedback.cedrik">Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🦝</div>
+    </div>
     <h3 data-i18n="feedback.title">📬 Stuur feedback</h3>
     <p data-i18n="feedback.sub">Meld een bug, doe een suggestie, of neem contact op.</p>
     <div class="feedback-types">
@@ -2929,11 +2954,11 @@ var COUNTRY_DEFAULTS = {
 // Belgische bezoeker EN als optie ziet, of een Nederlander DE/FR. Alle
 // talen in de array MOETEN ook in I18N_LANGS staan.
 var LANG_AVAILABILITY_BY_COUNTRY = {
-  NL: ['nl', 'en'],
-  BE: ['nl', 'fr'],
+  NL: ['nl', 'en', 'fr'],
+  BE: ['nl', 'fr', 'en'],
   FR: ['fr', 'en'],
   DE: ['de', 'en'],
-  default: ['nl', 'en']
+  default: ['nl', 'en', 'fr']
 };
 
 // Geocoding-helpers per land. Worden gebruikt door publishSale en de
@@ -3197,6 +3222,7 @@ var I18N = {
     'cat.gereedschap': "🔧 Gereedschap",
     'cat.kunst': "🎨 Kunst & Deco",
     'cat.verzamel': "🔭 Verzamelaars",
+    'cat.overig': "📦 Overig",
     // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
     'edit.title': "Advertentie bewerken",
     'edit.label_title': "Titel",
@@ -3303,6 +3329,7 @@ var I18N = {
     'settings.language.title': 'Taal',
     'settings.language.sub': 'Nederlands, Engels (Duits en Frans binnenkort)',
     // Feedback modal
+    'feedback.cedrik': 'Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🦝',
     'feedback.title': '📬 Stuur feedback',
     'feedback.sub': 'Help ons YardiGo beter te maken.',
     'feedback.placeholder': 'Beschrijf het probleem of je idee…',
@@ -3767,6 +3794,7 @@ var I18N = {
     'cat.gereedschap': "🔧 Tools",
     'cat.kunst': "🎨 Art & Decor",
     'cat.verzamel': "🔭 Collectibles",
+    'cat.overig': "📦 Other",
     // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
     'edit.title': "Edit listing",
     'edit.label_title': "Title",
@@ -3873,6 +3901,7 @@ var I18N = {
     'settings.language.title': 'Language',
     'settings.language.sub': 'Dutch, English (German and French coming soon)',
     // Feedback modal
+    'feedback.cedrik': 'Hi! I\'m Cedrik. Your ideas help me make YardiGo even better! 🦝',
     'feedback.title': '📬 Send feedback',
     'feedback.sub': 'Help us improve YardiGo.',
     'feedback.placeholder': 'Describe the problem or your idea…',
@@ -4337,6 +4366,7 @@ var I18N = {
     'cat.gereedschap': "🔧 Outils",
     'cat.kunst': "🎨 Art & Déco",
     'cat.verzamel': "🔭 Collections",
+    'cat.overig': "📦 Divers",
     // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
     'edit.title': "Modifier l'annonce",
     'edit.label_title': "Titre",
@@ -4443,6 +4473,7 @@ var I18N = {
     'settings.language.title': 'Langue',
     'settings.language.sub': 'Néerlandais, anglais, français (allemand bientôt)',
     // Feedback modal
+    'feedback.cedrik': 'Salut ! Je suis Cedrik. Vos idées m\'aident à améliorer YardiGo encore plus ! 🦝',
     'feedback.title': '📬 Envoyer un avis',
     'feedback.sub': 'Aidez-nous à améliorer YardiGo.',
     'feedback.placeholder': 'Décrivez le problème ou votre idée…',
@@ -4908,6 +4939,7 @@ var I18N = {
     'cat.gereedschap': "🔧 Werkzeuge",
     'cat.kunst': "🎨 Kunst & Deko",
     'cat.verzamel': "🔭 Sammlerstücke",
+    'cat.overig': "📦 Sonstiges",
     // Restanten: edit-flow, bulk consent, empty states, delete-account, checkin
     'edit.title': "Anzeige bearbeiten",
     'edit.label_title': "Titel",
@@ -5012,6 +5044,7 @@ var I18N = {
     'settings.darkmode.sub': 'Switch between light and dark theme',
     'settings.language.title': 'Language',
     'settings.language.sub': 'Dutch, English, French (German coming soon)',
+    'feedback.cedrik': 'Hallo! Ich bin Cedrik. Deine Ideen helfen mir, YardiGo noch besser zu machen! 🦝',
     'feedback.title': '📬 Send feedback',
     'feedback.sub': 'Help us improve YardiGo.',
     'feedback.placeholder': 'Describe the problem or your idea…',
@@ -5413,6 +5446,7 @@ let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let activeRadiusKm = 9999;
+let activeCatFilter = null; // bijv. '👗 Kleding', null = alle categorieën
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
@@ -6241,6 +6275,30 @@ function initMap() {
     }).addTo(map);
     renderMarkers();
 
+    // Fullscreen-knop als Leaflet custom control (topleft, onder zoom)
+    (function() {
+      var FsCtrl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function() {
+          var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          var a = L.DomUtil.create('a', '', div);
+          a.id = 'btn-map-fs';
+          a.href = '#';
+          a.title = 'Volledig scherm';
+          a.innerHTML = '⛶';
+          a.style.fontSize = '16px';
+          a.style.lineHeight = '26px';
+          L.DomEvent.on(a, 'click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            L.DomEvent.preventDefault(e);
+            toggleMapFullscreen();
+          });
+          return div;
+        }
+      });
+      new FsCtrl().addTo(map);
+    })();
+
     // Foto swipe in kaartpopup
     map.on('popupopen', function(e) { if (typeof attachPopupSwipe === 'function') attachPopupSwipe(e.popup); });
 
@@ -6678,6 +6736,11 @@ function saleMatchesFilters(s) {
   // (organisator ziet ze wel in "Mijn verkopen")
   if (s.confirmation_status && s.confirmation_status !== 'confirmed') return false;
   if (activeFilters.size > 0 && !activeFilters.has(s.type)) return false;
+  // Categoriefilter: verkoop moet de geselecteerde categorie in zijn tags hebben
+  if (activeCatFilter) {
+    var hasCat = (s.tags || []).some(function(t) { return t === activeCatFilter; });
+    if (!hasCat) return false;
+  }
   if (activeDateFilter !== 'all') {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
     if (range && (sd < range[0] || sd > range[1])) return false;
@@ -6731,6 +6794,15 @@ function filterType(type) {
     el.classList.toggle('active', t === 'all' ? activeFilters.size === 0 : activeFilters.has(t));
   });
   applyFilters();
+}
+function filterByCat(cat) {
+  activeCatFilter = cat || null;
+  document.querySelectorAll('#catFilterRow .cat-chip').forEach(function(el) {
+    var chipCat = el.dataset.cat || null;
+    el.classList.toggle('active', chipCat === activeCatFilter);
+  });
+  renderList();
+  if (typeof renderMarkers === 'function') renderMarkers();
 }
 function openDD(e, name) {
   e.stopPropagation();
@@ -6872,7 +6944,7 @@ function renderList() {
       + '<button id="list-clear-btn" class="empty-btn primary">Alle filters wissen</button>'
       + '</div>';
     var clearBtn = document.getElementById('list-clear-btn');
-    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); pickR(9999); });
+    if (clearBtn) clearBtn.addEventListener('click', function() { filterType('all'); pickD('all','Alle'); pickR(9999); filterByCat(null); });
     list.querySelectorAll('.clr-type').forEach(function(el) { el.addEventListener('click', function() { filterType('all'); }); });
     list.querySelectorAll('.clr-date').forEach(function(el) { el.addEventListener('click', function() { pickD('all','Alle'); }); });
     list.querySelectorAll('.clr-dist').forEach(function(el) { el.addEventListener('click', function() { pickR(9999); }); });
@@ -6958,14 +7030,14 @@ function renderBvCard(bv) {
         + '<div class="card-title">' + escapeHtml(bv.info.title) + '</div>'
         + '<span class="type-chip buurt">' + escapeHtml(i18n('type.buurt', 'Rommelroute')) + '</span>'
       + '</div>'
-      + '<div class="card-addr">' + addrLine + (bvDate ? ' · ' + bvDate : '') + '</div>'
+      + '<div class="card-addr">' + addrLine + '</div>'
       + '<div class="card-tags">' + tags + '</div>'
       + '<div class="card-foot">'
         + addrCount
         + (confirmedNote ? ' ' + confirmedNote : '')
         + '<span style="flex:1"></span>'
-        + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">'
-          + (going ? '✓ Ik ga' : '🕐 ' + (organizer ? escapeHtml(organizer.from + '–' + organizer.till) : ''))
+        + '<span class="c-time buurt" style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">'
+          + (going ? '✓ Ik ga' : (bvDate ? '📅 ' + bvDate + ' · ' : '') + '🕐 ' + (organizer ? escapeHtml(organizer.from + '–' + organizer.till) : ''))
         + '</span>'
         + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + orgIdAttr + ')">' + (fav ? '⭐' : '☆') + '</button>'
       + '</div>'
@@ -11371,6 +11443,34 @@ function activateFallbackMap() {
   var fb = document.getElementById('map-fallback');
   if (fb) { fb.style.display = 'block'; fbRenderTiles(); }
 }
+
+// ──────────────────────────────────────────────────
+// FULLSCREEN KAART
+// ──────────────────────────────────────────────────
+function toggleMapFullscreen() {
+  var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  if (!isFs) {
+    var el = document.documentElement;
+    if (el.requestFullscreen) { el.requestFullscreen(); }
+    else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
+  } else {
+    if (document.exitFullscreen) { document.exitFullscreen(); }
+    else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+  }
+}
+function _syncFsBtn(isFs) {
+  ['btn-map-fs', 'fb-fs-btn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = isFs ? '⊡' : '⛶';
+  });
+}
+document.addEventListener('fullscreenchange', function() {
+  _syncFsBtn(!!(document.fullscreenElement || document.webkitFullscreenElement));
+});
+document.addEventListener('webkitfullscreenchange', function() {
+  _syncFsBtn(!!(document.fullscreenElement || document.webkitFullscreenElement));
+});
+
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
