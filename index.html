@@ -2361,6 +2361,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <button type="button" onclick="openBulkAdresModal()" style="flex:1;padding:10px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="publish.buurt.multi">📋 Meerdere tegelijk</button>
           </div>
           <div style="font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.5" data-i18n="publish.buurt.bulk_hint">Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.</div>
+          <!-- Handmatig aantal adressen: toont ~N op de kaart als er weinig ingevoerd zijn -->
+          <div style="margin-top:12px;padding:10px 12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div style="font-size:11px;font-weight:700;color:var(--text)" data-i18n="publish.buurt.count_q">🏘️ Hoeveel adressen doen er mee?</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px" data-i18n="publish.buurt.count_hint">Optioneel – automatisch geteld als je adressen invoert hierboven.</div>
+            </div>
+            <input type="number" id="bvDeclaredCount" min="1" max="999" placeholder="bijv. 12"
+              style="width:72px;border:1.5px solid var(--border);border-radius:8px;padding:6px 8px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:var(--text);background:var(--bg);text-align:center;outline:none;flex-shrink:0"
+              oninput="declaredBvCount=parseInt(this.value)||0"
+              onfocus="this.style.borderColor='var(--forest)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
         </div>
         <!-- Adres-zichtbaarheid (AVG-gevoelig) -->
         <div style="margin-bottom:16px;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px">
@@ -3506,6 +3517,8 @@ var I18N = {
     'publish.buurt.add_addr': '+ Adres toevoegen',
     'publish.buurt.multi': '📋 Meerdere tegelijk',
     'publish.buurt.bulk_hint': 'Heb je al een lijstje? Plak of upload een Excel-, CSV- of tekstbestand met 1 adres per regel.',
+    'publish.buurt.count_q': '🏘️ Hoeveel adressen doen er mee?',
+    'publish.buurt.count_hint': 'Optioneel – automatisch geteld als je adressen invoert hierboven.',
     'publish.photos.add': "📷 Foto's toevoegen",
     'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy-tip:</strong> zorg dat er géén gezichten van omstanders, kentekens, persoonlijke documenten of andere herleidbare details op je foto\'s staan. Je foto\'s worden openbaar zichtbaar.',
     // Evenement subtypes
@@ -4078,6 +4091,8 @@ var I18N = {
     'publish.buurt.add_addr': '+ Add address',
     'publish.buurt.multi': '📋 Multiple at once',
     'publish.buurt.bulk_hint': 'Got a list ready? Paste or upload an Excel, CSV or text file with one address per line.',
+    'publish.buurt.count_q': '🏘️ How many addresses are joining?',
+    'publish.buurt.count_hint': 'Optional – auto-counted when you add addresses above.',
     'publish.photos.add': '📷 Add photos',
     'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy tip:</strong> make sure no faces of bystanders, license plates, personal documents or other identifiable details are in your photos. Your photos will be publicly visible.',
     // Event subtypes
@@ -4650,6 +4665,8 @@ var I18N = {
     'publish.buurt.add_addr': '+ Ajouter une adresse',
     'publish.buurt.multi': '📋 Plusieurs à la fois',
     'publish.buurt.bulk_hint': 'Vous avez déjà une liste ? Collez ou téléchargez un fichier Excel, CSV ou texte avec une adresse par ligne.',
+    'publish.buurt.count_q': '🏘️ Combien d\'adresses participent ?',
+    'publish.buurt.count_hint': 'Optionnel – compté automatiquement si vous saisissez des adresses ci-dessus.',
     'publish.photos.add': '📷 Ajouter des photos',
     'publish.photos.privacy_tip': "<strong style=\"color:#C5612A\">⚠️ Conseil vie privée :</strong> assurez-vous qu'aucun visage de passants, plaque d'immatriculation, document personnel ou autre détail identifiable ne figure sur vos photos. Vos photos seront publiquement visibles.",
     // Sous-types d'événement
@@ -6466,6 +6483,10 @@ function buildBuurtClusterPopup(bv, cluster) {
   var listings = bv.listings || [];
   var count = cluster && cluster.getChildCount ? cluster.getChildCount() : listings.length;
   var totalInBv = listings.length;
+  // Gebruik declared_count als schatting wanneer meer adressen verwacht worden dan al bevestigd.
+  var declaredTot = bv.info && bv.info.declared_count;
+  var displayTot = (declaredTot && declaredTot > totalInBv) ? declaredTot : totalInBv;
+  var isEstTot   = !!(declaredTot && declaredTot > totalInBv);
   var confirmed = listings.filter(function(l) { return l.confirmation_status === 'confirmed'; }).length;
   // Titel: gebruik info.title indien aanwezig, anders "Buurtverkoop {city}".
   var rawCity = (bv.info && bv.info.city) || (listings[0] && prettyCity(listings[0].address)) || '';
@@ -6516,7 +6537,7 @@ function buildBuurtClusterPopup(bv, cluster) {
     + '<div style="font-size:11px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">🏘️ ' + i18n('type.buurt', 'Rommelroute') + '</div>'
     + '<div style="font-size:15px;font-weight:800;line-height:1.25;margin-bottom:6px">' + escapeHtml(title) + '</div>'
     + '<div style="font-size:12px;opacity:.95">' + count + ' huis' + (count === 1 ? '' : 'jes') + ' in deze cluster'
-    + (otherInGroup > 0 ? ' <span style="opacity:.75">· totaal ' + totalInBv + '</span>' : '')
+    + (otherInGroup > 0 ? ' <span style="opacity:.75">· totaal ' + (isEstTot ? '~' : '') + displayTot + '</span>' : (isEstTot ? ' <span style="opacity:.75">· ~' + displayTot + ' totaal</span>' : ''))
     + '</div>'
     + '</div>';
   var metaRows = '';
@@ -7010,19 +7031,19 @@ function renderBvCard(bv) {
         + '<img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
       + '</div>'
     : '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')">🏘️</div>';
-  var addrCount = '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'
-    + nTotal + ' ' + (nTotal === 1 ? 'adres' : 'adressen') + '</span>';
-  var confirmedNote = (nConfirmed > 0)
-    ? '<span style="font-size:10px;color:#3A6B4A;font-weight:600">✅ ' + nConfirmed + ' bevestigd</span>'
+  // Adrespil — gebruik declared_count als schatting wanneer meer dan werkelijk aanwezig.
+  var declaredCount = bv.info && bv.info.declared_count;
+  var displayCount = (declaredCount && declaredCount > nTotal) ? declaredCount : nTotal;
+  var isEst = !!(declaredCount && declaredCount > nTotal);
+  // Bevestigde adressen alleen tonen als niet alles bevestigd is (en geen schatting).
+  var confirmedPart = (!isEst && nConfirmed > 0 && nConfirmed < nTotal)
+    ? ' · ✅ ' + nConfirmed
     : '';
-  // Uitklapknop onderaan card-body
-  var toggleBtn = '<button type="button" onclick="event.stopPropagation();toggleBvCard(\'' + bvId + '\')" '
-    + 'style="background:none;border:none;color:var(--terra);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;gap:3px">'
-    + '<span id="bv-toggle-label-' + bvId + '">Bekijk alle adressen</span>'
-    + '<span class="bv-list-chevron" id="bv-chev-' + bvId + '" style="font-size:14px;line-height:1">›</span>'
-    + '</button>';
+  var addrPill = '<span style="background:#E07B39;color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'
+    + (isEst ? '~' : '') + displayCount + ' ' + (displayCount === 1 ? 'adres' : 'adressen') + confirmedPart
+    + '</span>';
+  // Compacte card: zelfde structuur als createListingCard (geen extra rij voor adressen-knop).
   return '<div class="card bv-list-card">'
-    // Hoofdrij: identieke layout als andere kaarten — foto + body, beide klikbaar = openDetail
     + '<div style="display:flex;align-items:stretch;width:100%">'
     + thumb
     + '<div class="card-body" onclick="openDetail(' + orgIdAttr + ')">'
@@ -7033,39 +7054,16 @@ function renderBvCard(bv) {
       + '<div class="card-addr">' + addrLine + '</div>'
       + '<div class="card-tags">' + tags + '</div>'
       + '<div class="card-foot">'
-        + addrCount
-        + (confirmedNote ? ' ' + confirmedNote : '')
+        + addrPill
         + '<span style="flex:1"></span>'
         + '<span class="c-time buurt" style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">'
           + (going ? '✓ Ik ga' : (bvDate ? '📅 ' + bvDate + ' · ' : '') + '🕐 ' + (organizer ? escapeHtml(organizer.from + '–' + organizer.till) : ''))
         + '</span>'
         + '<button class="c-fav" onclick="event.stopPropagation();toggleFav(' + orgIdAttr + ')">' + (fav ? '⭐' : '☆') + '</button>'
       + '</div>'
-      + '<div style="margin-top:6px">' + toggleBtn + '</div>'
     + '</div>'
     + '</div>'
-    // Uitklapbare adressenlijst
-    + '<div class="bv-list-addresses" id="bv-body-' + bvId + '" style="display:none">'
-    + '<div style="font-size:10px;font-weight:700;color:var(--muted);padding:8px 14px 4px;text-transform:uppercase;letter-spacing:.5px">Deelnemende adressen</div>'
-    + bv.listings.map(function(listing) {
-        var rowFav = favorites.has(listing.id);
-        var idAttr = typeof listing.id === 'string' ? "'" + escapeHtml(listing.id) + "'" : listing.id;
-        var addrShort = escapeHtml((listing.address || '').split(',')[0] || listing.address || '');
-        var rowTags = (listing.tags||[]).slice(0,1).map(function(tg) {
-          return '<span style="font-size:10px;color:var(--muted)">' + escapeHtml(tg) + '</span>';
-        }).join('');
-        return '<div class="bv-addr-row" id="bv-addr-' + escapeHtml(listing.id) + '" onclick="openDetail(' + idAttr + ')">'
-          + '<div style="width:8px;height:8px;border-radius:50%;background:#E07B39;flex-shrink:0;margin-top:2px"></div>'
-          + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:13px;font-weight:600;color:var(--text)">' + addrShort + '</div>'
-          + '<div style="display:flex;gap:6px;margin-top:2px">' + rowTags + '</div>'
-          + '</div>'
-          + '<button class="bv-fav-btn" onclick="event.stopPropagation();toggleFav(' + idAttr + ')" title="Favoriet / route">'
-          + (rowFav ? '⭐' : '☆') + '</button>'
-          + '</div>';
-      }).join('')
-    + '</div>'
-    + '</div>';
+  + '</div>';
 }
 
 function toggleBvCard(bvId) {
@@ -7975,6 +7973,7 @@ function guestRegister() { closeGuestGate(); closeDetail(); document.getElementB
 // ADD FORM
 // ══════════════════════════════════════════════════
 var buurtAdressen = []; // array of {addr, pc, label, email, preconsent} for buurtverkoop
+var declaredBvCount = 0; // handmatig ingevoerd aantal adressen voor buurtverkoop (0 = niet opgegeven)
 
 // ── Bulk-toestemming state ─────────────────────────────────
 // bulkConsentDeclared = true zodra de organisator via de pop-up bevestigd heeft
@@ -8466,8 +8465,10 @@ function resetAddForm() {
   var pg = document.getElementById('photoGrid'); if (pg) pg.innerHTML = '';
   var pc = document.getElementById('photoCount');
   if (pc) pc.innerHTML = '<span style="color:#E07B39;font-weight:600">⚠️ Minimaal 1 foto vereist</span> · 0/10';
-  // Reset buurt adressen list
+  // Reset buurt adressen list + handmatig aantal
   var bl = document.getElementById('buurt-adressen-list'); if (bl) bl.innerHTML = '';
+  declaredBvCount = 0;
+  var bvCntEl = document.getElementById('bvDeclaredCount'); if (bvCntEl) bvCntEl.value = '';
   // Reset plattegrond
   addFloorplanFile = null;
   var fpFile = document.getElementById('add-floorplan-file'); if (fpFile) fpFile.value = '';
@@ -10021,7 +10022,8 @@ async function publishSale() {
           date: dateVal, from: fromVal, till: tillVal,
           tags: tagList, interested: 0, photos: publicPhotoUrls.slice(),
           neighborhood_sale_id: bvId,
-          neighborhood_sale: { id: bvId, title: title.value.trim(), date: dateVal },
+          neighborhood_sale: Object.assign({ id: bvId, title: title.value.trim(), date: dateVal },
+            (declaredBvCount > 0) ? { declared_count: declaredBvCount } : {}),
           desc: descVal,
           user_email: currentUser.email,
           user_id: currentUserId || '',
