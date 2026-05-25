@@ -5220,7 +5220,14 @@ document.addEventListener('click', function(e){
   if (!picker.contains(e.target)) closeLangMenu();
 });
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') closeLangMenu();
+  if (e.key === 'Escape') {
+    closeLangMenu();
+    // Sluit alle open overlays via Escape (UX-standaard)
+    if (document.getElementById('detailOv')?.classList.contains('open')) { closeDetail(); return; }
+    if (document.getElementById('loginOv')?.classList.contains('open')) { closeLogin(); return; }
+    if (document.getElementById('guestGateOv')?.classList.contains('open')) { closeGuestGate(); return; }
+    if (document.getElementById('reportOv')?.classList.contains('open')) { document.getElementById('reportOv').classList.remove('open'); return; }
+  }
 });
 
 // ──────────────────────────────────────────────────────────────
