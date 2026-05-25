@@ -2015,7 +2015,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div class="feedback-card">
     <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:16px">
       <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
-      <div style="background:var(--bg2);border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:12px;line-height:1.5;color:var(--text)" data-i18n="feedback.cedrik">Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🦝</div>
+      <div id="cedrik-feedback-bubble" style="background:var(--bg2);border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:12px;line-height:1.5;color:var(--text)">Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🦝</div>
     </div>
     <h3 data-i18n="feedback.title">📬 Stuur feedback</h3>
     <p data-i18n="feedback.sub">Meld een bug, doe een suggestie, of neem contact op.</p>
@@ -3341,6 +3341,9 @@ var I18N = {
     'settings.language.sub': 'Nederlands, Engels (Duits en Frans binnenkort)',
     // Feedback modal
     'feedback.cedrik': 'Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🦝',
+    'feedback.cedrik.bug': 'Au! Een bug gevonden? Beschrijf wat er misgaat – dan lossen we het zo snel mogelijk op! 🐛',
+    'feedback.cedrik.suggestie': 'Hoi! Ik ben Cedrik. Jouw ideeën helpen mij YardiGo nóg beter te maken! 🎯',
+    'feedback.cedrik.contact': 'Hoi! Heb je een vraag of wil je gewoon even iets kwijt? Ik geef je bericht door! 📬',
     'feedback.title': '📬 Stuur feedback',
     'feedback.sub': 'Help ons YardiGo beter te maken.',
     'feedback.placeholder': 'Beschrijf het probleem of je idee…',
@@ -3915,6 +3918,9 @@ var I18N = {
     'settings.language.sub': 'Dutch, English (German and French coming soon)',
     // Feedback modal
     'feedback.cedrik': 'Hi! I\'m Cedrik. Your ideas help me make YardiGo even better! 🦝',
+    'feedback.cedrik.bug': 'Ouch! Found a bug? Describe what goes wrong and we\'ll fix it asap! 🐛',
+    'feedback.cedrik.suggestie': 'Hi! I\'m Cedrik. Your ideas help me make YardiGo even better! 🎯',
+    'feedback.cedrik.contact': 'Hi! Got a question or just want to say something? I\'ll pass it on! 📬',
     'feedback.title': '📬 Send feedback',
     'feedback.sub': 'Help us improve YardiGo.',
     'feedback.placeholder': 'Describe the problem or your idea…',
@@ -4489,6 +4495,9 @@ var I18N = {
     'settings.language.sub': 'Néerlandais, anglais, français (allemand bientôt)',
     // Feedback modal
     'feedback.cedrik': 'Salut ! Je suis Cedrik. Vos idées m\'aident à améliorer YardiGo encore plus ! 🦝',
+    'feedback.cedrik.bug': 'Aïe ! Vous avez trouvé un bug ? Décrivez ce qui ne va pas et on le règle au plus vite ! 🐛',
+    'feedback.cedrik.suggestie': 'Salut ! Je suis Cedrik. Vos idées m\'aident à améliorer YardiGo encore plus ! 🎯',
+    'feedback.cedrik.contact': 'Salut ! Vous avez une question ou quelque chose à dire ? Je transmets votre message ! 📬',
     'feedback.title': '📬 Envoyer un avis',
     'feedback.sub': 'Aidez-nous à améliorer YardiGo.',
     'feedback.placeholder': 'Décrivez le problème ou votre idée…',
@@ -5062,6 +5071,9 @@ var I18N = {
     'settings.language.title': 'Language',
     'settings.language.sub': 'Dutch, English, French (German coming soon)',
     'feedback.cedrik': 'Hallo! Ich bin Cedrik. Deine Ideen helfen mir, YardiGo noch besser zu machen! 🦝',
+    'feedback.cedrik.bug': 'Aua! Einen Fehler gefunden? Beschreib was passiert – wir kümmern uns sofort darum! 🐛',
+    'feedback.cedrik.suggestie': 'Hallo! Ich bin Cedrik. Deine Ideen helfen mir, YardiGo noch besser zu machen! 🎯',
+    'feedback.cedrik.contact': 'Hallo! Hast du eine Frage oder möchtest etwas mitteilen? Ich leite es weiter! 📬',
     'feedback.title': '📬 Send feedback',
     'feedback.sub': 'Help us improve YardiGo.',
     'feedback.placeholder': 'Describe the problem or your idea…',
@@ -11755,15 +11767,23 @@ function openFeedback() {
   document.querySelectorAll('.ftype').forEach(function(b){ b.classList.remove('active'); });
   document.querySelectorAll('.ftype')[0].classList.add('active');
   currentFtype = 'Bug';
+  _setCedrikFeedbackText('Bug');
   document.getElementById('feedbackOv').classList.add('open');
 }
 function closeFeedback() {
   document.getElementById('feedbackOv').classList.remove('open');
 }
+function _setCedrikFeedbackText(type) {
+  var keyMap = { Bug: 'feedback.cedrik.bug', Suggestie: 'feedback.cedrik.suggestie', Contact: 'feedback.cedrik.contact' };
+  var key = keyMap[type] || 'feedback.cedrik.suggestie';
+  var el = document.getElementById('cedrik-feedback-bubble');
+  if (el) el.textContent = i18n(key, el.textContent);
+}
 function selectFtype(btn, type) {
   document.querySelectorAll('.ftype').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   currentFtype = type;
+  _setCedrikFeedbackText(type);
 }
 function sendFeedback() {
   var msg = document.getElementById('feedbackMsg').value.trim();
