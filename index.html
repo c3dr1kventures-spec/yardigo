@@ -2233,7 +2233,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Cedrik – Stap 0: wuivend -->
         <div class="cedrik-bubble" style="margin-bottom:12px">
           <img src="cedrik-ob-s1.png" alt="Cedrik" style="width:72px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.15))">
-          <div class="cedrik-speech" data-i18n="publish.cedrik.s0">Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!</div>
+          <div class="cedrik-speech" id="publish-cedrik-bubble">Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div class="type-opt active" id="to-particulier" onclick="selType('particulier')">🏠 <span data-i18n="publish.type.particulier">Opritverkoop: eigen spullen</span></div>
@@ -3381,6 +3381,9 @@ var I18N = {
     'publish.s3.title': "Foto's",
     'publish.photos.nudge': "Foto's geven bezoekers een idee van wat je verkoopt, zodat de <strong>juiste mensen</strong> langskomen.",
     'publish.cedrik.s0': 'Welkom! Kies het type dat het beste past bij jouw verkoop. Opritverkoop is het meest gekozen!',
+    'publish.cedrik.particulier': 'Super! Bij een opritverkoop verkoop jij je eigen spullen thuis. Foto\'s erbij = meer bezoekers! 📸',
+    'publish.cedrik.buurt': 'Een rommelroute met meerdere huizen, leuk! Zorg voor een goede beschrijving zodat mensen weten wat ze kunnen verwachten. 🗺️',
+    'publish.cedrik.evenement': 'Een evenement plaatsen! Denk aan een duidelijke omschrijving en het juiste type, dan vinden de juiste mensen jou. 🎪',
     'publish.cedrik.s1': 'Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!',
     'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt, niet je exacte adres.',
     'publish.cedrik.s3': "Bijna klaar! Voeg je mooiste spullen in beeld, of sla over als je liever geen foto's deelt.",
@@ -3958,6 +3961,9 @@ var I18N = {
     'publish.s3.title': 'Photos',
     'publish.photos.nudge': "Photos give visitors an idea of what you're selling, so the <strong>right people</strong> show up.",
     'publish.cedrik.s0': 'Welcome! Choose the type that fits your sale best. Driveway sale is the most popular!',
+    'publish.cedrik.particulier': 'Great! A driveway sale is perfect for selling your own stuff at home. Add photos for more visitors! 📸',
+    'publish.cedrik.buurt': 'A neighbourhood trail with multiple houses — fun! Write a good description so people know what to expect. 🗺️',
+    'publish.cedrik.evenement': 'Posting an event! A clear description and the right type will help the right people find you. 🎪',
     'publish.cedrik.s1': 'Give your sale a catchy title and clear date. The more info, the more visitors!',
     'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood, not your exact address.',
     'publish.cedrik.s3': "Almost done! Show off your best items, or skip if you'd rather not share photos.",
@@ -4535,6 +4541,9 @@ var I18N = {
     'publish.s3.title': 'Photos',
     'publish.photos.nudge': "Les photos donnent aux visiteurs une idée de ce que vous vendez, et les <strong>bonnes personnes</strong> viendront.",
     'publish.cedrik.s0': 'Bienvenue ! Choisissez le type qui correspond le mieux à votre vente. La vente sur allée est la plus populaire !',
+    'publish.cedrik.particulier': 'Super ! Une vente sur allée, c\'est parfait pour vendre vos affaires chez vous. Ajoutez des photos pour plus de visiteurs ! 📸',
+    'publish.cedrik.buurt': 'Un circuit de brocante avec plusieurs maisons — génial ! Écrivez une bonne description pour que les gens sachent à quoi s\'attendre. 🗺️',
+    'publish.cedrik.evenement': 'Publier un événement ! Une description claire et le bon type aideront les bonnes personnes à vous trouver. 🎪',
     'publish.cedrik.s1': 'Donnez un titre accrocheur et une date claire. Plus d\'infos = plus de visiteurs !',
     'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord votre quartier, pas votre adresse exacte.',
     'publish.cedrik.s3': "Presque fini ! Mettez vos plus belles affaires en image, ou ignorez si vous préférez.",
@@ -5107,6 +5116,9 @@ var I18N = {
     'publish.s3.title': 'Photos',
     'publish.photos.nudge': "Fotos zeigen Besuchern, was du verkaufst, damit die <strong>richtigen Leute</strong> vorbeikommen.",
     'publish.cedrik.s0': 'Willkommen! Wähle den Typ, der am besten zu deinem Verkauf passt. Hofverkauf ist am beliebtesten!',
+    'publish.cedrik.particulier': 'Super! Bei einem Hofverkauf verkaufst du deine eigenen Sachen zu Hause. Mit Fotos kommen mehr Besucher! 📸',
+    'publish.cedrik.buurt': 'Eine Trödelroute mit mehreren Häusern – toll! Eine gute Beschreibung hilft den Leuten zu wissen, was sie erwartet. 🗺️',
+    'publish.cedrik.evenement': 'Ein Event veröffentlichen! Eine klare Beschreibung und der richtige Typ helfen den richtigen Leuten, dich zu finden. 🎪',
     'publish.cedrik.s1': 'Gib deinem Verkauf einen einprägsamen Titel und ein klares Datum. Mehr Infos = mehr Besucher!',
     'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel, nicht deine genaue Adresse.',
     'publish.cedrik.s3': 'Fast fertig! Zeig deine schönsten Stücke, oder überspring es, wenn du keine Fotos teilen möchtest.',
@@ -8516,6 +8528,8 @@ function resetAddForm() {
   if (pub) pub.style.display = 'none';
   // Buurt vs single view
   updateStep2View();
+  // Reset Cedrik publish bubble naar welkomsttekst
+  _setCedrikPublishText(null);
 }
 
 function updateStep2View() {
@@ -8581,6 +8595,7 @@ function selType(t) {
   }
   updateTagsForType(t);
   updateStep2View();
+  _setCedrikPublishText(t);
   // Voeg automatisch eerste adresrij toe bij buurtverkoop
   if (t === 'buurt' && buurtAdressen.length === 0) {
     addBuurtAdres();
@@ -11777,6 +11792,12 @@ function _setCedrikFeedbackText(type) {
   var keyMap = { Bug: 'feedback.cedrik.bug', Suggestie: 'feedback.cedrik.suggestie', Contact: 'feedback.cedrik.contact' };
   var key = keyMap[type] || 'feedback.cedrik.suggestie';
   var el = document.getElementById('cedrik-feedback-bubble');
+  if (el) el.textContent = i18n(key, el.textContent);
+}
+function _setCedrikPublishText(type) {
+  var keyMap = { particulier: 'publish.cedrik.particulier', buurt: 'publish.cedrik.buurt', evenement: 'publish.cedrik.evenement' };
+  var key = keyMap[type] || 'publish.cedrik.s0';
+  var el = document.getElementById('publish-cedrik-bubble');
   if (el) el.textContent = i18n(key, el.textContent);
 }
 function selectFtype(btn, type) {
