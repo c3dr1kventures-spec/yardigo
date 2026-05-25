@@ -1778,7 +1778,7 @@ async function adminDeletePhoto(index){
   var m=url.match(/\/storage\/v1\/object\/public\/listings\/(.+)$/);
   if(m){try{await sb.storage.from('listings').remove([decodeURIComponent(m[1])]);}catch(e){console.warn(e);}}
   photos.splice(index,1);
-  var{error}=await sb.from('listings').update({photos:photos}).eq('id',currentListingId);
+  var{error}=await sb.from('listings').update({images:photos}).eq('id',currentListingId);
   if(error){toast('❌ '+error.message);return;}
   l.photos=photos;l.images=photos;
   renderAdminPhotoStrip();
@@ -1821,7 +1821,7 @@ async function adminAddPhoto(input){
   input.value='';
   if(!newUrls.length)return;
   var updatedPhotos=currentPhotos.concat(newUrls);
-  var{error}=await sb.from('listings').update({photos:updatedPhotos}).eq('id',currentListingId);
+  var{error}=await sb.from('listings').update({images:updatedPhotos}).eq('id',currentListingId);
   if(error){toast('❌ '+error.message);return;}
   l.photos=updatedPhotos;l.images=updatedPhotos;
   renderAdminPhotoStrip();
@@ -2081,8 +2081,7 @@ async function removePhoto(listingId,photoIdx){
   if(!l)return;
   var photos=(l.images||l.photos||[]).slice();
   photos.splice(photoIdx,1);
-  var field=l.images?'images':'photos';
-  var update={}; update[field]=photos;
+  var update={images:photos};
   var{error}=await sb.from('listings').update(update).eq('id',listingId);
   if(error){toast('❌ '+error.message);return;}
   allListings=allListings.map(function(x){return String(x.id)===String(listingId)?Object.assign({},x,update):x;});

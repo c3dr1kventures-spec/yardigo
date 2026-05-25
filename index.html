@@ -11787,9 +11787,12 @@ async function deleteEditPhoto(index) {
     try { await sbClient.storage.from('listings').remove([decodeURIComponent(m[1])]); } catch(e) { console.warn('storage remove:', e); }
   }
   s.photos = s.photos.filter(function(_, i) { return i !== index; });
-  try {
-    await sbClient.from('listings').update({ photos: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
-  } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); console.error(e); return; }
+  var delRes = await sbClient.from('listings').update({ images: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
+  if (delRes.error) {
+    toast('❌ Fout bij opslaan: ' + delRes.error.message);
+    logError(delRes.error.message, { action: 'delete_edit_photo_save' });
+    return;
+  }
   renderEditPhotos();
   renderList(); if (typeof renderMarkers === 'function') renderMarkers();
   toast('🗑️ Foto verwijderd');
@@ -11826,10 +11829,13 @@ async function handleEditPhotos(input) {
   input.value = '';
   if (!newUrls.length) return;
   s.photos = currentPhotos.concat(newUrls);
-  try {
-    await sbClient.from('listings').update({ photos: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
-    toast('✓ ' + newUrls.length + ' foto' + (newUrls.length > 1 ? '\'s' : '') + ' toegevoegd');
-  } catch(e) { toast(i18n('toast.save_error', 'Fout bij opslaan')); console.error(e); return; }
+  var saveRes = await sbClient.from('listings').update({ images: s.photos }).eq('id', s.id).eq('user_id', currentUser.id);
+  if (saveRes.error) {
+    toast('❌ Foto\'s geüpload maar niet opgeslagen: ' + saveRes.error.message);
+    logError(saveRes.error.message, { action: 'edit_photo_save' });
+    return;
+  }
+  toast('✓ ' + newUrls.length + ' foto' + (newUrls.length > 1 ? '\'s' : '') + ' toegevoegd');
   renderEditPhotos();
   renderList(); if (typeof renderMarkers === 'function') renderMarkers();
 }
