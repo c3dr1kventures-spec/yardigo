@@ -393,11 +393,6 @@ body.dark .yg-footer{border-top-color:var(--border);}
 
 /* ── MAP ── */
 #map{height:calc(100svh - 230px);min-height:280px;width:100%;}
-/* Fullscreen-modus: verberg alle app-chrome, geef kaart 100svh */
-body.map-fs .filter-bar,body.map-fs .type-row,body.map-fs .tab-row,body.map-fs .bnav{display:none!important;}
-body.map-fs #map{height:100svh!important;}
-body.map-fs #btn-map-fs{background:rgba(255,255,255,.9);}
-body.map-fs #fb-fs-btn{background:rgba(255,255,255,.9);}
 
 /* ── LIST ── */
 .list-wrap{padding:12px;}
@@ -1262,7 +1257,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div id="fb-zoom" style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:2px">
       <button onclick="fbZoom(1)" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:16px;cursor:pointer;line-height:1">+</button>
       <button onclick="fbZoom(-1)" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:16px;cursor:pointer;line-height:1">−</button>
-      <button id="fb-fs-btn" onclick="toggleMapFullscreen()" title="Volledig scherm" style="width:28px;height:28px;border:1px solid #ccc;border-radius:4px;background:white;font-size:14px;cursor:pointer;line-height:1;margin-top:2px">⛶</button>
     </div>
   </div>
 </div>
@@ -6351,29 +6345,6 @@ function initMap() {
     }).addTo(map);
     renderMarkers();
 
-    // Fullscreen-knop als Leaflet custom control (topleft, onder zoom)
-    (function() {
-      var FsCtrl = L.Control.extend({
-        options: { position: 'topleft' },
-        onAdd: function() {
-          var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-          var a = L.DomUtil.create('a', '', div);
-          a.id = 'btn-map-fs';
-          a.href = '#';
-          a.title = 'Volledig scherm';
-          a.innerHTML = '⛶';
-          a.style.fontSize = '16px';
-          a.style.lineHeight = '26px';
-          L.DomEvent.on(a, 'click', function(e) {
-            L.DomEvent.stopPropagation(e);
-            L.DomEvent.preventDefault(e);
-            toggleMapFullscreen();
-          });
-          return div;
-        }
-      });
-      new FsCtrl().addTo(map);
-    })();
 
     // Foto swipe in kaartpopup
     map.on('popupopen', function(e) { if (typeof attachPopupSwipe === 'function') attachPopupSwipe(e.popup); });
@@ -11446,25 +11417,6 @@ function activateFallbackMap() {
   if (fb) { fb.style.display = 'block'; fbRenderTiles(); }
 }
 
-// ──────────────────────────────────────────────────
-// FULLSCREEN KAART (CSS-gebaseerd, werkt op iOS/Android/desktop)
-// ──────────────────────────────────────────────────
-function toggleMapFullscreen() {
-  var isFs = document.body.classList.toggle('map-fs');
-  _syncFsBtn(isFs);
-  // Geef Leaflet een tick om de nieuwe afmetingen te verwerken
-  setTimeout(function() {
-    if (typeof map !== 'undefined' && map && map.invalidateSize) {
-      map.invalidateSize();
-    }
-  }, 50);
-}
-function _syncFsBtn(isFs) {
-  ['btn-map-fs', 'fb-fs-btn'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.innerHTML = isFs ? '⊡' : '⛶';
-  });
-}
 
 // ══════════════════════════════════════════════════
 // INIT
@@ -12418,7 +12370,8 @@ function clampAvatarOffset() {
     var pt = e.touches ? e.touches[0] : e;
     _avatarCrop.lastX = pt.clientX;
     _avatarCrop.lastY = pt.clientY;
-    e.preventDefault();
+    // Geen e.preventDefault() nodig: touch-action:none op #avatarCropStage
+    // zorgt ervoor dat de browser zelf al geen scroll/zoom start.
   }
   function onMove(e) {
     if (!_avatarCrop.dragging || !_avatarCrop.img) return;
@@ -12431,15 +12384,18 @@ function clampAvatarOffset() {
     _avatarCrop.offsetY += dy;
     clampAvatarOffset();
     drawAvatarCrop();
-    e.preventDefault();
+    // Geen e.preventDefault() nodig: touch-action:none op stage doet dit al.
   }
   function onUp() { _avatarCrop.dragging = false; }
 
   document.addEventListener('mousedown', onDown);
   document.addEventListener('mousemove', onMove);
   document.addEventListener('mouseup', onUp);
-  document.addEventListener('touchstart', onDown, { passive: false });
-  document.addEventListener('touchmove', onMove, { passive: false });
+  // passive:true zodat de browser Leaflet-kaartpanning niet hoeft te blokkeren
+  // terwijl hij wacht op deze handlers. touch-action:none op #avatarCropStage
+  // garandeert dat slepen in de crop-stage correct werkt zonder preventDefault.
+  document.addEventListener('touchstart', onDown, { passive: true });
+  document.addEventListener('touchmove', onMove, { passive: true });
   document.addEventListener('touchend', onUp);
 })();
 
