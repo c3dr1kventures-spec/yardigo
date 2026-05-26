@@ -393,6 +393,11 @@ body.dark .yg-footer{border-top-color:var(--border);}
 
 /* ── MAP ── */
 #map{height:calc(100svh - 230px);min-height:280px;width:100%;}
+/* Fullscreen-modus: verberg alle app-chrome, geef kaart 100svh */
+body.map-fs .filter-bar,body.map-fs .type-row,body.map-fs .tab-row,body.map-fs .bnav{display:none!important;}
+body.map-fs #map{height:100svh!important;}
+body.map-fs #btn-map-fs{background:rgba(255,255,255,.9);}
+body.map-fs #fb-fs-btn{background:rgba(255,255,255,.9);}
 
 /* ── LIST ── */
 .list-wrap{padding:12px;}
@@ -1265,11 +1270,22 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <div class="view" id="view-lijst">
   <div class="list-wrap">
-    <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <span id="lcount">0 gevonden</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="font-size:11px;color:var(--muted);font-weight:600" data-i18n="list.sort_by">Sorteer op:</span>
-        <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none">
+    <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+      <span id="lcount" style="flex-shrink:0;white-space:nowrap">0 gevonden</span>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <select id="catSelect" onchange="filterByCat(this.value||null)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:110px">
+          <option value="" data-i18n="filter.all">Alles</option>
+          <option value="👗 Kleding" data-i18n="cat.kleding">👗 Kleding</option>
+          <option value="🧸 Speelgoed" data-i18n="cat.speelgoed">🧸 Speelgoed</option>
+          <option value="🛋️ Meubels" data-i18n="cat.meubels">🛋️ Meubels</option>
+          <option value="📚 Boeken" data-i18n="cat.boeken">📚 Boeken</option>
+          <option value="📱 Elektronica" data-i18n="cat.elektro">📱 Elektronica</option>
+          <option value="🌿 Tuin" data-i18n="cat.tuin">🌿 Tuin</option>
+          <option value="🎨 Kunst" data-i18n="cat.kunst">🎨 Kunst</option>
+          <option value="🏺 Antiek & Vintage" data-i18n="cat.antiek">🏺 Antiek</option>
+          <option value="📦 Overig" data-i18n="cat.overig">📦 Overig</option>
+        </select>
+        <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:120px">
           <option value="newest" data-i18n="list.sort.newest">🆕 Nieuwste eerst</option>
           <option value="date-asc" data-i18n="list.sort.date_asc" selected>📅 Op datum</option>
           <option value="date-desc" data-i18n="list.sort.date_desc">📅 Laatste eerst</option>
@@ -1277,19 +1293,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
         </select>
       </div>
-    </div>
-    <!-- Categorie-filterchips -->
-    <div class="cat-filter-row" id="catFilterRow">
-      <button class="cat-chip active" data-cat="" onclick="filterByCat(null)" data-i18n="filter.all">Alle</button>
-      <button class="cat-chip" data-cat="👗 Kleding" onclick="filterByCat('👗 Kleding')" data-i18n="cat.kleding">👗 Kleding</button>
-      <button class="cat-chip" data-cat="🧸 Speelgoed" onclick="filterByCat('🧸 Speelgoed')" data-i18n="cat.speelgoed">🧸 Speelgoed</button>
-      <button class="cat-chip" data-cat="🛋️ Meubels" onclick="filterByCat('🛋️ Meubels')" data-i18n="cat.meubels">🛋️ Meubels</button>
-      <button class="cat-chip" data-cat="📚 Boeken" onclick="filterByCat('📚 Boeken')" data-i18n="cat.boeken">📚 Boeken</button>
-      <button class="cat-chip" data-cat="📱 Elektronica" onclick="filterByCat('📱 Elektronica')" data-i18n="cat.elektro">📱 Elektronica</button>
-      <button class="cat-chip" data-cat="🌿 Tuin" onclick="filterByCat('🌿 Tuin')" data-i18n="cat.tuin">🌿 Tuin</button>
-      <button class="cat-chip" data-cat="🎨 Kunst" onclick="filterByCat('🎨 Kunst')" data-i18n="cat.kunst">🎨 Kunst</button>
-      <button class="cat-chip" data-cat="🏺 Antiek & Vintage" onclick="filterByCat('🏺 Antiek & Vintage')" data-i18n="cat.antiek">🏺 Antiek</button>
-      <button class="cat-chip" data-cat="📦 Overig" onclick="filterByCat('📦 Overig')" data-i18n="cat.overig">📦 Overig</button>
     </div>
     <div id="cardList"></div>
   </div>
@@ -6375,61 +6378,10 @@ function initMap() {
     // Foto swipe in kaartpopup
     map.on('popupopen', function(e) { if (typeof attachPopupSwipe === 'function') attachPopupSwipe(e.popup); });
 
-    // iOS two-finger gesture hint
-    // De hint legt een donker waas over de kaart zodra een single-finger
-    // touch te lang duurt. Dat moet NIET triggeren bij taps op markers,
-    // clusters of popups, anders lijkt de popup na ~1s te 'verdwijnen'
-    // (hij wordt visueel afgedekt door het waas, niet echt gesloten).
-    var hintTimer = null;
-    var mapEl = document.getElementById('map');
-    var hint = document.getElementById('map-gesture-hint');
-
-    function _hideHint() {
-      clearTimeout(hintTimer);
-      hintTimer = null;
-      if (hint) hint.style.display = 'none';
-    }
-
-    function _isMarkerLikeTarget(target) {
-      if (!target || !target.closest) return false;
-      // Alle Leaflet-elementen die als "klikbaar" tellen — markers, clusters,
-      // popups, controls. Tap op deze elementen mag NOOIT de hint triggeren.
-      return !!target.closest(
-        '.leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-popup, ' +
-        '.leaflet-popup-pane, .leaflet-control, .marker-cluster, ' +
-        '.buurtverkoop-cluster'
-      );
-    }
-
-    mapEl.addEventListener('touchstart', function(e) {
-      // Skip hint-logica als de tap op een marker/popup/control begint
-      if (_isMarkerLikeTarget(e.target)) { _hideHint(); return; }
-      if (e.touches.length === 1) {
-        // Single finger op de tile-laag — toon hint na 600ms als de finger
-        // er nog steeds is (en dus geen tap maar een drag-poging).
-        hintTimer = setTimeout(function() {
-          if (hint) { hint.style.display = 'flex'; }
-          hintTimer = setTimeout(function() {
-            if (hint) hint.style.display = 'none';
-            hintTimer = null;
-          }, 1500);
-        }, 600);
-      } else {
-        // Twee vingers, hint heeft geen functie meer
-        _hideHint();
-      }
-    }, { passive: true });
-
-    mapEl.addEventListener('touchend', _hideHint, { passive: true });
-    mapEl.addEventListener('touchcancel', _hideHint, { passive: true });
-
-    mapEl.addEventListener('touchmove', function(e) {
-      if (e.touches.length >= 2) _hideHint();
-    }, { passive: true });
-
-    // Vangnet: zodra Leaflet een popup opent, hint direct dichttrekken zodat
-    // hij nooit boven een geopende popup kan komen te liggen.
-    if (map && map.on) map.on('popupopen', _hideHint);
+    // Gesture-hint is verwijderd — de touchlisteners die na 600ms een
+    // DOM-wijziging veroorzaakten (display:flex op de lege hint-div) bleken
+    // Leaflet's drag-tracking te verstoren op mobiel. Geen vervanging nodig:
+    // Leaflet 1.9+ ondersteunt single-finger panning out of the box.
   } catch(e) {
     console.log('Leaflet init failed, using fallback:', e);
     activateFallbackMap();
@@ -6439,17 +6391,11 @@ function initMap() {
 function makeMarkerIcon(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type];
-  var ic = getSaleIcon(sale);
-  // SVG voor de pin-vorm en witte cirkel, maar de emoji tekenen we als
-  // HTML bovenop de SVG. SVG <text> rendert op iOS/Safari niet altijd
-  // kleuren-emoji, HTML wel (gebruikt system emoji font stack).
-  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0">'
+  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" stroke="white" stroke-width="2"/>'
     + '<circle cx="18" cy="16" r="8" fill="white"/>'
     + '</svg>';
-  var emojiLayer = '<div style="position:absolute;top:0;left:0;width:36px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;pointer-events:none;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif">' + ic + '</div>';
-  var html = '<div style="position:relative;width:36px;height:46px">' + svg + emojiLayer + '</div>';
-  return L.divIcon({ className: '', html: html, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 function createListingPopup(sale) {
@@ -6625,15 +6571,11 @@ function createSmallPin(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type] || '#E07B39';
   var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
-  var icon = getSaleIcon(sale);
-  // Emoji als HTML bovenop de SVG om iOS/Safari emoji-rendering te garanderen
-  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:0;left:0">'
+  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
     + '<path d="' + p + '" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
     + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
     + '</svg>';
-  var emojiLayer = '<div style="position:absolute;top:0;left:0;width:36px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;pointer-events:none;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif">' + icon + '</div>';
-  var html = '<div style="position:relative;width:36px;height:46px">' + svg + emojiLayer + '</div>';
-  return L.divIcon({ className: '', html: html, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 var clusterGroups = [];
@@ -6874,10 +6816,8 @@ function filterType(type) {
 }
 function filterByCat(cat) {
   activeCatFilter = cat || null;
-  document.querySelectorAll('#catFilterRow .cat-chip').forEach(function(el) {
-    var chipCat = el.dataset.cat || null;
-    el.classList.toggle('active', chipCat === activeCatFilter);
-  });
+  var sel = document.getElementById('catSelect');
+  if (sel) sel.value = activeCatFilter || '';
   renderList();
   if (typeof renderMarkers === 'function') renderMarkers();
 }
@@ -11486,7 +11426,7 @@ function fbRenderMarkers() {
     if (px < -20 || px > w + 20 || py < -20 || py > h + 20) return '';
     var col = colors[sale.type];
     return '<div onclick="openDetail(\'' + escapeHtml(sale.id) + '\')" style="position:absolute;left:' + (px-15) + 'px;top:' + (py-36) + 'px;width:30px;height:36px;cursor:pointer;pointer-events:all;z-index:10" title="' + escapeHtml(sale.title) + '">'
-      + '<svg width="30" height="36" viewBox="0 0 30 36"><path d="M15 2C9 2 4 7 4 13C4 21 15 34 15 34C15 34 26 21 26 13C26 7 21 2 15 2Z" fill="' + col + '" stroke="white" stroke-width="1.5"/><circle cx="15" cy="13" r="5.5" fill="white"/><text x="15" y="17" text-anchor="middle" font-size="7">' + TYPES[sale.type].icon + '</text></svg>'
+      + '<svg width="30" height="36" viewBox="0 0 30 36"><path d="M15 2C9 2 4 7 4 13C4 21 15 34 15 34C15 34 26 21 26 13C26 7 21 2 15 2Z" fill="' + col + '" stroke="white" stroke-width="1.5"/><circle cx="15" cy="13" r="5.5" fill="white"/></svg>'
       + '</div>';
   }).join('');
 }
@@ -11507,18 +11447,17 @@ function activateFallbackMap() {
 }
 
 // ──────────────────────────────────────────────────
-// FULLSCREEN KAART
+// FULLSCREEN KAART (CSS-gebaseerd, werkt op iOS/Android/desktop)
 // ──────────────────────────────────────────────────
 function toggleMapFullscreen() {
-  var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-  if (!isFs) {
-    var el = document.documentElement;
-    if (el.requestFullscreen) { el.requestFullscreen(); }
-    else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
-  } else {
-    if (document.exitFullscreen) { document.exitFullscreen(); }
-    else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-  }
+  var isFs = document.body.classList.toggle('map-fs');
+  _syncFsBtn(isFs);
+  // Geef Leaflet een tick om de nieuwe afmetingen te verwerken
+  setTimeout(function() {
+    if (typeof map !== 'undefined' && map && map.invalidateSize) {
+      map.invalidateSize();
+    }
+  }, 50);
 }
 function _syncFsBtn(isFs) {
   ['btn-map-fs', 'fb-fs-btn'].forEach(function(id) {
@@ -11526,12 +11465,6 @@ function _syncFsBtn(isFs) {
     if (el) el.innerHTML = isFs ? '⊡' : '⛶';
   });
 }
-document.addEventListener('fullscreenchange', function() {
-  _syncFsBtn(!!(document.fullscreenElement || document.webkitFullscreenElement));
-});
-document.addEventListener('webkitfullscreenchange', function() {
-  _syncFsBtn(!!(document.fullscreenElement || document.webkitFullscreenElement));
-});
 
 // ══════════════════════════════════════════════════
 // INIT
