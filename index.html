@@ -59,6 +59,11 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{overscroll-behavior:none;}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:hidden;overscroll-behavior:none;}
+/* Op de kaartweergave: blokkeer body-scroll zodat iOS touch-events direct
+   naar Leaflet gaan i.p.v. de page-scroll-handler. overflow-x:hidden zet
+   overflow-y impliciet op auto (CSS-spec), waardoor iOS touch-start kaapt
+   als page-scroll, ook al heeft #map touch-action:none. */
+body.on-kaart{overflow-y:hidden!important;}
 body.dark{--bg:#1A1410;--bg2:#241E18;--border:#3A3028;--text:#F0EAE0;--muted:#9A8E82;--shadow:0 2px 12px rgba(0,0,0,.3);}
 
 /* ── DARK MODE OVERRIDES ── */
@@ -692,7 +697,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 }
 </style>
 </head>
-<body>
+<body class="on-kaart">
 
 <!-- Onderhoudsbanner -->
 <div id="maintenance-banner">
@@ -7324,6 +7329,8 @@ function sv(name, tabEl) {
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   var vEl = document.getElementById('view-' + name);
   if (vEl) vEl.classList.add('active');
+  // Kaartweergave: vergrendel body-scroll zodat iOS geen touch-events kaapt
+  document.body.classList.toggle('on-kaart', name === 'kaart');
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
   if (name === 'instellingen') loadSettingsTab();
