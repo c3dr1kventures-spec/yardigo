@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cedrik Preview – YardiGo Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; font-family: 'Poppins', sans-serif; background: #F0EDE8; }
+  .screens { display: flex; gap: 0; overflow-x: auto; height: 100vh; }
+  .screen { width: 375px; flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+  .s1 { background: #2A5038; }
+  .s2, .s3, .s4 { background: #F9F5EF; }
+
+  /* Accent headers for screens 2-4 */
+  .accent { height: 130px; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .accent-wave { position: absolute; bottom: -1px; left: 0; right: 0; }
+  .accent-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,.9); padding-bottom: 14px; text-align: center; }
+  .accent-emoji { font-size: 36px; margin-bottom: 4px; }
+
+  /* Content padding */
+  .content { padding: 24px; }
+  .s1 .content { padding: 40px 24px 24px; display: flex; flex-direction: column; align-items: center; }
+
+  /* Typography */
+  .title-lg { font-size: 28px; font-weight: 800; color: white; text-align: center; margin-bottom: 8px; line-height: 1.2; }
+  .sub-dark { font-size: 13px; color: rgba(255,255,255,.7); text-align: center; line-height: 1.7; margin-bottom: 14px; max-width: 280px; }
+  .title-md { font-size: 22px; font-weight: 800; color: #2C2416; margin-bottom: 4px; }
+  .sub-light { font-size: 13px; color: #7A6E62; margin-bottom: 10px; line-height: 1.6; }
+
+  /* Cedrik bubble */
+  .cedrik-bubble { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 14px; }
+  .cedrik-speech { flex: 1; background: white; border-radius: 16px 16px 16px 4px; padding: 10px 14px; font-size: 12px; color: #2C2416; line-height: 1.55; box-shadow: 0 2px 10px rgba(44,36,22,.10); border: 1.5px solid #EDE8DF; font-weight: 500; }
+  .cedrik-speech-dark { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.28); color: rgba(255,255,255,.93); }
+  .cedrik-name { font-size: 10px; font-weight: 700; color: #E07B39; margin-bottom: 2px; }
+
+  /* Feature cards s1 */
+  .feat-card { background: rgba(255,255,255,.1); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .feat-icon { font-size: 22px; }
+  .feat-title { font-size: 13px; font-weight: 700; color: white; }
+  .feat-sub { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 2px; }
+
+  /* Perm cards s2 */
+  .perm-card { background: white; border-radius: 14px; border: 1.5px solid #EDE8DF; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(44,36,22,.06); }
+  .perm-icon { font-size: 24px; }
+  .perm-label { font-size: 13px; font-weight: 700; color: #2C2416; }
+  .perm-sub { font-size: 11px; color: #A09080; margin-top: 2px; }
+
+  /* Cat grid s3 */
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .cat-tile { background: white; border-radius: 12px; border: 1.5px solid #EDE8DF; padding: 10px 6px; text-align: center; font-size: 11px; color: #2C2416; font-weight: 600; box-shadow: 0 1px 4px rgba(44,36,22,.06); }
+  .cat-tile .ci { font-size: 20px; margin-bottom: 4px; }
+
+  /* Form s4 */
+  .form-card { background: white; border-radius: 16px; border: 1.5px solid #EDE8DF; padding: 16px; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(44,36,22,.06); }
+  .form-label { font-size: 13px; font-weight: 700; color: #2C2416; margin-bottom: 10px; }
+  .form-input { width: 100%; box-sizing: border-box; border: 1.5px solid #E0D8CC; border-radius: 10px; padding: 11px 14px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #2C2416; margin-bottom: 8px; outline: none; background: #FDFAF6; }
+
+  /* Buttons */
+  .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; background: #E07B39; color: white; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+  .btn-ghost { width: 100%; padding: 13px; border-radius: 14px; border: 1.5px solid #D0C8BC; background: transparent; color: #7A6E62; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+
+  /* Screen label */
+  .screen-label { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.35); color: white; font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .5px; z-index: 10; white-space: nowrap; }
+
+  /* Logo for s1 */
+  .ob-logo { margin-bottom: 18px; }
+</style>
+</head>
+<body>
+<div class="screens">
+
+  <!-- ─── SCREEN 1: Welcome (dark) ─── -->
+  <div class="screen s1">
+    <div class="screen-label">SCREEN 1 — Welcome</div>
+    <div class="content">
+      <div class="ob-logo">
+        <svg width="60" height="66" viewBox="0 0 118 128" fill="none">
+          <path d="M66 11C46 11 30 27 30 47C30 67 66 109 66 109C66 109 102 67 102 47C102 27 86 11 66 11Z" fill="#3A6B4A" opacity="0.55"/>
+          <path d="M54 7C34 7 18 23 18 43C18 63 54 105 54 105C54 105 90 63 90 43C90 23 74 7 54 7Z" fill="#E07B39"/>
+          <circle cx="54" cy="39" r="15" fill="#F9F5EF"/>
+        </svg>
+      </div>
+      <div class="title-lg">Ontdek verkopen<br>bij jou in de buurt</div>
+      <div class="sub-dark">Garageverkopen, rommelroutes en vlooienmarkten, allemaal op de kaart.</div>
+
+      <!-- Cedrik S1 -->
+      <div class="cedrik-bubble" style="max-width:310px;width:100%;align-self:center;margin-bottom:20px">
+        <svg viewBox="0 0 78 86" width="64" height="72" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))">
+          <path d="M14,64 Q7,72 9,79" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <path d="M50,64 Q63,50 67,34" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <circle cx="67" cy="31" r="7.5" fill="#B2B6AE"/>
+          <line x1="62" y1="25" x2="61" y2="21" stroke="#9A9E96" stroke-width="3" stroke-linecap="round"/>
+          <line x1="67" y1="24" x2="67" y2="19" stroke="#9A9E96" stroke-width="3" stroke-linecap="round"/>
+          <line x1="72" y1="25" x2="73" y2="21" stroke="#9A9E96" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="32" cy="79" rx="22" ry="10" fill="#3A6B4A"/>
+          <path d="M12,58 Q32,67 52,58 L52,63 Q32,72 12,63 Z" fill="#E07B39"/>
+          <ellipse cx="32" cy="38" rx="24" ry="22" fill="#B2B6AE"/>
+          <circle cx="12" cy="20" r="10" fill="#9A9E96"/><circle cx="12" cy="20" r="6" fill="#C07878"/>
+          <circle cx="52" cy="20" r="10" fill="#9A9E96"/><circle cx="52" cy="20" r="6" fill="#C07878"/>
+          <ellipse cx="32" cy="42" rx="18" ry="14" fill="#D2D6CC"/>
+          <ellipse cx="22" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <ellipse cx="42" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <circle cx="22" cy="36" r="5.5" fill="white"/><circle cx="42" cy="36" r="5.5" fill="white"/>
+          <circle cx="23" cy="34.5" r="3.2" fill="#111"/><circle cx="43" cy="34.5" r="3.2" fill="#111"/>
+          <circle cx="24.5" cy="33" r="1.1" fill="white"/><circle cx="44.5" cy="33" r="1.1" fill="white"/>
+          <ellipse cx="32" cy="46" rx="3.5" ry="2.5" fill="#1E1A18"/>
+          <path d="M24,51 Q32,60 40,51" stroke="#1E1A18" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="15" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.25"/>
+          <ellipse cx="49" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.25"/>
+          <circle cx="32" cy="73" r="4" fill="#E07B39"/><circle cx="32" cy="73" r="2" fill="white"/>
+        </svg>
+        <div class="cedrik-speech cedrik-speech-dark">
+          <div class="cedrik-name">Cedrik</div>
+          Hoi! Ik ben Cedrik. Samen sporen we de beste vondsten in jouw buurt op!
+        </div>
+      </div>
+
+      <div style="width:100%">
+        <div class="feat-card"><div class="feat-icon">🗺️</div><div><div class="feat-title">Op de kaart</div><div class="feat-sub">Zie alle verkopen in jouw buurt</div></div></div>
+        <div class="feat-card"><div class="feat-icon">🧭</div><div><div class="feat-title">Route plannen</div><div class="feat-sub">Bezoek meerdere verkopen op één dag</div></div></div>
+        <div class="feat-card"><div class="feat-icon">🔔</div><div><div class="feat-title">Meldingen</div><div class="feat-sub">Nooit meer een verkoop missen</div></div></div>
+      </div>
+      <button class="btn-primary" style="margin-top:20px">Aan de slag →</button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 2: Permissions ─── -->
+  <div class="screen s2">
+    <div class="screen-label">SCREEN 2 — Toestemmingen</div>
+    <div class="accent" style="background:linear-gradient(135deg,#3A6B4A,#2A5038)">
+      <svg class="accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;right:0;width:100%"><path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/></svg>
+      <div style="text-align:center;padding-bottom:14px"><div class="accent-emoji">🔐</div><div class="accent-label">Toestemmingen</div></div>
+    </div>
+    <div class="content">
+      <div class="title-md">Jouw ervaring instellen</div>
+      <div class="sub-light">Geef toestemming voor de beste ervaring. Je kunt dit altijd later aanpassen.</div>
+
+      <!-- Cedrik S2 -->
+      <div class="cedrik-bubble" style="margin-bottom:14px">
+        <svg viewBox="0 0 82 86" width="64" height="70" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <path d="M14,64 Q7,72 9,79" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <path d="M50,64 Q62,62 70,60" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <circle cx="70" cy="59" r="7" fill="#B2B6AE"/>
+          <path d="M70,53 Q72,48 74,44" stroke="#B2B6AE" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="32" cy="79" rx="22" ry="10" fill="#3A6B4A"/>
+          <path d="M12,58 Q32,67 52,58 L52,63 Q32,72 12,63 Z" fill="#E07B39"/>
+          <ellipse cx="32" cy="38" rx="24" ry="22" fill="#B2B6AE"/>
+          <circle cx="12" cy="20" r="10" fill="#9A9E96"/><circle cx="12" cy="20" r="6" fill="#C07878"/>
+          <circle cx="52" cy="20" r="10" fill="#9A9E96"/><circle cx="52" cy="20" r="6" fill="#C07878"/>
+          <ellipse cx="32" cy="42" rx="18" ry="14" fill="#D2D6CC"/>
+          <ellipse cx="22" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <ellipse cx="42" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <circle cx="22" cy="36" r="6" fill="white"/><circle cx="42" cy="36" r="6" fill="white"/>
+          <circle cx="23" cy="35.5" r="3.5" fill="#111"/><circle cx="43" cy="35.5" r="3.5" fill="#111"/>
+          <circle cx="24.8" cy="34" r="1.2" fill="white"/><circle cx="44.8" cy="34" r="1.2" fill="white"/>
+          <ellipse cx="32" cy="46" rx="3.5" ry="2.5" fill="#1E1A18"/>
+          <path d="M27,52 Q32,56 37,52" stroke="#1E1A18" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <ellipse cx="15" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.18"/>
+          <ellipse cx="49" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.18"/>
+          <circle cx="32" cy="73" r="4" fill="#E07B39"/><circle cx="32" cy="73" r="2" fill="white"/>
+        </svg>
+        <div class="cedrik-speech"><div class="cedrik-name">Cedrik</div>Met je locatie vind ik verkopen vlakbij. Meldingen zorgen dat je niets mist!</div>
+      </div>
+
+      <div class="perm-card"><div class="perm-icon">📍</div><div><div class="perm-label">Locatie</div><div class="perm-sub">Tik om toestemming te geven</div></div></div>
+      <div class="perm-card"><div class="perm-icon">🔔</div><div><div class="perm-label">Meldingen</div><div class="perm-sub">Tik om toestemming te geven</div></div></div>
+      <button class="btn-primary" style="margin-top:12px">Verder →</button>
+      <button class="btn-ghost">Overslaan</button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 3: Categories ─── -->
+  <div class="screen s3">
+    <div class="screen-label">SCREEN 3 — Categorieën</div>
+    <div class="accent" style="background:linear-gradient(135deg,#E07B39,#C5612A)">
+      <svg class="accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;right:0;width:100%"><path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/></svg>
+      <div style="text-align:center;padding-bottom:14px"><div class="accent-emoji">🏷️</div><div class="accent-label">Categorieën</div></div>
+    </div>
+    <div class="content">
+      <div class="title-md">Wat zoek jij?</div>
+      <div class="sub-light" style="margin-bottom:10px">Kies minimaal 3 categorieën voor betere aanbevelingen.</div>
+
+      <!-- Cedrik S3 -->
+      <div class="cedrik-bubble" style="margin-bottom:10px">
+        <svg viewBox="0 0 70 86" width="58" height="70" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <path d="M14,64 Q7,72 9,79" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <path d="M50,64 Q54,58 46,53" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <circle cx="44" cy="51" r="6" fill="#B2B6AE"/>
+          <ellipse cx="32" cy="79" rx="22" ry="10" fill="#3A6B4A"/>
+          <path d="M12,58 Q32,67 52,58 L52,63 Q32,72 12,63 Z" fill="#E07B39"/>
+          <ellipse cx="32" cy="38" rx="24" ry="22" fill="#B2B6AE"/>
+          <circle cx="12" cy="20" r="10" fill="#9A9E96"/><circle cx="12" cy="20" r="6" fill="#C07878"/>
+          <circle cx="52" cy="20" r="10" fill="#9A9E96"/><circle cx="52" cy="20" r="6" fill="#C07878"/>
+          <ellipse cx="32" cy="42" rx="18" ry="14" fill="#D2D6CC"/>
+          <ellipse cx="22" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <ellipse cx="42" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <circle cx="22" cy="36" r="5.5" fill="white"/><circle cx="42" cy="36" r="5.5" fill="white"/>
+          <circle cx="24" cy="35.5" r="3.2" fill="#111"/><circle cx="44" cy="35.5" r="3.2" fill="#111"/>
+          <circle cx="25.5" cy="34" r="1.1" fill="white"/><circle cx="45.5" cy="34" r="1.1" fill="white"/>
+          <path d="M17,28 Q22,25 27,27" stroke="#4A4040" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <ellipse cx="32" cy="46" rx="3.5" ry="2.5" fill="#1E1A18"/>
+          <path d="M27,52 Q32,54 37,52" stroke="#1E1A18" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <ellipse cx="15" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.15"/>
+          <ellipse cx="49" cy="44" rx="5" ry="2.5" fill="#E07870" opacity="0.15"/>
+          <circle cx="32" cy="73" r="4" fill="#E07B39"/><circle cx="32" cy="73" r="2" fill="white"/>
+        </svg>
+        <div class="cedrik-speech"><div class="cedrik-name">Cedrik</div>Wat vind jij leuk? Kies je favorieten en ik zoek precies wat jij zoekt!</div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:#A04A18;margin-bottom:12px">Nog 3 categorieën nodig (minimaal 3)</div>
+      <div class="cat-grid">
+        <div class="cat-tile"><div class="ci">👗</div>Kleding</div>
+        <div class="cat-tile"><div class="ci">👟</div>Schoenen</div>
+        <div class="cat-tile"><div class="ci">📚</div>Boeken</div>
+        <div class="cat-tile"><div class="ci">🧸</div>Speelgoed</div>
+        <div class="cat-tile"><div class="ci">📱</div>Elektronica</div>
+        <div class="cat-tile"><div class="ci">🎨</div>Kunst</div>
+        <div class="cat-tile"><div class="ci">🏺</div>Antiek</div>
+        <div class="cat-tile"><div class="ci">🛋️</div>Meubels</div>
+        <div class="cat-tile"><div class="ci">🎵</div>Vinyl</div>
+      </div>
+      <button class="btn-primary" style="opacity:.55">Volgende →</button>
+    </div>
+  </div>
+
+  <!-- ─── SCREEN 4: Account ─── -->
+  <div class="screen s4">
+    <div class="screen-label">SCREEN 4 — Account</div>
+    <div class="accent" style="background:linear-gradient(135deg,#2A5038,#3A6B4A)">
+      <svg class="accent-wave" viewBox="0 0 375 24" fill="none" preserveAspectRatio="none" style="position:absolute;bottom:-1px;left:0;right:0;width:100%"><path d="M0 24C60 8 120 0 187.5 0C255 0 315 8 375 24H0Z" fill="#F9F5EF"/></svg>
+      <div style="text-align:center;padding-bottom:14px"><div class="accent-emoji">👋</div><div class="accent-label">Bijna klaar!</div></div>
+    </div>
+    <div class="content">
+      <div class="title-md">Welkom bij YardiGo</div>
+      <div class="sub-light" style="margin-bottom:10px">Maak een gratis account aan voor de volledige ervaring.</div>
+
+      <!-- Cedrik S4 -->
+      <div class="cedrik-bubble" style="margin-bottom:14px">
+        <svg viewBox="0 0 76 86" width="62" height="72" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(44,36,22,.12))">
+          <path d="M14,64 Q7,72 9,79" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <path d="M50,64 Q60,54 62,42" stroke="#3A6B4A" stroke-width="11" stroke-linecap="round" fill="none"/>
+          <rect x="55" y="33" width="16" height="13" rx="5" fill="#B2B6AE"/>
+          <path d="M56,35 Q54,28 58,24" stroke="#B2B6AE" stroke-width="7" stroke-linecap="round" fill="none"/>
+          <ellipse cx="32" cy="79" rx="22" ry="10" fill="#3A6B4A"/>
+          <path d="M12,58 Q32,67 52,58 L52,63 Q32,72 12,63 Z" fill="#E07B39"/>
+          <ellipse cx="32" cy="38" rx="24" ry="22" fill="#B2B6AE"/>
+          <circle cx="12" cy="20" r="10" fill="#9A9E96"/><circle cx="12" cy="20" r="6" fill="#C07878"/>
+          <circle cx="52" cy="20" r="10" fill="#9A9E96"/><circle cx="52" cy="20" r="6" fill="#C07878"/>
+          <ellipse cx="32" cy="42" rx="18" ry="14" fill="#D2D6CC"/>
+          <ellipse cx="22" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <ellipse cx="42" cy="36" rx="9" ry="7" fill="#2E2926"/>
+          <circle cx="22" cy="36" r="5.5" fill="white"/><circle cx="42" cy="36" r="5.5" fill="white"/>
+          <circle cx="23" cy="34.5" r="3.2" fill="#111"/><circle cx="43" cy="34.5" r="3.2" fill="#111"/>
+          <circle cx="24.5" cy="33" r="1.1" fill="white"/><circle cx="44.5" cy="33" r="1.1" fill="white"/>
+          <ellipse cx="32" cy="46" rx="3.5" ry="2.5" fill="#1E1A18"/>
+          <path d="M23,51 Q32,62 41,51" stroke="#1E1A18" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="15" cy="44" rx="5.5" ry="3" fill="#E07870" opacity="0.28"/>
+          <ellipse cx="49" cy="44" rx="5.5" ry="3" fill="#E07870" opacity="0.28"/>
+          <circle cx="32" cy="73" r="4" fill="#E07B39"/><circle cx="32" cy="73" r="2" fill="white"/>
+        </svg>
+        <div class="cedrik-speech"><div class="cedrik-name">Cedrik</div>Bijna klaar! Met een gratis account zie je adressen en kun je alles opslaan.</div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-label">Account aanmaken</div>
+        <input class="form-input" type="text" placeholder="Naam">
+        <input class="form-input" type="email" placeholder="E-mailadres">
+        <input class="form-input" type="password" placeholder="Wachtwoord">
+        <button class="btn-primary">Account aanmaken</button>
+      </div>
+      <button class="btn-ghost">Beperkt verder als gast →</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
