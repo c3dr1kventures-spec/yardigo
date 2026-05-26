@@ -57,7 +57,8 @@
   --shadow:0 2px 12px rgba(44,36,22,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:hidden;}
+html{overscroll-behavior:none;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:hidden;overscroll-behavior:none;}
 body.dark{--bg:#1A1410;--bg2:#241E18;--border:#3A3028;--text:#F0EAE0;--muted:#9A8E82;--shadow:0 2px 12px rgba(0,0,0,.3);}
 
 /* ── DARK MODE OVERRIDES ── */
@@ -392,7 +393,7 @@ body.dark .yg-footer{border-top-color:var(--border);}
 .view.active{display:block;}
 
 /* ── MAP ── */
-#map{height:calc(100svh - 230px);min-height:280px;width:100%;}
+#map{height:calc(100svh - 230px);min-height:280px;width:100%;touch-action:none;}
 
 /* ── LIST ── */
 .list-wrap{padding:12px;}
