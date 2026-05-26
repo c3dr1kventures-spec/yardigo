@@ -11441,13 +11441,63 @@ document.addEventListener('error', function(e) {
   }
 }, true);
 
+// ── Cache reset via ?reset=1 ──
+// Vangnet voor gebruikers die volledig vastzitten in een oude cache.
+// Bezoek https://yardigo.nl/?reset=1 en alle SW + caches worden gewist,
+// daarna keer je terug naar de homepage met een verse versie.
+if (location.search.indexOf('reset=1') !== -1) {
+  (async function() {
+    try {
+      if ('serviceWorker' in navigator) {
+        var regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(function(r) { return r.unregister(); }));
+      }
+      if (typeof caches !== 'undefined') {
+        var keys = await caches.keys();
+        await Promise.all(keys.map(function(k) { return caches.delete(k); }));
+      }
+      try { localStorage.clear(); } catch(e){}
+      try { sessionStorage.clear(); } catch(e){}
+    } finally {
+      // Naar de homepage zonder query, met cache-busting timestamp
+      location.replace('/?fresh=' + Date.now());
+    }
+  })();
+}
+
 // ── SERVICE WORKER REGISTRATIE ──
+// Nieuwe SW wordt direct geactiveerd én de pagina wordt automatisch
+// herladen zodra de service worker overschakelt. Zonder dit bleven
+// iOS-bezoekers op een oude cache-versie steken na een productie-update.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(reg) {
       console.log('YardiGo SW registered:', reg.scope);
+      // Forceer update-check bij elke navigatie
+      reg.update().catch(function(){});
+      // Wanneer een nieuwe SW gevonden is, laat hem direct overnemen
+      reg.addEventListener('updatefound', function() {
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function() {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // Er was al een controller → dit is een UPDATE, niet een eerste install
+            // Toon een hint en herlaad
+            try { console.log('YardiGo: nieuwe versie beschikbaar, herladen…'); } catch(e){}
+          }
+        });
+      });
     }).catch(function(err) {
       console.log('SW registration failed:', err);
+    });
+    // Wanneer de actieve SW wisselt (skipWaiting + clients.claim),
+    // herlaad één keer zodat de nieuwe assets in gebruik komen.
+    var _reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (_reloaded) return;
+      _reloaded = true;
+      // Kleine vertraging zodat eventuele lopende fetches niet midden in geknipt worden
+      setTimeout(function(){ try { window.location.reload(); } catch(e){} }, 100);
     });
   });
 }

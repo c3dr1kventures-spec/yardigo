@@ -1,9 +1,12 @@
 // ══════════════════════════════════════════════════════
-// YardiGo Service Worker v2.0
-// Strategie: Cache First voor assets, Network First voor data
+// YardiGo Service Worker v3.0 — 2026-05-26
+// Strategie: Network First voor HTML (geen stale UI),
+//            Cache First voor statische assets.
+// Bumped naar v3 om iOS Safari oude kapotte versie te resetten
+// na de map-touch / fullscreen-bug van 25/26 mei.
 // ══════════════════════════════════════════════════════
 
-const CACHE_NAME = 'yardigo-v2';
+const CACHE_NAME = 'yardigo-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Bestanden die altijd gecached worden bij installatie
@@ -17,7 +20,7 @@ const PRECACHE_ASSETS = [
 ];
 
 // CDN assets die gecached worden
-const CDN_CACHE_NAME = 'yardigo-cdn-v2';
+const CDN_CACHE_NAME = 'yardigo-cdn-v3';
 const CDN_DOMAINS = [
   'unpkg.com',
   'fonts.googleapis.com',
@@ -126,16 +129,27 @@ function cacheFirst(request, cacheName) {
 }
 
 // ── Network First strategie ──
+// Voor HTML-requests gebruiken we een hard timeout van 4s. Als de fetch
+// na 4s niet binnen is vallen we terug op de cache. Zonder timeout bleven
+// iOS-bezoekers op een trage verbinding minutenlang naar oude UI kijken.
 function networkFirst(request) {
-  return fetch(request).then(function(response) {
+  var isNav = request.mode === 'navigate' ||
+              (request.headers.get('accept') || '').includes('text/html');
+  var timeoutMs = isNav ? 4000 : 8000;
+  var timeoutId;
+  var timeoutPromise = new Promise(function(resolve) {
+    timeoutId = setTimeout(function() { resolve(null); }, timeoutMs);
+  });
+  var fetchPromise = fetch(request, { cache: 'no-store' }).then(function(response) {
+    clearTimeout(timeoutId);
     if (response && response.status === 200) {
-      caches.open(CACHE_NAME).then(function(cache) {
-        cache.put(request, response.clone());
-      });
+      var clone = response.clone();
+      caches.open(CACHE_NAME).then(function(cache) { cache.put(request, clone); });
     }
     return response;
-  }).catch(function() {
-    // Network failed — try cache
+  }).catch(function() { return null; });
+  return Promise.race([fetchPromise, timeoutPromise]).then(function(response) {
+    if (response) return response;
     return caches.match(request).then(function(cached) {
       if (cached) return cached;
       // Return offline page for navigation requests
