@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">YardiGo</string>
+    <string name="title_activity_main">YardiGo</string>
+    <string name="package_name">nl.yardigo.app</string>
+    <string name="custom_url_scheme">nl.yardigo.app</string>
+</resources>

@@ -19,3 +19,22 @@ Thumbs.db
 
 # Backup/old versions
 *.backup
+
+# ── Android build-artifacten ──
+# Gegenereerde build-output, niet committen
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/capacitor-cordova-android-plugins/
+android/app/release/
+android/app/debug/
+
+# Android keystores — NOOIT in git
+*.jks
+*.keystore
+keystore.properties
+
+# Play Store-assets (apart bewaard, niet in repo)
+play-store-assets/

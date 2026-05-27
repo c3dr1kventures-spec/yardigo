@@ -7,6 +7,12 @@
     "scrollEnabled": true,
     "backgroundColor": "#FFFFFF"
   },
+  "android": {
+    "backgroundColor": "#FFFFFF",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1500,

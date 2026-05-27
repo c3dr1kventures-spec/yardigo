@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "description": "Nederlandse garage sale & rommelmarkt discovery app.",
   "scripts": {
-    "sync": "cp index.html www/yardigo-v21.html && cp sw.js www/sw.js && cp manifest.json www/manifest.json && npx cap sync ios",
+    "_copy-web": "cp index.html www/index.html && cp index.html www/yardigo-v21.html && cp sw.js www/sw.js && cp manifest.json www/manifest.json",
+    "sync": "npm run _copy-web && npx cap sync ios",
+    "sync:android": "npm run _copy-web && npx cap sync android",
+    "sync:all": "npm run _copy-web && npx cap sync",
     "open": "npx cap open ios",
-    "build": "npm run sync && npx cap open ios"
+    "open:android": "npx cap open android",
+    "build": "npm run sync && npx cap open ios",
+    "build:android": "npm run sync:android && npx cap open android"
   },
   "repository": {
     "type": "git",
@@ -19,9 +24,10 @@
   },
   "homepage": "https://github.com/c3dr1kventures-spec/yardigo#readme",
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
-    "@capacitor/splash-screen": "^6.0.0"
+    "@capacitor/splash-screen": "^8.0.1"
   }
 }
