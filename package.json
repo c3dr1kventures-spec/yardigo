@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Nederlandse garage sale & rommelmarkt discovery app.",
   "scripts": {
-    "_copy-web": "cp index.html www/index.html && cp index.html www/yardigo-v21.html && cp sw.js www/sw.js && cp manifest.json www/manifest.json",
+    "_copy-web": "cp index.html www/index.html && cp index.html www/yardigo-v21.html && cp sw.js www/sw.js && cp manifest.json www/manifest.json && cp cedrik-ob-s1.png cedrik-ob-s2.png cedrik-ob-s3.png cedrik-ob-s4.png bouwen2.png og-image.png www/",
     "sync": "npm run _copy-web && npx cap sync ios",
     "sync:android": "npm run _copy-web && npx cap sync android",
     "sync:all": "npm run _copy-web && npx cap sync",
