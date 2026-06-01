@@ -592,6 +592,23 @@ body.dark .review-card{background:var(--bg2);}
 /* ── LOADING BAR ── */
 .lbar{position:fixed;top:0;left:0;height:3px;background:var(--terra);width:0;transition:width .4s;z-index:9999;}
 
+/* ── Splash loader (verschijnt direct bij open, verbergt na fetchListings + initMap) ── */
+/* Doel: voorkomt dat gebruikers een paar seconden naar een lege/zwarte kaart-area kijken
+   terwijl Supabase 100+ verkopen ophaalt. Z-index zit BOVEN welcome-sheet (9998) en
+   onboarding (9999) zodat hij echt het eerste is wat je ziet. */
+#app-splash{position:fixed;inset:0;z-index:10001;background:linear-gradient(180deg,#3A6B4A 0%,#2C5238 100%);display:flex;align-items:center;justify-content:center;transition:opacity .45s ease,visibility .45s ease;}
+#app-splash.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.splash-inner{text-align:center;color:white;padding:24px;}
+.splash-pin{width:84px;height:84px;animation:splash-pulse 1.4s ease-in-out infinite;filter:drop-shadow(0 6px 16px rgba(0,0,0,.25));}
+@keyframes splash-pulse{0%,100%{transform:scale(1) translateY(0);}50%{transform:scale(1.06) translateY(-4px);}}
+.splash-title{font-family:'Poppins',sans-serif;font-size:32px;font-weight:800;margin-top:18px;letter-spacing:-.5px;line-height:1;}
+.splash-title .si{color:#F2A830;}
+.splash-title .sg{color:#E07B39;}
+.splash-sub{font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;opacity:.82;margin-top:10px;letter-spacing:.2px;}
+.splash-bar{width:200px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:26px auto 0;overflow:hidden;position:relative;}
+.splash-bar::after{content:"";position:absolute;left:-40%;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,#F2A830,transparent);animation:splash-bar 1.5s ease-in-out infinite;}
+@keyframes splash-bar{0%{left:-40%;}100%{left:100%;}}
+
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
@@ -709,6 +726,20 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </style>
 </head>
 <body class="on-kaart">
+<!-- Splash loader — staat direct in de HTML zodat hij meteen rendert,
+     vóór de body-script JavaScript überhaupt geparsed is. Hide-call
+     komt uit DOMContentLoaded → na fetchListings + initMap. -->
+<div id="app-splash" aria-hidden="true">
+  <div class="splash-inner">
+    <svg class="splash-pin" viewBox="0 0 36 46" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="#F2A830" stroke="white" stroke-width="2"/>
+      <circle cx="18" cy="16" r="8" fill="white"/>
+    </svg>
+    <div class="splash-title">Yard<span class="si">i</span><span class="sg">Go</span></div>
+    <div class="splash-sub">Verkopen worden geladen…</div>
+    <div class="splash-bar"></div>
+  </div>
+</div>
 
 <!-- Onderhoudsbanner -->
 <div id="maintenance-banner">
@@ -1928,6 +1959,13 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <!-- Bottom nav -->
 <nav class="bnav">
+  <!-- Home links — navigeert weg van de app naar de marketing/news-pagina.
+       Op web (Vercel cleanUrls:true) werkt /home, op Capacitor wijst hij
+       naar home.html in www/. _goHome() handelt beide af. -->
+  <div class="bni" id="bni-home" onclick="_goHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg>
+    <span data-i18n="nav.home">Home</span>
+  </div>
   <div class="bni active" id="bni-kaart" onclick="sv('kaart',document.querySelector('.tab'));this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
     <span data-i18n="nav.map">Kaart</span>
@@ -1944,10 +1982,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
     <span data-i18n="nav.mine">Mijn</span>
   </div>
-  <div class="bni" id="bni-instellingen" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    <span data-i18n="nav.settings">Instellingen</span>
-  </div>
+  <!-- Instellingen-tab is verwijderd onderaan om dubbele navigatie te voorkomen.
+       Bereikbaar via het ⚙️-tabblad in de bovenste tab-row. -->
 </nav>
 <div class="fab-row" id="fab-row">
   <button class="fab-feedback" onclick="openFeedback()" title="Feedback geven">
@@ -3301,6 +3337,7 @@ var I18N = {
     'filter.sort': 'Sorteer',
     'filter.all': 'Alles',
     // Bottom nav
+    'nav.home': 'Home',
     'nav.map': 'Kaart',
     'nav.list': 'Lijst',
     'nav.route': 'Route',
@@ -3891,6 +3928,7 @@ var I18N = {
     'filter.sort': 'Sort',
     'filter.all': 'All',
     // Bottom nav
+    'nav.home': 'Home',
     'nav.map': 'Map',
     'nav.list': 'List',
     'nav.route': 'Route',
@@ -4481,6 +4519,7 @@ var I18N = {
     'filter.sort': 'Trier',
     'filter.all': 'Tout',
     // Bottom nav
+    'nav.home': 'Accueil',
     'nav.map': 'Carte',
     'nav.list': 'Liste',
     'nav.route': 'Itinéraire',
@@ -5070,6 +5109,7 @@ var I18N = {
     'filter.date': 'Date',
     'filter.sort': 'Sort',
     'filter.all': 'All',
+    'nav.home': 'Startseite',
     'nav.map': 'Map',
     'nav.list': 'List',
     'nav.route': 'Route',
@@ -11486,6 +11526,35 @@ function toast(msg) {
 }
 function showL() { var el = document.getElementById('lbar'); if (el) { el.style.width = '60%'; setTimeout(function(){el.style.width='100%';},400); } }
 function hideL() { var el = document.getElementById('lbar'); if (el) el.style.width = '0'; }
+
+// Splash loader hide — wordt aangeroepen na fetchListings + initMap.
+// Twee veiligheidsnetten: 8s harde timeout (mocht init iets hangen op
+// een trage verbinding) en error-vrij als el al weg is.
+function _hideAppSplash() {
+  var s = document.getElementById('app-splash');
+  if (!s || s.classList.contains('hidden')) return;
+  s.classList.add('hidden');
+  // Na fade-out volledig verwijderen zodat hij geen pointer-events meer
+  // kan vangen ook al staat pointer-events:none erop.
+  setTimeout(function() { if (s && s.parentNode) s.parentNode.removeChild(s); }, 600);
+}
+// Safety-net: als om wat voor reden initMap nooit klaar komt (network down,
+// JS-error) verbergen we de splash sowieso na 8s zodat de gebruiker
+// tenminste de fallback-kaart kan zien.
+setTimeout(_hideAppSplash, 8000);
+
+// Navigatie naar de Home-marketing-pagina vanuit de bnav.
+// Web (Vercel cleanUrls): /home → /home.html
+// Capacitor (localhost-server): /home heeft geen redirect → expliciet .html
+// We detecteren Capacitor via location.hostname === 'localhost' (Capacitor's
+// embedded server) of via window.Capacitor (officiële API).
+// Niet te verwarren met de bestaande goHome() die binnen de app naar het
+// kaart-tabblad gaat — die houdt zijn naam.
+function _goHome() {
+  var isCapacitor = (typeof window.Capacitor !== 'undefined') ||
+                    (location.hostname === 'localhost' && location.protocol === 'https:');
+  location.href = isCapacitor ? 'home.html' : '/home';
+}
 // Publish-voortgang: update de publiceerknop met een statusbericht
 function setPublishStatus(msg) {
   var btn = document.getElementById('addPublish');
@@ -11794,6 +11863,10 @@ document.addEventListener('DOMContentLoaded', async function() {
   updateUserUI();
   loadAvatarFromProfile();
   initMap();
+  // Splash loader weg — sales zijn geladen en de kaart is opgezet.
+  // Korte microtask-vertraging zodat Leaflet de eerste tegels al kan
+  // beginnen renderen vóór de fade-out start.
+  setTimeout(_hideAppSplash, 200);
 
   // ─── Uitschrijf-handlers ─────────────────────────────────
   (async function handleUnsubscribeParams() {
