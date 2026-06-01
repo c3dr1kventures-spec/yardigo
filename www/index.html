@@ -8619,7 +8619,7 @@ function addBuurtAdres() {
     + '</div>'
     + helper
     + '<div style="position:relative">'
-    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.addr_placeholder', 'Straatnaam + huisnummer')) + '" style="margin:0" oninput="addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
+    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.addr_placeholder', 'Straatnaam + huisnummer')) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].addr=this.value;addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
     + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.pc_placeholder_prefix', 'Postcode bijv. {ex}').replace('{ex}', (YG_ADDR_PLACEHOLDERS[currentListingCountry] || YG_ADDR_PLACEHOLDERS.NL).pc)) + '" maxlength="' + (currentListingCountry === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
@@ -9360,6 +9360,12 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   if (inputEl && inputEl.dataset) {
     delete inputEl.dataset.lat;
     delete inputEl.dataset.lng;
+  }
+  // Coords op buurtAdressen-object ook clearen, anders zou een edit-na-
+  // suggestie de stale lat/lng aan nieuwe tekst koppelen in publishSale.
+  if (isBuurtRow && buurtAdressen[buurtIdx]) {
+    delete buurtAdressen[buurtIdx].lat;
+    delete buurtAdressen[buurtIdx].lng;
   }
   if (!val || val.length < 3) { dd.style.display = 'none'; return; }
   clearTimeout(addrSugTimer);
