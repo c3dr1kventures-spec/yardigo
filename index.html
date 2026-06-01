@@ -127,6 +127,17 @@ body.dark .leaflet-popup-tip{background:var(--bg2) !important;}
 body.dark .leaflet-popup-close-button{color:var(--muted) !important;}
 body.dark #aAddr-dd,body.dark [id^="bv-dd-"]{background:var(--bg2) !important;border-color:var(--border) !important;}
 body.dark [id^="bv-dd-"] div,body.dark #aAddr-dd div{background:var(--bg2);color:var(--text);border-bottom-color:var(--border);}
+/* Adres-suggestie-rijen — eerste suggestie krijgt visueel een 'pak mij'-accent */
+.addr-sug{padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.addr-sug:hover{background:#F9F5EF;}
+.addr-sug-first{background:#FFF8EC;}
+.addr-sug-first:hover{background:#FFEFD3;}
+.addr-sug-hint{font-size:9.5px;font-weight:700;color:var(--terra);background:rgba(224,123,57,.12);border-radius:6px;padding:2px 7px;letter-spacing:.4px;flex-shrink:0;}
+.addr-sug-empty{padding:11px 14px;font-size:11.5px;color:var(--muted);line-height:1.5;font-style:italic;background:#F9F5EF;border-radius:0 0 10px 10px;}
+body.dark .addr-sug:hover{background:rgba(255,255,255,.06);}
+body.dark .addr-sug-first{background:rgba(242,168,48,.08);}
+body.dark .addr-sug-first:hover{background:rgba(242,168,48,.15);}
+body.dark .addr-sug-empty{background:rgba(255,255,255,.04);}
 body.dark .pop-tag.particulier{background:#2A2010;color:#C89840;}
 body.dark .pop-tag.buurt{background:#251810;color:#C06030;}
 body.dark .pop-tag.evenement{background:#0F1F14;color:#5A9A6A;}
@@ -2337,7 +2348,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <!-- Enkel adres (particulier / evenement) -->
         <div id="add-s2-single" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
           <div style="position:relative">
-            <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, 9741 AB Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" autocomplete="off">
+            <input class="form-input" id="aAddr" placeholder="Adres bijv. Kerklaan 12, 9741 AB Groningen" oninput="addrAutocomplete(this.value,'aAddr-dd')" onkeydown="_handleAddrKeydown(event,'aAddr-dd',false,-1)" autocomplete="off">
             <div id="aAddr-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>
           </div>
           <div style="font-size:11px;color:var(--muted);padding:0 2px" data-i18n="publish.addr_help">💡 Typ straat, postcode of plaatsnaam en selecteer een suggestie</div>
@@ -3143,6 +3154,8 @@ var I18N = {
     'publish.buurt.email_placeholder': "E-mailadres (optioneel, voor voorgevulde mail)",
     'publish.buurt.email_help': "E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.",
     'publish.buurt.addr_placeholder': "Straatnaam + huisnummer",
+    'publish.buurt.addr_placeholder_full': "Adres bijv. Kerklaan 12, 9741 AB Groningen",
+    'publish.addr.no_suggest': "Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer — we vinden de coördinaten dan automatisch.",
     'publish.buurt.pc_placeholder_prefix': "Postcode bijv. {ex}",
     'sharebuurt.title': "📨 Stuur deze links naar je buren",
     'sharebuurt.intro': "Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op \"Kopieer tekst + link\" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.",
@@ -3731,6 +3744,8 @@ var I18N = {
     'publish.buurt.email_placeholder': "Email address (optional, for prefilled mail)",
     'publish.buurt.email_help': "Email is not stored, only used to prefill the email button for you.",
     'publish.buurt.addr_placeholder': "Street + house number",
+    'publish.buurt.addr_placeholder_full': "Address e.g. 12 Church Lane, 1234 AB Town",
+    'publish.addr.no_suggest': "No suggestion? Type your address as completely as possible and publish — we'll find the coordinates automatically.",
     'publish.buurt.pc_placeholder_prefix': "Postcode e.g. {ex}",
     'sharebuurt.title': "📨 Send these links to your neighbors",
     'sharebuurt.intro': "Your own address is already online. For the other addresses, YardiGo first asks the resident for permission, as required under GDPR. A ready-made message with a personal greeting is prepared for each neighbor. Click \"Copy text + link\" or send directly via WhatsApp, SMS or email. Their address only appears on the map after confirmation.",
@@ -4319,6 +4334,8 @@ var I18N = {
     'publish.buurt.email_placeholder': "Adresse e-mail (facultatif, pour pré-remplir le mail)",
     'publish.buurt.email_help': "L'e-mail n'est pas enregistré, il sert uniquement à pré-remplir le bouton e-mail.",
     'publish.buurt.addr_placeholder': "Rue + numéro",
+    'publish.buurt.addr_placeholder_full': "Adresse p.ex. 12 rue de l'Église, 75001 Paris",
+    'publish.addr.no_suggest': "Pas de suggestion ? Tape ton adresse aussi complètement que possible et publie — nous trouverons les coordonnées automatiquement.",
     'publish.buurt.pc_placeholder_prefix': "Code postal, ex. {ex}",
     'sharebuurt.title': "📨 Envoie ces liens à tes voisins",
     'sharebuurt.intro': "Ton adresse est déjà en ligne. Pour les autres adresses, YardiGo demande d'abord l'autorisation des résidents, c'est obligatoire selon le RGPD. Pour chaque voisin, un message tout prêt avec une formule personnalisée est préparé. Clique sur \"Copier le texte + lien\" ou envoie directement via WhatsApp, SMS ou e-mail. Leur adresse n'apparaît sur la carte qu'après confirmation.",
@@ -4908,6 +4925,8 @@ var I18N = {
     'publish.buurt.email_placeholder': "E-Mail-Adresse (optional, für vorausgefüllte E-Mail)",
     'publish.buurt.email_help': "E-Mail wird nicht gespeichert, sondern nur zum Vorausfüllen der E-Mail-Schaltfläche verwendet.",
     'publish.buurt.addr_placeholder': "Straße + Hausnummer",
+    'publish.buurt.addr_placeholder_full': "Adresse z. B. Kirchstraße 12, 10115 Berlin",
+    'publish.addr.no_suggest': "Keine Vorschläge? Gib deine Adresse so vollständig wie möglich ein und veröffentliche — wir finden die Koordinaten automatisch.",
     'publish.buurt.pc_placeholder_prefix': "PLZ z. B. {ex}",
     'sharebuurt.title': "📨 Sende diese Links an deine Nachbarn",
     'sharebuurt.intro': "Deine eigene Adresse ist bereits online. Für die anderen Adressen fragt YardiGo zuerst die Bewohner um Erlaubnis, wie es die DSGVO vorschreibt. Für jeden Nachbarn liegt eine vorbereitete Nachricht mit persönlicher Anrede bereit. Klicke auf \"Text + Link kopieren\" oder sende direkt via WhatsApp, SMS oder E-Mail. Ihre Adresse erscheint erst nach Bestätigung auf der Karte.",
@@ -8619,10 +8638,15 @@ function addBuurtAdres() {
     + '</div>'
     + helper
     + '<div style="position:relative">'
-    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.addr_placeholder', 'Straatnaam + huisnummer')) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].addr=this.value;addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')" autocomplete="off">'
+    + '<input class="form-input" id="bv-addr-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.addr_placeholder_full', 'Adres bijv. straat + nr, postcode, plaats')) + '" style="margin:0"'
+    + ' oninput="buurtAdressen[' + idx + '].addr=this.value;addrAutocomplete(this.value,\'bv-dd-' + idx + '\',true,'+idx+')"'
+    + ' onkeydown="_handleAddrKeydown(event,\'bv-dd-' + idx + '\',true,'+idx+')"'
+    + ' autocomplete="off">'
     + '<div id="bv-dd-' + idx + '" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;z-index:999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.12)"></div>'
     + '</div>'
-    + '<input class="form-input" id="bv-pc-' + idx + '" placeholder="' + escapeHtml(i18n('publish.buurt.pc_placeholder_prefix', 'Postcode bijv. {ex}').replace('{ex}', (YG_ADDR_PLACEHOLDERS[currentListingCountry] || YG_ADDR_PLACEHOLDERS.NL).pc)) + '" maxlength="' + (currentListingCountry === 'NL' ? 7 : 5) + '" style="margin:0" oninput="buurtAdressen[' + idx + '].pc=this.value">'
+    // Postcode-veld is verwijderd — postcode wordt automatisch geëxtraheerd
+    // uit het gekozen of getypte adres (via extractPostcode in selectAddr-
+    // Suggestion en als fallback in publishSale). Eén veld minder per rij.
     + extraFields;
   if (list) list.appendChild(row);
 }
@@ -9349,87 +9373,205 @@ function importBulkAdres() {
 // currentListingCountry (de keuze uit de plaats-flow, default = TLD): NL
 // blijft op PDOK (preciezer), de rest via Nominatim met countrycodes-filter.
 var addrSugTimer = null;
+// ── Adres-autocomplete per land ────────────────────────────────────────
+// NL → PDOK Locatieserver (gratis, zeer accuraat, postcode+huisnummer werkt)
+// FR → BAN api-adresse.data.gouv.fr (gratis, idem)
+// BE/DE → Nominatim (geen gratis nationale variant beschikbaar — bij 0 hits
+//          tonen we een "typ door"-hint zodat de gebruiker weet dat hij
+//          gewoon zelf kan typen; publishSale geocodet het dan alsnog).
+//
+// Elke suggestie wordt opgeslagen in window._addrSugBuffer[ddId] zodat
+// _acceptFirstAddrSuggestion() (gekoppeld aan Tab/Enter) hem kan oppakken.
+window._addrSugBuffer = window._addrSugBuffer || {};
+
 function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
   var dd = document.getElementById(ddId);
   if (!dd) return;
-  // Gebruiker is aan het typen, dus eventueel eerder geselecteerde coords
-  // zijn niet meer geldig — wis de cache zodat publishSale niet stiekem
-  // de oude coords aan een nieuw adres koppelt.
+  // Gebruiker is aan het typen — clear eventueel ge-cachte coords (anders
+  // koppelt publishSale stiekem oude lat/lng aan nieuwe tekst).
   var inputId = isBuurtRow ? 'bv-addr-' + buurtIdx : 'aAddr';
   var inputEl = document.getElementById(inputId);
   if (inputEl && inputEl.dataset) {
     delete inputEl.dataset.lat;
     delete inputEl.dataset.lng;
+    delete inputEl.dataset.pc;
   }
-  // Coords op buurtAdressen-object ook clearen, anders zou een edit-na-
-  // suggestie de stale lat/lng aan nieuwe tekst koppelen in publishSale.
   if (isBuurtRow && buurtAdressen[buurtIdx]) {
     delete buurtAdressen[buurtIdx].lat;
     delete buurtAdressen[buurtIdx].lng;
+    // Pc clearen we hier NIET — als er een suggestie was gekozen kan hij
+    // weer ge-set worden via selectAddrSuggestion; anders wordt hij bij
+    // publishSale via extractPostcode opnieuw afgeleid uit de tekst.
   }
+  // Reset suggestie-buffer voor deze dropdown
+  window._addrSugBuffer[ddId] = [];
+
   if (!val || val.length < 3) { dd.style.display = 'none'; return; }
   clearTimeout(addrSugTimer);
   addrSugTimer = setTimeout(function() {
-    // renderRow accepteert nu optionele lat/lon zodat we ze meeprikken aan
-    // selectAddrSuggestion. Voor PDOK (NL) zijn ze niet beschikbaar in de
-    // suggest-response — dan blijft de oude flow (re-geocode in publishSale)
-    // gewoon werken want PDOK weergavenaam is netjes en Nominatim kan 'm
-    // wel matchen. Voor Nominatim-suggesties (BE/FR/DE) MOETEN we de coords
-    // cachen, anders faalt de re-geocode op Nominatim's eigen verbose
-    // display_name en landt alles op de fallback-coords.
-    var renderRow = function(label, lat, lon) {
-      var coordsArg = (lat != null && lon != null) ? (',' + lat + ',' + lon) : '';
-      return '<div style="padding:9px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text)" '
-        + 'onmousedown="selectAddrSuggestion(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',\'' + String(label).replace(/'/g, "\\'") + '\'' + coordsArg + ')">'
-        + '📍 ' + escapeHtml(label) + '</div>';
+
+    // Render één suggestie-rij. We slaan de hele payload op in een buffer
+    // (per dropdown-id) zodat het keydown-handler de eerste kan accepteren
+    // zonder de DOM-onmousedown te triggeren.
+    var firstIdx = 0;
+    var renderSug = function(payload, idx) {
+      window._addrSugBuffer[ddId].push(payload);
+      var cls = (idx === firstIdx) ? 'addr-sug addr-sug-first' : 'addr-sug';
+      return '<div class="' + cls + '" '
+        + 'data-sug-idx="' + idx + '" '
+        + 'onmousedown="_pickAddrSug(\'' + ddId + '\',' + (isBuurtRow ? 'true,' + buurtIdx : 'false,-1') + ',' + idx + ')">'
+        + '📍 ' + escapeHtml(payload.label)
+        + (idx === firstIdx ? '<span class="addr-sug-hint">↵ enter</span>' : '')
+        + '</div>';
     };
-    if (currentListingCountry === 'NL') {
-      // PDOK Locatieserver: gratis, snel, nauwkeurig voor NL
-      fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam', { headers: { 'Accept': 'application/json' } })
+
+    // Hint-row bij 0 resultaten (BE/DE — soms rurale adressen of typo's).
+    // Gebruiker weet hierdoor dat hij gewoon door kan typen.
+    var renderNoResults = function() {
+      return '<div class="addr-sug-empty">'
+        + '💡 ' + escapeHtml(i18n('publish.addr.no_suggest', 'Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer — we vinden de coördinaten dan automatisch.'))
+        + '</div>';
+    };
+
+    var country = currentListingCountry;
+
+    if (country === 'NL') {
+      // PDOK Locatieserver — gebruikt /lookup ipv /suggest zodat we ook
+      // postcode én lat/lng terugkrijgen, niet alleen weergavenaam.
+      // Eerst /suggest om kandidaten te vinden (gewone search-tekst), daarna
+      // hoeven we niets extra te doen want weergavenaam bevat postcode al.
+      fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/suggest?q=' + encodeURIComponent(val) + '&rows=6&fq=type:(adres+woonplaats+straatnaam)&fl=weergavenaam,id', { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var docs = (data.response && data.response.docs) ? data.response.docs : [];
-          if (!docs.length) { dd.style.display = 'none'; return; }
-          dd.innerHTML = docs.map(function(d) { return renderRow(d.weergavenaam || ''); }).join('');
+          if (!docs.length) {
+            dd.innerHTML = renderNoResults();
+            dd.style.display = 'block';
+            return;
+          }
+          dd.innerHTML = docs.map(function(d, i) {
+            // Pc extraheren uit weergavenaam (PDOK formaat: "Straat 12, 1234 AB Stad")
+            var extracted = (typeof extractPostcode === 'function') ? extractPostcode(d.weergavenaam || '', 'NL') : null;
+            return renderSug({
+              label: d.weergavenaam || '',
+              pc: extracted ? extracted.pc : null,
+              // PDOK suggest levert geen lat/lng — die haalt publishSale zelf op
+              lat: null, lng: null
+            }, i);
+          }).join('');
+          dd.style.display = 'block';
+        })
+        .catch(function() { dd.style.display = 'none'; });
+    } else if (country === 'FR') {
+      // BAN — équivalent national de PDOK pour la France. Renvoie label,
+      // postcode, lat/lng dans une seule réponse GeoJSON.
+      fetch('https://api-adresse.data.gouv.fr/search/?q=' + encodeURIComponent(val) + '&limit=6&autocomplete=1', { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var feats = (data && data.features) ? data.features : [];
+          if (!feats.length) {
+            dd.innerHTML = renderNoResults();
+            dd.style.display = 'block';
+            return;
+          }
+          dd.innerHTML = feats.map(function(f, i) {
+            var p = f.properties || {};
+            var c = (f.geometry && f.geometry.coordinates) ? f.geometry.coordinates : [null, null];
+            return renderSug({
+              label: p.label || '',
+              pc: p.postcode || null,
+              lat: c[1], lng: c[0]  // BAN levert [lng, lat] in GeoJSON
+            }, i);
+          }).join('');
           dd.style.display = 'block';
         })
         .catch(function() { dd.style.display = 'none'; });
     } else {
-      // Nominatim met country-filter voor BE/FR/DE — coords cachen!
+      // BE/DE → Nominatim. Geen gratis nationale variant.
       var cc = lcCountryCode();
       fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val) + '&format=json&addressdetails=1&limit=6&countrycodes=' + cc, { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (!data || !data.length) { dd.style.display = 'none'; return; }
-          dd.innerHTML = data.map(function(d) { return renderRow(d.display_name || '', +d.lat, +d.lon); }).join('');
+          if (!data || !data.length) {
+            dd.innerHTML = renderNoResults();
+            dd.style.display = 'block';
+            return;
+          }
+          dd.innerHTML = data.map(function(d, i) {
+            // Nominatim's addressdetails geeft postcode terug; anders fallback
+            // op extractPostcode op de display_name.
+            var pc = (d.address && d.address.postcode) ? d.address.postcode : null;
+            if (!pc && typeof extractPostcode === 'function') {
+              var ex = extractPostcode(d.display_name || '', country);
+              if (ex) pc = ex.pc;
+            }
+            return renderSug({
+              label: d.display_name || '',
+              pc: pc,
+              lat: +d.lat, lng: +d.lon
+            }, i);
+          }).join('');
           dd.style.display = 'block';
         })
         .catch(function() { dd.style.display = 'none'; });
     }
   }, 280);
 }
-function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label, lat, lon) {
+
+// Click-handler op een suggestie-rij. Haalt payload uit de buffer en
+// delegeert naar selectAddrSuggestion (één centraal punt voor side-effects).
+function _pickAddrSug(ddId, isBuurtRow, buurtIdx, idx) {
+  var buf = window._addrSugBuffer[ddId];
+  if (!buf || !buf[idx]) return;
+  var p = buf[idx];
+  selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, p.label, p.lat, p.lng, p.pc);
+}
+
+// Keydown-handler op de adres-input. Tab of Enter pakt de eerste suggestie
+// als de dropdown openstaat. Werkt voor zowel aAddr als bv-addr-{idx}.
+function _handleAddrKeydown(e, ddId, isBuurtRow, buurtIdx) {
+  if (e.key !== 'Enter' && e.key !== 'Tab') return;
+  var dd = document.getElementById(ddId);
+  if (!dd || dd.style.display === 'none') return;
+  var buf = window._addrSugBuffer[ddId];
+  if (!buf || !buf.length) return;
+  // Voorkom dat Enter een formulier submit of Tab focus verspringt voordat
+  // we de suggestie hebben overgenomen.
+  e.preventDefault();
+  _pickAddrSug(ddId, isBuurtRow, buurtIdx, 0);
+}
+
+function selectAddrSuggestion(ddId, isBuurtRow, buurtIdx, label, lat, lon, pc) {
   var dd = document.getElementById(ddId);
   if (dd) dd.style.display = 'none';
-  // Coords meegegeven (Nominatim-suggestie): cache ze op het input element
-  // zodat publishSale ze direct kan gebruiken zonder een re-geocode op de
-  // verbose Nominatim display_name te doen — die faalt vaak.
   var hasCoords = (typeof lat === 'number' && !isNaN(lat) && typeof lon === 'number' && !isNaN(lon));
+  // Pc afleiden als hij niet meekwam (PDOK levert hem niet rechtstreeks).
+  if (!pc && typeof extractPostcode === 'function') {
+    var _ex = extractPostcode(label, currentListingCountry);
+    if (_ex) pc = _ex.pc;
+  }
   if (isBuurtRow) {
     var inp = document.getElementById('bv-addr-' + buurtIdx);
     if (inp) {
       inp.value = label;
       if (hasCoords) { inp.dataset.lat = String(lat); inp.dataset.lng = String(lon); }
+      if (pc) inp.dataset.pc = pc;
     }
     if (buurtAdressen[buurtIdx]) {
       buurtAdressen[buurtIdx].addr = label;
       if (hasCoords) { buurtAdressen[buurtIdx].lat = lat; buurtAdressen[buurtIdx].lng = lon; }
+      if (pc) buurtAdressen[buurtIdx].pc = pc;
+      // Als er nog een (oud) bv-pc-{idx} input bestaat — voor backwards-
+      // compatibility met bulk-imports/draft-restore — synchroniseer 'm.
+      var oldPcInp = document.getElementById('bv-pc-' + buurtIdx);
+      if (oldPcInp && pc) oldPcInp.value = pc;
     }
   } else {
     var aAddr = document.getElementById('aAddr');
     if (aAddr) {
       aAddr.value = label;
       if (hasCoords) { aAddr.dataset.lat = String(lat); aAddr.dataset.lng = String(lon); }
+      if (pc) aAddr.dataset.pc = pc;
     }
   }
 }
@@ -9670,6 +9812,15 @@ async function publishSale() {
       var _focusEl = document.getElementById('bv-addr-' + _emptyIdx);
       if (_focusEl) { try { _focusEl.focus(); _focusEl.scrollIntoView({block:'center', behavior:'smooth'}); } catch(e) {} }
       return;
+    }
+    // Pc-fallback: het aparte postcode-veld is verwijderd, dus voor handmatig
+    // getypte adressen (geen suggestie gekozen) leiden we 'm hier af uit de
+    // tekst. Voorkomt dat de DB-listing een lege pc-kolom krijgt.
+    for (var _j = 0; _j < buurtAdressen.length; _j++) {
+      if (!buurtAdressen[_j].pc && typeof extractPostcode === 'function') {
+        var _exPc = extractPostcode(buurtAdressen[_j].addr, currentListingCountry);
+        if (_exPc && _exPc.pc) buurtAdressen[_j].pc = _exPc.pc;
+      }
     }
   }
 
