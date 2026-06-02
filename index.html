@@ -10005,43 +10005,100 @@ async function publishSale() {
       lng = _cachedLng;
       cityName = extractCity(mainAddr);
     } else {
-      var geoAddr = isBuurt
-        ? (buurtAdressen[0].addr + (buurtAdressen[0].pc ? ', ' + buurtAdressen[0].pc : '') + ', ' + _geoCountry)
-        : (mainAddr + ', ' + _geoCountry);
+      // Raw input (zonder land-suffix) zodat we de pc-dedup-helper goed kunnen
+      // toepassen. We voegen ', land' pas helemaal aan het eind toe.
+      var _rawAddr = isBuurt ? (buurtAdressen[0].addr || '') : (mainAddr || '');
+      var _knownPc = isBuurt ? (buurtAdressen[0].pc || '') : '';
+      if (!_knownPc && typeof extractPostcode === 'function') {
+        var _exPc0 = extractPostcode(_rawAddr, currentListingCountry);
+        if (_exPc0) _knownPc = _exPc0.pc;
+      }
+      // _addrHasPc: zit de postcode al in de string? Vergelijk met spaties
+      // gestript zodat "1011AB" en "1011 AB" allebei matchen.
+      function _addrHasPc(addr, pc) {
+        if (!addr || !pc) return false;
+        var normAddr = addr.replace(/\s/g, '').toUpperCase();
+        var normPc = pc.replace(/\s/g, '').toUpperCase();
+        return normAddr.indexOf(normPc) !== -1;
+      }
+      // Bouw een nette query: voeg pc alleen toe als hij nog niet in addr staat.
+      // Dit lost het Budel-bug op: "Dorpsstraat 54, 6021HD Budel" + apart pc
+      // "6021 HD" werd "..., 6021HD Budel, 6021 HD, Nederland" → 0 Nominatim-hits.
+      function _buildGeoQuery(addr, pc, country) {
+        var parts = [addr];
+        if (pc && !_addrHasPc(addr, pc)) parts.push(pc);
+        if (country) parts.push(country);
+        return parts.join(', ');
+      }
+      var geoAddr = _buildGeoQuery(_rawAddr, _knownPc, _geoCountry);
       var _geoHeaders = { 'Accept-Language': 'nl,fr,de,en' };
-      var _nominatimUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC;
-      try {
-        var geoRes  = await fetch(_nominatimUrl, { headers: _geoHeaders });
-        geoData = await geoRes.json();
-        // Retry eenmalig na 1.2s bij lege resultaten (Nominatim rate-limit of tijdelijke storing)
-        if (!geoData.length) {
-          await new Promise(function(r) { setTimeout(r, 1200); });
-          var _geoRetry = await fetch(_nominatimUrl, { headers: _geoHeaders });
-          geoData = await _geoRetry.json();
+
+      // ── NL: PDOK first ──────────────────────────────────────────────
+      // PDOK Locatieserver gebruikt de officiële BAG-data en vindt vrijwel
+      // alle NL-adressen direct (met centroïde/lat-lng). Nominatim's BAG-
+      // dekking is variabel — vooral huisnummers/postbusadressen kunnen
+      // ontbreken. We proberen PDOK eerst, dan Nominatim als fallback.
+      if (currentListingCountry === 'NL') {
+        try {
+          var _pdokUrl = 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' + encodeURIComponent(_rawAddr) + '&fq=type:adres&rows=1&fl=weergavenaam,centroide_ll,postcode,woonplaatsnaam';
+          var _pdokRes = await fetch(_pdokUrl, { headers: { 'Accept': 'application/json' } });
+          var _pdokJson = await _pdokRes.json();
+          var _pdokDoc = _pdokJson && _pdokJson.response && _pdokJson.response.docs && _pdokJson.response.docs[0];
+          if (_pdokDoc && _pdokDoc.centroide_ll) {
+            // centroide_ll formaat: "POINT(5.5690359 51.2718934)"  (lon eerst)
+            var _m = _pdokDoc.centroide_ll.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+            if (_m) {
+              // Mock een Nominatim-achtige response zodat downstream code
+              // (cityName-extractie, bbox-validatie) niets hoeft te weten van
+              // de bron-API.
+              geoData = [{
+                lat: _m[2],
+                lon: _m[1],
+                address: { city: _pdokDoc.woonplaatsnaam || extractCity(_rawAddr) }
+              }];
+            }
+          }
+        } catch(_pdokErr) {
+          // PDOK down? Geen probleem, valt vanzelf door naar Nominatim.
+          console.warn('PDOK lookup faalde, fallback op Nominatim:', _pdokErr);
         }
-      } catch(_geoNetErr) {
-        hideL();
-        toast('📡 Locatie ophalen mislukt. Controleer je internetverbinding en probeer opnieuw.');
-        return;
       }
-      // Als het volledige adres geen resultaat geeft, probeer een vereenvoudigde
-      // query met alleen postcode + stad. Dit helpt bij Belgische adressen waarbij
-      // schrijfwijzen, sub-gemeenten (bv. Wondelgem = deelgemeente Gent) of
-      // afwijkende straatnaamnoteringen de Nominatim-match blokkeren.
-      if (!geoData.length && currentListingCountry !== 'NL') {
-        var _pcFallback = isBuurt ? (buurtAdressen[0].pc || '') : '';
-        if (!_pcFallback) {
-          var _pcEx = extractPostcode(isBuurt ? (buurtAdressen[0].addr || '') : mainAddr, currentListingCountry);
-          if (_pcEx) _pcFallback = _pcEx.pc;
+
+      // ── Nominatim (NL fallback, BE/FR/DE primary) ──────────────────
+      if (!geoData.length) {
+        var _nominatimUrl = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(geoAddr) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC;
+        try {
+          var geoRes  = await fetch(_nominatimUrl, { headers: _geoHeaders });
+          geoData = await geoRes.json();
+          // Retry eenmalig na 1.2s bij lege resultaten (Nominatim rate-limit of tijdelijke storing)
+          if (!geoData.length) {
+            await new Promise(function(r) { setTimeout(r, 1200); });
+            var _geoRetry = await fetch(_nominatimUrl, { headers: _geoHeaders });
+            geoData = await _geoRetry.json();
+          }
+        } catch(_geoNetErr) {
+          hideL();
+          toast('📡 Locatie ophalen mislukt. Controleer je internetverbinding en probeer opnieuw.');
+          return;
         }
-        var _cityFallback2 = extractCity(isBuurt ? (buurtAdressen[0].addr || '') : mainAddr);
-        var _simpleGeoQuery = [_pcFallback, _cityFallback2 !== 'Onbekend' ? _cityFallback2 : '', _geoCountry].filter(Boolean).join(', ');
+      }
+
+      // ── Pc + stad fallback (nu voor ALLE landen incl. NL) ──────────
+      // Helpt bij adressen waar straatnaam/huisnummer schrijfwijze afwijkt
+      // van Nominatim's index, maar de pc + stad wel matchen. Resulteert in
+      // de juiste straat-buurt-coords ipv 0 hits.
+      if (!geoData.length) {
+        var _cityFallback2 = extractCity(_rawAddr);
+        var _simpleGeoQuery = [_knownPc, _cityFallback2 !== 'Onbekend' ? _cityFallback2 : '', _geoCountry].filter(Boolean).join(', ');
         if (_simpleGeoQuery.replace(/,\s*/g, '').trim().length > 0) {
-          var geoRes2 = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(_simpleGeoQuery) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC, { headers: _geoHeaders });
-          var geoData2 = await geoRes2.json();
-          if (geoData2.length) geoData = geoData2;
+          try {
+            var geoRes2 = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(_simpleGeoQuery) + '&format=json&addressdetails=1&limit=1&countrycodes=' + _geoCC, { headers: _geoHeaders });
+            var geoData2 = await geoRes2.json();
+            if (geoData2.length) geoData = geoData2;
+          } catch(_fbErr) { /* netwerkfout → geen extra fallback */ }
         }
       }
+
       if (!geoData.length) {
         hideL();
         clearPublishStatus();
