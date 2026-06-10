@@ -508,6 +508,179 @@ body.dark #admin-panel{background:var(--bg);}
 body.dark .adm-header{background:var(--bg2);}
 body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea,body.dark .adm-field select,body.dark .adm-preview{background:var(--bg2);color:var(--text);}
 
+/* ──────────────────────────────────────────────────────
+   DESKTOP layout (≥1024px) — body.is-desktop.
+   Mobile UI blijft default (geen wijziging).
+   Capacitor (native app) blijft altijd mobile dankzij JS check.
+   ────────────────────────────────────────────────────── */
+/* Desktop top-nav — hidden op mobile, flex op desktop */
+.desktop-nav{display:none;}
+/* Kaart split en sidebars — hidden op mobile */
+.kaart-side,.lijst-side,.home-content-aside{display:none;}
+.home-content-grid{display:block;}
+.home-content-main{display:block;}
+
+@media (min-width: 1024px) {
+  /* ── ROOT: override mobile-eerste max-width:480px op body ── */
+  body.is-desktop{max-width:none;}
+  body.is-desktop .fab-row{max-width:1400px;}
+
+  /* ── HEADER & nav ── */
+  body.is-desktop .header{padding:14px 28px;max-width:none;}
+  body.is-desktop .desktop-nav{
+    display:flex;gap:4px;flex:1;justify-content:center;
+    margin:0 24px;align-items:center;
+  }
+  body.is-desktop .desktop-nav button{
+    background:transparent;border:none;color:#fff;
+    padding:9px 16px;border-radius:10px;
+    font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    transition:background .15s,opacity .15s;opacity:.78;
+  }
+  body.is-desktop .desktop-nav button:hover{background:rgba(255,255,255,.14);opacity:1;}
+  body.is-desktop .desktop-nav button.active{background:rgba(255,255,255,.22);opacity:1;}
+  body.is-desktop .bnav{display:none !important;}
+  body.is-desktop .tab-row{display:none;}
+
+  /* ── Zoekbalk + filter-bar centeren ── */
+  body.is-desktop .search-row{padding:0 28px 12px;}
+  body.is-desktop .search-row .s-wrap{max-width:540px !important;margin:0 auto;}
+  body.is-desktop .filter-bar{padding:12px 28px;max-width:1400px;margin:0 auto;justify-content:center;}
+  body.is-desktop .type-row{padding:6px 28px;max-width:1400px;margin:0 auto;}
+
+  /* ── KAART view: map links, lijst rechts ── */
+  body.is-desktop #view-kaart .kaart-split{
+    display:flex;height:calc(100svh - 200px);min-height:520px;
+    max-width:1400px;margin:0 auto;padding:0 16px;gap:16px;box-sizing:border-box;
+  }
+  body.is-desktop #map{height:100% !important;flex:1.85;min-width:0;border-radius:12px;overflow:hidden;}
+  body.is-desktop .kaart-side{
+    display:flex;flex-direction:column;flex:1;min-width:300px;max-width:440px;
+    background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;
+  }
+  body.is-desktop .kaart-side-head{
+    padding:12px 16px;border-bottom:1.5px solid var(--border);
+    font-size:13px;font-weight:700;color:#2C2416;background:#FAF7F2;
+    position:sticky;top:0;z-index:1;
+  }
+  body.is-desktop #kaart-side-cards{flex:1;overflow-y:auto;padding:10px 12px;}
+  body.is-desktop #kaart-side-cards .card{margin-bottom:8px;}
+  body.dark.is-desktop .kaart-side{background:var(--bg2);}
+  body.dark.is-desktop .kaart-side-head{background:var(--bg);color:var(--text);}
+  body.dark.is-desktop #map{border:1.5px solid var(--border);}
+
+  /* ── LIJST view: filter sidebar + grid ── */
+  body.is-desktop #view-lijst{
+    display:flex;gap:20px;max-width:1400px;margin:0 auto;padding:20px 24px;align-items:flex-start;
+  }
+  body.is-desktop .lijst-side{
+    display:block;width:220px;flex-shrink:0;background:#fff;
+    border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;
+    position:sticky;top:80px;
+  }
+  body.is-desktop .lijst-side-title{
+    font-size:10px;font-weight:800;color:#9A8E82;letter-spacing:.6px;margin-bottom:12px;
+  }
+  body.is-desktop .lijst-side-group{margin-bottom:18px;}
+  body.is-desktop .lijst-side-h{
+    font-size:11px;font-weight:700;color:#2C2416;margin-bottom:6px;
+  }
+  body.is-desktop .ls-opt{
+    display:block;width:100%;text-align:left;padding:6px 10px;margin-bottom:2px;
+    background:transparent;border:1.5px solid transparent;border-radius:8px;
+    font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;color:#4A3E32;
+    cursor:pointer;transition:background .12s,border-color .12s;
+  }
+  body.is-desktop .ls-opt:hover{background:#F0EBE3;}
+  body.is-desktop .ls-opt.active{background:#FFF1E7;border-color:#E07B39;color:#E07B39;font-weight:700;}
+  body.is-desktop .list-wrap{flex:1;padding:0;min-width:0;}
+  body.is-desktop #cardList{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  body.is-desktop #cardList .card{margin-bottom:0;height:100%;}
+  body.dark.is-desktop .lijst-side{background:var(--bg2);}
+  body.dark.is-desktop .lijst-side-h,
+  body.dark.is-desktop .lijst-side-title{color:var(--text);}
+  body.dark.is-desktop .ls-opt{color:var(--text);}
+  body.dark.is-desktop .ls-opt:hover{background:var(--bg);}
+
+  /* ── HOME view: hero, tabs, 2-col content ── */
+  body.is-desktop #view-home .home-wrap{max-width:1400px;margin:0 auto;padding:0 24px 84px;}
+  body.is-desktop #view-home .home-hero{margin:18px 0 0;border-radius:18px;padding:34px 36px;}
+  body.is-desktop #view-home .home-hero h1{font-size:30px;}
+  body.is-desktop #view-home .home-hero p{font-size:14px;}
+  body.is-desktop #view-home .home-hero .home-pin{width:52px;height:64px;}
+  body.is-desktop #view-home .home-tab-row{position:sticky;top:0;margin:14px 0 4px;border-radius:12px;padding:0 8px;}
+  body.is-desktop #view-home .home-tab{font-size:14px;padding:14px 20px;}
+  body.is-desktop #view-home .home-content-grid{
+    display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;
+  }
+  body.is-desktop #view-home .home-content-main{min-width:0;}
+  body.is-desktop #view-home .home-content-aside{display:flex;flex-direction:column;gap:14px;position:sticky;top:84px;}
+  body.is-desktop #view-home .home-section{padding:18px 4px 6px;}
+  body.is-desktop #view-home .home-section-title{font-size:12px;}
+  body.is-desktop #view-home #home-news-list,
+  body.is-desktop #view-home #home-blog-list,
+  body.is-desktop #view-home #home-info-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+  body.is-desktop #view-home .home-card{margin-bottom:0;height:100%;}
+  body.is-desktop .home-ad-slot{
+    background:linear-gradient(135deg,#FFF8E8,#F4D7B0);border:1.5px dashed #C49656;
+    border-radius:14px;padding:18px;text-align:center;color:#7A5A2E;
+  }
+  body.is-desktop .home-ad-label{
+    font-size:10px;font-weight:800;letter-spacing:.6px;margin-bottom:8px;
+  }
+  body.is-desktop .home-ad-placeholder{
+    height:230px;background:rgba(255,255,255,.5);border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:#9A8056;
+  }
+  body.is-desktop .home-sidebar-card{
+    background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);
+  }
+  body.is-desktop .hsc-title{font-size:13px;font-weight:800;color:#2C2416;margin-bottom:6px;}
+  body.is-desktop .hsc-body{font-size:12.5px;color:#4A3E32;line-height:1.55;}
+  body.dark.is-desktop .home-sidebar-card{background:var(--bg2);}
+  body.dark.is-desktop .hsc-title,
+  body.dark.is-desktop .hsc-body{color:var(--text);}
+
+  /* ── ROUTE / MIJN max-width ── */
+  body.is-desktop .route-wrap,
+  body.is-desktop #view-mijn > *{max-width:1100px;margin:0 auto;}
+  body.is-desktop #view-mijn{padding:0 24px;}
+
+  /* ── FAB-row: rechtsonder met meer ruimte ── */
+  body.is-desktop .fab-row{right:32px;bottom:32px;}
+  body.is-desktop .fab{padding:14px 22px;font-size:14px;}
+
+  /* ── Hover-states op cards ── */
+  body.is-desktop .card{transition:transform .15s,box-shadow .15s;cursor:pointer;}
+  body.is-desktop .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(44,36,22,.12);}
+
+  /* ── Detail-sheet als gecentreerde modal op desktop ──
+     (bottom-sheet animation behouden voor mobiel) */
+  body.is-desktop .sheet{
+    bottom:auto;top:50%;left:50%;
+    transform:translate(-50%,calc(-50% + 30px));
+    max-width:720px;border-radius:20px;
+    max-height:calc(100vh - 80px);
+  }
+  body.is-desktop .overlay.open .sheet{transform:translate(-50%,-50%);}
+  body.is-desktop .sheet-handle{display:none;}
+
+  /* ── Home-post detail modal op desktop ── */
+  body.is-desktop #home-post-overlay{align-items:center;justify-content:center;}
+  body.is-desktop #home-post-overlay .hpo-sheet{
+    border-radius:18px;max-width:780px;max-height:88svh;width:calc(100% - 60px);
+    animation:viewFadeIn .25s ease-out;
+  }
+  body.is-desktop #home-post-overlay .hpo-head{border-radius:18px 18px 0 0;}
+
+  /* ── Admin panel: max-width container op desktop ── */
+  body.is-desktop #admin-panel{padding:0;}
+  body.is-desktop #admin-panel .adm-body{max-width:900px;margin:0 auto;width:100%;}
+  body.is-desktop #admin-panel .adm-header{padding:14px 32px;}
+  body.is-desktop #admin-panel .adm-header h2{max-width:900px;margin:0 auto;width:100%;}
+}
+
 /* ── HOME POST detail-overlay ── */
 #home-post-overlay{display:none;position:fixed;inset:0;z-index:10005;background:rgba(44,36,22,.45);align-items:flex-end;}
 #home-post-overlay.open{display:flex;animation:viewFadeIn .2s ease-out;}
@@ -1346,6 +1519,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <span class="logo-sub">FIND · SELL · GO</span>
     </div>
   </div>
+  <!-- Desktop top-nav — alleen zichtbaar bij body.is-desktop (≥1024px).
+       Spiegelt de bnav onderaan op mobiel; clicks roepen dezelfde
+       handlers aan zodat state synchroon blijft. -->
+  <nav class="desktop-nav" id="desktop-nav">
+    <button id="dn-home"  onclick="sv('home',null);_dnActivate('dn-home');document.getElementById('bni-home').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-home')b.classList.remove('active')})" data-i18n="nav.home">Home</button>
+    <button id="dn-kaart" class="active" onclick="sv('kaart',document.querySelectorAll('.tab')[0]);_dnActivate('dn-kaart');document.getElementById('bni-kaart').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-kaart')b.classList.remove('active')})" data-i18n="nav.map">Kaart</button>
+    <button id="dn-lijst" onclick="sv('lijst',document.querySelectorAll('.tab')[1]);_dnActivate('dn-lijst');document.getElementById('bni-lijst').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-lijst')b.classList.remove('active')})" data-i18n="nav.list">Lijst</button>
+    <button id="dn-route" onclick="sv('route',document.querySelectorAll('.tab')[2]);_dnActivate('dn-route');document.getElementById('bni-route').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-route')b.classList.remove('active')})" data-i18n="nav.route">Route</button>
+    <button id="dn-mijn"  onclick="sv('mijn',document.querySelectorAll('.tab')[3]);_dnActivate('dn-mijn');document.getElementById('bni-mijn').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-mijn')b.classList.remove('active')})" data-i18n="nav.mine">Mijn</button>
+  </nav>
   <div class="header-right">
     <div class="lang-picker" id="langPicker">
       <button class="lang-btn" onclick="toggleLangMenu(event)" id="langBtn" aria-haspopup="menu" aria-expanded="false" title="Taal kiezen / Choose language" aria-label="Taal kiezen"><span class="lang-flag" id="langFlag">🇳🇱</span></button>
@@ -1435,6 +1618,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <!-- Views -->
 <div class="view active" id="view-kaart">
+  <!-- Desktop split (Funda-stijl): map links + sidebar lijst rechts.
+       Op mobiel valt deze structuur weg via CSS — alleen de map blijft. -->
+  <div class="kaart-split">
   <div id="map" style="position:relative;overflow:hidden">
   <!-- Gesture-hint verwijderd 2026-04-27: de melding "twee vingers om de
        kaart te bewegen" klopte niet voor de huidige fullscreen-map waar
@@ -1452,9 +1638,46 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </div>
 </div>
+<!-- Sidebar lijst rechts (alleen zichtbaar op desktop). renderList()
+     vult deze automatisch via _syncKaartSideList() na elke render. -->
+<aside class="kaart-side" id="kaart-side">
+  <div class="kaart-side-head">
+    <span id="kaart-side-count">Verkopen</span>
+  </div>
+  <div id="kaart-side-cards"></div>
+</aside>
+</div>
 </div>
 
 <div class="view" id="view-lijst">
+  <!-- Desktop filter sidebar — alleen zichtbaar op ≥1024px. Geeft snelle
+       toegang tot de filters zonder dropdown-menu's. -->
+  <aside class="lijst-side">
+    <div class="lijst-side-title">FILTERS</div>
+    <div class="lijst-side-group">
+      <div class="lijst-side-h">📍 Afstand</div>
+      <button class="ls-opt" onclick="pickR(5)">5 km</button>
+      <button class="ls-opt" onclick="pickR(10)">10 km</button>
+      <button class="ls-opt" onclick="pickR(25)">25 km</button>
+      <button class="ls-opt" onclick="pickR(50)">50 km</button>
+      <button class="ls-opt active" onclick="pickR(9999)">Overal</button>
+    </div>
+    <div class="lijst-side-group">
+      <div class="lijst-side-h">📅 Datum</div>
+      <button class="ls-opt active" onclick="pickD('all','filter.date.all_short')">Alle datums</button>
+      <button class="ls-opt" onclick="pickD('today','filter.date.today')">Vandaag</button>
+      <button class="ls-opt" onclick="pickD('weekend','filter.date.weekend')">Dit weekend</button>
+      <button class="ls-opt" onclick="pickD('week','filter.date.week')">Deze week</button>
+      <button class="ls-opt" onclick="pickD('next','filter.date.next_week')">Volgende week</button>
+    </div>
+    <div class="lijst-side-group">
+      <div class="lijst-side-h">TYPE</div>
+      <button class="ls-opt" onclick="filterType('particulier')">🏠 Opritverkoop</button>
+      <button class="ls-opt" onclick="filterType('buurt')">🏘️ Rommelroute</button>
+      <button class="ls-opt" onclick="filterType('evenement')">🎪 Evenement</button>
+      <button class="ls-opt" onclick="filterType('all')">✕ Wis filter</button>
+    </div>
+  </aside>
   <div class="list-wrap">
     <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
       <span id="lcount" style="flex-shrink:0;white-space:nowrap">0 gevonden</span>
@@ -2141,6 +2364,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </button>
     </div>
 
+    <!-- Desktop layout: posts links (70%), sidebar rechts (30%) met ads en uitgelicht.
+         Op mobiel zit alles gewoon in één kolom. -->
+    <div class="home-content-grid">
+    <div class="home-content-main">
+
     <!-- Secties — section-titels verbergen automatisch wanneer een
          specifieke tab actief is (dan is de tab zelf de header). -->
     <div class="home-section" data-section="news">
@@ -2157,6 +2385,27 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div class="home-section-title" data-i18n="home.section.info">ℹ️ Info & help</div>
       <div id="home-info-list"><div class="home-loading">Laden…</div></div>
     </div>
+
+    </div><!-- /home-content-main -->
+
+    <!-- Sidebar (alleen op desktop ≥1024px) — ad-slot + uitgelicht.
+         Op mobiel verbergt via CSS, zodat alles in één kolom blijft. -->
+    <aside class="home-content-aside">
+      <div class="home-ad-slot" aria-label="Advertentieruimte">
+        <div class="home-ad-label">ADVERTENTIE</div>
+        <div class="home-ad-placeholder">300 × 250</div>
+      </div>
+      <div class="home-sidebar-card">
+        <div class="hsc-title">⭐ Uitgelicht</div>
+        <div class="hsc-body">Komende rommelmarkten in jouw regio worden hier binnenkort uitgelicht.</div>
+      </div>
+      <div class="home-sidebar-card">
+        <div class="hsc-title">💡 Tip</div>
+        <div class="hsc-body">Heb jij een leuke verkoop in jouw straat? Plaats hem gratis via <strong>+ Plaatsen</strong> bovenin.</div>
+      </div>
+    </aside>
+
+    </div><!-- /home-content-grid -->
 
     <div style="padding:24px 20px;text-align:center;font-size:11px;color:var(--muted)">
       <span data-i18n="home.footer">YardiGo · Find · Sell · Go</span>
@@ -7387,6 +7636,8 @@ function renderList() {
 
   list.innerHTML = html;
 
+  // Op desktop: sync de side-list naast de kaart zodat beide synchroon zijn
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
 }
 
 // Eén buurtverkoop = 1 uitklapbare kaart in de lijst. Adressen verschijnen
@@ -7771,6 +8022,15 @@ function sv(name, tabEl) {
   var fabRow = document.getElementById('fab-row');
   // FAB verbergen op kaart (overlap) en op home (geen sales context)
   if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart' || name === 'home');
+  // Desktop-nav active state synchroniseren
+  if (typeof _dnActivate === 'function') {
+    var dnId = ({ home:'dn-home', kaart:'dn-kaart', lijst:'dn-lijst', route:'dn-route', mijn:'dn-mijn' })[name];
+    if (dnId) _dnActivate(dnId);
+  }
+  // Op desktop ook side-list bijwerken bij kaart
+  if (name === 'kaart' && typeof _syncKaartSideList === 'function') {
+    setTimeout(_syncKaartSideList, 80);
+  }
 }
 function ptab(i) {
   document.querySelectorAll('.pp').forEach(function(p) { p.classList.remove('active'); });
@@ -12006,6 +12266,55 @@ function _goHome() {
   var isCapacitor = (typeof window.Capacitor !== 'undefined') ||
                     (location.hostname === 'localhost' && location.protocol === 'https:');
   location.href = isCapacitor ? 'home.html' : '/home';
+}
+
+// ══════════════════════════════════════════════════
+// DESKTOP/MOBILE breakpoint — zet body.is-desktop bij ≥1024px.
+// Capacitor (PWA op telefoon) blijft altijd mobiel ongeacht
+// schermbreedte. Op het web schakelt het automatisch tussen
+// mobile/desktop layout bij window resize.
+// ══════════════════════════════════════════════════
+(function _ygDesktopWatcher() {
+  // Capacitor (native app op iOS/Android) → altijd mobile UI
+  var isCapacitor = (typeof window.Capacitor !== 'undefined');
+  if (isCapacitor) return;
+  var mq = window.matchMedia('(min-width: 1024px)');
+  function _apply(e) {
+    var on = e && typeof e.matches === 'boolean' ? e.matches : mq.matches;
+    document.body.classList.toggle('is-desktop', on);
+    // Map opnieuw layouten als schermtype verandert terwijl kaart open is
+    if (typeof map !== 'undefined' && map && map.invalidateSize) {
+      setTimeout(function(){ try { map.invalidateSize(); } catch(_e){} }, 100);
+    }
+    // Kaart-sidebar bijwerken op desktop
+    if (on && typeof renderList === 'function') {
+      setTimeout(function() { try { _syncKaartSideList(); } catch(_e) {} }, 50);
+    }
+  }
+  _apply(mq);
+  // Modern + legacy listener API
+  if (mq.addEventListener) mq.addEventListener('change', _apply);
+  else if (mq.addListener) mq.addListener(_apply);
+})();
+
+// Kopieer #cardList HTML naar de kaart-sidebar zodat op desktop
+// dezelfde lijst zichtbaar is naast de kaart.
+function _syncKaartSideList() {
+  if (!document.body.classList.contains('is-desktop')) return;
+  var src = document.getElementById('cardList');
+  var dst = document.getElementById('kaart-side-cards');
+  if (src && dst) dst.innerHTML = src.innerHTML;
+  // Synchroniseer ook het aantal-label
+  var countSrc = document.getElementById('lcount');
+  var countDst = document.getElementById('kaart-side-count');
+  if (countSrc && countDst) countDst.textContent = countSrc.textContent;
+}
+
+// Markeer welke top-nav-knop actief is op desktop.
+function _dnActivate(id) {
+  document.querySelectorAll('.desktop-nav button').forEach(function(b){ b.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 
 // ══════════════════════════════════════════════════
