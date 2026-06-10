@@ -501,6 +501,38 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
 body.dark #home-post-overlay .hpo-sheet,body.dark #home-post-overlay .hpo-head{background:var(--bg2);}
 body.dark #home-post-overlay h1{color:var(--text);}
 
+/* ── Reacties ── */
+.hpc-wrap{margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border);}
+.hpc-title{font-size:14px;font-weight:800;color:#2C2416;margin-bottom:12px;}
+.hpc-form{background:#F0EBE3;border-radius:12px;padding:10px;margin-bottom:14px;}
+.hpc-form textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;color:#2C2416;background:#fff;outline:none;resize:vertical;min-height:60px;box-sizing:border-box;}
+.hpc-form .hpc-row{display:flex;justify-content:flex-end;margin-top:8px;}
+.hpc-form button{padding:8px 14px;border-radius:8px;border:none;background:#E07B39;color:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.hpc-form button:disabled{opacity:.5;cursor:not-allowed;}
+.hpc-login-hint{padding:14px;background:#FFF8E8;border:1.5px solid #F4D7B0;border-radius:12px;color:#7A5A2E;font-size:12.5px;line-height:1.55;margin-bottom:14px;text-align:center;}
+.hpc-login-hint a{color:#E07B39;font-weight:700;cursor:pointer;text-decoration:none;}
+.hpc-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.hpc-item:last-child{border-bottom:none;}
+.hpc-avatar{width:32px;height:32px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.hpc-avatar img{width:100%;height:100%;object-fit:cover;}
+.hpc-body{flex:1;min-width:0;}
+.hpc-name{font-size:12.5px;font-weight:700;color:#2C2416;}
+.hpc-when{font-size:10px;color:#9A8E82;margin-left:6px;font-weight:500;}
+.hpc-text{font-size:12.5px;color:#3A332B;line-height:1.55;margin-top:2px;word-wrap:break-word;}
+.hpc-del{background:transparent;border:none;color:#D94040;font-size:11px;cursor:pointer;padding:2px 4px;font-family:'Poppins',sans-serif;}
+.hpc-empty{font-size:12px;color:var(--muted);padding:14px;text-align:center;}
+body.dark .hpc-form{background:var(--bg);}
+body.dark .hpc-form textarea{background:var(--bg2);color:var(--text);}
+
+/* ── Admin image upload-knop ── */
+.adm-upload-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
+.adm-upload-btn{padding:8px 12px;background:#F0EBE3;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:#2C2416;cursor:pointer;flex-shrink:0;}
+.adm-upload-btn:hover{filter:brightness(.97);}
+.adm-upload-btn input[type=file]{display:none;}
+.adm-hero-preview{margin-top:8px;}
+.adm-hero-preview img{max-width:100%;max-height:140px;border-radius:8px;border:1.5px solid var(--border);display:block;}
+.adm-upload-status{font-size:11px;color:var(--muted);}
+
 /* ── MAP ── */
 #map{height:calc(100svh - 230px);min-height:280px;width:100%;touch-action:none;}
 
@@ -2166,8 +2198,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <textarea id="adm-excerpt" maxlength="500" style="min-height:60px" placeholder="Eén of twee zinnen die in de lijst getoond worden"></textarea>
       </div>
       <div class="adm-field">
-        <label for="adm-hero">Hero afbeelding URL (optioneel)</label>
-        <input type="url" id="adm-hero" placeholder="https://…">
+        <label for="adm-hero">Hero afbeelding (optioneel)</label>
+        <input type="url" id="adm-hero" placeholder="https://… of upload hieronder" oninput="_admHeroPreview(this.value)">
+        <div class="adm-upload-row">
+          <label class="adm-upload-btn">
+            📷 Upload afbeelding
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="adminUploadHero(this)">
+          </label>
+          <span id="adm-upload-status" class="adm-upload-status"></span>
+        </div>
+        <div class="adm-hero-preview" id="adm-hero-preview"></div>
       </div>
       <div class="adm-field">
         <label for="adm-body">Inhoud (Markdown)</label>
@@ -2204,6 +2244,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="hpo-body" id="home-post-body">
       <div class="home-loading">Laden…</div>
     </div>
+    <!-- Reacties-sectie wordt door openHomePost() gevuld in #home-post-comments -->
+    <div class="hpo-body" id="home-post-comments" style="padding-top:0"></div>
   </div>
 </div>
 
@@ -11973,14 +12015,20 @@ function _renderHomeBucket(elId, posts, typeKey) {
   }).join('');
 }
 
+// State: welke post is open zodat comments-submit hem kent
+var _openPostId = null;
+
 // Detail-overlay voor een Home post — gebruikt de bestaande overlay-style
 async function openHomePost(id) {
   if (!sbClient) return;
   var ov = document.getElementById('home-post-overlay');
   if (!ov) return;
   ov.classList.add('open');
+  _openPostId = id;
   var bodyEl = document.getElementById('home-post-body');
+  var commentsEl = document.getElementById('home-post-comments');
   if (bodyEl) bodyEl.innerHTML = '<div class="home-loading">Laden…</div>';
+  if (commentsEl) commentsEl.innerHTML = '';
   try {
     var res = await sbClient.from('news_posts').select('id,type,title,body_md,hero_image_url,published_at,author_id').eq('id', id).maybeSingle();
     if (res.error || !res.data) {
@@ -11995,6 +12043,8 @@ async function openHomePost(id) {
       '<div style="font-size:11px;font-weight:700;color:#9A8E82;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">' + p.type + ' · ' + when + '</div>' +
       '<h1 style="font-size:22px;font-weight:800;color:#2C2416;margin:0 0 12px;line-height:1.3">' + _esc(p.title) + '</h1>' +
       '<div class="adm-preview" style="border:none;padding:0;background:transparent;max-height:none">' + ygMarkdown(p.body_md || '') + '</div>';
+    // Reacties laden (parallel)
+    loadHomePostComments(id);
   } catch(e) {
     bodyEl.innerHTML = '<div class="home-empty">Fout: ' + (e.message || 'onbekend') + '</div>';
   }
@@ -12002,6 +12052,153 @@ async function openHomePost(id) {
 function closeHomePost() {
   var ov = document.getElementById('home-post-overlay');
   if (ov) ov.classList.remove('open');
+  _openPostId = null;
+}
+
+// ── Reacties op een post ──
+async function loadHomePostComments(postId) {
+  var el = document.getElementById('home-post-comments');
+  if (!el) return;
+  // Header + (form of login-hint) eerst renderen
+  var formHtml;
+  if (isGuest || !currentUser || !currentUser.id) {
+    formHtml = '<div class="hpc-login-hint">' +
+      '💬 Log in om een reactie achter te laten. ' +
+      '<a onclick="closeHomePost();openLogin()">Inloggen</a>' +
+      '</div>';
+  } else {
+    formHtml = '<div class="hpc-form">' +
+      '<textarea id="hpc-input" maxlength="2000" placeholder="Schrijf een reactie…"></textarea>' +
+      '<div class="hpc-row">' +
+        '<button onclick="submitHomePostComment()" id="hpc-submit-btn">Plaats reactie</button>' +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML =
+    '<div class="hpc-wrap">' +
+      '<div class="hpc-title">💬 Reacties</div>' +
+      formHtml +
+      '<div id="hpc-list"><div class="hpc-empty">Reacties laden…</div></div>' +
+    '</div>';
+
+  // Reacties + naam/avatar van de reageerder ophalen
+  try {
+    var res = await sbClient.from('news_comments')
+      .select('id, body, created_at, user_id, profile:user_id(display_name, avatar_url)')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    var listEl = document.getElementById('hpc-list');
+    if (!listEl) return;
+    var rows = res.data || [];
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="hpc-empty">Nog geen reacties. Wees de eerste!</div>';
+      return;
+    }
+    var myId = (!isGuest && currentUser) ? currentUser.id : null;
+    var isAdmin = window.YG_IS_ADMIN === true;
+    listEl.innerHTML = rows.map(function(c) {
+      var name = (c.profile && c.profile.display_name) || 'Anoniem';
+      var av   = c.profile && c.profile.avatar_url
+        ? '<img src="' + _esc(c.profile.avatar_url) + '" alt="">'
+        : _esc(name.charAt(0).toUpperCase());
+      var when = c.created_at ? new Date(c.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short' }) : '';
+      var canDel = (c.user_id === myId) || isAdmin;
+      var delBtn = canDel ? '<button class="hpc-del" onclick="deleteHomePostComment(\'' + c.id + '\')">verwijderen</button>' : '';
+      return '<div class="hpc-item">' +
+        '<div class="hpc-avatar">' + av + '</div>' +
+        '<div class="hpc-body">' +
+          '<div><span class="hpc-name">' + _esc(name) + '</span><span class="hpc-when">' + when + '</span></div>' +
+          '<div class="hpc-text">' + _esc(c.body) + '</div>' +
+          (canDel ? '<div style="margin-top:2px">' + delBtn + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    var listEl = document.getElementById('hpc-list');
+    if (listEl) listEl.innerHTML = '<div class="hpc-empty">Reacties laden mislukt</div>';
+  }
+}
+
+async function submitHomePostComment() {
+  if (!_openPostId) return;
+  if (isGuest || !currentUser || !currentUser.id) { toast('Log eerst in'); return; }
+  var input = document.getElementById('hpc-input');
+  var btn   = document.getElementById('hpc-submit-btn');
+  if (!input) return;
+  var body = (input.value || '').trim();
+  if (!body) { toast('Schrijf eerst iets'); return; }
+  if (body.length > 2000) { toast('Max 2000 tekens'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Plaatsen…'; }
+  try {
+    var res = await sbClient.from('news_comments').insert({
+      post_id: _openPostId,
+      user_id: currentUser.id,
+      body: body
+    });
+    if (res.error) { toast('Fout: ' + res.error.message); return; }
+    input.value = '';
+    toast('✓ Reactie geplaatst');
+    loadHomePostComments(_openPostId);
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Plaats reactie'; }
+  }
+}
+
+async function deleteHomePostComment(id) {
+  if (!confirm('Reactie verwijderen?')) return;
+  try {
+    var res = await sbClient.from('news_comments').delete().eq('id', id);
+    if (res.error) { toast('Fout: ' + res.error.message); return; }
+    if (_openPostId) loadHomePostComments(_openPostId);
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+  }
+}
+
+// ── Admin: image upload naar Supabase Storage ──
+function _admHeroPreview(url) {
+  var prev = document.getElementById('adm-hero-preview');
+  if (!prev) return;
+  if (url && /^https?:\/\//.test(url)) {
+    prev.innerHTML = '<img src="' + _esc(url) + '" alt="preview" onerror="this.style.display=\'none\'">';
+  } else {
+    prev.innerHTML = '';
+  }
+}
+
+async function adminUploadHero(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var status = document.getElementById('adm-upload-status');
+  var heroInput = document.getElementById('adm-hero');
+  if (!sbClient) { toast('Geen verbinding'); return; }
+  if (file.size > 5 * 1024 * 1024) { toast('Max 5 MB'); input.value = ''; return; }
+  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  if (!/^(jpg|jpeg|png|webp|gif)$/.test(ext)) { toast('Alleen jpg/png/webp/gif'); input.value = ''; return; }
+  var path = (currentUser && currentUser.id ? currentUser.id : 'admin') + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  if (status) status.textContent = 'Uploaden…';
+  try {
+    var up = await sbClient.storage.from('news-images').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || ('image/' + ext)
+    });
+    if (up.error) { toast('Upload mislukt: ' + up.error.message); if (status) status.textContent = ''; return; }
+    var pub = sbClient.storage.from('news-images').getPublicUrl(path);
+    var url = pub && pub.data ? pub.data.publicUrl : '';
+    if (!url) { toast('Upload OK maar geen URL'); return; }
+    if (heroInput) heroInput.value = url;
+    _admHeroPreview(url);
+    if (status) status.textContent = '✓ Geüpload';
+    toast('✓ Afbeelding geüpload');
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+    if (status) status.textContent = '';
+  } finally {
+    input.value = '';
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -12140,6 +12337,8 @@ function adminNewPost() {
   document.getElementById('adm-pinned').checked = false;
   document.getElementById('adm-preview').innerHTML = '<em style="color:#9A8E82">Begin met typen om de preview te zien</em>';
   document.getElementById('adm-delete-btn').style.display = 'none';
+  var st = document.getElementById('adm-upload-status'); if (st) st.textContent = '';
+  _admHeroPreview('');
   document.getElementById('adm-list-view').style.display = 'none';
   document.getElementById('adm-editor-view').style.display = 'block';
 }
@@ -12160,6 +12359,8 @@ async function adminEditPost(id) {
     document.getElementById('adm-published').checked = !!p.published;
     document.getElementById('adm-pinned').checked = !!p.pinned;
     document.getElementById('adm-preview').innerHTML = ygMarkdown(p.body_md || '');
+    var st = document.getElementById('adm-upload-status'); if (st) st.textContent = '';
+    _admHeroPreview(p.hero_image_url || '');
     document.getElementById('adm-delete-btn').style.display = 'inline-block';
     document.getElementById('adm-list-view').style.display = 'none';
     document.getElementById('adm-editor-view').style.display = 'block';
