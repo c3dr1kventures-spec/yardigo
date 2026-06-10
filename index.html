@@ -565,7 +565,9 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
     position:sticky;top:0;z-index:1;
   }
   body.is-desktop #kaart-side-cards{flex:1;overflow-y:auto;padding:10px 12px;}
-  body.is-desktop #kaart-side-cards .card{margin-bottom:8px;}
+  body.is-desktop #kaart-side-cards .card{margin-bottom:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s;}
+  body.is-desktop #kaart-side-cards .card:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(44,36,22,.10);}
+  body.is-desktop #kaart-side-cards .card.selected{border-color:#E07B39;box-shadow:0 0 0 2px rgba(224,123,57,.18),0 4px 14px rgba(44,36,22,.10);}
   body.dark.is-desktop .kaart-side{background:var(--bg2);}
   body.dark.is-desktop .kaart-side-head{background:var(--bg);color:var(--text);}
   body.dark.is-desktop #map{border:1.5px solid var(--border);}
@@ -657,7 +659,47 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.is-desktop .card{transition:transform .15s,box-shadow .15s;cursor:pointer;}
   body.is-desktop .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(44,36,22,.12);}
 
-  /* ── Detail-sheet als gecentreerde modal op desktop ──
+  /* ── Fluid scaling: tekst en ruimte schalen tussen 1024 en 1920px ── */
+  body.is-desktop #view-home .home-hero h1{font-size:clamp(26px,2.2vw,38px);}
+  body.is-desktop #view-home .home-hero p{font-size:clamp(13px,1.05vw,16px);}
+  body.is-desktop .home-section-title{font-size:clamp(11px,.9vw,13px);}
+  body.is-desktop .kaart-side-head{font-size:clamp(12px,.95vw,15px);}
+  body.is-desktop .desktop-nav button{font-size:clamp(13px,1vw,15px);padding:clamp(8px,.7vw,11px) clamp(14px,1.2vw,20px);}
+}
+
+/* ── Extra ruimte boven 1440px (standard desktop) ── */
+@media (min-width: 1440px) {
+  body.is-desktop .header,
+  body.is-desktop .search-row,
+  body.is-desktop .filter-bar,
+  body.is-desktop .type-row{padding-left:40px;padding-right:40px;}
+  body.is-desktop #view-kaart .kaart-split{max-width:1600px;padding:0 24px;}
+  body.is-desktop #view-lijst.active{max-width:1600px;padding:24px 40px;}
+  body.is-desktop #view-home .home-wrap{max-width:1600px;padding:0 40px 84px;}
+}
+
+/* ── Riant boven 1680px (groot desktop / QHD) ── */
+@media (min-width: 1680px) {
+  body.is-desktop #view-kaart .kaart-split{max-width:1760px;}
+  body.is-desktop .kaart-side{max-width:480px;min-width:360px;}
+  body.is-desktop #view-lijst.active{max-width:1760px;}
+  body.is-desktop .lijst-side{width:240px;}
+  body.is-desktop #view-home .home-wrap{max-width:1760px;}
+  body.is-desktop #view-home .home-content-grid{grid-template-columns:1fr 380px;gap:32px;}
+  body.is-desktop #view-home .home-hero{padding:42px 44px;}
+}
+
+/* ── 4K / Ultra-wide boven 2200px ── */
+@media (min-width: 2200px) {
+  body.is-desktop #view-kaart .kaart-split,
+  body.is-desktop #view-lijst.active,
+  body.is-desktop #view-home .home-wrap{max-width:2000px;}
+  body.is-desktop .kaart-side{max-width:560px;min-width:420px;}
+}
+
+/* ── Detail + overlays op desktop (hoort bij ≥1024px-laag) ── */
+@media (min-width: 1024px) {
+  /* Detail-sheet als gecentreerde modal op desktop
      (bottom-sheet animation behouden voor mobiel) */
   body.is-desktop .sheet{
     bottom:auto;top:50%;left:50%;
@@ -668,7 +710,7 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.is-desktop .overlay.open .sheet{transform:translate(-50%,-50%);}
   body.is-desktop .sheet-handle{display:none;}
 
-  /* ── Home-post detail modal op desktop ── */
+  /* Home-post detail modal op desktop */
   body.is-desktop #home-post-overlay{align-items:center;justify-content:center;}
   body.is-desktop #home-post-overlay .hpo-sheet{
     border-radius:18px;max-width:780px;max-height:88svh;width:calc(100% - 60px);
@@ -676,7 +718,7 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   }
   body.is-desktop #home-post-overlay .hpo-head{border-radius:18px 18px 0 0;}
 
-  /* ── Admin panel: max-width container op desktop ── */
+  /* Admin panel: max-width container op desktop */
   body.is-desktop #admin-panel{padding:0;}
   body.is-desktop #admin-panel .adm-body{max-width:900px;margin:0 auto;width:100%;}
   body.is-desktop #admin-panel .adm-header{padding:14px 32px;}
@@ -2390,13 +2432,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
     </div><!-- /home-content-main -->
 
-    <!-- Sidebar (alleen op desktop ≥1024px) — ad-slot + uitgelicht.
-         Op mobiel verbergt via CSS, zodat alles in één kolom blijft. -->
+    <!-- Sidebar (alleen op desktop ≥1024px) — Tips en Uitgelicht.
+         Ad-slot komt hier later als we ads gaan plaatsen. -->
     <aside class="home-content-aside">
-      <div class="home-ad-slot" aria-label="Advertentieruimte">
-        <div class="home-ad-label">ADVERTENTIE</div>
-        <div class="home-ad-placeholder">300 × 250</div>
-      </div>
       <div class="home-sidebar-card">
         <div class="hsc-title">⭐ Uitgelicht</div>
         <div class="hsc-body">Komende rommelmarkten in jouw regio worden hier binnenkort uitgelicht.</div>
@@ -2404,6 +2442,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div class="home-sidebar-card">
         <div class="hsc-title">💡 Tip</div>
         <div class="hsc-body">Heb jij een leuke verkoop in jouw straat? Plaats hem gratis via <strong>+ Plaatsen</strong> bovenin.</div>
+      </div>
+      <div class="home-sidebar-card">
+        <div class="hsc-title">📍 Zelf organiseren?</div>
+        <div class="hsc-body">Een rommelroute of buurtverkoop opzetten kan in een paar klikken. We helpen je met adressen, deelbare links en bevestigingen.</div>
       </div>
     </aside>
 
@@ -7254,6 +7296,10 @@ function groupByNeighborhoodSale(listings) {
   return groups;
 }
 
+// Lookup map: sale_id → { marker, clusterGroup } voor de side-list klik-flow op desktop.
+// Wordt herbouwd bij elke renderMarkers().
+var _markersById = {};
+
 function renderMarkers() {
   // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
   // Als Leaflet niet beschikbaar is (CDN-fout, offline), is de fallback-kaart actief
@@ -7263,6 +7309,7 @@ function renderMarkers() {
   markers = [];
   clusterGroups.forEach(function(g) { map.removeLayer(g); });
   clusterGroups = [];
+  _markersById = {};
   if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
 
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
@@ -7344,6 +7391,7 @@ function renderMarkers() {
       });
       marker.bindPopup(createListingPopup(listing), { maxWidth: 260 });
       group.addLayer(marker);
+      _markersById[listing.id] = { marker: marker, cluster: group };
     });
 
     // ── Cluster click: toon overzichts-popup voor deze buurtverkoop ──
@@ -7384,6 +7432,7 @@ function renderMarkers() {
     m.bindPopup(createListingPopup(sale), { maxWidth: 260 });
     m.addTo(map);
     markers.push(m);
+    _markersById[sale.id] = { marker: m, cluster: null };
   });
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
@@ -12305,11 +12354,66 @@ function _syncKaartSideList() {
   if (!document.body.classList.contains('is-desktop')) return;
   var src = document.getElementById('cardList');
   var dst = document.getElementById('kaart-side-cards');
-  if (src && dst) dst.innerHTML = src.innerHTML;
+  if (src && dst) {
+    dst.innerHTML = src.innerHTML;
+    // Voeg data-sale-id toe aan elke card door het te parsen uit de onclick attr.
+    // De click-handler op #kaart-side-cards gebruikt dit om de juiste pin te focussen.
+    dst.querySelectorAll('.card').forEach(function(card) {
+      var inner = card.querySelector('[onclick*="openDetail"]');
+      if (!inner) return;
+      var m = (inner.getAttribute('onclick') || '').match(/openDetail\(['"]?([^'"\),]+)['"]?\)/);
+      if (m && m[1]) card.dataset.saleId = m[1];
+    });
+  }
   // Synchroniseer ook het aantal-label
   var countSrc = document.getElementById('lcount');
   var countDst = document.getElementById('kaart-side-count');
   if (countSrc && countDst) countDst.textContent = countSrc.textContent;
+}
+
+// Click op een card in de kaart-side-list (alleen desktop): pan de kaart naar
+// de juiste pin en open de popup — open NIET het volledige detail. Zo kan de
+// gebruiker snel door de lijst scrollen en de bijbehorende pin op de map zien.
+// De detail-overlay opent alleen wanneer ze op "Meer info" in de popup klikken.
+document.addEventListener('click', function(e) {
+  if (!document.body.classList.contains('is-desktop')) return;
+  var sideList = document.getElementById('kaart-side-cards');
+  if (!sideList) return;
+  // Alleen clicks binnen de side-list onderscheppen
+  if (!sideList.contains(e.target)) return;
+  // Sta wel toe dat favoriet/route-knopjes hun eigen handler doen
+  if (e.target.closest('.c-fav, .c-route, button')) return;
+  var card = e.target.closest('.card');
+  if (!card || !card.dataset.saleId) return;
+  e.preventDefault();
+  e.stopPropagation();
+  _focusSaleOnMap(card.dataset.saleId);
+  // Markeer card als geselecteerd in de lijst
+  sideList.querySelectorAll('.card.selected').forEach(function(c){ c.classList.remove('selected'); });
+  card.classList.add('selected');
+}, true); // capture, om openDetail() te bypassen
+
+function _focusSaleOnMap(saleId) {
+  if (typeof map === 'undefined' || !map) return;
+  var sale = sales.find(function(s){ return String(s.id) === String(saleId); });
+  if (!sale) return;
+  // Glijdende pan + zoom (geen sprong)
+  var targetZoom = Math.max(map.getZoom(), 14);
+  try { map.flyTo([sale.lat, sale.lng], targetZoom, { duration: 0.55 }); }
+  catch(e) { map.setView([sale.lat, sale.lng], targetZoom); }
+  // Open de marker-popup na de animatie. Bij clusters: laat de cluster eerst
+  // uitzoomen tot de marker zichtbaar is.
+  var entry = _markersById[saleId];
+  if (!entry) return;
+  setTimeout(function() {
+    try {
+      if (entry.cluster && typeof entry.cluster.zoomToShowLayer === 'function') {
+        entry.cluster.zoomToShowLayer(entry.marker, function() { entry.marker.openPopup(); });
+      } else {
+        entry.marker.openPopup();
+      }
+    } catch(e) {}
+  }, 600);
 }
 
 // Markeer welke top-nav-knop actief is op desktop.
