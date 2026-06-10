@@ -413,9 +413,28 @@ body.dark .yg-footer{border-top-color:var(--border);}
 /* Home view: chrome verbergen voor "app-binnen-app"-gevoel — bnav blijft staan */
 body.on-home .filter-bar,
 body.on-home .type-row,
-body.on-home .tab-row{display:none;}
+body.on-home .tab-row,
+body.on-home .search-row{display:none;}
 .view#view-home.active{animation:viewFadeIn .28s ease-out;}
 @keyframes viewFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Home eigen tab-row — alleen zichtbaar als body.on-home */
+.home-tab-row{display:none;}
+body.on-home .home-tab-row{
+  display:flex;gap:2px;background:#fff;border-bottom:1.5px solid var(--border);
+  padding:0 6px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
+  position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(44,36,22,.04);
+}
+.home-tab-row::-webkit-scrollbar{display:none;}
+.home-tab{
+  flex-shrink:0;padding:12px 16px;font-family:'Poppins',sans-serif;
+  font-size:13px;font-weight:700;color:#9A8E82;cursor:pointer;
+  border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .15s;
+  background:transparent;border-left:none;border-right:none;border-top:none;
+}
+.home-tab:hover{color:#2C2416;}
+.home-tab.active{color:var(--terra);border-bottom-color:var(--terra);}
+body.dark .home-tab-row{background:var(--bg2);border-bottom-color:var(--border);}
 
 /* ── HOME view ── */
 .home-wrap{padding:0 0 84px;background:var(--bg);min-height:calc(100svh - 60px);}
@@ -1350,8 +1369,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </header>
 
-<!-- Zoekbalk rij -->
-<div style="background:var(--forest);padding:0 14px 10px;">
+<!-- Zoekbalk rij — verbergt automatisch op Home view (body.on-home) -->
+<div class="search-row" style="background:var(--forest);padding:0 14px 10px;">
   <div class="s-wrap" style="max-width:100%;width:100%;">
     <span class="s-ico">📍</span>
     <input type="text" id="pcInput" placeholder="Zoek op postcode of plaats…" data-i18n-placeholder="header.search_placeholder" autocomplete="off"
@@ -2089,6 +2108,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
      in loadHomeView() uit Supabase geladen.
      ───────────────────────────────────────────────────── -->
 <div class="view" id="view-home">
+  <!-- Sticky tab-row bovenaan Home (sticky onder header). Schakelt
+       welke categorieën zichtbaar zijn in onderstaande secties. -->
+  <div class="home-tab-row" id="home-tab-row">
+    <button class="home-tab active" data-tab="all"  onclick="homeSwitchTab('all',this)" data-i18n="home.tab.all">Alles</button>
+    <button class="home-tab"        data-tab="news" onclick="homeSwitchTab('news',this)" data-i18n="home.tab.news">📰 Nieuws</button>
+    <button class="home-tab"        data-tab="blog" onclick="homeSwitchTab('blog',this)" data-i18n="home.tab.blog">📝 Blog</button>
+    <button class="home-tab"        data-tab="info" onclick="homeSwitchTab('info',this)" data-i18n="home.tab.info">ℹ️ Info</button>
+  </div>
+
   <div class="home-wrap">
     <div class="home-hero">
       <div class="home-hero-row">
@@ -2113,17 +2141,19 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </button>
     </div>
 
-    <div class="home-section">
+    <!-- Secties — section-titels verbergen automatisch wanneer een
+         specifieke tab actief is (dan is de tab zelf de header). -->
+    <div class="home-section" data-section="news">
       <div class="home-section-title" data-i18n="home.section.news">📰 Nieuws & updates</div>
       <div id="home-news-list"><div class="home-loading">Laden…</div></div>
     </div>
 
-    <div class="home-section">
+    <div class="home-section" data-section="blog">
       <div class="home-section-title" data-i18n="home.section.blog">📝 Blog</div>
       <div id="home-blog-list"><div class="home-loading">Laden…</div></div>
     </div>
 
-    <div class="home-section">
+    <div class="home-section" data-section="info">
       <div class="home-section-title" data-i18n="home.section.info">ℹ️ Info & help</div>
       <div id="home-info-list"><div class="home-loading">Laden…</div></div>
     </div>
@@ -3633,6 +3663,10 @@ var I18N = {
     'home.section.news': '📰 Nieuws & updates',
     'home.section.blog': '📝 Blog',
     'home.section.info': 'ℹ️ Info & help',
+    'home.tab.all':  'Alles',
+    'home.tab.news': '📰 Nieuws',
+    'home.tab.blog': '📝 Blog',
+    'home.tab.info': 'ℹ️ Info',
     'home.footer': 'YardiGo · Find · Sell · Go',
     'home.empty': 'Hier verschijnen binnenkort updates van YardiGo. 👋',
     // Bottom nav
@@ -4232,6 +4266,10 @@ var I18N = {
     'home.section.news': '📰 News & updates',
     'home.section.blog': '📝 Blog',
     'home.section.info': 'ℹ️ Info & help',
+    'home.tab.all':  'All',
+    'home.tab.news': '📰 News',
+    'home.tab.blog': '📝 Blog',
+    'home.tab.info': 'ℹ️ Info',
     'home.footer': 'YardiGo · Find · Sell · Go',
     'home.empty': 'YardiGo updates will appear here soon. 👋',
     // Bottom nav
@@ -4831,6 +4869,10 @@ var I18N = {
     'home.section.news': '📰 Actualités',
     'home.section.blog': '📝 Blog',
     'home.section.info': 'ℹ️ Infos & aide',
+    'home.tab.all':  'Tout',
+    'home.tab.news': '📰 Actus',
+    'home.tab.blog': '📝 Blog',
+    'home.tab.info': 'ℹ️ Infos',
     'home.footer': 'YardiGo · Find · Sell · Go',
     'home.empty': 'Les actualités YardiGo apparaîtront bientôt ici. 👋',
     // Bottom nav
@@ -5430,6 +5472,10 @@ var I18N = {
     'home.section.news': '📰 Nachrichten & Updates',
     'home.section.blog': '📝 Blog',
     'home.section.info': 'ℹ️ Info & Hilfe',
+    'home.tab.all':  'Alle',
+    'home.tab.news': '📰 News',
+    'home.tab.blog': '📝 Blog',
+    'home.tab.info': 'ℹ️ Info',
     'home.footer': 'YardiGo · Find · Sell · Go',
     'home.empty': 'Hier erscheinen bald Updates von YardiGo. 👋',
     'nav.home': 'Startseite',
@@ -11953,6 +11999,8 @@ function _goHome() {
 // State + cache voor Home view (kort: 60s) — voorkomt unnecessary reloads
 // bij snel tab-switchen, wel snel een refresh na admin-edit.
 var _homeCache = { ts: 0, data: null };
+var _homeTab = 'all';   // 'all' | 'news' | 'blog' | 'info'
+
 function loadHomeView(force) {
   var adminBar = document.getElementById('home-admin-bar');
   if (adminBar) adminBar.style.display = (window.YG_IS_ADMIN === true) ? 'block' : 'none';
@@ -11986,15 +12034,42 @@ function loadHomeView(force) {
     });
 }
 
+// Switcht de actieve tab in de Home-tab-row. Tab='all' toont alle 3 secties
+// (met sectie-titels), specifieke tabs tonen alleen die ene sectie zonder titel.
+function homeSwitchTab(tab, el) {
+  _homeTab = tab;
+  document.querySelectorAll('#home-tab-row .home-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  // Update sectie-zichtbaarheid en titels
+  ['news','blog','info'].forEach(function(typeKey) {
+    var sec = document.querySelector('.home-section[data-section="' + typeKey + '"]');
+    if (!sec) return;
+    if (tab === 'all') {
+      sec.style.display = 'block';
+      var t = sec.querySelector('.home-section-title');
+      if (t) t.style.display = 'block';
+    } else if (tab === typeKey) {
+      sec.style.display = 'block';
+      var t = sec.querySelector('.home-section-title');
+      if (t) t.style.display = 'none'; // tab fungeert als header
+    } else {
+      sec.style.display = 'none';
+    }
+  });
+  // Hercalculeer cards (in 'all' max 5 per categorie, in specifieke tab max 20)
+  if (_homeCache.data) _renderHomePosts(_homeCache.data);
+}
+
 function _renderHomePosts(posts) {
   var buckets = { news: [], blog: [], info: [] };
   posts.forEach(function(p) { if (buckets[p.type]) buckets[p.type].push(p); });
-  _renderHomeBucket('home-news-list', buckets.news, 'news');
-  _renderHomeBucket('home-blog-list', buckets.blog, 'blog');
-  _renderHomeBucket('home-info-list', buckets.info, 'info');
+  var maxPerBucket = _homeTab === 'all' ? 5 : 20;
+  _renderHomeBucket('home-news-list', buckets.news, 'news', maxPerBucket);
+  _renderHomeBucket('home-blog-list', buckets.blog, 'blog', maxPerBucket);
+  _renderHomeBucket('home-info-list', buckets.info, 'info', maxPerBucket);
 }
 
-function _renderHomeBucket(elId, posts, typeKey) {
+function _renderHomeBucket(elId, posts, typeKey, max) {
   var el = document.getElementById(elId);
   if (!el) return;
   if (!posts.length) {
@@ -12002,7 +12077,7 @@ function _renderHomeBucket(elId, posts, typeKey) {
     return;
   }
   var typeLabels = { news: 'Nieuws', blog: 'Blog', info: 'Info' };
-  el.innerHTML = posts.slice(0, 5).map(function(p) {
+  el.innerHTML = posts.slice(0, max || 5).map(function(p) {
     var when = p.published_at ? new Date(p.published_at).toLocaleDateString(currentLang === 'nl' ? 'nl-NL' : currentLang) : '';
     var excerpt = p.excerpt ? '<div class="hc-excerpt">' + _esc(p.excerpt) + '</div>' : '';
     var pin = p.pinned ? ' 📌' : '';
