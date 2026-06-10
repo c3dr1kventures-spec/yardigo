@@ -45,6 +45,9 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Markdown rendering voor Home news/blog/info posts (admin-content) -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -407,6 +410,96 @@ body.dark .yg-footer{border-top-color:var(--border);}
 /* ── VIEWS ── */
 .view{display:none;}
 .view.active{display:block;}
+/* Home view: chrome verbergen voor "app-binnen-app"-gevoel — bnav blijft staan */
+body.on-home .filter-bar,
+body.on-home .type-row,
+body.on-home .tab-row{display:none;}
+.view#view-home.active{animation:viewFadeIn .28s ease-out;}
+@keyframes viewFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── HOME view ── */
+.home-wrap{padding:0 0 84px;background:var(--bg);min-height:calc(100svh - 60px);}
+.home-hero{background:linear-gradient(135deg,#3A6B4A 0%,#2A5038 100%);color:#fff;padding:28px 20px 32px;border-radius:0 0 24px 24px;box-shadow:0 4px 18px rgba(44,36,22,.10);}
+.home-hero h1{margin:0 0 4px;font-size:24px;font-weight:800;letter-spacing:-.3px;}
+.home-hero p{margin:0;font-size:13px;opacity:.92;line-height:1.5;}
+.home-hero .home-hero-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.home-hero .home-pin{width:36px;height:44px;flex-shrink:0;}
+.home-section{padding:20px 16px 4px;}
+.home-section-title{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin:0 0 10px;padding:0 4px;}
+.home-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.home-card:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(44,36,22,.10);}
+.home-card .hc-type{display:inline-block;font-size:10px;font-weight:800;color:var(--terra);background:#FFF1E7;border-radius:999px;padding:3px 10px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;}
+.home-card .hc-type.blog{color:#3A6B4A;background:#EAF2EC;}
+.home-card .hc-type.info{color:#7A5A2E;background:#FFF8E8;}
+.home-card .hc-title{font-size:15px;font-weight:700;color:#2C2416;line-height:1.35;margin:0 0 4px;}
+.home-card .hc-excerpt{font-size:12.5px;color:#6B5E50;line-height:1.55;margin:0 0 6px;}
+.home-card .hc-meta{font-size:11px;color:#9A8E82;}
+.home-empty{font-size:13px;color:var(--muted);padding:16px;text-align:center;background:#fff;border:1.5px dashed var(--border);border-radius:12px;}
+.home-loading{font-size:13px;color:var(--muted);padding:24px;text-align:center;}
+body.dark .home-card{background:var(--bg2);}
+body.dark .home-card .hc-title{color:var(--text);}
+body.dark .home-empty{background:var(--bg2);}
+
+/* ── ADMIN PANEL (Home content beheer) ── */
+#admin-panel{display:none;position:fixed;inset:0;z-index:10010;background:#FAF7F2;flex-direction:column;}
+#admin-panel.open{display:flex;}
+.adm-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1.5px solid var(--border);background:#fff;}
+.adm-header h2{flex:1;margin:0;font-size:16px;font-weight:800;color:#2C2416;}
+.adm-close{background:transparent;border:none;font-size:22px;color:#7A6E62;cursor:pointer;padding:4px 8px;}
+.adm-body{flex:1;overflow-y:auto;padding:16px;}
+.adm-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.adm-btn{padding:9px 14px;border-radius:10px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:#fff;color:#2C2416;cursor:pointer;}
+.adm-btn.primary{background:#3A6B4A;border-color:#3A6B4A;color:#fff;}
+.adm-btn.danger{background:#fff;border-color:#D94040;color:#D94040;}
+.adm-btn:hover{filter:brightness(.97);}
+.adm-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1.5px solid var(--border);padding-bottom:0;}
+.adm-tab{padding:8px 14px;font-size:12px;font-weight:700;color:#9A8E82;cursor:pointer;border-bottom:2px solid transparent;}
+.adm-tab.active{color:#E07B39;border-bottom-color:#E07B39;}
+.adm-post-row{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.adm-post-row .apr-type{font-size:10px;font-weight:800;color:#fff;background:#E07B39;border-radius:999px;padding:2px 8px;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;}
+.adm-post-row .apr-type.blog{background:#3A6B4A;}
+.adm-post-row .apr-type.info{background:#C49656;}
+.adm-post-row .apr-title{flex:1;font-size:13px;font-weight:600;color:#2C2416;}
+.adm-post-row .apr-meta{font-size:11px;color:#9A8E82;}
+.adm-post-row .apr-draft{font-size:10px;color:#D94040;font-weight:700;margin-left:6px;}
+.adm-post-row .apr-pub{font-size:10px;color:#3A6B4A;font-weight:700;margin-left:6px;}
+.adm-post-row .apr-actions{display:flex;gap:6px;}
+.adm-post-row .apr-actions button{padding:6px 10px;font-size:11px;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;}
+
+/* Editor */
+.adm-field{margin-bottom:12px;}
+.adm-field label{display:block;font-size:11px;font-weight:700;color:#7A6E62;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.adm-field input,.adm-field select,.adm-field textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;color:#2C2416;background:#fff;outline:none;box-sizing:border-box;}
+.adm-field textarea{resize:vertical;min-height:200px;font-family:'SFMono-Regular',Consolas,monospace;font-size:12.5px;line-height:1.55;}
+.adm-field input:focus,.adm-field textarea:focus,.adm-field select:focus{border-color:#E07B39;}
+.adm-row{display:flex;gap:10px;}
+.adm-row > *{flex:1;}
+.adm-checkbox{display:flex;align-items:center;gap:8px;font-size:13px;color:#2C2416;cursor:pointer;}
+.adm-checkbox input{width:auto;margin:0;accent-color:#E07B39;}
+.adm-preview{background:#fff;border:1.5px dashed var(--border);border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:#2C2416;max-height:260px;overflow-y:auto;}
+.adm-preview h1,.adm-preview h2,.adm-preview h3{margin:8px 0 6px;font-weight:800;color:#2C2416;}
+.adm-preview h1{font-size:18px;} .adm-preview h2{font-size:16px;} .adm-preview h3{font-size:14px;}
+.adm-preview p{margin:6px 0;}
+.adm-preview a{color:#E07B39;}
+.adm-preview ul,.adm-preview ol{margin:6px 0 6px 18px;}
+.adm-preview code{background:#F0EBE3;padding:1px 5px;border-radius:4px;font-size:12px;}
+.adm-preview blockquote{border-left:3px solid #E07B39;padding:2px 10px;color:#6B5E50;margin:8px 0;}
+.adm-empty{text-align:center;padding:32px;color:#9A8E82;font-size:13px;}
+body.dark #admin-panel{background:var(--bg);}
+body.dark .adm-header{background:var(--bg2);}
+body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea,body.dark .adm-field select,body.dark .adm-preview{background:var(--bg2);color:var(--text);}
+
+/* ── HOME POST detail-overlay ── */
+#home-post-overlay{display:none;position:fixed;inset:0;z-index:10005;background:rgba(44,36,22,.45);align-items:flex-end;}
+#home-post-overlay.open{display:flex;animation:viewFadeIn .2s ease-out;}
+#home-post-overlay .hpo-sheet{background:#fff;border-radius:18px 18px 0 0;width:100%;max-height:92svh;overflow-y:auto;padding:0;animation:viewSheetUp .3s ease-out;}
+@keyframes viewSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#home-post-overlay .hpo-head{position:sticky;top:0;background:#fff;padding:14px 16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:8px;z-index:1;}
+#home-post-overlay .hpo-head .hpo-spacer{flex:1;}
+#home-post-overlay .hpo-close{background:transparent;border:none;font-size:22px;color:#7A6E62;cursor:pointer;padding:4px 8px;}
+#home-post-overlay .hpo-body{padding:18px 18px 28px;}
+body.dark #home-post-overlay .hpo-sheet,body.dark #home-post-overlay .hpo-head{background:var(--bg2);}
+body.dark #home-post-overlay h1{color:var(--text);}
 
 /* ── MAP ── */
 #map{height:calc(100svh - 230px);min-height:280px;width:100%;touch-action:none;}
@@ -1957,12 +2050,168 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </div>
 
+<!-- ─────────────────────────────────────────────────────
+     HOME view — inline news/blog/info binnen de app.
+     bnav blijft staan, chrome (filter-bar, type-row,
+     tab-row) verdwijnt via body.on-home. Content wordt
+     in loadHomeView() uit Supabase geladen.
+     ───────────────────────────────────────────────────── -->
+<div class="view" id="view-home">
+  <div class="home-wrap">
+    <div class="home-hero">
+      <div class="home-hero-row">
+        <svg class="home-pin" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M40 4C24.5 4 12 16.5 12 32C12 52 40 82 40 82C40 82 68 52 68 32C68 16.5 55.5 4 40 4Z" fill="#E07B39"/>
+          <ellipse cx="32" cy="20" rx="7" ry="5" fill="white" opacity="0.22"/>
+          <circle cx="40" cy="31" r="13" fill="white"/>
+          <rect x="36" y="80" width="8" height="14" rx="2" fill="#C68B3C"/>
+          <rect x="22" y="70" width="36" height="18" rx="3" fill="#D4964A"/>
+        </svg>
+        <div>
+          <h1 data-i18n="home.hero.title">Welkom bij YardiGo</h1>
+          <p data-i18n="home.hero.sub">Het laatste nieuws, tips en achtergronden over rommelmarkten en garageverkopen.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin-only panel knop — alleen zichtbaar als isAdmin true is -->
+    <div id="home-admin-bar" style="display:none;padding:14px 16px 0">
+      <button onclick="openAdminPanel()" style="width:100%;background:#3A6B4A;color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+        🛠️ Beheer · Nieuw bericht plaatsen
+      </button>
+    </div>
+
+    <div class="home-section">
+      <div class="home-section-title" data-i18n="home.section.news">📰 Nieuws & updates</div>
+      <div id="home-news-list"><div class="home-loading">Laden…</div></div>
+    </div>
+
+    <div class="home-section">
+      <div class="home-section-title" data-i18n="home.section.blog">📝 Blog</div>
+      <div id="home-blog-list"><div class="home-loading">Laden…</div></div>
+    </div>
+
+    <div class="home-section">
+      <div class="home-section-title" data-i18n="home.section.info">ℹ️ Info & help</div>
+      <div id="home-info-list"><div class="home-loading">Laden…</div></div>
+    </div>
+
+    <div style="padding:24px 20px;text-align:center;font-size:11px;color:var(--muted)">
+      <span data-i18n="home.footer">YardiGo · Find · Sell · Go</span>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────
+     ADMIN PANEL — beheer van news_posts (alleen
+     zichtbaar voor users met "admin" in admin_badges).
+     Wordt geopend vanuit Home view via openAdminPanel().
+     ───────────────────────────────────────────────────── -->
+<div id="admin-panel" role="dialog" aria-modal="true" aria-labelledby="adm-title">
+  <div class="adm-header">
+    <h2 id="adm-title">🛠️ Beheer · Berichten</h2>
+    <button class="adm-close" onclick="closeAdminPanel()" aria-label="Sluiten">✕</button>
+  </div>
+  <div class="adm-body">
+
+    <!-- LIJST view -->
+    <div id="adm-list-view">
+      <div class="adm-toolbar">
+        <button class="adm-btn primary" onclick="adminNewPost()">+ Nieuw bericht</button>
+        <button class="adm-btn" onclick="adminLoadPosts()">⟳ Herladen</button>
+      </div>
+      <div class="adm-tabs">
+        <div class="adm-tab active" data-filter="all" onclick="adminFilter('all',this)">Alle</div>
+        <div class="adm-tab" data-filter="news" onclick="adminFilter('news',this)">Nieuws</div>
+        <div class="adm-tab" data-filter="blog" onclick="adminFilter('blog',this)">Blog</div>
+        <div class="adm-tab" data-filter="info" onclick="adminFilter('info',this)">Info</div>
+        <div class="adm-tab" data-filter="drafts" onclick="adminFilter('drafts',this)">Concepten</div>
+      </div>
+      <div id="adm-posts-list"><div class="adm-empty">Laden…</div></div>
+    </div>
+
+    <!-- EDITOR view -->
+    <div id="adm-editor-view" style="display:none">
+      <div class="adm-toolbar">
+        <button class="adm-btn" onclick="adminBackToList()">← Terug</button>
+        <button class="adm-btn primary" onclick="adminSavePost()">💾 Opslaan</button>
+        <button class="adm-btn danger" id="adm-delete-btn" style="display:none" onclick="adminDeletePost()">🗑️ Verwijderen</button>
+      </div>
+      <input type="hidden" id="adm-edit-id">
+      <div class="adm-row">
+        <div class="adm-field">
+          <label for="adm-type">Type</label>
+          <select id="adm-type">
+            <option value="news">📰 Nieuws</option>
+            <option value="blog">📝 Blog</option>
+            <option value="info">ℹ️ Info / Help</option>
+          </select>
+        </div>
+        <div class="adm-field">
+          <label for="adm-lang">Taal</label>
+          <select id="adm-lang">
+            <option value="nl">Nederlands</option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+      </div>
+      <div class="adm-field">
+        <label for="adm-title-input">Titel</label>
+        <input type="text" id="adm-title-input" maxlength="200" placeholder="Bijv. Welkom bij YardiGo">
+      </div>
+      <div class="adm-field">
+        <label for="adm-excerpt">Korte intro (optioneel, max 500 tekens)</label>
+        <textarea id="adm-excerpt" maxlength="500" style="min-height:60px" placeholder="Eén of twee zinnen die in de lijst getoond worden"></textarea>
+      </div>
+      <div class="adm-field">
+        <label for="adm-hero">Hero afbeelding URL (optioneel)</label>
+        <input type="url" id="adm-hero" placeholder="https://…">
+      </div>
+      <div class="adm-field">
+        <label for="adm-body">Inhoud (Markdown)</label>
+        <textarea id="adm-body" placeholder="# Titel&#10;&#10;Tekst hier… **vet**, *cursief*, [link](https://…)&#10;&#10;## Tussenkop"></textarea>
+      </div>
+      <div class="adm-field">
+        <label>Live preview</label>
+        <div class="adm-preview" id="adm-preview"><em style="color:#9A8E82">Begin met typen om de preview te zien</em></div>
+      </div>
+      <div class="adm-row" style="align-items:center">
+        <label class="adm-checkbox">
+          <input type="checkbox" id="adm-published"> Gepubliceerd (zichtbaar voor iedereen)
+        </label>
+        <label class="adm-checkbox">
+          <input type="checkbox" id="adm-pinned"> Vastgezet (bovenaan in lijst)
+        </label>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────
+     HOME POST detail-overlay — bottom sheet die opent
+     wanneer een gebruiker op een nieuwskaart klikt.
+     Rendert markdown body via ygMarkdown() (DOMPurify-safe).
+     ───────────────────────────────────────────────────── -->
+<div id="home-post-overlay" onclick="if(event.target===this)closeHomePost()">
+  <div class="hpo-sheet">
+    <div class="hpo-head">
+      <div class="hpo-spacer"></div>
+      <button class="hpo-close" onclick="closeHomePost()" aria-label="Sluiten">✕</button>
+    </div>
+    <div class="hpo-body" id="home-post-body">
+      <div class="home-loading">Laden…</div>
+    </div>
+  </div>
+</div>
+
 <!-- Bottom nav -->
 <nav class="bnav">
-  <!-- Home links — navigeert weg van de app naar de marketing/news-pagina.
-       Op web (Vercel cleanUrls:true) werkt /home, op Capacitor wijst hij
-       naar home.html in www/. _goHome() handelt beide af. -->
-  <div class="bni" id="bni-home" onclick="_goHome()">
+  <!-- Home is nu een view binnen de app (geen page reload meer).
+       Klik schakelt om naar view-home en activeert deze bni. -->
+  <div class="bni" id="bni-home" onclick="sv('home',null);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg>
     <span data-i18n="nav.home">Home</span>
   </div>
@@ -3336,6 +3585,14 @@ var I18N = {
     'filter.date': 'Datum',
     'filter.sort': 'Sorteer',
     'filter.all': 'Alles',
+    // Home view (inline)
+    'home.hero.title': 'Welkom bij YardiGo',
+    'home.hero.sub': 'Het laatste nieuws, tips en achtergronden over rommelmarkten en garageverkopen.',
+    'home.section.news': '📰 Nieuws & updates',
+    'home.section.blog': '📝 Blog',
+    'home.section.info': 'ℹ️ Info & help',
+    'home.footer': 'YardiGo · Find · Sell · Go',
+    'home.empty': 'Hier verschijnen binnenkort updates van YardiGo. 👋',
     // Bottom nav
     'nav.home': 'Home',
     'nav.map': 'Kaart',
@@ -3927,6 +4184,14 @@ var I18N = {
     'filter.date': 'Date',
     'filter.sort': 'Sort',
     'filter.all': 'All',
+    // Home view (inline)
+    'home.hero.title': 'Welcome to YardiGo',
+    'home.hero.sub': 'The latest news, tips and background on flea markets and garage sales.',
+    'home.section.news': '📰 News & updates',
+    'home.section.blog': '📝 Blog',
+    'home.section.info': 'ℹ️ Info & help',
+    'home.footer': 'YardiGo · Find · Sell · Go',
+    'home.empty': 'YardiGo updates will appear here soon. 👋',
     // Bottom nav
     'nav.home': 'Home',
     'nav.map': 'Map',
@@ -4518,6 +4783,14 @@ var I18N = {
     'filter.date': 'Date',
     'filter.sort': 'Trier',
     'filter.all': 'Tout',
+    // Home view (inline)
+    'home.hero.title': 'Bienvenue sur YardiGo',
+    'home.hero.sub': 'Actualités, conseils et coulisses des brocantes et vide-greniers.',
+    'home.section.news': '📰 Actualités',
+    'home.section.blog': '📝 Blog',
+    'home.section.info': 'ℹ️ Infos & aide',
+    'home.footer': 'YardiGo · Find · Sell · Go',
+    'home.empty': 'Les actualités YardiGo apparaîtront bientôt ici. 👋',
     // Bottom nav
     'nav.home': 'Accueil',
     'nav.map': 'Carte',
@@ -5109,6 +5382,14 @@ var I18N = {
     'filter.date': 'Date',
     'filter.sort': 'Sort',
     'filter.all': 'All',
+    // Home view (inline)
+    'home.hero.title': 'Willkommen bei YardiGo',
+    'home.hero.sub': 'Neuigkeiten, Tipps und Hintergründe rund um Flohmärkte und Garagenverkäufe.',
+    'home.section.news': '📰 Nachrichten & Updates',
+    'home.section.blog': '📝 Blog',
+    'home.section.info': 'ℹ️ Info & Hilfe',
+    'home.footer': 'YardiGo · Find · Sell · Go',
+    'home.empty': 'Hier erscheinen bald Updates von YardiGo. 👋',
     'nav.home': 'Startseite',
     'nav.map': 'Map',
     'nav.list': 'List',
@@ -5639,6 +5920,8 @@ function updateUserUI() {
   // Bewerken-knop: tonen voor ingelogde gebruikers, verbergen voor gasten
   var editBtn = document.getElementById('profile-edit-btn');
   if (editBtn) editBtn.style.display = isGuest ? 'none' : 'flex';
+  // Admin-status verversen (sets window.YG_IS_ADMIN, toont/verbergt Home admin-bar)
+  if (typeof checkAdminStatus === 'function') checkAdminStatus();
 }
 
 // Zet body.is-guest klasse zodat leden-only UI (meld-knoppen) kan verbergen
@@ -7390,12 +7673,16 @@ function sv(name, tabEl) {
   if (vEl) vEl.classList.add('active');
   // Kaartweergave: vergrendel body-scroll zodat iOS geen touch-events kaapt
   document.body.classList.toggle('on-kaart', name === 'kaart');
+  // Home: verberg de sale-chrome (filter, type-pills, tab-row)
+  document.body.classList.toggle('on-home', name === 'home');
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
   if (name === 'instellingen') loadSettingsTab();
   if (name === 'mijn') loadCheckinState();
+  if (name === 'home') loadHomeView();
   var fabRow = document.getElementById('fab-row');
-  if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart');
+  // FAB verbergen op kaart (overlap) en op home (geen sales context)
+  if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart' || name === 'home');
 }
 function ptab(i) {
   document.querySelectorAll('.pp').forEach(function(p) { p.classList.remove('active'); });
@@ -11607,11 +11894,348 @@ setTimeout(_hideAppSplash, 8000);
 // embedded server) of via window.Capacitor (officiële API).
 // Niet te verwarren met de bestaande goHome() die binnen de app naar het
 // kaart-tabblad gaat — die houdt zijn naam.
+// Behouden voor eventuele externe links (bijv. share-out), niet meer gebruikt
+// door de bnav — die heeft nu een inline view-home.
 function _goHome() {
   var isCapacitor = (typeof window.Capacitor !== 'undefined') ||
                     (location.hostname === 'localhost' && location.protocol === 'https:');
   location.href = isCapacitor ? 'home.html' : '/home';
 }
+
+// ══════════════════════════════════════════════════
+// HOME view (inline) — laadt nieuws/blog/info uit Supabase.
+// Volledige implementatie volgt in stap 4 van de Home-feature.
+// Voor nu: placeholder met "binnenkort"-tekst zodat de inline
+// view-switch al getest kan worden.
+// ══════════════════════════════════════════════════
+// State + cache voor Home view (kort: 60s) — voorkomt unnecessary reloads
+// bij snel tab-switchen, wel snel een refresh na admin-edit.
+var _homeCache = { ts: 0, data: null };
+function loadHomeView(force) {
+  var adminBar = document.getElementById('home-admin-bar');
+  if (adminBar) adminBar.style.display = (window.YG_IS_ADMIN === true) ? 'block' : 'none';
+
+  var now = Date.now();
+  if (!force && _homeCache.data && (now - _homeCache.ts < 60000)) {
+    _renderHomePosts(_homeCache.data);
+    return;
+  }
+  if (!sbClient) {
+    _renderHomePosts([]);
+    return;
+  }
+  // Fetch laatste 30 gepubliceerde posts in huidige UI-taal (fallback NL)
+  var lang = (typeof currentLang === 'string' && currentLang) ? currentLang : 'nl';
+  sbClient.from('news_posts')
+    .select('id,type,title,excerpt,hero_image_url,published_at,pinned,lang')
+    .eq('published', true)
+    .in('lang', [lang, 'nl'])
+    .order('pinned', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(30)
+    .then(function(res) {
+      if (res.error) {
+        console.warn('home load error', res.error);
+        _renderHomePosts([]);
+        return;
+      }
+      _homeCache = { ts: now, data: res.data || [] };
+      _renderHomePosts(res.data || []);
+    });
+}
+
+function _renderHomePosts(posts) {
+  var buckets = { news: [], blog: [], info: [] };
+  posts.forEach(function(p) { if (buckets[p.type]) buckets[p.type].push(p); });
+  _renderHomeBucket('home-news-list', buckets.news, 'news');
+  _renderHomeBucket('home-blog-list', buckets.blog, 'blog');
+  _renderHomeBucket('home-info-list', buckets.info, 'info');
+}
+
+function _renderHomeBucket(elId, posts, typeKey) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  if (!posts.length) {
+    el.innerHTML = '<div class="home-empty">' + i18n('home.empty', 'Hier verschijnen binnenkort updates van YardiGo. 👋') + '</div>';
+    return;
+  }
+  var typeLabels = { news: 'Nieuws', blog: 'Blog', info: 'Info' };
+  el.innerHTML = posts.slice(0, 5).map(function(p) {
+    var when = p.published_at ? new Date(p.published_at).toLocaleDateString(currentLang === 'nl' ? 'nl-NL' : currentLang) : '';
+    var excerpt = p.excerpt ? '<div class="hc-excerpt">' + _esc(p.excerpt) + '</div>' : '';
+    var pin = p.pinned ? ' 📌' : '';
+    return '<div class="home-card" onclick="openHomePost(\'' + p.id + '\')">' +
+      '<div class="hc-type ' + typeKey + '">' + typeLabels[typeKey] + pin + '</div>' +
+      '<div class="hc-title">' + _esc(p.title) + '</div>' +
+      excerpt +
+      '<div class="hc-meta">' + when + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// Detail-overlay voor een Home post — gebruikt de bestaande overlay-style
+async function openHomePost(id) {
+  if (!sbClient) return;
+  var ov = document.getElementById('home-post-overlay');
+  if (!ov) return;
+  ov.classList.add('open');
+  var bodyEl = document.getElementById('home-post-body');
+  if (bodyEl) bodyEl.innerHTML = '<div class="home-loading">Laden…</div>';
+  try {
+    var res = await sbClient.from('news_posts').select('id,type,title,body_md,hero_image_url,published_at,author_id').eq('id', id).maybeSingle();
+    if (res.error || !res.data) {
+      bodyEl.innerHTML = '<div class="home-empty">Bericht niet gevonden.</div>';
+      return;
+    }
+    var p = res.data;
+    var hero = p.hero_image_url ? '<img src="' + _esc(p.hero_image_url) + '" alt="" style="width:100%;border-radius:14px;margin-bottom:14px;max-height:240px;object-fit:cover">' : '';
+    var when = p.published_at ? new Date(p.published_at).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' }) : '';
+    bodyEl.innerHTML =
+      hero +
+      '<div style="font-size:11px;font-weight:700;color:#9A8E82;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">' + p.type + ' · ' + when + '</div>' +
+      '<h1 style="font-size:22px;font-weight:800;color:#2C2416;margin:0 0 12px;line-height:1.3">' + _esc(p.title) + '</h1>' +
+      '<div class="adm-preview" style="border:none;padding:0;background:transparent;max-height:none">' + ygMarkdown(p.body_md || '') + '</div>';
+  } catch(e) {
+    bodyEl.innerHTML = '<div class="home-empty">Fout: ' + (e.message || 'onbekend') + '</div>';
+  }
+}
+function closeHomePost() {
+  var ov = document.getElementById('home-post-overlay');
+  if (ov) ov.classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
+// ADMIN — detectie + paneel voor Home-content beheer
+// ══════════════════════════════════════════════════
+
+// Veilige markdown-render: marked.js → DOMPurify (gehard tegen XSS).
+// Fallback naar plain text (escaped) als libraries nog niet geladen zijn.
+function ygMarkdown(md) {
+  if (!md) return '';
+  try {
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+      var html = marked.parse(md, { breaks: true, gfm: true });
+      return DOMPurify.sanitize(html, { ADD_ATTR: ['target','rel'] });
+    }
+  } catch(e) {}
+  // Fallback: escape + linebreaks
+  var div = document.createElement('div');
+  div.textContent = md;
+  return div.innerHTML.replace(/\n/g, '<br>');
+}
+
+// Laadt de admin-status voor de huidige user en zet window.YG_IS_ADMIN.
+// Wordt aangeroepen vanuit updateUserUI() telkens als de auth-state verandert.
+async function checkAdminStatus() {
+  window.YG_IS_ADMIN = false;
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) {
+    // Verberg admin-bar als die zichtbaar was
+    var bar = document.getElementById('home-admin-bar');
+    if (bar) bar.style.display = 'none';
+    return;
+  }
+  try {
+    var res = await sbClient.from('profiles').select('admin_badges').eq('id', currentUser.id).maybeSingle();
+    var raw = res && res.data ? res.data.admin_badges : null;
+    var arr = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw || '[]') : []);
+    window.YG_IS_ADMIN = arr.indexOf('admin') !== -1;
+  } catch(e) {
+    window.YG_IS_ADMIN = false;
+  }
+  // Refresh admin-bar zichtbaarheid als Home actief is
+  var bar = document.getElementById('home-admin-bar');
+  if (bar) bar.style.display = window.YG_IS_ADMIN ? 'block' : 'none';
+}
+
+// State voor admin panel
+var _admPostsCache = [];
+var _admFilter = 'all';
+
+function openAdminPanel() {
+  if (!window.YG_IS_ADMIN) { toast('Geen admin-rechten'); return; }
+  var p = document.getElementById('admin-panel');
+  if (!p) return;
+  p.classList.add('open');
+  adminBackToList();
+  adminLoadPosts();
+}
+function closeAdminPanel() {
+  var p = document.getElementById('admin-panel');
+  if (p) p.classList.remove('open');
+}
+function adminBackToList() {
+  document.getElementById('adm-list-view').style.display = 'block';
+  document.getElementById('adm-editor-view').style.display = 'none';
+}
+function adminFilter(filter, el) {
+  _admFilter = filter;
+  document.querySelectorAll('.adm-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  adminRenderList();
+}
+
+async function adminLoadPosts() {
+  var listEl = document.getElementById('adm-posts-list');
+  if (listEl) listEl.innerHTML = '<div class="adm-empty">Laden…</div>';
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.from('news_posts')
+      .select('id,type,title,excerpt,published,published_at,pinned,created_at,updated_at,lang')
+      .order('pinned', { ascending: false })
+      .order('updated_at', { ascending: false });
+    if (res.error) {
+      listEl.innerHTML = '<div class="adm-empty">Fout bij laden: ' + (res.error.message || 'onbekend') + '</div>';
+      return;
+    }
+    _admPostsCache = res.data || [];
+    adminRenderList();
+  } catch(e) {
+    listEl.innerHTML = '<div class="adm-empty">Fout: ' + (e.message || 'onbekend') + '</div>';
+  }
+}
+
+function adminRenderList() {
+  var listEl = document.getElementById('adm-posts-list');
+  if (!listEl) return;
+  var rows = _admPostsCache.filter(function(p){
+    if (_admFilter === 'all') return true;
+    if (_admFilter === 'drafts') return !p.published;
+    return p.type === _admFilter;
+  });
+  if (!rows.length) {
+    listEl.innerHTML = '<div class="adm-empty">Geen berichten in deze categorie. Klik op <strong>+ Nieuw bericht</strong> om er een te maken.</div>';
+    return;
+  }
+  listEl.innerHTML = rows.map(function(p){
+    var when = p.published_at ? new Date(p.published_at).toLocaleDateString('nl-NL') : new Date(p.updated_at).toLocaleDateString('nl-NL');
+    var status = p.published
+      ? '<span class="apr-pub">● gepubliceerd</span>'
+      : '<span class="apr-draft">● concept</span>';
+    var pin = p.pinned ? ' 📌' : '';
+    return '<div class="adm-post-row">' +
+      '<span class="apr-type ' + p.type + '">' + p.type + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="apr-title">' + _esc(p.title) + pin + status + '</div>' +
+        '<div class="apr-meta">' + p.lang.toUpperCase() + ' · ' + when + '</div>' +
+      '</div>' +
+      '<div class="apr-actions">' +
+        '<button onclick="adminEditPost(\'' + p.id + '\')">Bewerk</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// HTML-escape helper (gebruikt door admin list — titel komt uit user-input)
+function _esc(s){ var d=document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; }
+
+function adminNewPost() {
+  document.getElementById('adm-edit-id').value = '';
+  document.getElementById('adm-type').value = 'news';
+  document.getElementById('adm-lang').value = 'nl';
+  document.getElementById('adm-title-input').value = '';
+  document.getElementById('adm-excerpt').value = '';
+  document.getElementById('adm-hero').value = '';
+  document.getElementById('adm-body').value = '';
+  document.getElementById('adm-published').checked = false;
+  document.getElementById('adm-pinned').checked = false;
+  document.getElementById('adm-preview').innerHTML = '<em style="color:#9A8E82">Begin met typen om de preview te zien</em>';
+  document.getElementById('adm-delete-btn').style.display = 'none';
+  document.getElementById('adm-list-view').style.display = 'none';
+  document.getElementById('adm-editor-view').style.display = 'block';
+}
+
+async function adminEditPost(id) {
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.from('news_posts').select('*').eq('id', id).maybeSingle();
+    if (res.error || !res.data) { toast('Bericht niet gevonden'); return; }
+    var p = res.data;
+    document.getElementById('adm-edit-id').value = p.id;
+    document.getElementById('adm-type').value = p.type;
+    document.getElementById('adm-lang').value = p.lang || 'nl';
+    document.getElementById('adm-title-input').value = p.title || '';
+    document.getElementById('adm-excerpt').value = p.excerpt || '';
+    document.getElementById('adm-hero').value = p.hero_image_url || '';
+    document.getElementById('adm-body').value = p.body_md || '';
+    document.getElementById('adm-published').checked = !!p.published;
+    document.getElementById('adm-pinned').checked = !!p.pinned;
+    document.getElementById('adm-preview').innerHTML = ygMarkdown(p.body_md || '');
+    document.getElementById('adm-delete-btn').style.display = 'inline-block';
+    document.getElementById('adm-list-view').style.display = 'none';
+    document.getElementById('adm-editor-view').style.display = 'block';
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+  }
+}
+
+async function adminSavePost() {
+  var id      = document.getElementById('adm-edit-id').value;
+  var type    = document.getElementById('adm-type').value;
+  var lang    = document.getElementById('adm-lang').value;
+  var title   = document.getElementById('adm-title-input').value.trim();
+  var excerpt = document.getElementById('adm-excerpt').value.trim();
+  var hero    = document.getElementById('adm-hero').value.trim();
+  var body    = document.getElementById('adm-body').value;
+  var pub     = document.getElementById('adm-published').checked;
+  var pinned  = document.getElementById('adm-pinned').checked;
+  if (!title) { toast('Titel is verplicht'); return; }
+  if (!body || !body.trim()) { toast('Inhoud is verplicht'); return; }
+  if (!sbClient) { toast('Geen verbinding'); return; }
+
+  var payload = {
+    type: type, lang: lang, title: title,
+    excerpt: excerpt || null,
+    hero_image_url: hero || null,
+    body_md: body,
+    published: pub,
+    pinned: pinned
+  };
+  // Bij nieuwe post: zet author_id op huidige user
+  if (!id && currentUser && currentUser.id) payload.author_id = currentUser.id;
+
+  try {
+    var res;
+    if (id) {
+      res = await sbClient.from('news_posts').update(payload).eq('id', id).select().maybeSingle();
+    } else {
+      res = await sbClient.from('news_posts').insert(payload).select().maybeSingle();
+    }
+    if (res.error) { toast('Fout: ' + res.error.message); return; }
+    toast('✓ Opgeslagen');
+    adminBackToList();
+    adminLoadPosts();
+    // Refresh Home view content als die actief is
+    if (document.getElementById('view-home').classList.contains('active')) loadHomeView();
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+  }
+}
+
+async function adminDeletePost() {
+  var id = document.getElementById('adm-edit-id').value;
+  if (!id) return;
+  if (!confirm('Weet je zeker dat je dit bericht wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
+  try {
+    var res = await sbClient.from('news_posts').delete().eq('id', id);
+    if (res.error) { toast('Fout: ' + res.error.message); return; }
+    toast('✓ Verwijderd');
+    adminBackToList();
+    adminLoadPosts();
+  } catch(e) {
+    toast('Fout: ' + (e.message || 'onbekend'));
+  }
+}
+
+// Live preview tijdens typen in body textarea
+document.addEventListener('DOMContentLoaded', function() {
+  var body = document.getElementById('adm-body');
+  if (body) {
+    body.addEventListener('input', function() {
+      var prev = document.getElementById('adm-preview');
+      if (prev) prev.innerHTML = ygMarkdown(this.value) || '<em style="color:#9A8E82">Begin met typen om de preview te zien</em>';
+    });
+  }
+});
 // Publish-voortgang: update de publiceerknop met een statusbericht
 function setPublishStatus(msg) {
   var btn = document.getElementById('addPublish');
