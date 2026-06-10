@@ -2108,15 +2108,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
      in loadHomeView() uit Supabase geladen.
      ───────────────────────────────────────────────────── -->
 <div class="view" id="view-home">
-  <!-- Sticky tab-row bovenaan Home (sticky onder header). Schakelt
-       welke categorieën zichtbaar zijn in onderstaande secties. -->
-  <div class="home-tab-row" id="home-tab-row">
-    <button class="home-tab active" data-tab="all"  onclick="homeSwitchTab('all',this)" data-i18n="home.tab.all">Alles</button>
-    <button class="home-tab"        data-tab="news" onclick="homeSwitchTab('news',this)" data-i18n="home.tab.news">📰 Nieuws</button>
-    <button class="home-tab"        data-tab="blog" onclick="homeSwitchTab('blog',this)" data-i18n="home.tab.blog">📝 Blog</button>
-    <button class="home-tab"        data-tab="info" onclick="homeSwitchTab('info',this)" data-i18n="home.tab.info">ℹ️ Info</button>
-  </div>
-
   <div class="home-wrap">
     <div class="home-hero">
       <div class="home-hero-row">
@@ -2132,6 +2123,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <p data-i18n="home.hero.sub">Het laatste nieuws, tips en achtergronden over rommelmarkten en garageverkopen.</p>
         </div>
       </div>
+    </div>
+
+    <!-- Tab-row direct onder de hero (sticky tijdens scrollen). Schakelt
+         welke categorieën zichtbaar zijn in de secties hieronder. -->
+    <div class="home-tab-row" id="home-tab-row">
+      <button class="home-tab active" data-tab="all"  onclick="homeSwitchTab('all',this)" data-i18n="home.tab.all">Alles</button>
+      <button class="home-tab"        data-tab="news" onclick="homeSwitchTab('news',this)" data-i18n="home.tab.news">📰 Nieuws</button>
+      <button class="home-tab"        data-tab="blog" onclick="homeSwitchTab('blog',this)" data-i18n="home.tab.blog">📝 Blog</button>
+      <button class="home-tab"        data-tab="info" onclick="homeSwitchTab('info',this)" data-i18n="home.tab.info">ℹ️ Info</button>
     </div>
 
     <!-- Admin-only panel knop — alleen zichtbaar als isAdmin true is -->
@@ -11111,19 +11111,37 @@ async function loadCheckinState() {
   var today = new Date().toISOString().slice(0, 10);
   var weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   try {
-    // Favorieten ophalen met listing-data
-    var favRes = await sbClient.from('favorites')
+    // Verkopen die de user wil bezoeken — bron is BEIDE favorieten (⭐) én
+    // "Ik ga erheen!" (listing_interests). De flow voelde voor gebruikers
+    // verwarrend als alleen favorieten de check-in trigger; nu doen beide het.
+    var favPromise = sbClient.from('favorites')
       .select('listing_id, listings!inner(id, title, date_start, user_id)')
       .eq('user_id', currentUser.id)
       .lte('listings.date_start', today)
       .gte('listings.date_start', weekAgo);
-    var favs = favRes.data || [];
-    if (!favs.length) { card.style.display = 'none'; return; }
-    var ids = favs.map(function(f) { return f.listing_id; });
+    var intPromise = sbClient.from('listing_interests')
+      .select('listing_id, listings!inner(id, title, date_start, user_id)')
+      .eq('user_id', currentUser.id)
+      .lte('listings.date_start', today)
+      .gte('listings.date_start', weekAgo);
+    var both = await Promise.all([favPromise, intPromise]);
+    // Combineer + dedupe op listing_id (favoriet + interest kan dezelfde sale zijn)
+    var seen = new Set();
+    var candidates = [];
+    [both[0].data || [], both[1].data || []].forEach(function(arr) {
+      arr.forEach(function(r) {
+        if (r && r.listing_id && !seen.has(r.listing_id)) {
+          seen.add(r.listing_id);
+          candidates.push(r);
+        }
+      });
+    });
+    if (!candidates.length) { card.style.display = 'none'; return; }
+    var ids = candidates.map(function(c) { return c.listing_id; });
     // Bestaande check-ins ophalen
     var ciRes = await sbClient.from('checkins').select('listing_id').eq('user_id', currentUser.id).in('listing_id', ids);
     var checkedIds = new Set((ciRes.data || []).map(function(c) { return c.listing_id; }));
-    var pending = favs.filter(function(f) { return !checkedIds.has(f.listing_id); });
+    var pending = candidates.filter(function(c) { return !checkedIds.has(c.listing_id); });
     // Attendance-score bijwerken
     var allCiRes = await sbClient.from('checkins').select('attended').eq('user_id', currentUser.id);
     var allCi = allCiRes.data || [];
