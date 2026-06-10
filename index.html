@@ -571,7 +571,9 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.dark.is-desktop #map{border:1.5px solid var(--border);}
 
   /* ── LIJST view: filter sidebar + grid ── */
-  body.is-desktop #view-lijst{
+  /* BELANGRIJK: alleen op .active toepassen, anders blijft de view zichtbaar
+     onder andere views (Home/Route/Mijn) */
+  body.is-desktop #view-lijst.active{
     display:flex;gap:20px;max-width:1400px;margin:0 auto;padding:20px 24px;align-items:flex-start;
   }
   body.is-desktop .lijst-side{
