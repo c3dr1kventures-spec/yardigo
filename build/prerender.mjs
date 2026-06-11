@@ -24,7 +24,10 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://fwehqudhwzcnkcuypuqw.s
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
 
-const BASE_URL = process.env.BASE_URL || 'https://yardigo.nl';
+// Default naar www-variant zodat sitemap-URL's matchen met het canonical
+// dat we in index.html zetten (https://www.yardigo.nl/). Een mismatch zou
+// Google twijfel geven over welke versie van de URL geïndexeerd moet worden.
+const BASE_URL = process.env.BASE_URL || 'https://www.yardigo.nl';
 const DEFAULT_OG_IMAGE = BASE_URL + '/og-image.png';
 
 // DB-category → UI-type mapping (sync met index.html regel ~3833)
