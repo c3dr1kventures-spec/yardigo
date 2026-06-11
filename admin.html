@@ -420,6 +420,40 @@ textarea.setting-input{min-height:72px;resize:vertical;}
           <div class="panel-title">Nieuwe advertenties per dag <span id="an-listings-range">laatste 30 dagen</span></div>
           <div class="bar-chart" id="an-listings-chart" style="height:140px"><div class="spinner"></div></div>
         </div>
+
+        <!-- Nieuw: Herkomst / referrer -->
+        <div class="panel">
+          <div class="panel-title">📍 Verkeer-herkomst <span>top bronnen</span></div>
+          <div id="an-referrers"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Nieuw: Apparaat-split -->
+        <div class="panel">
+          <div class="panel-title">📱 Apparaat & taal</div>
+          <div id="an-devices"><div class="spinner"></div></div>
+          <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase">Talen</div>
+            <div id="an-languages"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Nieuw: Conversion funnel -->
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-title">🎯 Conversion-funnel <span>laatste 30 dagen</span></div>
+          <div id="an-funnel"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Nieuw: Uur-patroon -->
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-title">⏰ Bezoek per uur van de dag <span>laatste 14 dagen, NL-tijd</span></div>
+          <div class="bar-chart" id="an-hourly" style="height:120px"><div class="spinner"></div></div>
+        </div>
+
+        <!-- Nieuw: SEO landing-pagina's -->
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-title">🌐 Top SEO-landing pages <span>plaats/type pagina's + verkoop-details</span></div>
+          <div id="an-top-landings"><div class="spinner"></div></div>
+        </div>
       </div>
 
       <div style="margin-top:18px;font-size:11px;color:var(--muted);text-align:center">
@@ -1202,8 +1236,162 @@ async function loadAnalytics(){
       '<div style="color:var(--muted);font-size:11px;padding:10px">Kon advertentietellingen niet laden: ' + escapeHtml(e.message||String(e)) + '</div>';
   }
 
+  // 5) Referrers — vanwaar komen bezoekers?
+  try{
+    var r = await sb.rpc('analytics_referrers', { p_days: days, p_limit: 10 });
+    if (r.error) throw r.error;
+    renderAnalyticsReferrers(r.data || []);
+  } catch(e){
+    document.getElementById('an-referrers').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data: ' + escapeHtml(e.message||String(e)) + '</div>';
+  }
+
+  // 6) Devices + 7) Languages
+  try{
+    var dv = await sb.rpc('analytics_devices', { p_days: days });
+    if (dv.error) throw dv.error;
+    renderAnalyticsDevices(dv.data || []);
+  } catch(e){
+    document.getElementById('an-devices').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data: ' + escapeHtml(e.message||String(e)) + '</div>';
+  }
+  try{
+    var lg2 = await sb.rpc('analytics_languages', { p_days: days });
+    if (lg2.error) throw lg2.error;
+    renderAnalyticsLanguages(lg2.data || []);
+  } catch(e){
+    document.getElementById('an-languages').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data</div>';
+  }
+
+  // 8) Funnel
+  try{
+    var f = await sb.rpc('analytics_funnel', { p_days: days });
+    if (f.error) throw f.error;
+    renderAnalyticsFunnel(f.data || []);
+  } catch(e){
+    document.getElementById('an-funnel').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data: ' + escapeHtml(e.message||String(e)) + '</div>';
+  }
+
+  // 9) Hourly
+  try{
+    var h = await sb.rpc('analytics_hourly', { p_days: 14 });
+    if (h.error) throw h.error;
+    renderAnalyticsHourly(h.data || []);
+  } catch(e){
+    document.getElementById('an-hourly').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data</div>';
+  }
+
+  // 10) Top landings
+  try{
+    var tl = await sb.rpc('analytics_top_landings', { p_days: days, p_limit: 15 });
+    if (tl.error) throw tl.error;
+    renderAnalyticsTopLandings(tl.data || []);
+  } catch(e){
+    document.getElementById('an-top-landings').innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data of nog geen SEO-bezoek</div>';
+  }
+
   // Vernieuw-knop herstellen
   if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '🔄 Vernieuw'; }
+}
+
+// ── Renderers voor de nieuwe analytics-panels ──
+function renderAnalyticsReferrers(rows){
+  var el = document.getElementById('an-referrers');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Nog geen referrer-data</div>'; return; }
+  var total = rows.reduce(function(s,r){ return s + Number(r.visits||0); }, 0);
+  var iconMap = { google:'🔎', facebook:'📘', instagram:'📷', bing:'🅱️', duckduckgo:'🦆', whatsapp:'💬', '(direct)':'➡️', '(internal)':'🔗' };
+  el.innerHTML = rows.map(function(r){
+    var pct = total ? Math.round(100 * Number(r.visits||0) / total) : 0;
+    var icon = iconMap[r.source] || '🌐';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border);font-size:12px">'+
+      '<span>'+icon+'</span>'+
+      '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(r.source)+'</span>'+
+      '<span style="font-weight:700;color:var(--terra)">'+r.visits+'</span>'+
+      '<span style="font-size:10px;color:var(--muted);width:36px;text-align:right">'+pct+'%</span>'+
+    '</div>';
+  }).join('');
+}
+
+function renderAnalyticsDevices(rows){
+  var el = document.getElementById('an-devices');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data</div>'; return; }
+  var total = rows.reduce(function(s,r){ return s + Number(r.visits||0); }, 0);
+  var iconMap = { mobile:'📱', tablet:'📲', desktop:'🖥️', unknown:'❓' };
+  el.innerHTML = rows.map(function(r){
+    var pct = total ? Math.round(100 * Number(r.visits||0) / total) : 0;
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:12px">'+
+      '<span>'+(iconMap[r.device]||'❓')+'</span>'+
+      '<span style="flex:1;text-transform:capitalize">'+escapeHtml(r.device)+'</span>'+
+      '<span style="font-weight:700;color:var(--terra)">'+r.visits+'</span>'+
+      '<span style="font-size:10px;color:var(--muted);width:36px;text-align:right">'+pct+'%</span>'+
+    '</div>';
+  }).join('');
+}
+
+function renderAnalyticsLanguages(rows){
+  var el = document.getElementById('an-languages');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data</div>'; return; }
+  var flagMap = { nl:'🇳🇱', en:'🇬🇧', fr:'🇫🇷', de:'🇩🇪', be:'🇧🇪', unknown:'❓' };
+  el.innerHTML = rows.map(function(r){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:4px 4px;font-size:12px">'+
+      '<span>'+(flagMap[r.lang]||'🌐')+'</span>'+
+      '<span style="flex:1">'+escapeHtml(r.lang)+'</span>'+
+      '<span style="font-weight:700;color:var(--terra)">'+r.visits+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function renderAnalyticsFunnel(rows){
+  var el = document.getElementById('an-funnel');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen funnel-data</div>'; return; }
+  var maxV = Math.max.apply(null, rows.map(function(r){ return Number(r.count_value||0); }));
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px">' +
+    rows.map(function(r){
+      var w = maxV ? Math.max(2, Math.round(100 * Number(r.count_value||0) / maxV)) : 0;
+      var pct = r.pct_of_previous != null ? ' <span style="color:var(--muted);font-size:11px">(' + r.pct_of_previous + '% vs vorige)</span>' : '';
+      return '<div>' +
+        '<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;font-size:12.5px">' +
+          '<span style="font-weight:600">' + escapeHtml(r.stage) + pct + '</span>' +
+          '<span style="font-weight:800;color:var(--terra)">' + r.count_value + '</span>' +
+        '</div>' +
+        '<div style="background:var(--bg2);height:18px;border-radius:6px;overflow:hidden">' +
+          '<div style="width:' + w + '%;height:100%;background:linear-gradient(90deg,#E07B39,#3A6B4A);border-radius:6px"></div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
+function renderAnalyticsHourly(rows){
+  var el = document.getElementById('an-hourly');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Geen data</div>'; return; }
+  var maxV = Math.max(1, ...rows.map(function(r){ return Number(r.visits)||0; }));
+  el.innerHTML = '<div style="display:flex;align-items:flex-end;gap:3px;height:100%;padding:0 4px">' +
+    rows.map(function(r){
+      var h = maxV ? Math.max(2, Math.round(100 * Number(r.visits||0) / maxV)) : 0;
+      var hour = String(r.hour_of_day).padStart(2,'0');
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end">' +
+        '<div title="' + hour + ':00 — ' + r.visits + ' bezoeken" style="width:100%;height:' + h + '%;background:linear-gradient(180deg,#E07B39,#D26A2E);border-radius:3px 3px 0 0;min-height:2px"></div>' +
+        '<div style="font-size:9px;color:var(--muted);margin-top:3px">' + hour + '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
+function renderAnalyticsTopLandings(rows){
+  var el = document.getElementById('an-top-landings');
+  if (!rows.length){ el.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">Nog geen bezoeken op SEO-landings of detail-pages. Verschijnt zodra Google crawlt.</div>'; return; }
+  el.innerHTML = '<div>' + rows.map(function(r){
+    var prettyPath = r.path.length > 60 ? r.path.slice(0,58) + '…' : r.path;
+    var icon = r.path.startsWith('/v/') ? '🏷️' :
+               r.path.startsWith('/rommelroute/') ? '🏘️' :
+               r.path.startsWith('/vlooienmarkt/') || r.path.startsWith('/rommelmarkt/') ? '🎪' :
+               '🏠';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid var(--border);font-size:12px">'+
+      '<span>'+icon+'</span>'+
+      '<a href="https://www.yardigo.nl'+escapeHtml(r.path)+'" target="_blank" style="flex:1;color:var(--text);text-decoration:none;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(prettyPath)+'</a>'+
+      '<span style="font-weight:700;color:var(--terra)">'+r.visits+'</span>'+
+      '<span style="font-size:10px;color:var(--muted)">'+r.unique_sessions+' uniek</span>'+
+    '</div>';
+  }).join('') + '</div>';
 }
 
 function renderAnalyticsSummary(r){
