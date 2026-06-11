@@ -45,3 +45,9 @@ play-store-assets/
 v/
 sitemap.xml
 robots.txt
+# Landing pages per plaats+type
+rommelroute/
+rommelmarkt/
+vlooienmarkt/
+opritverkoop/
+garageverkoop/
