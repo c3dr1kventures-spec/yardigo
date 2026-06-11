@@ -48,6 +48,8 @@
 <!-- Markdown rendering voor Home news/blog/info posts (admin-content) -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+<!-- QR-code generator voor de organisator-promotiepakketten -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -555,6 +557,56 @@ body.dark .home-empty{background:var(--bg2);}
 body.dark .empty-cedrik-bubble,
 body.dark .empty-nearby-card,
 body.dark .empty-action{background:var(--bg2);}
+
+/* ── PROMOTIE-PAKKET (organisator-tools) ── */
+.promo-poster{
+  background:linear-gradient(160deg,#FAF7F2,#F0EBE3);
+  border:2px solid #E07B39;border-radius:18px;padding:20px;
+  text-align:center;color:#2C2416;margin:0 auto 18px;max-width:340px;
+}
+.promo-poster .pp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.promo-poster .pp-logo{font-size:16px;font-weight:800;color:#E07B39;}
+.promo-poster .pp-type{font-size:10px;font-weight:700;color:#fff;background:#3A6B4A;border-radius:999px;padding:3px 10px;}
+.promo-poster .pp-title{font-size:20px;font-weight:800;line-height:1.2;margin-bottom:12px;color:#2C2416;}
+.promo-poster .pp-meta{margin-bottom:14px;font-size:13px;font-weight:600;color:#4A3E32;}
+.promo-poster .pp-row{margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.promo-poster .pp-ico{flex-shrink:0;}
+.promo-poster .pp-qr-wrap{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;}
+.promo-poster #pp-qr{display:block;margin:0 auto;}
+.promo-poster .pp-qr-cta{font-size:10.5px;color:#7A6E62;margin-top:6px;}
+.promo-poster .pp-footer{font-size:10.5px;color:#9A8E82;margin-top:6px;}
+
+.promo-actions{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.promo-action{
+  padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);
+  background:#fff;color:var(--text);font-family:'Poppins',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;
+}
+.promo-action:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(44,36,22,.10);}
+.promo-action.ghost{background:transparent;color:var(--muted);border-color:var(--border);}
+
+.promo-section{margin-bottom:14px;}
+.promo-section-title{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+.promo-textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Poppins',sans-serif;font-size:12.5px;color:var(--text);background:#fff;
+  outline:none;box-sizing:border-box;resize:vertical;line-height:1.5;
+}
+.promo-row{display:flex;gap:6px;margin-top:6px;}
+.promo-btn{
+  padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;
+  font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:700;color:var(--text);cursor:pointer;
+}
+.promo-btn.primary{background:var(--terra);color:#fff;border-color:var(--terra);}
+.promo-btn:hover{filter:brightness(.97);}
+.promo-link-row{display:flex;gap:6px;}
+.promo-link-input{
+  flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;
+  font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);background:var(--bg2);outline:none;
+}
+body.dark .promo-textarea{background:var(--bg2);color:var(--text);}
+body.dark .promo-poster{background:linear-gradient(160deg,var(--bg2),var(--bg));color:var(--text);}
+body.dark .promo-poster .pp-title{color:var(--text);}
 
 /* ── Categorie multi-picker ── */
 .cat-picker-btn{
@@ -3023,6 +3075,73 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </div>
       <button class="share-action-btn" id="share-googlemaps-btn" onclick="shareGoogleMaps()">🗺️ Openen in Google Maps</button>
       <button class="share-action-btn" onclick="shareCalendar()">📅 Toevoegen aan kalender</button>
+      <!-- Promotie-pakket: alleen voor de eigenaar van de advertentie zichtbaar -->
+      <button class="share-action-btn" id="share-promo-pack-btn" style="display:none;background:#3A6B4A;color:#fff;border-color:#3A6B4A" onclick="openPromoPack()">🎨 Maak promotie-pakket (poster + QR)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PROMOTIE-PAKKET overlay (poster + QR + share-tekst) ═══════════ -->
+<div class="overlay" id="promoPackOv" onclick="if(event.target===this)closePromoPack()">
+  <div class="sheet" style="max-height:94vh;max-width:560px">
+    <div class="sheet-handle"></div>
+    <div style="padding:14px 18px 24px">
+      <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px">🎨 Promotie-pakket</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">Deel je verkoop met buurtgenoten — poster, QR-code en kant-en-klare tekst voor WhatsApp en Facebook.</div>
+
+      <!-- Poster preview (afdrukbaar) -->
+      <div id="promo-poster" class="promo-poster">
+        <div class="pp-head">
+          <div class="pp-logo">YardiGo</div>
+          <div class="pp-type" id="pp-type-badge">Opritverkoop</div>
+        </div>
+        <div class="pp-title" id="pp-title">Titel</div>
+        <div class="pp-meta">
+          <div class="pp-row"><span class="pp-ico">📅</span><span id="pp-date">datum</span></div>
+          <div class="pp-row"><span class="pp-ico">🕐</span><span id="pp-time">tijd</span></div>
+          <div class="pp-row"><span class="pp-ico">📍</span><span id="pp-loc">locatie</span></div>
+        </div>
+        <div class="pp-qr-wrap">
+          <canvas id="pp-qr" width="180" height="180"></canvas>
+          <div class="pp-qr-cta">Scan voor route, foto's en updates</div>
+        </div>
+        <div class="pp-footer">Geplaatst via <strong>YardiGo</strong> · yardigo.nl</div>
+      </div>
+
+      <!-- Acties -->
+      <div class="promo-actions">
+        <button class="promo-action" onclick="promoPrintPoster()">🖨️ Afdrukken / opslaan als PDF</button>
+        <button class="promo-action" onclick="promoDownloadPNG()">📥 Download als afbeelding</button>
+      </div>
+
+      <!-- Kant-en-klare deelteksten -->
+      <div class="promo-section">
+        <div class="promo-section-title">📱 WhatsApp / sms-tekst</div>
+        <textarea class="promo-textarea" id="promo-wa-text" rows="4" readonly></textarea>
+        <div class="promo-row">
+          <button class="promo-btn" onclick="promoCopy('promo-wa-text')">📋 Kopieer</button>
+          <button class="promo-btn primary" onclick="promoShareWA()">↗ Open in WhatsApp</button>
+        </div>
+      </div>
+
+      <div class="promo-section">
+        <div class="promo-section-title">📘 Facebook-tekst</div>
+        <textarea class="promo-textarea" id="promo-fb-text" rows="5" readonly></textarea>
+        <div class="promo-row">
+          <button class="promo-btn" onclick="promoCopy('promo-fb-text')">📋 Kopieer</button>
+          <button class="promo-btn" onclick="promoShareFB()">↗ Deel op Facebook</button>
+        </div>
+      </div>
+
+      <div class="promo-section">
+        <div class="promo-section-title">🔗 Korte link</div>
+        <div class="promo-link-row">
+          <input class="promo-link-input" id="promo-short-link" readonly>
+          <button class="promo-btn" onclick="promoCopy('promo-short-link')">Kopieer</button>
+        </div>
+      </div>
+
+      <button class="promo-action ghost" onclick="closePromoPack()" style="margin-top:18px">Sluiten</button>
     </div>
   </div>
 </div>
@@ -8953,6 +9072,12 @@ function detailShare() {
   // Verberg Google Maps-knop wanneer adres nog verborgen is (coördinaten lekken anders het adres)
   var gmBtn = document.getElementById('share-googlemaps-btn');
   if (gmBtn) gmBtn.style.display = s.address_hidden ? 'none' : '';
+  // Promotie-pakket alleen voor de eigenaar (auteur van de verkoop)
+  var promoBtn = document.getElementById('share-promo-pack-btn');
+  if (promoBtn) {
+    var isOwner = !isGuest && currentUser && currentUser.id && s.user_id && s.user_id === currentUser.id;
+    promoBtn.style.display = isOwner ? '' : 'none';
+  }
   document.getElementById('shareOv').classList.add('open');
 }
 function closeShare() { document.getElementById('shareOv').classList.remove('open'); }
@@ -9020,6 +9145,163 @@ function shareCalendar() {
     'END:VEVENT','END:VCALENDAR'].join('\r\n');
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics],{type:'text/calendar'})); a.download = 'yardigo-'+s.id+'.ics'; a.click();
   toast(i18n('toast.calendar_downloaded', '📅 Kalenderbestand gedownload!')); closeShare();
+}
+
+// ══════════════════════════════════════════════════
+// PROMOTIE-PAKKET — poster + QR + deelteksten voor organisatoren
+// ══════════════════════════════════════════════════
+var _promoSaleId = null;
+
+function openPromoPack() {
+  var s = sales.find(function(x) { return x.id === detailSaleId; });
+  if (!s) return;
+  _promoSaleId = s.id;
+  closeShare();
+  // Vul de poster-content
+  var t = TYPES[s.type];
+  var _typeLbl = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : (t ? t.label : '');
+  var _icon = getSaleIcon(s);
+  document.getElementById('pp-type-badge').textContent = _icon + ' ' + _typeLbl;
+  document.getElementById('pp-title').textContent = s.title;
+  document.getElementById('pp-date').textContent = s.date ? fmtDate(s.date) : 'Datum t.b.a.';
+  document.getElementById('pp-time').textContent = (s.from || '') + (s.till ? '–' + s.till : '');
+  // Adres: respecteer adres-privacy (toon stad als verborgen)
+  var _loc = s.address_hidden
+    ? (s.city || 'Wordt 24u vooraf zichtbaar')
+    : (s.address || s.city || '');
+  document.getElementById('pp-loc').textContent = _loc;
+  // QR-code: korte link naar verkoop
+  var _url = 'https://yardigo.nl/v/' + s.id;
+  document.getElementById('promo-short-link').value = _url;
+  _renderPromoQR(_url);
+  // Deelteksten genereren (NL — i18n volgt later indien gewenst)
+  var _dateStr = s.date ? fmtDate(s.date) : '';
+  var _timeStr = (s.from || '') + (s.till ? '–' + s.till : '');
+  var _waText = '🎉 ' + s.title + '\n' +
+    '📅 ' + _dateStr + (_timeStr ? ' · 🕐 ' + _timeStr : '') + '\n' +
+    '📍 ' + _loc + '\n\n' +
+    'Meer info, foto\'s en route via YardiGo:\n' + _url;
+  var _fbText = '🎉 ' + s.title + ' — ' + _dateStr + '\n\n' +
+    'Wij doen mee! ' + (_timeStr ? 'Tussen ' + _timeStr + ' ' : '') +
+    'kun je langskomen op ' + _loc + '.\n\n' +
+    'Bekijk alle foto\'s, plan je route en zie wie er nog meer komt op YardiGo:\n' + _url + '\n\n' +
+    '#rommelmarkt #garageverkoop #buurtverkoop';
+  document.getElementById('promo-wa-text').value = _waText;
+  document.getElementById('promo-fb-text').value = _fbText;
+  document.getElementById('promoPackOv').classList.add('open');
+}
+
+function closePromoPack() {
+  document.getElementById('promoPackOv').classList.remove('open');
+  _promoSaleId = null;
+}
+
+function _renderPromoQR(url) {
+  var canvas = document.getElementById('pp-qr');
+  if (!canvas) return;
+  if (typeof QRCode === 'undefined' || !QRCode.toCanvas) {
+    // Fallback: gebruik een externe QR-service als de library niet geladen is
+    var ctx = canvas.getContext('2d');
+    if (ctx) { ctx.fillStyle = '#9A8E82'; ctx.fillRect(0,0,180,180); ctx.fillStyle='#fff'; ctx.font='12px Poppins'; ctx.fillText('QR niet geladen', 30, 90); }
+    return;
+  }
+  QRCode.toCanvas(canvas, url, {
+    width: 180, margin: 1,
+    color: { dark: '#2C2416', light: '#FFFFFF' }
+  }, function(err) {
+    if (err) console.warn('QR render fail:', err);
+  });
+}
+
+function promoPrintPoster() {
+  var poster = document.getElementById('promo-poster');
+  if (!poster) return;
+  // Open een nieuwe window met enkel de poster + minimale styling
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Poster — ' +
+    document.getElementById('pp-title').textContent + '</title>' +
+    '<style>' +
+    '@page{margin:0;size:A4;}body{margin:0;padding:0;background:#fff;font-family:Poppins,Arial,sans-serif;}' +
+    '.print-wrap{width:210mm;min-height:297mm;display:flex;align-items:center;justify-content:center;padding:20mm;box-sizing:border-box;}' +
+    '.poster-clone{transform:scale(1.6);transform-origin:center;}' +
+    '</style></head><body><div class="print-wrap"><div class="poster-clone">' +
+    poster.outerHTML +
+    '</div></div></body></html>';
+  // Inline alle eigen poster-CSS variabelen direct
+  var styles = '<style>' + _getPromoPosterCSS() + '</style>';
+  html = html.replace('</head>', styles + '</head>');
+  var w = window.open('', '_blank', 'width=900,height=1200');
+  if (!w) { toast('Pop-up geblokkeerd — sta pop-ups toe en probeer opnieuw'); return; }
+  w.document.write(html);
+  w.document.close();
+  // Wacht tot het canvas-data is geladen
+  setTimeout(function() {
+    // Kopieer canvas QR als data-URL naar het print-window omdat OuterHTML het canvas niet meeneemt
+    var srcCanvas = document.getElementById('pp-qr');
+    var destCanvas = w.document.getElementById('pp-qr');
+    if (srcCanvas && destCanvas) {
+      var ctx = destCanvas.getContext('2d');
+      ctx.drawImage(srcCanvas, 0, 0);
+    }
+    w.focus();
+    w.print();
+  }, 300);
+}
+
+// Genereert de CSS-string voor de poster, geïnlined zodat de print-window
+// hem heeft zonder de hoofd-stylesheet te laden.
+function _getPromoPosterCSS() {
+  return '.promo-poster{background:linear-gradient(160deg,#FAF7F2,#F0EBE3);border:2px solid #E07B39;border-radius:18px;padding:24px;text-align:center;color:#2C2416;max-width:380px;margin:0 auto;}' +
+    '.promo-poster .pp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}' +
+    '.promo-poster .pp-logo{font-size:18px;font-weight:800;color:#E07B39;}' +
+    '.promo-poster .pp-type{font-size:11px;font-weight:700;color:#fff;background:#3A6B4A;border-radius:999px;padding:4px 12px;}' +
+    '.promo-poster .pp-title{font-size:24px;font-weight:800;line-height:1.2;margin-bottom:14px;color:#2C2416;}' +
+    '.promo-poster .pp-meta{margin-bottom:18px;font-size:14px;font-weight:600;color:#4A3E32;}' +
+    '.promo-poster .pp-row{margin-bottom:6px;}' +
+    '.promo-poster .pp-ico{display:inline-block;margin-right:8px;}' +
+    '.promo-poster .pp-qr-wrap{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;}' +
+    '.promo-poster #pp-qr{display:block;margin:0 auto;}' +
+    '.promo-poster .pp-qr-cta{font-size:11px;color:#7A6E62;margin-top:8px;}' +
+    '.promo-poster .pp-footer{font-size:11px;color:#9A8E82;margin-top:8px;}';
+}
+
+function promoDownloadPNG() {
+  // Voor v1: bied print-naar-PDF aan via de printer-dialog (kan ook PNG opslaan
+  // op moderne OS'en). Echte PNG-export vereist html2canvas, kunnen we later.
+  toast('Gebruik "Afdrukken / opslaan als PDF" voor nu — full PNG export volgt.');
+}
+
+function promoCopy(elId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  el.select();
+  el.setSelectionRange(0, el.value.length);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(el.value).then(function() {
+      toast('✓ Gekopieerd');
+    }).catch(function() {
+      try { document.execCommand('copy'); toast('✓ Gekopieerd'); } catch(e) { toast('Kon niet kopiëren — selecteer zelf'); }
+    });
+  } else {
+    try { document.execCommand('copy'); toast('✓ Gekopieerd'); } catch(e) { toast('Kon niet kopiëren'); }
+  }
+}
+
+function promoShareWA() {
+  var t = document.getElementById('promo-wa-text').value;
+  window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank');
+}
+
+function promoShareFB() {
+  // Facebook accepteert geen pre-filled text via deelbare URL; we openen de
+  // share-dialoog met enkel de URL en kopiëren de tekst voor de gebruiker.
+  var s = _promoSaleId ? sales.find(function(x) { return x.id === _promoSaleId; }) : null;
+  if (!s) return;
+  promoCopy('promo-fb-text');
+  setTimeout(function() {
+    var url = 'https://yardigo.nl/v/' + s.id;
+    window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+    toast('Tekst gekopieerd — plak hem in je Facebook-post');
+  }, 250);
 }
 
 // ══════════════════════════════════════════════════
