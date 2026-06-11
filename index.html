@@ -459,6 +459,49 @@ body.dark .home-card{background:var(--bg2);}
 body.dark .home-card .hc-title{color:var(--text);}
 body.dark .home-empty{background:var(--bg2);}
 
+/* ── Categorie multi-picker ── */
+.cat-picker-btn{
+  font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;
+  padding:5px 8px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--bg2);color:var(--text);cursor:pointer;outline:none;
+  max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.cat-picker-menu{
+  display:none;position:absolute;top:calc(100% + 4px);right:0;
+  background:#fff;border:1.5px solid var(--border);border-radius:12px;
+  box-shadow:0 6px 20px rgba(44,36,22,.12);
+  padding:6px;min-width:200px;max-height:340px;overflow-y:auto;z-index:1000;
+}
+.cat-picker-menu.open{display:block;}
+.cat-picker-opt{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  cursor:pointer;font-size:12px;color:var(--text);transition:background .12s;
+  background:transparent;border:none;width:100%;text-align:left;
+  font-family:'Poppins',sans-serif;
+}
+.cat-picker-opt:hover{background:#F0EBE3;}
+.cat-picker-opt input{margin:0;accent-color:#E07B39;cursor:pointer;}
+.cat-picker-opt.cat-picker-all{color:#D94040;font-weight:700;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0;margin-bottom:4px;}
+body.dark .cat-picker-menu{background:var(--bg2);}
+body.dark .cat-picker-opt:hover{background:var(--bg);}
+
+/* Grid-size kiezer: alleen tonen op desktop */
+.grid-size-select{display:none;}
+
+/* Grid-size classes (op desktop) */
+@media (min-width: 1024px) {
+  body.is-desktop .grid-size-select{display:inline-block;}
+  body.is-desktop #cardList.grid-1col{grid-template-columns:1fr !important;}
+  body.is-desktop #cardList.grid-2col{grid-template-columns:repeat(2,1fr) !important;}
+  body.is-desktop #cardList.grid-3col{grid-template-columns:repeat(3,1fr) !important;}
+  body.is-desktop #cardList.grid-4col{grid-template-columns:repeat(4,1fr) !important;}
+  /* Bij 1 of 2 kolommen worden kaarten breder: meer padding voor de card-body */
+  body.is-desktop #cardList.grid-1col .card,
+  body.is-desktop #cardList.grid-2col .card{min-height:140px;}
+  body.is-desktop #cardList.grid-1col .card-thumb,
+  body.is-desktop #cardList.grid-2col .card-thumb{width:160px;min-height:140px;font-size:42px;}
+}
+
 /* ── ADMIN PANEL (Home content beheer) ── */
 #admin-panel{display:none;position:fixed;inset:0;z-index:10010;background:#FAF7F2;flex-direction:column;}
 #admin-panel.open{display:flex;}
@@ -1744,27 +1787,46 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </aside>
   <div class="list-wrap">
-    <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+    <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
       <span id="lcount" style="flex-shrink:0;white-space:nowrap">0 gevonden</span>
-      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-        <select id="catSelect" onchange="filterByCat(this.value||null)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:110px">
-          <option value="" data-i18n="filter.all">Alles</option>
-          <option value="👗 Kleding" data-i18n="cat.kleding">👗 Kleding</option>
-          <option value="🧸 Speelgoed" data-i18n="cat.speelgoed">🧸 Speelgoed</option>
-          <option value="🛋️ Meubels" data-i18n="cat.meubels">🛋️ Meubels</option>
-          <option value="📚 Boeken" data-i18n="cat.boeken">📚 Boeken</option>
-          <option value="📱 Elektronica" data-i18n="cat.elektro">📱 Elektronica</option>
-          <option value="🌿 Tuin" data-i18n="cat.tuin">🌿 Tuin</option>
-          <option value="🎨 Kunst" data-i18n="cat.kunst">🎨 Kunst</option>
-          <option value="🏺 Antiek & Vintage" data-i18n="cat.antiek">🏺 Antiek</option>
-          <option value="📦 Overig" data-i18n="cat.overig">📦 Overig</option>
-        </select>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap">
+        <!-- Categorie multi-picker: button opens dropdown with checkboxes.
+             Vervangt het oude single-select <select> zodat meerdere
+             categorieën tegelijk gekozen kunnen worden. -->
+        <div class="cat-picker" id="catPickerWrap" style="position:relative">
+          <button class="cat-picker-btn" id="catPickerBtn" onclick="toggleCatPicker(event)" type="button">
+            <span id="catPickerLabel">🏷️ Alles</span> ▾
+          </button>
+          <div class="cat-picker-menu" id="catPickerMenu" role="menu">
+            <button class="cat-picker-opt cat-picker-all" onclick="catPickerClear()" type="button">
+              ✕ <span data-i18n="filter.clear">Wis alles</span>
+            </button>
+            <label class="cat-picker-opt"><input type="checkbox" value="👗 Kleding" onchange="catPickerToggle(this)"> 👗 Kleding</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="🧸 Speelgoed" onchange="catPickerToggle(this)"> 🧸 Speelgoed</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="🛋️ Meubels" onchange="catPickerToggle(this)"> 🛋️ Meubels</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="📚 Boeken" onchange="catPickerToggle(this)"> 📚 Boeken</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="📱 Elektronica" onchange="catPickerToggle(this)"> 📱 Elektronica</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="🌿 Tuin" onchange="catPickerToggle(this)"> 🌿 Tuin</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="🎨 Kunst" onchange="catPickerToggle(this)"> 🎨 Kunst</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="🏺 Antiek & Vintage" onchange="catPickerToggle(this)"> 🏺 Antiek &amp; Vintage</label>
+            <label class="cat-picker-opt"><input type="checkbox" value="📦 Overig" onchange="catPickerToggle(this)"> 📦 Overig</label>
+          </div>
+        </div>
         <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:120px">
           <option value="newest" data-i18n="list.sort.newest">🆕 Nieuwste eerst</option>
           <option value="date-asc" data-i18n="list.sort.date_asc" selected>📅 Op datum</option>
           <option value="date-desc" data-i18n="list.sort.date_desc">📅 Laatste eerst</option>
           <option value="nearby" data-i18n="list.sort.nearby">📍 Dichtstbijzijnde</option>
           <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
+        </select>
+        <!-- Weergave-kiezer (alleen zichtbaar op desktop): bepaalt hoeveel
+             advertenties naast elkaar staan in de grid. -->
+        <select id="gridSizeSelect" class="grid-size-select" onchange="applyGridSize(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:130px">
+          <option value="auto" selected>📐 Auto</option>
+          <option value="4col">▦ 4 per rij</option>
+          <option value="3col">▥ 3 per rij</option>
+          <option value="2col">▤ 2 per rij (groter)</option>
+          <option value="1col">▣ 1 per rij (volledig)</option>
         </select>
       </div>
     </div>
@@ -6264,7 +6326,10 @@ let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
 let activeRadiusKm = 9999;
-let activeCatFilter = null; // bijv. '👗 Kleding', null = alle categorieën
+let activeCatFilter = null; // legacy single-cat (behouden voor compat)
+// Nieuwe multi-cat state: een Set van categorienamen. Lege set = geen filter.
+// Een listing matched als minstens één van zijn tags in deze set zit.
+let activeCatFilters = new Set();
 let advTagFilters = new Set();
 let isGuest = true; // Standaard gast totdat gebruiker inlogt of account aanmaakt
 let currentUser = { name: '', email: '' };
@@ -7484,8 +7549,13 @@ function saleMatchesFilters(s) {
   if (s.confirmation_status && s.confirmation_status !== 'confirmed') return false;
   if (activeFilters.size > 0 && !activeFilters.has(s.type)) return false;
   // Categoriefilter: verkoop moet de geselecteerde categorie in zijn tags hebben
-  if (activeCatFilter) {
-    var hasCat = (s.tags || []).some(function(t) { return t === activeCatFilter; });
+  // Multi-cat filter: listing past als ÉÉN van zijn tags in de active set zit.
+  // Legacy activeCatFilter wordt nog ondersteund (single-cat) voor het geval
+  // oude code-paden hem nog setten — als hij gezet is mergen we hem.
+  var _catsToCheck = activeCatFilters && activeCatFilters.size ? activeCatFilters : null;
+  if (!_catsToCheck && activeCatFilter) _catsToCheck = new Set([activeCatFilter]);
+  if (_catsToCheck) {
+    var hasCat = (s.tags || []).some(function(t) { return _catsToCheck.has(t); });
     if (!hasCat) return false;
   }
   if (activeDateFilter !== 'all') {
@@ -7542,13 +7612,79 @@ function filterType(type) {
   });
   applyFilters();
 }
+// Legacy: single-cat filter. Behoud voor de filter-bar dropdown.
+// Synced naar de nieuwe multi-cat state: `cat` wordt de enige actieve cat.
 function filterByCat(cat) {
   activeCatFilter = cat || null;
-  var sel = document.getElementById('catSelect');
-  if (sel) sel.value = activeCatFilter || '';
+  activeCatFilters = new Set();
+  if (cat) activeCatFilters.add(cat);
+  _syncCatPickerUI();
   renderList();
   if (typeof renderMarkers === 'function') renderMarkers();
 }
+
+// ── Multi-categorie picker ──
+function toggleCatPicker(e) {
+  e.stopPropagation();
+  var menu = document.getElementById('catPickerMenu');
+  if (menu) menu.classList.toggle('open');
+}
+function catPickerToggle(cb) {
+  var v = cb.value;
+  if (cb.checked) activeCatFilters.add(v); else activeCatFilters.delete(v);
+  // Sync legacy single-cat: zet 'm op de eerste actieve, anders null.
+  activeCatFilter = activeCatFilters.size === 1 ? Array.from(activeCatFilters)[0] : null;
+  _syncCatPickerUI();
+  renderList();
+  if (typeof renderMarkers === 'function') renderMarkers();
+}
+function catPickerClear() {
+  activeCatFilters.clear();
+  activeCatFilter = null;
+  document.querySelectorAll('#catPickerMenu input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
+  _syncCatPickerUI();
+  renderList();
+  if (typeof renderMarkers === 'function') renderMarkers();
+  var menu = document.getElementById('catPickerMenu');
+  if (menu) menu.classList.remove('open');
+}
+function _syncCatPickerUI() {
+  // Update button label gebaseerd op aantal gekozen categorieën
+  var lbl = document.getElementById('catPickerLabel');
+  if (!lbl) return;
+  var n = activeCatFilters.size;
+  if (n === 0) lbl.textContent = '🏷️ Alles';
+  else if (n === 1) lbl.textContent = Array.from(activeCatFilters)[0];
+  else lbl.textContent = '🏷️ ' + n + ' categorieën';
+  // Sync checkboxes met state (voor het geval filterByCat() ze omgezet heeft)
+  document.querySelectorAll('#catPickerMenu input[type=checkbox]').forEach(function(cb) {
+    cb.checked = activeCatFilters.has(cb.value);
+  });
+}
+// Sluit picker bij klik buiten
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('catPickerWrap');
+  var menu = document.getElementById('catPickerMenu');
+  if (!wrap || !menu || !menu.classList.contains('open')) return;
+  if (!wrap.contains(e.target)) menu.classList.remove('open');
+});
+
+// ── Grid-size kiezer (Lijst): kies hoeveel kolommen op desktop ──
+function applyGridSize(size) {
+  var grid = document.getElementById('cardList');
+  if (!grid) return;
+  grid.classList.remove('grid-1col','grid-2col','grid-3col','grid-4col');
+  if (size && size !== 'auto') grid.classList.add('grid-' + size);
+  try { localStorage.setItem('yg-grid-size', size || 'auto'); } catch(e) {}
+}
+// Restore grid-size voorkeur bij boot
+(function() {
+  try {
+    var saved = localStorage.getItem('yg-grid-size') || 'auto';
+    var sel = document.getElementById('gridSizeSelect');
+    if (sel) { sel.value = saved; applyGridSize(saved); }
+  } catch(e) {}
+})();
 function openDD(e, name) {
   e.stopPropagation();
   var menu = document.getElementById('dd-' + name);
@@ -12418,23 +12554,17 @@ function _focusSaleOnMap(saleId) {
   if (typeof map === 'undefined' || !map) return;
   var sale = sales.find(function(s){ return String(s.id) === String(saleId); });
   if (!sale) return;
-  // Glijdende pan + zoom (geen sprong)
-  var targetZoom = Math.max(map.getZoom(), 14);
-  try { map.flyTo([sale.lat, sale.lng], targetZoom, { duration: 0.55 }); }
-  catch(e) { map.setView([sale.lat, sale.lng], targetZoom); }
-  // Open de marker-popup na de animatie. Bij clusters: laat de cluster eerst
-  // uitzoomen tot de marker zichtbaar is.
+  // Pan naar de pin, BEHOUD huidige zoom-niveau (de gebruiker kan zelf
+  // beslissen of ze in of uit willen zoomen — wij forceren niks).
+  try { map.panTo([sale.lat, sale.lng], { animate: true, duration: 0.55 }); }
+  catch(e) { map.setView([sale.lat, sale.lng], map.getZoom()); }
+  // Open de marker-popup. Bij clusters openen we de cluster-popup omdat
+  // de marker zelf gegroepeerd is op het huidige zoom-niveau.
   var entry = _markersById[saleId];
   if (!entry) return;
   setTimeout(function() {
-    try {
-      if (entry.cluster && typeof entry.cluster.zoomToShowLayer === 'function') {
-        entry.cluster.zoomToShowLayer(entry.marker, function() { entry.marker.openPopup(); });
-      } else {
-        entry.marker.openPopup();
-      }
-    } catch(e) {}
-  }, 600);
+    try { entry.marker.openPopup(); } catch(e) {}
+  }, 400);
 }
 
 // Markeer welke top-nav-knop actief is op desktop.
