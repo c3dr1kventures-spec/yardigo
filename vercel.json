@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "",
+  "buildCommand": "node build/prerender.mjs",
   "outputDirectory": ".",
   "installCommand": "",
   "cleanUrls": true,

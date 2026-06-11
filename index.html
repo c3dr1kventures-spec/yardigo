@@ -37,6 +37,37 @@
 <meta name="twitter:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart.">
 <meta name="twitter:image" content="https://www.yardigo.nl/og-image.png">
 
+<!-- JSON-LD: WebSite + Organization (helpt Google met sitelinks-search + knowledge panel) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.yardigo.nl/#website",
+      "url": "https://www.yardigo.nl/",
+      "name": "YardiGo",
+      "description": "Vind rommelmarkten, rommelroutes en garagesales op de kaart.",
+      "inLanguage": "nl-NL",
+      "publisher": { "@id": "https://www.yardigo.nl/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.yardigo.nl/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.yardigo.nl/#organization",
+      "name": "YardiGo",
+      "url": "https://www.yardigo.nl/",
+      "logo": "https://www.yardigo.nl/og-image.png",
+      "description": "Privacy-vriendelijk kaart- en route-platform voor lokale rommelmarkten, garageverkopen en buurtverkopen in Nederland, België, Frankrijk en Duitsland."
+    }
+  ]
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -13890,6 +13921,32 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Korte microtask-vertraging zodat Leaflet de eerste tegels al kan
   // beginnen renderen vóór de fade-out start.
   setTimeout(_hideAppSplash, 200);
+
+  // ─── Deep-link vanaf prerendered /v/{id} pagina ──
+  // Het build-time gegenereerde stub-bestand redirect naar /?v=ID.
+  // Wij vangen dat hier op en openen het juiste detail-overlay, en
+  // wissen de query daarna uit de URL met history.replaceState zodat
+  // hij weer schoon is.
+  (function handleSaleDeepLink() {
+    var params = new URLSearchParams(location.search);
+    var vid = params.get('v');
+    // Fallback: sessionStorage-flag (gezet door /v/{id}/index.html)
+    if (!vid) {
+      try { vid = sessionStorage.getItem('yg-open-sale'); if (vid) sessionStorage.removeItem('yg-open-sale'); } catch(e) {}
+    }
+    if (!vid) return;
+    function tryOpen(retries) {
+      var s = (typeof sales !== 'undefined') && sales.find(function(x) { return String(x.id) === String(vid); });
+      if (s) {
+        openDetail(s.id);
+        // URL schoon maken
+        try { history.replaceState({}, '', '/'); } catch(e) {}
+      } else if (retries > 0) {
+        setTimeout(function() { tryOpen(retries - 1); }, 400);
+      }
+    }
+    setTimeout(function() { tryOpen(8); }, 800);
+  })();
 
   // ─── Uitschrijf-handlers ─────────────────────────────────
   (async function handleUnsubscribeParams() {

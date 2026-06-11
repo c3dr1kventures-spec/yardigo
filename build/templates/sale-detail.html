@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<!-- SEO meta (uniek per advertentie, server-rendered) -->
+<title>{{TITLE}} — {{DATE}} in {{CITY}} | YardiGo</title>
+<meta name="description" content="{{META_DESC}}">
+<link rel="canonical" href="{{CANONICAL}}">
+
+<!-- Open Graph (Facebook/WhatsApp preview) -->
+<meta property="og:type" content="event">
+<meta property="og:url" content="{{CANONICAL}}">
+<meta property="og:title" content="{{TITLE}} — {{DATE}}">
+<meta property="og:description" content="{{META_DESC}}">
+<meta property="og:image" content="{{OG_IMAGE}}">
+<meta property="og:site_name" content="YardiGo">
+<meta property="og:locale" content="{{OG_LOCALE}}">
+
+<!-- Twitter card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{TITLE}} — {{DATE}}">
+<meta name="twitter:description" content="{{META_DESC}}">
+<meta name="twitter:image" content="{{OG_IMAGE}}">
+
+<!-- JSON-LD Event structured data -->
+<script type="application/ld+json">{{JSON_LD}}</script>
+
+<!-- Brand styling (minimaal, voldoende om de fallback-preview leesbaar te maken) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Poppins',sans-serif;background:#FAF7F2;color:#2C2416;line-height:1.5;}
+.detail-wrap{max-width:720px;margin:0 auto;padding:24px 20px 60px;}
+header{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.logo{font-size:20px;font-weight:800;color:#E07B39;}
+.tagline{font-size:11px;color:#7A6E62;}
+h1{font-size:26px;font-weight:800;line-height:1.25;margin:8px 0 14px;}
+.type-badge{display:inline-block;font-size:11px;font-weight:700;color:#fff;background:#3A6B4A;border-radius:999px;padding:4px 12px;margin-bottom:8px;}
+.type-badge.particulier{background:#F2A830;color:#2C2416;}
+.type-badge.buurt{background:#E07B39;}
+.meta-row{display:flex;flex-wrap:wrap;gap:16px;margin:14px 0 22px;font-size:14px;color:#4A3E32;}
+.meta-row span{display:inline-flex;align-items:center;gap:6px;}
+.lead{font-size:15px;color:#3A332B;margin-bottom:22px;}
+.cta{display:inline-block;background:#E07B39;color:#fff;border-radius:12px;padding:14px 24px;font-weight:800;text-decoration:none;font-size:15px;}
+.cta:hover{filter:brightness(1.05);}
+.fallback-note{font-size:12px;color:#9A8E82;margin-top:24px;border-top:1px solid #E8E0D4;padding-top:14px;}
+.spa-loading{text-align:center;padding:80px 20px;color:#7A6E62;}
+.spa-loading-spinner{display:inline-block;width:36px;height:36px;border:3px solid #EDE8DF;border-top-color:#E07B39;border-radius:50%;animation:spin .9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<!-- ─── Static SEO content (zichtbaar voor crawlers en niet-JS users) ─── -->
+<div class="detail-wrap" id="static-content">
+  <header>
+    <span class="logo">YardiGo</span>
+    <span class="tagline">Find · Sell · Go</span>
+  </header>
+  <span class="type-badge {{TYPE_KEY}}">{{TYPE_LABEL}}</span>
+  <h1>{{TITLE}}</h1>
+  <div class="meta-row">
+    <span>📅 {{DATE_LONG}}</span>
+    <span>🕐 {{TIME}}</span>
+    <span>📍 {{LOCATION}}</span>
+  </div>
+  <p class="lead">{{LEAD_TEXT}}</p>
+  <a href="/" class="cta" id="open-app-cta">Bekijk in YardiGo →</a>
+  <div class="fallback-note">
+    Deze pagina laadt automatisch de volledige YardiGo-app met kaart, foto's en route. Werkt JavaScript niet? Bezoek dan <a href="/" style="color:#E07B39">yardigo.nl</a>.
+  </div>
+</div>
+
+<!-- ─── Hydration: laadt de SPA en geeft de control over zodra hij klaar is ─── -->
+<script>
+(function() {
+  // We laden de hoofd-app door redirect naar / met state in sessionStorage.
+  // De SPA leest deze state bij boot en opent direct het juiste verkoop-detail.
+  try {
+    sessionStorage.setItem('yg-open-sale', {{SALE_ID_JSON}});
+  } catch(e) {}
+  // Bots/crawlers zien de static content; mensen worden zachtjes doorgestuurd
+  // naar de SPA. Bij no-JS blijft de static page intact.
+  var isBot = /bot|crawler|spider|crawling/i.test(navigator.userAgent);
+  if (!isBot) {
+    setTimeout(function() {
+      location.replace('/?v=' + {{SALE_ID_JSON}});
+    }, 50);
+  }
+})();
+</script>
+</body>
+</html>

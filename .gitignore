@@ -38,3 +38,10 @@ keystore.properties
 
 # Play Store-assets (apart bewaard, niet in repo)
 play-store-assets/
+
+# ── Build-output van prerender (gegenereerd bij elke deploy) ──
+# Vercel draait build/prerender.mjs voor elke deploy; deze
+# bestanden hoeven niet in git, ze worden vers gegenereerd.
+v/
+sitemap.xml
+robots.txt
