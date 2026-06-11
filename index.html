@@ -924,8 +924,12 @@ body.dark .route-stop-card{background:var(--bg2);}
 .route-order-btn{background:none;border:1.5px solid var(--border);border-radius:6px;width:22px;height:22px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:0;}
 .route-order-btn:disabled{opacity:.25;cursor:default;}
 
-/* ── PROFILE ── */
-.profile-header{background:linear-gradient(160deg,var(--forest),var(--forest-dark));padding:60px 16px 48px;text-align:center;}
+/* ── PROFILE ──
+   Padding bottom verkleind van 48px → 24px zodat de stat-cards niet
+   half achter het groene blok verdwijnen. De inline wrapper-style
+   margin-top:-36px is hieronder geneutraliseerd via .profile-content. */
+.profile-header{background:linear-gradient(160deg,var(--forest),var(--forest-dark));padding:60px 16px 24px;text-align:center;}
+.profile-content{margin-top:12px !important;}
 .profile-tabs{display:flex;background:var(--bg2);border-radius:10px;padding:3px;margin-bottom:14px;}
 .ptab{flex:1;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border-radius:8px;cursor:pointer;color:var(--muted);}
 .ptab.active{background:white;color:var(--text);box-shadow:0 2px 8px rgba(44,36,22,.1);}
@@ -1636,6 +1640,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button id="dn-lijst" onclick="sv('lijst',document.querySelectorAll('.tab')[1]);_dnActivate('dn-lijst');document.getElementById('bni-lijst').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-lijst')b.classList.remove('active')})" data-i18n="nav.list">Lijst</button>
     <button id="dn-route" onclick="sv('route',document.querySelectorAll('.tab')[2]);_dnActivate('dn-route');document.getElementById('bni-route').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-route')b.classList.remove('active')})" data-i18n="nav.route">Route</button>
     <button id="dn-mijn"  onclick="sv('mijn',document.querySelectorAll('.tab')[3]);_dnActivate('dn-mijn');document.getElementById('bni-mijn').classList.add('active');document.querySelectorAll('.bni').forEach(function(b){if(b.id!=='bni-mijn')b.classList.remove('active')})" data-i18n="nav.mine">Mijn</button>
+    <button id="dn-instellingen" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);_dnActivate('dn-instellingen');document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')})" title="Instellingen" data-i18n="nav.settings">⚙️ Instellingen</button>
   </nav>
   <div class="header-right">
     <div class="lang-picker" id="langPicker">
@@ -1875,7 +1880,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <!-- Stad + lid-sinds rij (verborgen tot JS data inlaadt) -->
     <div id="profile-meta" style="display:none;margin-top:6px;font-size:11px;color:rgba(255,255,255,0.65);justify-content:center;flex-wrap:wrap;gap:10px;line-height:1.6"></div>
   </div>
-  <div style="padding:0 14px 100px;margin-top:-36px">
+  <div class="profile-content" style="padding:0 14px 100px">
     <!-- Bio-kaart (verborgen als bio leeg is) -->
     <div id="profile-bio-card" style="display:none;background:white;border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.55;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07)"></div>
     <!-- Profielvolledigheid-nudge (verborgen als profiel al compleet is) -->
@@ -1981,7 +1986,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="font-size:20px;font-weight:800;color:white;" data-i18n="nav.settings">Instellingen</div>
     <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:4px" data-i18n="settings.subtitle">Pas je YardiGo ervaring aan</div>
   </div>
-  <div style="padding:0 14px 100px;margin-top:-20px">
+  <div class="profile-content" style="padding:0 14px 100px">
 
     <!-- ── ACCOUNT ── -->
     <div class="settings-section">
@@ -8232,7 +8237,7 @@ function sv(name, tabEl) {
   if (fabRow) fabRow.classList.toggle('hidden', name === 'kaart' || name === 'home');
   // Desktop-nav active state synchroniseren
   if (typeof _dnActivate === 'function') {
-    var dnId = ({ home:'dn-home', kaart:'dn-kaart', lijst:'dn-lijst', route:'dn-route', mijn:'dn-mijn' })[name];
+    var dnId = ({ home:'dn-home', kaart:'dn-kaart', lijst:'dn-lijst', route:'dn-route', mijn:'dn-mijn', instellingen:'dn-instellingen' })[name];
     if (dnId) _dnActivate(dnId);
   }
   // Op desktop ook side-list bijwerken bij kaart
