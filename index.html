@@ -1841,7 +1841,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </button>
 
     <button class="btn-login" onclick="openLogin()" id="loginBtn" aria-label="Inloggen"><span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text" data-i18n="header.login">Inloggen</span></button>
-    <button class="btn-publish" onclick="isGuest ? guestGate('plaatsen') : openAdd()" aria-label="Plaatsen"><span class="btn-publish-icon" aria-hidden="true">+</span><span class="btn-publish-text" data-i18n="header.publish">Plaatsen</span></button>
+    <button class="btn-publish" onclick="openAdd()" aria-label="Plaatsen"><span class="btn-publish-icon" aria-hidden="true">+</span><span class="btn-publish-text" data-i18n="header.publish">Plaatsen</span></button>
   </div>
 </header>
 
@@ -2124,7 +2124,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
     <div class="pp active" id="pp-0">
       <div id="my-sales-list"></div>
-      <button class="btn-pub" onclick="isGuest ? guestGate('plaatsen') : openAdd()">+ Nieuwe verkoop plaatsen</button>
+      <button class="btn-pub" onclick="openAdd()">+ Nieuwe verkoop plaatsen</button>
     </div>
     <div class="pp" id="pp-1">
       <div id="fav-list"></div>
@@ -2871,7 +2871,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <button class="fab-feedback" onclick="openFeedback()" title="Feedback geven">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>
-  <button class="fab" onclick="isGuest ? guestGate('plaatsen') : openAdd()" data-i18n="publish.title">＋ Verkoop plaatsen</button>
+  <button class="fab" onclick="openAdd()" data-i18n="publish.title">＋ Verkoop plaatsen</button>
 </div>
 
 <!-- ═══════════ REVIEW SHEET ═══════════ -->
@@ -9179,6 +9179,75 @@ function shareCalendar() {
 }
 
 // ══════════════════════════════════════════════════
+// GUEST-PUBLISH: vraagt om account pas bij publiceren (Prio 5)
+// De draft staat al in localStorage zodat alles bewaard blijft.
+function _showGuestPublishSignup() {
+  // Sluit de add-overlay zachtjes zodat de signup-modal er duidelijk overheen valt
+  var addOv = document.getElementById('addOv') || document.getElementById('addOverlay');
+  if (addOv) addOv.classList.remove('open');
+  // Toon een korte overlay met uitleg + signup-route
+  var existing = document.getElementById('guestPublishSignup');
+  if (existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'guestPublishSignup';
+  ov.className = 'overlay open';
+  ov.style.zIndex = '10020';
+  ov.innerHTML =
+    '<div class="sheet" style="max-width:440px">' +
+      '<div class="sheet-handle"></div>' +
+      '<div style="padding:24px 24px 28px;text-align:center">' +
+        '<div style="font-size:42px;margin-bottom:10px">🎉</div>' +
+        '<div style="font-size:18px;font-weight:800;color:#2C2416;margin-bottom:6px">Bijna klaar!</div>' +
+        '<div style="font-size:13px;color:#4A3E32;margin-bottom:18px;line-height:1.55">' +
+          'Maak een gratis account aan om je verkoop live te zetten. ' +
+          '<strong>Alle ingevulde informatie blijft bewaard</strong> — je hoeft niets opnieuw te typen.' +
+        '</div>' +
+        '<div style="background:#FFF8E8;border:1.5px solid #F4D7B0;border-radius:12px;padding:10px 14px;font-size:12px;color:#7A5A2E;margin-bottom:18px;text-align:left;line-height:1.5">' +
+          '✓ E-mail-bevestiging vereist (voorkomt spam)<br>' +
+          '✓ Je kan je verkoop later bewerken of intrekken<br>' +
+          '✓ Andere gebruikers kunnen je vragen stellen' +
+        '</div>' +
+        '<button onclick="_guestPublishGoSignup()" style="width:100%;background:#E07B39;color:#fff;border:none;border-radius:12px;padding:14px;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px">Maak gratis account →</button>' +
+        '<button onclick="_guestPublishGoLogin()" style="width:100%;background:#fff;color:#E07B39;border:2px solid #E07B39;border-radius:12px;padding:13px;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px">Al een account? Inloggen</button>' +
+        '<button onclick="_guestPublishClose()" style="background:transparent;color:#9A8E82;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:8px">Later — bewaar mijn invoer</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+function _guestPublishClose() {
+  var ov = document.getElementById('guestPublishSignup');
+  if (ov) ov.remove();
+  // Heropen het add-formulier — draft blijft bewaard en wordt automatisch herladen
+  setTimeout(function() { openAdd(); }, 100);
+}
+
+function _guestPublishGoSignup() {
+  _guestPublishClose();
+  if (typeof startOnboarding === 'function') {
+    // Start de signup-flow direct vanaf stap 4 (account aanmaken)
+    setTimeout(function() {
+      startOnboarding(false);
+      // Spring naar het account-step direct
+      try { obGoTo(3); } catch(e) {}
+      toast('Maak je account aan — je verkoop blijft bewaard');
+    }, 150);
+  } else {
+    toast('Account aanmaken niet beschikbaar — probeer opnieuw');
+  }
+}
+
+function _guestPublishGoLogin() {
+  _guestPublishClose();
+  if (typeof openLogin === 'function') {
+    setTimeout(function() {
+      openLogin();
+      toast('Log in — je verkoop staat klaar');
+    }, 150);
+  }
+}
+
+// ══════════════════════════════════════════════════
 // PROMOTIE-PAKKET — poster + QR + deelteksten voor organisatoren
 // ══════════════════════════════════════════════════
 var _promoSaleId = null;
@@ -9579,25 +9648,25 @@ function _stopDraftAutosave() {
 }
 
 async function openAdd() {
-  // Auth-guard verplaatst van publishSale naar hier: voorkomt dat de
-  // gebruiker een formulier vult dat hij vervolgens niet kan publiceren
-  // omdat zijn JWT al verlopen blijkt. Soft-fail bij netwerkproblemen,
-  // publishSale doet alsnog een eindcheck als vangnet.
-  if (typeof sbClient !== 'undefined' && sbClient && sbClient.auth) {
+  // PRIO 5 (audit): laat gasten het formulier OPENEN en INVULLEN zonder
+  // account. Pas bij publishSale vragen we om signup. Drafts worden
+  // automatisch in localStorage bewaard zodat de invul-data behouden
+  // blijft tijdens de signup-flow.
+  // Geen vroege auth-block hier meer — alleen een silent sessie-refresh
+  // voor ingelogde users zodat hun JWT actueel is.
+  if (!isGuest && typeof sbClient !== 'undefined' && sbClient && sbClient.auth) {
     try {
       var sess = await sbClient.auth.getSession();
       var valid = sess && sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id;
       if (!valid) {
+        // Sessie verlopen — de user is feitelijk weer een gast, maar laat ze toch verder
         try { await sbClient.auth.signOut(); } catch(e) {}
         currentUser = {};
         isGuest = true;
-        toast(i18n('toast.session_expired_login_required', 'Je sessie is verlopen, log opnieuw in om een verkoop te plaatsen.'));
-        try { guestGate('listing plaatsen'); } catch(e) {}
-        return;
+        // Stil — geen toast, ze merken het bij publishSale
       }
     } catch(e) {
       console.warn('openAdd session-check faalde:', e);
-      // Soft-fail: laat de flow doorgaan, publishSale heeft een eigen guard
     }
   }
 
@@ -11104,8 +11173,15 @@ async function publishSale() {
     toast(i18n('toast.publish_in_progress', '⏳ Publicatie loopt al, even geduld...'));
     return;
   }
-  // Authenticatiecheck (lokale state)
-  if (isGuest || !currentUser || !currentUser.email) { guestGate('listing plaatsen'); return; }
+  // Authenticatiecheck: gast mag het hele formulier invullen, maar voor het
+  // publiceren een account aanmaken. De draft staat al in localStorage dus
+  // alles blijft bewaard. Na signup kan de gebruiker direct opnieuw op
+  // Publiceren klikken.
+  if (isGuest || !currentUser || !currentUser.email) {
+    _saveAddDraft();
+    _showGuestPublishSignup();
+    return;
+  }
 
   // ── AVG-bevestiging: eerst basis-validatie, dan modal tonen ──
   // Alleen tonen als de gebruiker in deze publish-poging nog niet bevestigd heeft.
