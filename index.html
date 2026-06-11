@@ -2046,7 +2046,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <div class="view" id="view-mijn">
   <div class="profile-header" style="position:relative">
     <!-- Bewerken-knop: alleen tonen voor ingelogde gebruikers (JS zet display:flex) -->
-    <button id="profile-edit-btn" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-instellingen').classList.add('active')" style="display:none;position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:white;cursor:pointer;font-family:'Poppins',sans-serif;letter-spacing:.3px;align-items:center;gap:5px">✏️ Bewerken</button>
+    <button id="profile-edit-btn" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')})" style="display:none;position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:white;cursor:pointer;font-family:'Poppins',sans-serif;letter-spacing:.3px;align-items:center;gap:5px">✏️ Bewerken</button>
     <div style="position:relative;width:80px;margin:0 auto 10px;cursor:pointer" onclick="document.getElementById('profilePhotoInput').click()">
       <div id="profile-avatar" style="width:80px;height:80px;border-radius:50%;border:3px solid white;background:var(--terra);display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden">
         <span id="profile-avatar-emoji">😊</span>
@@ -2064,7 +2064,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <!-- Bio-kaart (verborgen als bio leeg is) -->
     <div id="profile-bio-card" style="display:none;background:white;border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:12px;color:var(--text);line-height:1.55;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07)"></div>
     <!-- Profielvolledigheid-nudge (verborgen als profiel al compleet is) -->
-    <div id="profile-complete-nudge" style="display:none;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;font-size:12px;color:#7A5A2E;cursor:pointer" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')});document.getElementById('bni-instellingen').classList.add('active')">
+    <div id="profile-complete-nudge" style="display:none;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;font-size:12px;color:#7A5A2E;cursor:pointer" onclick="sv('instellingen',document.querySelectorAll('.tab')[4]);document.querySelectorAll('.bni').forEach(function(b){b.classList.remove('active')})">
       <span style="font-size:18px;flex-shrink:0">👤</span>
       <span style="flex:1;line-height:1.4" id="profile-nudge-text">Voeg een foto, stad en bio toe voor een completer profiel.</span>
       <span style="font-size:16px;color:#B87A3A">›</span>
@@ -3788,6 +3788,7 @@ var _errorLogBusy = false;
 var _LOG_IGNORE = [
   /^Script error\.?$/i,
   /^Unexpected token ['"]?\}['"]?/i,
+  /^Unexpected token ['"]?;['"]?$/i,
   /^Unexpected end of input/i,
   /Failed to connect to MetaMask/i,
   /window\.webkit\.messageHandlers/i,
@@ -3798,8 +3799,27 @@ var _LOG_IGNORE = [
   /Je hebt het maximale aantal van 10 actieve/i,
   /Je hebt het afgelopen uur te veel listings/i,
   /Cannot read properties of undefined \(reading 'value'\)/i,
-  /Load failed/i
+  /Load failed/i,
+  // WebView / browser-extensie script-injecties (UCBrowser AgentWeb e.d.)
+  // De stack-trace bevat alleen <anonymous>:1:... refs, geen onze code.
+  /\bprepareVideo\b/i,
+  /^Share canceled$/i,
+  /^Abort due to cancellation of share/i,
+  /Cannot read properties of undefined \(reading 'firstChild'\)/i
 ];
+
+// Stack-based ignore: als de hele stack alleen <anonymous>:1:... entries
+// bevat (typische WebView/extensie-injectie zoals UCBrowser AgentWeb), is
+// het zeker geen bug in onze code.
+function _LOG_isInjectedStack(stack) {
+  if (!stack) return false;
+  var lines = String(stack).split('\n').slice(1, 8); // skip 1e regel (message)
+  if (!lines.length) return false;
+  return lines.every(function(l) {
+    var t = l.trim();
+    return !t || /<anonymous>:\d+:\d+/.test(t);
+  });
+}
 async function logError(err, context) {
   if (!sbClient) return;
   var msg = (err && err.message) ? err.message : String(err || 'Onbekende fout');
@@ -3807,6 +3827,9 @@ async function logError(err, context) {
     if (_LOG_IGNORE[_i].test(msg)) return; // negeer bekende ruis
   }
   var stack = (err && err.stack) ? err.stack.substring(0, 2000) : null;
+  // Stack-based filter: injecties uit WebView/browser-extensies hebben alleen
+  // <anonymous>-frames en zijn nooit onze code. Skip.
+  if (stack && _LOG_isInjectedStack(stack)) return;
   var userId = null;
   try { userId = (currentUser && currentUser.id) || null; } catch(e) {}
   var entry = {
