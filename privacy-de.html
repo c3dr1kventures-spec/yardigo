@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Datenschutzerklärung – YardiGo</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; color: #2C2416; background: #F9F5EF; line-height: 1.7; }
+    h1 { font-size: 28px; color: #E07B39; margin-bottom: 4px; }
+    h2 { font-size: 18px; margin-top: 36px; color: #3A6B4A; }
+    h3 { font-size: 15px; margin-top: 24px; color: #3A6B4A; }
+    p, li { font-size: 15px; color: #4A3E32; }
+    ul { padding-left: 20px; }
+    a { color: #E07B39; }
+    .last-updated { font-size: 13px; color: #7A6E62; margin-bottom: 32px; }
+    footer { margin-top: 48px; font-size: 13px; color: #7A6E62; border-top: 1px solid #EDE8DF; padding-top: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 8px; font-size: 14px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #EDE8DF; vertical-align: top; }
+    th { background: #F2EADD; color: #2C2416; font-weight: 700; }
+    .note { font-size: 13px; color: #7A6E62; background: #F2EADD; border-left: 3px solid #E07B39; padding: 10px 12px; border-radius: 6px; margin: 12px 0; }
+    .back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #3A6B4A; text-decoration: none; margin-bottom: 28px; }
+    .back:hover { opacity: .75; }
+  </style>
+</head>
+<body>
+
+  <a class="back" href="/">← Zurück zu YardiGo</a>
+  <span style="float:right;font-size:12px;color:#7A6E62">
+    <a href="/privacy" style="color:#3A6B4A;text-decoration:none">🇳🇱 NL</a> ·
+    <a href="/privacy-fr" style="color:#3A6B4A;text-decoration:none">🇫🇷 FR</a>
+  </span>
+
+  <h1>Datenschutzerklärung</h1>
+  <p class="last-updated">Version 2.4 · Zuletzt aktualisiert: 2. Mai 2026</p>
+
+  <p>YardiGo ist eine niederländische App und Website, mit der du Garagenverkäufe, Hofflohmärkte, Kofferraumflohmärkte und Trödelmärkte in deiner Nähe finden und veröffentlichen kannst. In dieser Datenschutzerklärung erklären wir, welche personenbezogenen Daten wir verarbeiten, warum, wie lange, auf welcher Rechtsgrundlage und welche Rechte dir nach der Datenschutz-Grundverordnung (DSGVO / GDPR) zustehen.</p>
+
+  <h2>1. Verantwortlicher</h2>
+  <p>
+    <strong>Christian Koops</strong>, handelnd unter dem Namen <strong>YardiGo</strong> (Einzelunternehmen in Gründung), mit Sitz in den Niederlanden.<br>
+    Handelsregisternummer (KvK) und Anschrift: <em>werden hier veröffentlicht, sobald die Eintragung bei der niederländischen Handelskammer (Kamer van Koophandel) abgeschlossen ist.</em><br>
+    E-Mail für Datenschutzanfragen: <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a><br>
+    Allgemeine E-Mail: <a href="mailto:info@yardigo.de">info@yardigo.de</a><br>
+    Pflichtangaben nach § 5 TMG findest du im <a href="/impressum-de">Impressum</a>.
+  </p>
+  <p>YardiGo hat keinen Datenschutzbeauftragten benannt; dies ist für eine Organisation dieser Größe nicht verpflichtend (Art. 37 DSGVO).</p>
+
+  <h2>2. Welche Daten verarbeiten wir?</h2>
+  <p>Wir verarbeiten ausschließlich die Daten, die zur Erbringung des Dienstes erforderlich sind (Datenminimierung, Art. 5 Abs. 1 lit. c DSGVO):</p>
+  <ul>
+    <li><strong>Name</strong> – beim Erstellen eines Kontos, als Anzeigename in der App.</li>
+    <li><strong>E-Mail-Adresse</strong> – zur Registrierung, Anmeldung und Kommunikation rund um dein Konto.</li>
+    <li><strong>Gehashtes Passwort</strong> – über Supabase Auth; Passwörter werden niemals im Klartext gespeichert.</li>
+    <li><strong>Nutzer-ID</strong> – ein interner Identifikator, der mit deinem Konto verknüpft ist.</li>
+    <li><strong>Genauer Standort (GPS)</strong> – um Verkäufe in deiner Nähe anzuzeigen und deine eigene Anzeige auf der Karte zu platzieren. Nur nach ausdrücklicher Erlaubnis über dein Gerät. Dieser Standort wird nicht dauerhaft in unserer Datenbank gespeichert; wir nutzen ihn in Echtzeit, um die Karte zu rendern.</li>
+    <li><strong>Anzeigeninhalt</strong> – Fotos, Adresse, Datum/Uhrzeit, Kategorien und Beschreibung, die du beim Einstellen eines Verkaufs selbst eingibst.</li>
+    <li><strong>Technische Logs</strong> – IP-Adresse, Browsertyp, Betriebssystem und Zeitstempel; automatisch erfasst durch Supabase und Vercel zur Sicherheit und Fehlersuche.</li>
+    <li><strong>Kommunikationspräferenzen</strong> – zwei separate Opt-in-Flags: (1) <em>Service-Updates</em> per E-Mail (Release-Notes, Mitteilungen zum Dienst) und (2) <em>personalisierte Verkaufstipps</em> per E-Mail – Erinnerungen an bevorstehende Verkäufe in deiner Nähe. Zusätzlich speichern wir deine gewünschte E-Mail-Frequenz (wöchentlich oder monatlich), einen Ländercode zur Zielgruppenfilterung (NL, BE oder DE) und ein zufälliges Abmelde-Token, damit du dich über den Link in der E-Mail abmelden kannst, ohne dich einzuloggen.</li>
+  </ul>
+
+  <h2>3. Zwecke, Rechtsgrundlagen und Speicherfristen</h2>
+  <p>Nach der DSGVO müssen wir je Verarbeitung benennen, <strong>was</strong> wir tun, <strong>warum</strong>, auf welcher <strong>Rechtsgrundlage</strong> (Art. 6 Abs. 1 DSGVO) und wie <strong>lange</strong> wir es speichern:</p>
+
+  <table>
+    <thead>
+      <tr><th>Daten</th><th>Zweck</th><th>Rechtsgrundlage</th><th>Speicherfrist</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Name, E-Mail, gehashtes Passwort, Nutzer-ID</td>
+        <td>Konto anlegen, Authentifizierung, Diensterbringung</td>
+        <td>Art. 6 Abs. 1 lit. b – Vertragserfüllung</td>
+        <td>Bis zur Löschung deines Kontos, zuzüglich maximal 30 Tage in Sicherungskopien</td>
+      </tr>
+      <tr>
+        <td>GPS-Standort (Echtzeit)</td>
+        <td>Verkäufe in der Nähe anzeigen, eigene Anzeige auf der Karte platzieren</td>
+        <td>Art. 6 Abs. 1 lit. a – Einwilligung (über iOS-/Android-Standortdialog)</td>
+        <td>Nicht dauerhaft gespeichert; nur im Speicher während der Nutzung</td>
+      </tr>
+      <tr>
+        <td>Anzeigeninhalt (Fotos, Adresse, Datum, Beschreibung)</td>
+        <td>Deinen Verkauf anderen Nutzern anzeigen</td>
+        <td>Art. 6 Abs. 1 lit. b – Vertragserfüllung</td>
+        <td>Bis du die Anzeige löschst, oder automatische Löschung innerhalb von 30 Tagen nach Veranstaltungsdatum</td>
+      </tr>
+      <tr>
+        <td>Technische Logs (IP, Gerät, Fehler)</td>
+        <td>Sicherheit, Betrugserkennung, Fehlersuche, Rate-Limiting</td>
+        <td>Art. 6 Abs. 1 lit. f – berechtigtes Interesse</td>
+        <td>Maximal 90 Tage in Logs</td>
+      </tr>
+      <tr>
+        <td>Service-E-Mails (Passwort-Reset, Kontobenachrichtigungen)</td>
+        <td>Transaktionsbezogene Kommunikation zu deinem Konto</td>
+        <td>Art. 6 Abs. 1 lit. b – Vertragserfüllung</td>
+        <td>Dauer der Kontobeziehung</td>
+      </tr>
+      <tr>
+        <td>Service-Update-Opt-in-Flag, Ländercode, Abmelde-Token und E-Mail-Adresse</td>
+        <td>Versand von YardiGo-Service-Updates per E-Mail (Release-Notes, neue Funktionen, wichtige Mitteilungen zum Dienst) und Ermöglichung der Abmeldung</td>
+        <td>Art. 6 Abs. 1 lit. a – Einwilligung, erteilt über ein nicht vorausgewähltes Opt-in bei der Registrierung oder über <em>Einstellungen → Benachrichtigungen</em></td>
+        <td>Bis du deine Einwilligung widerrufst oder dein Konto löschst. Bei Widerruf bleibt das Flag auf „aus"; bei Kontolöschung wird alles innerhalb von 30 Tagen gelöscht</td>
+      </tr>
+      <tr>
+        <td>Promo-Opt-in-Flag, E-Mail-Frequenz, Stadt/Region, Abmelde-Token und E-Mail-Adresse</td>
+        <td>Versand personalisierter E-Mail-Erinnerungen zu bevorstehenden Verkäufen in deiner Nähe, in der von dir gewählten Frequenz (wöchentlich oder monatlich)</td>
+        <td>Art. 6 Abs. 1 lit. a – Einwilligung, erteilt über eine separate, nicht vorausgewählte Opt-in-Checkbox bei der Registrierung oder über <em>Einstellungen → E-Mail-Einstellungen</em></td>
+        <td>Bis du deine Einwilligung widerrufst oder dein Konto löschst. Abmeldung möglich über den Schalter in den Einstellungen, den Abmeldelink am Ende jeder E-Mail oder per E-Mail an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>E-Mail-Kommunikation.</strong> YardiGo versendet zwei Arten von Opt-in-E-Mails, jeweils mit <strong>separater</strong> Einwilligung:</p>
+  <ul>
+    <li><strong>Service-Updates</strong> – Release-Notes, neue oder geänderte Funktionen und wichtige Mitteilungen zum Dienst. Nur für Nutzer, die das Kästchen <em>YardiGo-Updates per E-Mail</em> angekreuzt haben.</li>
+    <li><strong>Personalisierte Verkaufstipps</strong> – automatische Erinnerungen an bevorstehende Verkäufe in deiner Nähe, in der von dir gewählten Frequenz. Nur für Nutzer, die das Kästchen <em>Schick mir Tipps zu Verkäufen in meiner Nähe</em> angekreuzt haben. Die E-Mail enthält Verkäufe in oder nahe deiner Stadt, basierend auf der in deinem Profil angegebenen Stadt.</li>
+  </ul>
+  <p>Beide Kästchen sind <strong>nicht vorausgewählt</strong>. Du kannst deine Einwilligung jederzeit über <em>Einstellungen → E-Mail-Einstellungen</em>, über den Abmeldelink am Ende jeder E-Mail oder per E-Mail an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a> widerrufen. Wir nehmen deine E-Mail-Adresse nicht in andere Listen auf und geben deine Adresse nicht an Dritte außerhalb unseres E-Mail-Verarbeiters weiter (siehe §5).</p>
+
+  <h2>4. Folgen, wenn du Daten nicht bereitstellst</h2>
+  <ul>
+    <li>Ohne E-Mail-Adresse und Passwort kannst du kein Konto erstellen; du kannst YardiGo dann jedoch <strong>als Gast</strong> nutzen, um Verkäufe anzusehen.</li>
+    <li>Ohne Standorterlaubnis können wir dir Verkäufe in deiner Umgebung nicht automatisch anzeigen; die manuelle Suche nach Ort oder PLZ bleibt möglich.</li>
+    <li>Ohne Anzeigeninhalt (Adresse, Datum) kannst du keinen Verkauf einstellen; das Ansehen fremder Verkäufe bleibt möglich.</li>
+  </ul>
+
+  <h2>5. Empfänger und Auftragsverarbeiter</h2>
+  <p>Wir verkaufen deine Daten niemals und geben sie nicht an Werbetreibende weiter. Wir nutzen ausschließlich die folgenden Auftragsverarbeiter, mit denen jeweils eine Vereinbarung zur Auftragsverarbeitung besteht (oder die deren Standardbedingungen anwenden):</p>
+
+  <table>
+    <thead>
+      <tr><th>Partei</th><th>Zweck</th><th>Verarbeitungsort</th><th>Garantie für Drittlandübermittlung</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Supabase Inc.</strong> (USA)</td>
+        <td>Datenbank, Authentifizierung und Dateispeicherung (Fotos)</td>
+        <td>EU-Region (Frankfurt)</td>
+        <td>EU-US Data Privacy Framework + SCC</td>
+      </tr>
+      <tr>
+        <td><strong>Vercel Inc.</strong> (USA)</td>
+        <td>Hosting der Website und Edge-Auslieferung</td>
+        <td>Globales CDN; Primärregion EU</td>
+        <td>EU-US Data Privacy Framework + SCC</td>
+      </tr>
+      <tr>
+        <td><strong>Apple Inc.</strong> (USA)</td>
+        <td>Vertrieb der iOS-App, Push-Benachrichtigungen, App-Store-Authentifizierung</td>
+        <td>Weltweit</td>
+        <td>EU-US Data Privacy Framework + SCC</td>
+      </tr>
+      <tr>
+        <td><strong>OpenStreetMap Foundation</strong> (Vereinigtes Königreich)</td>
+        <td>Kartenkacheln, die beim Öffnen der Karte geladen werden; erhält dabei deine IP-Adresse</td>
+        <td>Vereinigtes Königreich</td>
+        <td>Angemessenheitsbeschluss der Europäischen Kommission (UK)</td>
+      </tr>
+      <tr>
+        <td><strong>Porkbun LLC</strong> (USA)</td>
+        <td>Domainregistrierung und E-Mail-Weiterleitung für privacy@yardigo.de</td>
+        <td>USA</td>
+        <td>EU-US Data Privacy Framework + SCC</td>
+      </tr>
+      <tr>
+        <td><strong>Resend Inc.</strong> (USA)</td>
+        <td>Versand transaktionsbezogener E-Mails (z. B. Passwort-Reset) und Service-Updates an Nutzer, die per Opt-in eingewilligt haben; erhält dabei deine E-Mail-Adresse und den Inhalt der Nachricht</td>
+        <td>USA, mit EU-Region für den Versand aus Frankfurt</td>
+        <td>EU-US Data Privacy Framework + SCC; Auftragsverarbeitungsvertrag auf Basis der Standard-DPA von Resend</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Öffentlich gemachte Anzeigendaten (Adresse, Beschreibung, Fotos und der von dir angegebene Anzeigename) sind für alle Besucher von YardiGo sichtbar. Veröffentliche daher keine Daten, die du nicht öffentlich machen möchtest.</p>
+
+  <h2>5a. Hofflohmärkte: Adressen anderer Bewohner</h2>
+  <p>Bei einem <strong>Hofflohmarkt</strong> kann der Organisator im Veröffentlichungsformular mehrere Adressen angeben. Eine Adresse eines anderen Haushalts ist auch ein personenbezogenes Datum der dortigen Bewohner. Für diese Verarbeitung ist eine eigene Rechtsgrundlage erforderlich. YardiGo arbeitet daher mit einem <strong>verpflichtenden Bestätigungslink</strong>:</p>
+  <ul>
+    <li>Die eigene Adresse des Organisators geht sofort online. Dafür erteilt der Organisator beim Veröffentlichen ausdrücklich die Einwilligung für sich selbst (Art. 6 Abs. 1 lit. a DSGVO).</li>
+    <li>Für jede weitere Adresse erstellt YardiGo einen eindeutigen, zufälligen Link (<code>/bevestig?token=…</code>) und sendet ihn <strong>nicht</strong> selbst an den Bewohner. Der Organisator teilt den Link manuell per WhatsApp, SMS oder E-Mail mit dem betreffenden Bewohner.</li>
+    <li>Solange der Bewohner den Link nicht angeklickt hat, ist die Adresse <strong>nicht</strong> für andere Nutzer sichtbar (auch nicht für angemeldete Besucher). Der Eintrag bleibt im Status <em>pending</em>.</li>
+    <li>Der Bewohner kann über den Link „Ja, meine Adresse bestätigen" (Einwilligung; Status <em>confirmed</em>) oder „Nein, entfernen" (Ablehnung; Status <em>declined</em>) wählen. Bei Ablehnung werden Straße, Postleitzahl und Koordinaten <strong>sofort</strong> aus unserer Datenbank gelöscht.</li>
+    <li>Bleibt ein Bestätigungslink <strong>7 Tage</strong> unbeantwortet, setzt YardiGo den Status automatisch auf <em>expired</em> und Straße, Postleitzahl und Koordinaten werden ebenfalls gelöscht. Der Bewohner muss nichts unternehmen.</li>
+    <li>Optional kann der Bewohner einen Anzeigenamen angeben (z. B. „Fam. Müller"); dies ist niemals verpflichtend.</li>
+    <li>Solltest du als Bewohner feststellen, dass deine Adresse ohne dein Wissen eingetragen wurde, schreibe an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a>. Wir entfernen sie auf erstes Verlangen, unabhängig vom Status.</li>
+  </ul>
+  <p>In diesem Ablauf verarbeiten wir folgende Daten des Bewohners: Straßenname + Hausnummer, Postleitzahl, geografische Koordinaten und (optional) den vom Bewohner selbst angegebenen Anzeigenamen. Wir verarbeiten <strong>keine</strong> Telefonnummer und <strong>keine</strong> E-Mail-Adresse des Bewohners. Die Kommunikation mit dem Bewohner läuft vollständig außerhalb von YardiGo, über den Organisator.</p>
+  <p><strong>Erkennungs-Label durch den Organisator.</strong> Beim Erstellen eines Hofflohmarkts kann der Organisator optional ein kurzes Erkennungs-Label je Adresse eingeben (z. B. einen Vornamen oder „Nr. 14"). Dieses Label ist ausschließlich als Gedächtnisstütze für den Organisator gedacht, nur in dessen Dashboard sichtbar und erscheint <strong>niemals</strong> öffentlich auf der Karte, der Detailseite oder der Bestätigungsseite. Wenn ein Bewohner über den Bestätigungslink einen eigenen Anzeigenamen angibt, ersetzt das nicht das Label des Organisators, sondern wird separat im Bewohnerprofil des Eintrags gespeichert.</p>
+  <p><strong>Die E-Mail-Adresse des Nachbarn ist optional und wird nicht gespeichert.</strong> Der Organisator kann im Veröffentlichungsformular je Adresse eine E-Mail-Adresse eingeben, ausschließlich um die E-Mail-Schaltfläche auf der Teilungsseite direkt nach der Veröffentlichung <em>vorausgefüllt</em> zu öffnen (über einen <code>mailto:</code>-Link). Die E-Mail-Adresse wird nur im Browser des Organisators verwendet, wird <strong>nicht</strong> an unseren Server übermittelt und <strong>nicht</strong> in unserer Datenbank gespeichert. Die E-Mail selbst wird von der E-Mail-App des Organisators von dessen eigener E-Mail-Adresse aus gesendet; YardiGo ist beim Versand weder Absender noch Verarbeiter.</p>
+  <p><strong>Rechtsgrundlage:</strong> ausdrückliche Einwilligung über den Bestätigungslink (Art. 6 Abs. 1 lit. a DSGVO). Die Einwilligung kann jederzeit über denselben Link (solange der Verkauf noch nicht stattgefunden hat) oder per E-Mail an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a> widerrufen werden. Der Widerruf hat keine Rückwirkung auf bereits zuvor erfolgte Verarbeitungen.</p>
+  <p><strong>Speicherfrist:</strong> aktiv bis einschließlich zum Datum des Hofflohmarkts; danach werden Adress-, Postleitzahl- und Koordinatendaten bestätigter Bewohner (samt optionalem Erkennungs-Label des Organisators) innerhalb von 30 Tagen gelöscht. Pending- oder abgelehnte Einträge werden sofort bzw. nach 7 Tagen gelöscht, wie oben beschrieben.</p>
+
+  <h2>6. Cookies und lokaler Speicher</h2>
+  <p>YardiGo verwendet <strong>keine</strong> Tracking-Cookies, <strong>keine</strong> Analysedienste mit personenbezogenen Daten (wie Google Analytics oder Meta Pixel) und <strong>keine</strong> Werbe-Pixel. Wir setzen ausschließlich ein:</p>
+  <ul>
+    <li><strong>Technischer localStorage</strong> – um deinen Anmeldestatus und Einstellungen (z. B. ausgewählte Kategorien) auf deinem Gerät zu speichern. Dies sind keine Cookies, und die Daten verlassen dein Gerät nicht.</li>
+    <li><strong>Funktionale Sitzungscookies von Supabase Auth</strong> – unbedingt erforderlich, um dich angemeldet zu halten. Für unbedingt erforderliche Cookies ist nach § 25 Abs. 2 Nr. 2 TTDSG keine Einwilligung notwendig.</li>
+  </ul>
+  <p>Da wir keine analytischen oder Marketing-Skripte laden, zeigen wir bewusst kein Cookie-Banner. Sollte YardiGo künftig Analyse- oder andere nicht notwendige Cookies verwenden, platzieren wir zu diesem Zeitpunkt ein Consent-Banner mit gleichwertigen Optionen „Annehmen" und „Ablehnen", und diese Skripte werden erst nach Einwilligung geladen.</p>
+
+  <h2>7. Sicherheit</h2>
+  <ul>
+    <li>Die gesamte Kommunikation mit unserem Server erfolgt über HTTPS (TLS).</li>
+    <li>Passwörter werden niemals im Klartext gespeichert; wir verwenden die Hashing-Implementierung von Supabase Auth.</li>
+    <li>Der Datenbankzugriff ist über Row Level Security (RLS) auf Supabase eingeschränkt: Du kannst nur deine eigenen Anzeigen und Profildaten ändern.</li>
+    <li>Rate-Limiting ist auf den Anmelde- und Registrierungs-Endpunkten aktiv, um Brute-Force-Versuche zu begrenzen.</li>
+  </ul>
+
+  <h2>8. Automatisierte Entscheidungsfindung und Profiling</h2>
+  <p>YardiGo wendet <strong>keine</strong> automatisierte Entscheidungsfindung oder Profilbildung im Sinne von Art. 22 DSGVO an. Es werden also keine Entscheidungen über dich von Algorithmen mit rechtlichen oder erheblichen Auswirkungen für dich getroffen.</p>
+
+  <h2>9. Deine Rechte</h2>
+  <p>Nach der DSGVO stehen dir folgende Rechte zu:</p>
+  <ul>
+    <li><strong>Auskunft</strong> (Art. 15) – Abfrage, welche Daten wir über dich verarbeiten.</li>
+    <li><strong>Berichtigung</strong> (Art. 16) – unrichtige Daten korrigieren lassen.</li>
+    <li><strong>Löschung / Recht auf Vergessenwerden</strong> (Art. 17) – Konto und zugehörige Daten löschen lassen. Dies ist selbst möglich über <em>Mein → Einstellungen → Konto löschen</em> in der App oder per E-Mail an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a>.</li>
+    <li><strong>Einschränkung</strong> (Art. 18) – uns auffordern, die Verarbeitung vorübergehend zu beschränken, z. B. während einer Auseinandersetzung über die Richtigkeit.</li>
+    <li><strong>Datenübertragbarkeit</strong> (Art. 20) – deine Kontodaten und Anzeigen in einem strukturierten, maschinenlesbaren Format anfordern.</li>
+    <li><strong>Widerspruch</strong> (Art. 21) – Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (insbesondere die Logs).</li>
+    <li><strong>Widerruf der Einwilligung</strong> (Art. 7 Abs. 3) – die GPS-Erlaubnis kannst du jederzeit über die Einstellungen deines Geräts widerrufen. Dies hat keine Auswirkungen auf die vor dem Widerruf erfolgte Verarbeitung.</li>
+  </ul>
+  <p>Sende eine Anfrage an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a>. Wir antworten innerhalb eines Monats (Art. 12 Abs. 3 DSGVO). Zur Identitätsfeststellung bitten wir dich, die Anfrage von der bei deinem Konto registrierten E-Mail-Adresse zu senden; eine Ausweiskopie benötigen wir dafür nicht.</p>
+
+  <h2>10. Beschwerderecht bei der Aufsichtsbehörde</h2>
+  <p>Wenn du der Auffassung bist, dass wir nicht sorgfältig mit deinen Daten umgehen, kannst du eine Beschwerde bei einer Datenschutz-Aufsichtsbehörde einlegen. YardiGo hat seinen Sitz in den Niederlanden, sodass die federführende Aufsichtsbehörde (Art. 56 DSGVO) die niederländische <strong>Autoriteit Persoonsgegevens (AP)</strong> ist:</p>
+  <p>
+    <strong>Autoriteit Persoonsgegevens</strong><br>
+    Postbus 93374, 2509 AJ Den Haag, Niederlande<br>
+    <a href="https://www.autoriteitpersoonsgegevens.nl" target="_blank" rel="noopener">autoriteitpersoonsgegevens.nl</a>
+  </p>
+  <div style="border-left:3px solid #3A6B4A;padding:6px 14px;margin:14px 0;background:#F0F6F2;border-radius:6px">
+    <p style="margin-top:8px"><strong>Für Personen mit gewöhnlichem Aufenthalt in Deutschland.</strong> Nach Art. 77 DSGVO kannst du deine Beschwerde auch bei der für dein Bundesland zuständigen Aufsichtsbehörde oder bei der oder dem Bundesbeauftragten für den Datenschutz und die Informationsfreiheit einreichen:</p>
+    <p style="margin-bottom:8px">
+      <strong>Die Bundesbeauftragte für den Datenschutz und die Informationsfreiheit (BfDI)</strong><br>
+      Graurheindorfer Straße 153, 53117 Bonn<br>
+      <a href="https://www.bfdi.bund.de" target="_blank" rel="noopener">bfdi.bund.de</a>
+    </p>
+    <p style="margin-bottom:8px;font-size:13px;color:#7A6E62">Eine Übersicht der Landesdatenschutzbeauftragten findest du auf der Website der BfDI.</p>
+  </div>
+
+  <h2>11. Nutzer unter 16 Jahren</h2>
+  <p>YardiGo richtet sich an Nutzer ab 16 Jahren. Nutzer unter 16 benötigen nach Art. 8 DSGVO die Einwilligung eines Elternteils oder Erziehungsberechtigten. Solltest du vermuten, dass wir ohne entsprechende Einwilligung Daten einer minderjährigen Person verarbeiten, kontaktiere uns bitte unter <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a>; wir löschen diese Daten dann schnellstmöglich.</p>
+
+  <h2>12. Datenpannen</h2>
+  <p>Wir nehmen unsere Meldepflicht bei Datenpannen ernst. Tritt eine Datenpanne ein, die ein Risiko für deine Rechte und Freiheiten darstellt, melden wir diese innerhalb von <strong>72 Stunden</strong> nach Kenntnisnahme der zuständigen Aufsichtsbehörde (Art. 33 DSGVO). Bei einem hohen Risiko informieren wir dich unmittelbar (Art. 34 DSGVO).</p>
+
+  <h2>13. Änderungen dieser Erklärung</h2>
+  <p>Wir können diese Datenschutzerklärung anpassen. Die jeweils aktuelle Version findest du unter <a href="https://www.yardigo.de/privacy-de">www.yardigo.de/privacy-de</a>. Bei wesentlichen Änderungen informieren wir dich über eine In-App-Benachrichtigung oder per E-Mail, mindestens 30 Tage vor Inkrafttreten.</p>
+
+  <h3>Versionsverlauf</h3>
+  <ul>
+    <li><strong>v2.5 · 9. Mai 2026</strong>: In-App-Nachrichtensystem und personalisierte E-Mail-Erinnerungen hinzugefügt. §2 ergänzt um Promo-Opt-in-Flag, E-Mail-Frequenz. §3 neue Tabellenzeile für personalisierte Verkaufstipps (separates Opt-in, Art. 6 Abs. 1 lit. a DSGVO). E-Mail-Abschnitt umgeschrieben, um beide E-Mail-Arten zu unterscheiden. Abmeldemechanismus für Promo-Mails dokumentiert.</li>
+    <li><strong>v2.4 · 2. Mai 2026</strong>: Neuer Abschnitt zu Service-Updates per E-Mail. §2 ergänzt um die Kategorie „Kommunikationspräferenzen" (Opt-in-Flag, Ländercode, Abmelde-Token). §3 neue Tabellenzeile für Service-Updates auf Einwilligungsbasis (Art. 6 Abs. 1 lit. a DSGVO, nicht vorausgewähltes Opt-in). §5 Verarbeiter Resend Inc. (USA) hinzugefügt zum Versand von Service-Updates und transaktionsbezogenen E-Mails. Keine Marketing- oder kommerziellen Newsletter.</li>
+    <li><strong>v2.3 · 20. April 2026</strong>: §5a ergänzt um zwei neue Punkte zum Hofflohmarkt-Ablauf: (1) Der Organisator kann ein optionales, nur für ihn sichtbares Erkennungs-Label je Adresse speichern (z. B. einen Vornamen oder „Nr. 14"), und (2) die optionale E-Mail-Adresse des Nachbarn wird ausschließlich im Browser für einen vorausgefüllten mailto-Link verwendet und nicht auf unserem Server gespeichert.</li>
+    <li><strong>v2.2 · 19. April 2026</strong>: Kontaktangaben des Verantwortlichen vereinfacht; Anschrift und Handelsregisternummer werden veröffentlicht, sobald die Eintragung bei der niederländischen Handelskammer abgeschlossen ist.</li>
+    <li><strong>v2.1 · 18. April 2026</strong>: Neuer §5a über Hofflohmärkte mit verpflichtendem Bestätigungslink für Adressen anderer Bewohner (Art. 6 Abs. 1 lit. a DSGVO); ausstehende Einträge werden nach 7 Tagen automatisch gelöscht.</li>
+    <li><strong>v2.0 · 17. April 2026</strong>: vollständige Überarbeitung nach DSGVO-Audit; Verarbeiterliste erweitert (Apple, OSM, Porkbun), Drittlandübermittlungen ausdrücklich gemacht, konkrete Speicherfristen, Rechtsgrundlage lit. f für Logs, Klausel zu Art. 22, Datenpannen-Abschnitt, Folgen bei Nichtbereitstellung ergänzt.</li>
+    <li><strong>v1.0 · April 2026</strong>: erste Version zum Launch.</li>
+  </ul>
+
+  <h2>14. Kontakt</h2>
+  <p>Fragen zum Datenschutz? Schreib an <a href="mailto:privacy@yardigo.de">privacy@yardigo.de</a>. Andere Fragen zur App: <a href="mailto:info@yardigo.de">info@yardigo.de</a>.</p>
+
+  <footer>
+    &copy; 2026 YardiGo · <a href="/voorwaarden-de">Nutzungsbedingungen</a> · <a href="/impressum-de">Impressum</a> · <a href="/">Zurück zu YardiGo</a>
+  </footer>
+
+<script>
+// Auto-redirect to NL/FR version if the user has chosen that language
+// (yg-lang in localStorage or ?lang= in URL).
+(function() {
+  try {
+    var lang = null;
+    try { lang = localStorage.getItem('yg-lang'); } catch(e) {}
+    var qLang = new URLSearchParams(location.search).get('lang');
+    var target = qLang || lang;
+    if (target === 'fr' && location.pathname.indexOf('privacy-fr') === -1) {
+      location.replace('/privacy-fr');
+    } else if (target === 'nl' && (location.pathname === '/privacy-de' || location.pathname === '/privacy-de.html')) {
+      location.replace('/privacy');
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
