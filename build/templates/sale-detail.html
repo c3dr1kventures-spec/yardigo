@@ -27,6 +27,37 @@
 <!-- JSON-LD Event structured data -->
 <script type="application/ld+json">{{JSON_LD}}</script>
 
+<!-- Locale-aware canonical + og:url + og:locale (zelfde HTML op .nl/.be/.de/.app) -->
+<script>
+(function() {
+  try {
+    var host = (location.hostname || '').toLowerCase();
+    if (!host) return;
+    if (host === 'yardigo.app' || host === 'www.yardigo.app') {
+      var rb = document.createElement('meta');
+      rb.name = 'robots'; rb.content = 'noindex,follow';
+      document.head.appendChild(rb);
+      return;
+    }
+    var canonHost = null, ogLocale = null;
+    if (host.endsWith('yardigo.be'))      { canonHost = 'www.yardigo.be'; ogLocale = 'nl_BE'; }
+    else if (host.endsWith('yardigo.de')) { canonHost = 'www.yardigo.de'; ogLocale = 'de_DE'; }
+    else if (host.endsWith('yardigo.nl')) { canonHost = 'www.yardigo.nl'; ogLocale = 'nl_NL'; }
+    else return;
+    function withHost(url) {
+      try { var u = new URL(url); u.protocol = 'https:'; u.hostname = canonHost; return u.toString(); }
+      catch (e) { return url; }
+    }
+    var canon = document.querySelector('link[rel="canonical"]');
+    if (canon) canon.setAttribute('href', withHost(canon.getAttribute('href')));
+    var ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute('content', withHost(ogUrl.getAttribute('content')));
+    var ogLoc = document.querySelector('meta[property="og:locale"]');
+    if (ogLoc && ogLocale) ogLoc.setAttribute('content', ogLocale);
+  } catch (e) {}
+})();
+</script>
+
 <!-- Brand styling (minimaal, voldoende om de fallback-preview leesbaar te maken) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap">
