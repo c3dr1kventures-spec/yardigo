@@ -3124,16 +3124,24 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <!-- ═══════════ SHARE SHEET ═══════════ -->
 <div class="overlay" id="shareOv" onclick="if(event.target===this)closeShare()">
-  <div class="sheet" style="max-height:70vh">
+  <div class="sheet" style="max-height:82vh">
     <div class="sheet-handle"></div>
     <div style="padding:16px 20px 24px">
+      <!-- Celebratory banner: alleen zichtbaar wanneer share-modal direct na publiceren wordt geopend -->
+      <div id="share-publish-banner" style="display:none;background:linear-gradient(135deg,#3A6B4A,#E07B39);color:white;padding:14px 16px;border-radius:12px;margin-bottom:14px;text-align:center">
+        <div style="font-size:18px;font-weight:800;margin-bottom:2px" data-i18n="share.publish_banner_title">🎉 Je verkoop staat live!</div>
+        <div style="font-size:12.5px;opacity:0.95" data-i18n="share.publish_banner_sub">Deel 'm met je netwerk voor meer bezoekers ↓</div>
+      </div>
       <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px" id="share-title-text">Titel</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:2px" id="share-sub-text"></div>
       <div class="share-icon-grid">
         <button class="share-icon-btn" onclick="shareWhatsApp()"><div class="share-icon-circle" style="background:#25D366">💬</div>WhatsApp</button>
         <button class="share-icon-btn" onclick="shareFacebook()"><div class="share-icon-circle" style="background:#1877F2">📘</div>Facebook</button>
+        <button class="share-icon-btn" onclick="shareInstagram()"><div class="share-icon-circle" style="background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)">📷</div>Instagram</button>
+        <button class="share-icon-btn" onclick="shareX()"><div class="share-icon-circle" style="background:#000">𝕏</div>X</button>
+        <button class="share-icon-btn" onclick="shareLinkedIn()"><div class="share-icon-circle" style="background:#0A66C2">in</div>LinkedIn</button>
         <button class="share-icon-btn" onclick="shareEmail()"><div class="share-icon-circle" style="background:var(--terra)">📧</div>E-mail</button>
-        <button class="share-icon-btn" onclick="shareNative()"><div class="share-icon-circle" style="background:var(--bark)">⋯</div>Meer</button>
+        <button class="share-icon-btn" onclick="shareNative()"><div class="share-icon-circle" style="background:var(--bark)">⋯</div><span data-i18n="share.more">Meer</span></button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:10px">
         <span style="flex:1;font-size:12px;color:var(--muted)" id="share-link-text">yardigo.nl/v/1</span>
@@ -3143,6 +3151,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <button class="share-action-btn" onclick="shareCalendar()">📅 Toevoegen aan kalender</button>
       <!-- Promotie-pakket: alleen voor de eigenaar van de advertentie zichtbaar -->
       <button class="share-action-btn" id="share-promo-pack-btn" style="display:none;background:#3A6B4A;color:#fff;border-color:#3A6B4A" onclick="openPromoPack()">🎨 Maak promotie-pakket (poster + QR)</button>
+      <!-- Alleen zichtbaar na post-publish modal: optie om dit modal voortaan over te slaan -->
+      <div id="share-publish-skip-row" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);text-align:center">
+        <button onclick="dismissPostPublishShare()" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11.5px;cursor:pointer;text-decoration:underline" data-i18n="share.publish_dismiss">Sluiten en niet meer tonen na publiceren</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4183,6 +4195,13 @@ var I18N = {
     'toast.address_visible_in': "🔒 Volledig adres zichtbaar {when}",
     'toast.address_visible_soon': "binnenkort",
     'share.addr_hidden': "Adres nog niet zichtbaar",
+    'share.publish_banner_title': "🎉 Je verkoop staat live!",
+    'share.publish_banner_sub': "Deel 'm met je netwerk voor meer bezoekers ↓",
+    'share.publish_dismiss': "Sluiten en niet meer tonen na publiceren",
+    'share.more': "Meer",
+    'toast.ig_copied': "📷 Link gekopieerd — plak in je Instagram-post of -story",
+    'toast.share_dismissed': "OK, we tonen dit voortaan niet meer",
+    'toast.sale_not_found': "Verkoop niet gevonden",
     'toast.rate_limit_wait': "Even wachten. Je kunt over {sec} seconden opnieuw publiceren.",
     'toast.search_radius': "Zoekradius: {km} km",
     'toast.map_type': "Kaarttype: {label}",
@@ -4786,6 +4805,13 @@ var I18N = {
     'toast.address_visible_in': "🔒 Full address visible {when}",
     'toast.address_visible_soon': "soon",
     'share.addr_hidden': "Address not yet visible",
+    'share.publish_banner_title': "🎉 Your sale is live!",
+    'share.publish_banner_sub': "Share it with your network to reach more visitors ↓",
+    'share.publish_dismiss': "Close and don't show again after publishing",
+    'share.more': "More",
+    'toast.ig_copied': "📷 Link copied — paste it in your Instagram post or story",
+    'toast.share_dismissed': "OK, we won't show this anymore",
+    'toast.sale_not_found': "Sale not found",
     'toast.rate_limit_wait': "Please wait. You can publish again in {sec} seconds.",
     'toast.search_radius': "Search radius: {km} km",
     'toast.map_type': "Map type: {label}",
@@ -5389,6 +5415,13 @@ var I18N = {
     'toast.address_visible_in': "🔒 Adresse complète visible {when}",
     'toast.address_visible_soon': "bientôt",
     'share.addr_hidden': "Adresse pas encore visible",
+    'share.publish_banner_title': "🎉 Votre vente est en ligne !",
+    'share.publish_banner_sub': "Partagez-la avec votre réseau pour plus de visiteurs ↓",
+    'share.publish_dismiss': "Fermer et ne plus afficher après publication",
+    'share.more': "Plus",
+    'toast.ig_copied': "📷 Lien copié — collez-le dans votre publication ou story Instagram",
+    'toast.share_dismissed': "OK, nous ne l'afficherons plus",
+    'toast.sale_not_found': "Vente introuvable",
     'toast.rate_limit_wait': "Patiente. Tu pourras publier à nouveau dans {sec} secondes.",
     'toast.search_radius': "Rayon de recherche : {km} km",
     'toast.map_type': "Type de carte : {label}",
@@ -5990,6 +6023,13 @@ var I18N = {
     'toast.address_visible_in': "🔒 Vollständige Adresse sichtbar {when}",
     'toast.address_visible_soon': "bald",
     'share.addr_hidden': "Adresse noch nicht sichtbar",
+    'share.publish_banner_title': "🎉 Dein Verkauf ist online!",
+    'share.publish_banner_sub': "Teile ihn mit deinem Netzwerk für mehr Besucher ↓",
+    'share.publish_dismiss': "Schließen und nach dem Veröffentlichen nicht mehr anzeigen",
+    'share.more': "Mehr",
+    'toast.ig_copied': "📷 Link kopiert — füge ihn in deinen Instagram-Beitrag oder deine Story ein",
+    'toast.share_dismissed': "OK, das zeigen wir nicht mehr",
+    'toast.sale_not_found': "Verkauf nicht gefunden",
     'toast.rate_limit_wait': "Bitte warte. Du kannst in {sec} Sekunden wieder veröffentlichen.",
     'toast.search_radius': "Suchradius: {km} km",
     'toast.map_type': "Kartentyp: {label}",
@@ -7019,6 +7059,7 @@ function renderMySales() {
         + '</div>'
         + '<div style="display:flex;flex-direction:column;gap:4px">'
           + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
+          + '<button onclick="openMySaleShare(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:#3A6B4A;color:white">🚀 Delen</button>'
           + '<button onclick="openEditSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--terra);color:white">✏️ Bewerk</button>'
           + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
         + '</div>'
@@ -7026,6 +7067,15 @@ function renderMySales() {
       + bvAddressesHtml
     + '</div>';
   }).join('');
+}
+
+// Open share-modal voor een eigen verkoop vanuit "Mijn verkopen"
+// (zonder celebratory banner — die hoort alleen bij vers-publiceren)
+function openMySaleShare(saleId) {
+  var s = sales.find(function(x) { return String(x.id) === String(saleId); });
+  if (!s) { toast(i18n('toast.sale_not_found', 'Verkoop niet gevonden')); return; }
+  detailSaleId = s.id;
+  if (typeof detailShare === 'function') detailShare();
 }
 
 // Open de share-modal met één specifieke link (gebruikt vanuit "Mijn verkopen")
@@ -9346,7 +9396,20 @@ function detailShare() {
   }
   document.getElementById('shareOv').classList.add('open');
 }
-function closeShare() { document.getElementById('shareOv').classList.remove('open'); }
+function closeShare() {
+  document.getElementById('shareOv').classList.remove('open');
+  // Reset banner + skip-row zodat een volgende keer (bv. vanuit detail-page)
+  // de modal weer in de 'normale' staat opent
+  var b = document.getElementById('share-publish-banner');
+  if (b) b.style.display = 'none';
+  var sr = document.getElementById('share-publish-skip-row');
+  if (sr) sr.style.display = 'none';
+}
+function dismissPostPublishShare() {
+  try { localStorage.setItem('yg-skip-post-publish-share', '1'); } catch(e) {}
+  closeShare();
+  toast(i18n('toast.share_dismissed', 'OK, we tonen dit voortaan niet meer'));
+}
 function shareWhatsApp() {
   var s = sales.find(function(x){return x.id===detailSaleId;}); if(!s) return;
   var addr = _shareAddr(s);
@@ -9388,6 +9451,84 @@ function shareFacebook() {
   var fbUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + pageUrl + '&quote=' + encodeURIComponent(s.title + ': ' + addr + ' op ' + fmtDate(s.date));
   window.open(fbUrl, '_blank', 'width=600,height=400');
   closeShare();
+}
+
+// X (Twitter) share via web intent
+function shareX() {
+  var s = sales.find(function(x) { return x.id === detailSaleId; });
+  if (!s) return;
+  var addr = _shareAddr(s);
+  var text = s.title + ' · ' + addr + ' · ' + fmtDate(s.date);
+  var url = 'https://yardigo.nl/v/' + s.id;
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank', 'width=600,height=520');
+  closeShare();
+}
+
+// LinkedIn share via share-offsite intent
+function shareLinkedIn() {
+  var s = sales.find(function(x) { return x.id === detailSaleId; });
+  if (!s) return;
+  var url = encodeURIComponent('https://yardigo.nl/v/' + s.id);
+  window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url, '_blank', 'width=600,height=520');
+  closeShare();
+}
+
+// Instagram heeft geen web-share-API. Kopieer de link + open de app als
+// 'beste poging'. Op desktop blijft het bij 'kopieer + open web'.
+function shareInstagram() {
+  var s = sales.find(function(x) { return x.id === detailSaleId; });
+  if (!s) return;
+  var link = 'https://yardigo.nl/v/' + s.id;
+  function _afterCopy(){
+    toast(i18n('toast.ig_copied', '📷 Link gekopieerd — plak in je Instagram-post of -story'));
+    var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
+    setTimeout(function(){
+      try { window.location.href = isMobile ? 'instagram://' : 'https://www.instagram.com/'; } catch(e) {}
+    }, 800);
+  }
+  if (navigator.clipboard) navigator.clipboard.writeText(link).then(_afterCopy).catch(_afterCopy);
+  else _afterCopy();
+  closeShare();
+}
+
+// ── Post-publish share-modal ──────────────────────────────────────────────
+// Wordt aangeroepen direct ná het succesvol publiceren van een eigen
+// verkoop. Hergebruikt het bestaande shareOv (zelfde UX als detail-pagina)
+// maar toont een korte celebratory banner bovenaan.
+// Gebruiker kan via "Niet meer tonen" de modal voor volgende publicaties
+// onderdrukken (localStorage). Werkt onafhankelijk van of de nieuwe
+// listing al in sales[] zit — we voegen 'm tijdelijk toe als dat nodig is.
+function showPostPublishShareModal(id, payload) {
+  if (!id) return;
+  try { if (localStorage.getItem('yg-skip-post-publish-share') === '1') return; } catch(e) {}
+
+  // Synth een minimaal sale-object zodat detailShare() z'n werk kan doen
+  var pseudoSale = {
+    id: id,
+    title: (payload && payload.title) || '',
+    address: (payload && payload.address) || '',
+    date: (payload && (payload.date_start || payload.date)) || '',
+    address_hidden: false, // net gepubliceerd door eigenaar zelf
+    user_id: (payload && payload.user_id) || (currentUser && currentUser.id) || null
+  };
+  var existing = sales.find(function(x) { return String(x.id) === String(id); });
+  if (!existing) sales.push(pseudoSale);
+
+  detailSaleId = id;
+
+  // Banner zichtbaar maken
+  var banner = document.getElementById('share-publish-banner');
+  if (banner) banner.style.display = '';
+
+  // Bestaand share-modal openen (incl. promotie-pakket-knop voor eigenaar)
+  if (typeof detailShare === 'function') detailShare();
+
+  // Kleine vertraging voordat we de "niet meer tonen" optie tonen onderaan,
+  // zodat de gebruiker eerst de share-knoppen ziet
+  setTimeout(function() {
+    var skipRow = document.getElementById('share-publish-skip-row');
+    if (skipRow) skipRow.style.display = '';
+  }, 50);
 }
 function shareGoogleMaps() {
   var s = sales.find(function(x){return x.id===detailSaleId;});
@@ -12036,6 +12177,7 @@ async function publishSale() {
     } else {
       // ── Particulier / Evenement ──
       // Lees evenement-subtype uit dropdown (alleen relevant bij type evenement)
+      var _newlyPublishedListingId = null; // wordt na succesvolle insert gevuld, gebruikt door post-publish share-modal
       var eventSubtype = null;
       if (selTypeVal === 'evenement') {
         var _evSel = document.getElementById('aEventType');
@@ -12077,13 +12219,15 @@ async function publishSale() {
           address_reveal_mode: revealMode
         };
         if (eventSubtype) _insertPayload.event_subtype = eventSubtype;
-        var insRes = await sbClient.from('listings').insert(_insertPayload);
+        var insRes = await sbClient.from('listings').insert(_insertPayload).select('id').single();
         if (insRes && insRes.error) {
           console.error('Listing insert mislukt:', insRes.error);
           logError(insRes.error.message || 'listing insert failed', { action: 'listing_insert', code: insRes.error.code });
           toast('❌ ' + (insRes.error.message || 'Publiceren mislukt'));
           hideL(); return;
         }
+        // Bewaar nieuwe listing-id zodat we de share-modal kunnen openen
+        _newlyPublishedListingId = (insRes && insRes.data && insRes.data.id) || null;
       }
     }
 
@@ -12095,6 +12239,14 @@ async function publishSale() {
     _clearAddDraft();           // _stopDraftAutosave geen nieuwe draft opslaat
     closeAdd(); hideL();
     toast(i18n('toast.publish_success', '🎉 Verkoop geplaatst!'));
+    // Toon post-publish share-modal voor niet-buurt-verkopen. Buurtverkoop
+    // toont al een eigen modal met bevestigingslinks per buur.
+    if (_newlyPublishedListingId && newSale.type !== 'buurt') {
+      setTimeout(function() {
+        try { showPostPublishShareModal(_newlyPublishedListingId, _insertPayload); }
+        catch(e) { console.warn('post-publish share-modal niet getoond:', e); }
+      }, 400);
+    }
   } catch(e) { console.error(e); logError(e, { action: 'publishSale' }); hideL(); toast(i18n('toast.publish_failed', '❌ Publiceren mislukt')); }
   finally {
     // Lock altijd vrijgeven + knop herstellen
