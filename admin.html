@@ -200,6 +200,19 @@ input[type=checkbox]{width:14px;height:14px;accent-color:var(--terra);cursor:poi
 .toggle input:checked+.toggle-slider{background:var(--terra);}
 .toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
 .info-box{background:var(--bg2);border-radius:10px;padding:11px 14px;font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px;}
+/* ── Curated tab form ── */
+.form-grid{display:flex;flex-direction:column;gap:12px;}
+.form-row{display:flex;flex-direction:column;gap:5px;}
+.form-row label{font-size:11.5px;font-weight:700;color:var(--text);letter-spacing:.3px;text-transform:uppercase;}
+.form-row label .muted{font-size:10.5px;font-weight:500;text-transform:none;color:var(--muted);letter-spacing:0;margin-left:6px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;background:white;color:var(--text);}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--terra);}
+.form-row textarea{min-height:80px;resize:vertical;line-height:1.5;}
+.form-row-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-row-2col>div{display:flex;flex-direction:column;gap:5px;}
+.muted{color:var(--muted);font-weight:500;font-size:10.5px;}
+/* Curated tab uses btn-primary inline (override default 100% width) */
+#tab-curated .btn-primary,#tab-curated .btn-ghost{width:auto;padding:8px 16px;margin-top:0;font-size:13px;}
 .setting-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-bottom:8px;}
 .setting-input:focus{border-color:var(--terra);}
 textarea.setting-input{min-height:72px;resize:vertical;}
@@ -356,6 +369,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="nav-tab" onclick="switchTab('analytics',this)">📈 Analytics</div>
     <div class="nav-tab" id="nav-moderation" onclick="switchTab('moderation',this)">🔔 Moderatie <span class="tab-badge" id="pending-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('listings',this)">📋 Advertenties</div>
+    <div class="nav-tab" id="nav-curated" onclick="switchTab('curated',this)">📍 Curated <span class="tab-badge" id="claims-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('users',this)">👥 Gebruikers</div>
     <div class="nav-tab" onclick="switchTab('photos',this)">📸 Foto's</div>
     <div class="nav-tab" onclick="switchTab('log',this)">📜 Log</div>
@@ -521,6 +535,149 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         </div>
         <div class="table-scroll"><div id="listings-table-body"><div class="loading"><div class="spinner"></div>Laden…</div></div></div>
       </div>
+    </div>
+
+    <!-- ════ CURATED (door YardiGo verzamelde evenementen) ════ -->
+    <div class="tab-pane" id="tab-curated">
+      <div class="section-header">
+        <span class="section-title">📍 Door YardiGo verzameld</span>
+        <div class="section-actions">
+          <span class="section-count" id="curated-count">—</span>
+          <button class="btn btn-primary btn-sm" onclick="curatedShowAdd()">+ Nieuw evenement</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadCurated()">🔄 Ververs</button>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:14px">
+        Hier plaats je evenementen (rommelmarkten, vlooienmarkten, braderies, kerstmarkten, rommelroutes) op basis van <strong>openbare bronnen</strong> (gemeentekalenders, officiële organisator-pagina's). <strong>Niet</strong> overnemen: posters, foto's, ingekopieerde teksten van Facebook. <strong>Wel</strong>: feitelijke data (titel, datum, plaats), eigen korte beschrijving, link naar bron. Organisatoren kunnen vermeldingen claimen — claims verschijnen in de queue onderaan.
+      </div>
+
+      <!-- Quick-add form (initieel verborgen) -->
+      <div id="curated-add-form" class="panel" style="display:none;padding:18px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-weight:800;font-size:15px;color:var(--text)">Nieuw evenement</div>
+          <button class="btn btn-ghost btn-sm" onclick="curatedHideAdd()">✕ Sluiten</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Type evenement</label>
+            <select id="cu-event-subtype">
+              <option value="">— Kies type —</option>
+              <option value="rommelmarkt">🛒 Rommelmarkt</option>
+              <option value="vlooienmarkt">🎪 Vlooienmarkt / Trödelmarkt</option>
+              <option value="braderie">🏪 Braderie</option>
+              <option value="kerstmarkt">🎄 Kerstmarkt</option>
+              <option value="antiekmarkt">🏺 Antiekmarkt</option>
+              <option value="boekenmarkt">📚 Boekenmarkt</option>
+              <option value="kofferbak">🚗 Kofferbakverkoop</option>
+              <option value="rommelroute">🏘️ Rommelroute / Hofflohmarkt</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Titel <span class="muted">(eigen tekst, geen copy/paste)</span></label>
+            <input type="text" id="cu-title" placeholder="bv. Rommelmarkt Sporthal De Marke" maxlength="120">
+          </div>
+
+          <div class="form-row form-row-2col">
+            <div>
+              <label>Datum</label>
+              <input type="date" id="cu-date">
+            </div>
+            <div>
+              <label>Plaats</label>
+              <input type="text" id="cu-city" placeholder="bv. Assen" maxlength="60">
+            </div>
+          </div>
+
+          <div class="form-row form-row-2col">
+            <div>
+              <label>Van</label>
+              <input type="time" id="cu-time-from" value="10:00">
+            </div>
+            <div>
+              <label>Tot</label>
+              <input type="time" id="cu-time-till" value="16:00">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Locatie <span class="muted">(rommelroute: laat leeg of vul "Centrum [stad]")</span></label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="cu-address" placeholder="bv. Stationsplein 12, Assen" style="flex:1">
+              <button class="btn btn-ghost btn-sm" type="button" onclick="curatedGeocode()" title="Adres → GPS">🔍 Zoek</button>
+            </div>
+          </div>
+
+          <div class="form-row form-row-2col">
+            <div>
+              <label>Latitude</label>
+              <input type="number" step="0.0000001" id="cu-lat" placeholder="52.9982">
+            </div>
+            <div>
+              <label>Longitude</label>
+              <input type="number" step="0.0000001" id="cu-lng" placeholder="6.5615">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Pin op kaart <span class="muted">(klik om te verplaatsen)</span></label>
+            <div id="cu-minimap" style="height:240px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">Kaart wordt geladen bij eerste gebruik…</div>
+            </div>
+          </div>
+
+          <div class="form-row form-row-2col">
+            <div>
+              <label>Bron-URL <span class="muted">(verplicht)</span></label>
+              <input type="url" id="cu-source-url" placeholder="https://gemeenteassen.nl/evenementen/...">
+            </div>
+            <div>
+              <label>Bron-label</label>
+              <input type="text" id="cu-source-label" placeholder="Gemeente Assen kalender">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Beschrijving <span class="muted">(eigen feitelijke tekst — geen copy/paste van Facebook of poster)</span></label>
+            <textarea id="cu-description" rows="4" placeholder="Op zaterdag 20 juni vindt in Assen een rommelmarkt plaats. Bezoekers kunnen verschillende kramen bezoeken. Meer info bij de organisator."></textarea>
+            <div style="margin-top:6px;display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" type="button" onclick="curatedGenerateTemplate()">✨ Genereer standaard-tekst</button>
+              <span class="muted" style="font-size:11px;align-self:center">Vult titel/datum/plaats + bron-disclaimer in</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Adres-zichtbaarheid</label>
+            <select id="cu-reveal-mode">
+              <option value="instant" selected>Direct zichtbaar (markt/braderie op publieke locatie)</option>
+              <option value="day_before">24u vooraf (alleen bij specifiek adres)</option>
+            </select>
+          </div>
+
+          <div class="form-row" style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-ghost" type="button" onclick="curatedHideAdd()">Annuleren</button>
+            <button class="btn btn-primary" type="button" onclick="curatedSubmit()">🚀 Publiceren</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lijst van curated listings -->
+      <div id="curated-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
+
+      <!-- Claim-queue sectie -->
+      <div class="section-header" style="margin-top:30px">
+        <span class="section-title">✋ Claim-aanvragen</span>
+        <div class="section-actions">
+          <span class="section-count" id="claims-pending-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadClaimsQueue()">🔄 Ververs</button>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:10px;font-size:12px">
+        Organisatoren kunnen vermeldingen claimen. Verifieer altijd 2 dingen: (1) groene "Domein matcht bron-URL" check, en (2) klik de bewijs-link en zoek de <code>verification_token</code> publiek geplaatst op hun officiële kanaal. Bij twijfel: afwijzen met reden.
+      </div>
+      <div id="claims-queue-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
     </div>
 
     <!-- ════ GEBRUIKERS ════ -->
@@ -1183,6 +1340,7 @@ function switchTab(name,el){
   if(name==='analytics') loadAnalytics();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
   if(name==='reviews') loadReviews();
+  if(name==='curated') { loadCurated(); loadClaimsQueue(); }
   if(name==='buurt') loadBuurt();
   if(name==='reminders') loadReminders();
 }
@@ -2819,6 +2977,301 @@ function exportReviewsCSV(){
   var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='yardigo_reviews_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
   toast('⬇️ CSV gedownload');
+}
+
+// ══════════════════════════════════════════════════
+// CURATED (door YardiGo verzamelde evenementen)
+// ══════════════════════════════════════════════════
+var _cuMiniMap = null, _cuMiniMarker = null, _cuLeafletLoaded = false;
+
+function curatedShowAdd() {
+  var form = document.getElementById('curated-add-form');
+  if (form) form.style.display = '';
+  // Lazy-load Leaflet voor de mini-kaart
+  curatedEnsureLeaflet().then(function() {
+    setTimeout(curatedInitMiniMap, 50); // wachten tot DOM zichtbaar is
+  }).catch(function(e) {
+    console.warn('Leaflet kon niet geladen worden:', e);
+  });
+}
+
+function curatedHideAdd() {
+  var form = document.getElementById('curated-add-form');
+  if (form) form.style.display = 'none';
+  curatedResetForm();
+}
+
+function curatedResetForm() {
+  ['cu-event-subtype','cu-title','cu-date','cu-city','cu-address','cu-lat','cu-lng','cu-source-url','cu-source-label','cu-description'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  var t1 = document.getElementById('cu-time-from'); if (t1) t1.value = '10:00';
+  var t2 = document.getElementById('cu-time-till'); if (t2) t2.value = '16:00';
+  var rv = document.getElementById('cu-reveal-mode'); if (rv) rv.value = 'instant';
+  if (_cuMiniMarker && _cuMiniMap) { _cuMiniMap.removeLayer(_cuMiniMarker); _cuMiniMarker = null; }
+}
+
+function curatedEnsureLeaflet() {
+  return new Promise(function(resolve, reject) {
+    if (_cuLeafletLoaded || (typeof L !== 'undefined')) { _cuLeafletLoaded = true; return resolve(); }
+    // CSS
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    // JS
+    var sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    sc.onload = function() { _cuLeafletLoaded = true; resolve(); };
+    sc.onerror = function() { reject(new Error('Leaflet script kon niet laden')); };
+    document.head.appendChild(sc);
+  });
+}
+
+function curatedInitMiniMap() {
+  if (_cuMiniMap || typeof L === 'undefined') return;
+  var el = document.getElementById('cu-minimap');
+  if (!el) return;
+  el.innerHTML = ''; // verwijder placeholder
+  _cuMiniMap = L.map(el, { zoomControl: true, scrollWheelZoom: false }).setView([52.1, 5.3], 7); // NL center
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+  }).addTo(_cuMiniMap);
+  _cuMiniMap.on('click', function(e) {
+    curatedSetPin(e.latlng.lat, e.latlng.lng);
+  });
+  // Als lat/lng al ingevuld → toon pin
+  var lat = parseFloat(document.getElementById('cu-lat').value);
+  var lng = parseFloat(document.getElementById('cu-lng').value);
+  if (!isNaN(lat) && !isNaN(lng)) {
+    curatedSetPin(lat, lng);
+    _cuMiniMap.setView([lat, lng], 14);
+  }
+}
+
+function curatedSetPin(lat, lng) {
+  if (!_cuMiniMap || typeof L === 'undefined') return;
+  if (_cuMiniMarker) _cuMiniMap.removeLayer(_cuMiniMarker);
+  // Inline SVG-pin zodat we niet afhankelijk zijn van Leaflet's default-icon
+  // asset paths (die kapot kunnen zijn bij CDN-loads).
+  var pinIcon = L.divIcon({
+    className: 'cu-pin-icon',
+    html: '<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:#E07B39;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25);transform:rotate(-45deg);display:flex;align-items:center;justify-content:center"><div style="transform:rotate(45deg);color:white;font-size:13px;font-weight:800">📍</div></div>',
+    iconSize: [26, 26],
+    iconAnchor: [13, 26]
+  });
+  _cuMiniMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(_cuMiniMap);
+  document.getElementById('cu-lat').value = lat.toFixed(7);
+  document.getElementById('cu-lng').value = lng.toFixed(7);
+}
+
+async function curatedGeocode() {
+  var addr = (document.getElementById('cu-address').value || '').trim();
+  var city = (document.getElementById('cu-city').value || '').trim();
+  var q = [addr, city].filter(Boolean).join(', ');
+  if (!q) { toast('Vul een adres of plaats in'); return; }
+  try {
+    var res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl,be,de,fr&q=' + encodeURIComponent(q), {
+      headers: { 'Accept': 'application/json' }
+    });
+    var rows = await res.json();
+    if (!rows || !rows.length) { toast('Geen locatie gevonden'); return; }
+    var lat = parseFloat(rows[0].lat), lng = parseFloat(rows[0].lon);
+    await curatedEnsureLeaflet();
+    if (!_cuMiniMap) curatedInitMiniMap();
+    curatedSetPin(lat, lng);
+    if (_cuMiniMap) _cuMiniMap.setView([lat, lng], 14);
+    toast('📍 Locatie gevonden');
+  } catch (e) {
+    console.error(e);
+    toast('Geocode mislukt: ' + (e.message || e));
+  }
+}
+
+function curatedGenerateTemplate() {
+  var type = document.getElementById('cu-event-subtype').value || 'evenement';
+  var typeMap = {
+    rommelmarkt:'rommelmarkt', vlooienmarkt:'vlooienmarkt', braderie:'braderie',
+    kerstmarkt:'kerstmarkt', antiekmarkt:'antiekmarkt', boekenmarkt:'boekenmarkt',
+    kofferbak:'kofferbakverkoop', rommelroute:'rommelroute'
+  };
+  var typeLabel = typeMap[type] || 'evenement';
+  var city = document.getElementById('cu-city').value.trim() || '[plaats]';
+  var date = document.getElementById('cu-date').value;
+  var dateStr = date ? new Date(date+'T00:00:00').toLocaleDateString('nl-NL', { weekday:'long', day:'numeric', month:'long' }) : '[datum]';
+  var srcLabel = document.getElementById('cu-source-label').value.trim() || 'de officiële organisator';
+  var tpl = 'Op ' + dateStr + ' vindt in ' + city + ' een ' + typeLabel + ' plaats. '
+          + 'Bekijk de officiële aankondiging bij ' + srcLabel + ' voor meer informatie '
+          + '(programma, kramen, parkeren). '
+          + 'Ben jij de organisator? Claim deze vermelding om foto\'s en extra info toe te voegen.';
+  document.getElementById('cu-description').value = tpl;
+}
+
+async function curatedSubmit() {
+  var payload = {
+    placed_by: 'yardigo',
+    status: 'active',
+    confirmation_status: 'confirmed',
+    category: 'rommelmarkt', // alle curated = type=evenement; category=rommelmarkt is een bestaande
+    event_subtype: document.getElementById('cu-event-subtype').value || null,
+    title: (document.getElementById('cu-title').value || '').trim(),
+    description: (document.getElementById('cu-description').value || '').trim(),
+    city: (document.getElementById('cu-city').value || '').trim() || null,
+    address: (document.getElementById('cu-address').value || '').trim() || (document.getElementById('cu-city').value || '').trim(),
+    date_start: document.getElementById('cu-date').value || null,
+    time_start: document.getElementById('cu-time-from').value || null,
+    time_end:   document.getElementById('cu-time-till').value || null,
+    latitude:  parseFloat(document.getElementById('cu-lat').value) || null,
+    longitude: parseFloat(document.getElementById('cu-lng').value) || null,
+    source_url:   (document.getElementById('cu-source-url').value || '').trim() || null,
+    source_label: (document.getElementById('cu-source-label').value || '').trim() || null,
+    address_reveal_mode: document.getElementById('cu-reveal-mode').value || 'instant',
+    images: []
+  };
+
+  // Client-side validatie
+  var errs = [];
+  if (!payload.event_subtype) errs.push('Kies een type evenement');
+  if (!payload.title || payload.title.length < 3) errs.push('Titel is verplicht');
+  if (!payload.date_start) errs.push('Datum is verplicht');
+  if (!payload.source_url) errs.push('Bron-URL is verplicht');
+  if (!payload.latitude || !payload.longitude) errs.push('Zet een pin op de kaart of klik "Zoek"');
+  if (!payload.address) errs.push('Locatie is verplicht');
+  if (errs.length) { toast('⚠️ ' + errs[0]); return; }
+
+  // De huidige admin is de curator + initieel eigenaar (claim verzet later user_id)
+  var u = (await sb.auth.getUser()).data && (await sb.auth.getUser()).data.user;
+  if (!u || !u.id) { toast('Niet ingelogd'); return; }
+  payload.user_id = u.id;
+  payload.curator_user_id = u.id;
+
+  var res = await sb.from('listings').insert(payload).select('id').single();
+  if (res.error) {
+    console.error(res.error);
+    toast('❌ ' + res.error.message);
+    return;
+  }
+  toast('✅ Curated evenement gepubliceerd');
+  curatedHideAdd();
+  loadCurated();
+}
+
+async function loadCurated() {
+  var el = document.getElementById('curated-list'); if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res = await sb.from('listings')
+    .select('id,title,city,date_start,time_start,time_end,event_subtype,source_url,source_label,claimed_by_user_id,claimed_at,created_at,status')
+    .eq('placed_by','yardigo')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (res.error) { el.innerHTML = '<div class="log-empty">Fout: '+esc(res.error.message)+'</div>'; return; }
+  var rows = res.data || [];
+  document.getElementById('curated-count').textContent = rows.length;
+  if (!rows.length) {
+    el.innerHTML = '<div class="log-empty" style="padding:24px;text-align:center">Nog geen curated evenementen. Klik "+ Nieuw evenement" om te beginnen.</div>';
+    return;
+  }
+  var iconMap = { rommelmarkt:'🛒', vlooienmarkt:'🎪', braderie:'🏪', kerstmarkt:'🎄',
+                  antiekmarkt:'🏺', boekenmarkt:'📚', kofferbak:'🚗', rommelroute:'🏘️' };
+  el.innerHTML = rows.map(function(r) {
+    var icon = iconMap[r.event_subtype] || '📍';
+    var dateStr = r.date_start ? new Date(r.date_start+'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    var claimed = r.claimed_by_user_id ? '<span style="background:#3A6B4A;color:white;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">✓ Geclaimd</span>' : '<span style="background:var(--bg2);color:var(--muted);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">Open</span>';
+    return '<div class="panel" style="padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">'
+      + '<div style="font-size:28px">'+icon+'</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">'+esc(r.title)+'</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">'+dateStr+' · '+esc(r.city||'—')+' · '+esc(r.event_subtype||'')+'</div>'
+        + '<div style="font-size:10.5px;color:var(--muted)">Bron: <a href="'+esc(r.source_url||'#')+'" target="_blank" rel="noopener" style="color:var(--terra)">'+esc(r.source_label||r.source_url||'—')+'</a></div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">'
+        + claimed
+        + '<button class="btn btn-ghost btn-sm" onclick="curatedDelete(\''+r.id+'\')" style="font-size:10px;padding:4px 10px;border:1px solid #d04545;color:#d04545;background:white;border-radius:6px;cursor:pointer">🗑️ Verwijder</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function curatedDelete(id) {
+  if (!confirm('Curated evenement verwijderen?')) return;
+  var res = await sb.from('listings').delete().eq('id', id).eq('placed_by','yardigo');
+  if (res.error) { toast('❌ '+res.error.message); return; }
+  toast('🗑️ Verwijderd');
+  loadCurated();
+}
+
+// ══════════════════════════════════════════════════
+// CLAIM-QUEUE
+// ══════════════════════════════════════════════════
+async function loadClaimsQueue() {
+  var el = document.getElementById('claims-queue-list'); if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res = await sb.from('listing_claims_queue').select('*').order('created_at',{ascending:false}).limit(50);
+  if (res.error) {
+    el.innerHTML = '<div class="log-empty">Fout: '+esc(res.error.message)+'</div>';
+    document.getElementById('claims-pending-count').textContent = '?';
+    return;
+  }
+  var rows = res.data || [];
+  document.getElementById('claims-pending-count').textContent = rows.length;
+  var badge = document.getElementById('claims-badge');
+  if (badge) { badge.textContent = rows.length; badge.style.display = rows.length ? '' : 'none'; }
+  if (!rows.length) {
+    el.innerHTML = '<div class="log-empty" style="padding:18px;text-align:center;font-size:12px">Geen openstaande claims.</div>';
+    return;
+  }
+  el.innerHTML = rows.map(function(c) {
+    var matchOk = c.email_domain_matches_source;
+    var ageOk   = (c.requester_account_age_days || 0) >= 7;
+    var prevOk  = (c.requester_previous_claim_count || 0) <= 1;
+    var flag = function(ok, txt) {
+      var color = ok ? '#3A6B4A' : '#C5612A';
+      var ico = ok ? '✓' : '⚠';
+      return '<span style="color:'+color+';font-size:11px;font-weight:600">'+ico+' '+txt+'</span>';
+    };
+    var dateStr = c.created_at ? new Date(c.created_at).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="panel" style="padding:14px;margin-bottom:12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:14px;font-weight:700">'+esc(c.listing_title||'—')+'</div>'
+          + '<div style="font-size:11px;color:var(--muted)">'+esc(c.listing_city||'—')+' · '+dateStr+'</div>'
+        + '</div>'
+        + '<div style="text-align:right">'
+          + '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;background:#3A6B4A;color:white;border:none;border-radius:6px;cursor:pointer;margin-right:4px" onclick="claimApprove('+c.id+')">✓ Goedkeuren</button>'
+          + '<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;background:white;color:#d04545;border:1px solid #d04545;border-radius:6px;cursor:pointer" onclick="claimReject('+c.id+')">✕ Afwijzen</button>'
+        + '</div>'
+      + '</div>'
+      + '<div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6">'
+        + '<div><strong>Aanvrager:</strong> '+esc(c.organizer_name)+' &lt;'+esc(c.organizer_email)+'&gt;'+(c.organizer_phone?' · '+esc(c.organizer_phone):'')+'</div>'
+        + '<div><strong>Bewijs-link:</strong> '+(c.evidence_url?'<a href="'+esc(c.evidence_url)+'" target="_blank" rel="noopener" style="color:var(--terra)">'+esc(c.evidence_url)+' ↗</a>':'<span class="muted">(geen)</span>')+'</div>'
+        + '<div><strong>Verification-token (moet hierop staan):</strong> <code style="background:white;padding:2px 6px;border-radius:4px;font-family:monospace">'+esc(c.verification_token)+'</code></div>'
+        + (c.evidence_notes?'<div style="margin-top:4px"><strong>Toelichting:</strong> '+esc(c.evidence_notes)+'</div>':'')
+        + '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:14px">'
+          + flag(matchOk, 'Domein '+(matchOk?'matcht':'matcht NIET')+' bron-URL')
+          + flag(ageOk,   'Account '+(c.requester_account_age_days||0)+' dagen oud')
+          + flag(prevOk,  (c.requester_previous_claim_count||0)+' eerdere claims')
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function claimApprove(claimId) {
+  if (!confirm('Claim goedkeuren? De aanvrager wordt eigenaar van de listing.')) return;
+  var res = await sb.rpc('decide_listing_claim', { p_claim_id: claimId, p_decision: 'approved', p_reason: null });
+  if (res.error) { toast('❌ '+res.error.message); return; }
+  toast('✅ Claim goedgekeurd');
+  loadClaimsQueue();
+  loadCurated();
+}
+
+async function claimReject(claimId) {
+  var reason = prompt('Reden voor afwijzing (verplicht voor DSA):');
+  if (!reason || reason.trim().length < 3) { toast('Reden vereist'); return; }
+  var res = await sb.rpc('decide_listing_claim', { p_claim_id: claimId, p_decision: 'rejected', p_reason: reason.trim() });
+  if (res.error) { toast('❌ '+res.error.message); return; }
+  toast('✕ Claim afgewezen');
+  loadClaimsQueue();
 }
 
 // ══════════════════════════════════════════════════
