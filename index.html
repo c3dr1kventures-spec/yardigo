@@ -3059,6 +3059,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div><span id="det-addr-pending-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒</div>
         <div style="margin-top:4px;font-size:11px;color:#3A6B4A;font-weight:600"><span data-i18n="detail.addr_visible_in">⏳ Volledig adres zichtbaar over</span> <span id="det-addr-countdown">—</span></div>
       </div>
+      <!-- Curated banner (door YardiGo verzameld) -->
+      <div id="det-curated-banner" style="display:none;font-size:12px;color:#5A4A3A;margin:8px 0 12px;border:1.5px dashed #DDD0BC;background:#FBF6EE;border-radius:10px;padding:10px 12px;line-height:1.55">
+        <div style="font-weight:600;color:#7A5C1C">🔍 <span data-i18n="detail.curated_title">Door YardiGo verzameld</span></div>
+        <div style="margin-top:3px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-actions" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
+          <button id="det-claim-btn" onclick="openClaimModal()" style="background:var(--terra);color:white;border:none;border-radius:6px;padding:5px 10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer" data-i18n="detail.curated_claim_btn">✨ Claim deze vermelding</button>
+          <button onclick="openReport()" style="background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:6px;padding:5px 10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer" data-i18n="detail.curated_report_btn">🚩 Meld een probleem</button>
+        </div>
+        <div id="det-curated-claimed" style="display:none;margin-top:6px;color:#3A6B4A;font-weight:600" data-i18n="detail.curated_claimed_note">✓ Geclaimd door organisator</div>
+      </div>
       <div id="det-interest-wrap" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:4px 8px;border-radius:8px">
         <span style="font-size:16px;font-weight:800;color:var(--terra)" id="det-interest-num">0</span>
         <span style="font-size:11px;color:var(--muted)" id="det-interest-label" data-i18n="detail.going">gaan erheen</span>
@@ -3154,6 +3164,66 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Alleen zichtbaar na post-publish modal: optie om dit modal voortaan over te slaan -->
       <div id="share-publish-skip-row" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);text-align:center">
         <button onclick="dismissPostPublishShare()" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11.5px;cursor:pointer;text-decoration:underline" data-i18n="share.publish_dismiss">Sluiten en niet meer tonen na publiceren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CLAIM overlay (organisator claimt curated vermelding) ═══════════ -->
+<div class="overlay" id="claimOv" onclick="if(event.target===this)closeClaimModal()">
+  <div class="sheet" style="max-height:92vh;max-width:520px">
+    <div class="sheet-handle"></div>
+    <div style="padding:18px 22px 28px">
+      <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px" data-i18n="claim.title">✨ Claim deze vermelding</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.55" data-i18n="claim.intro">Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.</div>
+
+      <!-- Form -->
+      <div id="claim-form-wrap">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="claim.field_name">Jouw naam *</label>
+            <input id="claim-name" type="text" maxlength="80" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="claim.field_email">E-mail (officieel domein heeft voorkeur) *</label>
+            <input id="claim-email" type="email" maxlength="120" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="claim.field_phone">Telefoon (optioneel)</label>
+            <input id="claim-phone" type="tel" maxlength="30" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="claim.field_evidence">Bewijs-link (website/Facebook waar je de claim bevestigt)</label>
+            <input id="claim-evidence-url" type="url" maxlength="240" placeholder="https://..." style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="claim.field_notes">Toelichting (optioneel)</label>
+            <textarea id="claim-notes" maxlength="400" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px;resize:vertical"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button onclick="closeClaimModal()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="claim.btn_cancel">Annuleren</button>
+          <button onclick="submitClaim()" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer" data-i18n="claim.btn_submit">Claim indienen</button>
+        </div>
+      </div>
+
+      <!-- Resultaat (verschijnt na succesvolle submit) -->
+      <div id="claim-result-wrap" style="display:none">
+        <div style="background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:10px;padding:14px;margin-bottom:14px">
+          <div style="font-weight:800;color:#3A6B4A;font-size:14px;margin-bottom:8px" data-i18n="claim.success_title">✓ Claim ingediend</div>
+          <div style="font-size:12.5px;color:#2C4A36;line-height:1.6">
+            <span data-i18n="claim.success_step1">Om misbruik te voorkomen vragen we je nu één ding te doen:</span>
+            <ol style="margin:8px 0 8px 18px;padding:0;font-size:12.5px;line-height:1.7">
+              <li><span data-i18n="claim.success_step2">Plaats onderstaande verificatiecode op je officiële kanaal (website/Facebook):</span></li>
+              <li><span data-i18n="claim.success_step3">Geef de URL waar de code staat door via een e-mail naar</span> <a href="mailto:claim@yardigo.nl">claim@yardigo.nl</a></li>
+            </ol>
+            <div style="background:white;border-radius:8px;padding:10px;margin-top:6px;text-align:center;border:1px dashed #B5CFC0">
+              <code id="claim-token-display" style="font-family:monospace;font-size:14px;color:#3A6B4A;font-weight:700;letter-spacing:.5px">yg-claim-xxxxxx</code>
+              <button onclick="copyClaimToken()" style="margin-left:8px;background:var(--terra);color:white;border:none;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer" data-i18n="claim.copy_token">Kopieer</button>
+            </div>
+          </div>
+        </div>
+        <button onclick="closeClaimModal()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer" data-i18n="claim.btn_close">Sluiten</button>
       </div>
     </div>
   </div>
@@ -3985,7 +4055,14 @@ function mapSupabaseToSale(item) {
     // ── Evenement subtype (voor marker differentiatie) ──
     event_subtype: item.event_subtype || null,
     // ── Buurtverkoop plattegrond ──
-    floorplan_url: item.floorplan_url || null
+    floorplan_url: item.floorplan_url || null,
+    // ── Curated: door YardiGo verzameld ──
+    placed_by: item.placed_by || 'user',
+    source_url: item.source_url || null,
+    source_label: item.source_label || null,
+    claim_token: item.claim_token || null,
+    claimed_by_user_id: item.claimed_by_user_id || null,
+    claimed_at: item.claimed_at || null
   };
 }
 
@@ -4202,6 +4279,31 @@ var I18N = {
     'toast.ig_copied': "📷 Link gekopieerd — plak in je Instagram-post of -story",
     'toast.share_dismissed': "OK, we tonen dit voortaan niet meer",
     'toast.sale_not_found': "Verkoop niet gevonden",
+    'detail.curated_title': "Door YardiGo verzameld",
+    'detail.curated_desc_prefix': "Samengesteld op basis van openbare informatie van",
+    'detail.curated_claim_btn': "✨ Claim deze vermelding",
+    'detail.curated_report_btn': "🚩 Meld een probleem",
+    'detail.curated_claimed_note': "✓ Geclaimd door organisator",
+    'claim.title': "✨ Claim deze vermelding",
+    'claim.intro': "Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.",
+    'claim.field_name': "Jouw naam *",
+    'claim.field_email': "E-mail (officieel domein heeft voorkeur) *",
+    'claim.field_phone': "Telefoon (optioneel)",
+    'claim.field_evidence': "Bewijs-link (website/Facebook waar je de claim bevestigt)",
+    'claim.field_notes': "Toelichting (optioneel)",
+    'claim.btn_cancel': "Annuleren",
+    'claim.btn_submit': "Claim indienen",
+    'claim.btn_close': "Sluiten",
+    'claim.success_title': "✓ Claim ingediend",
+    'claim.success_step1': "Om misbruik te voorkomen vragen we je nu één ding te doen:",
+    'claim.success_step2': "Plaats onderstaande verificatiecode op je officiële kanaal (website/Facebook):",
+    'claim.success_step3': "Geef de URL waar de code staat door via een e-mail naar",
+    'claim.copy_token': "Kopieer",
+    'toast.claim_already_claimed': "Deze vermelding is al geclaimd",
+    'toast.claim_name_required': "Geef je naam op",
+    'toast.claim_email_required': "Geef een geldig e-mailadres op",
+    'toast.claim_failed': "Claim indienen mislukt",
+    'toast.claim_token_copied': "📋 Verificatiecode gekopieerd",
     'toast.rate_limit_wait': "Even wachten. Je kunt over {sec} seconden opnieuw publiceren.",
     'toast.search_radius': "Zoekradius: {km} km",
     'toast.map_type': "Kaarttype: {label}",
@@ -4812,6 +4914,31 @@ var I18N = {
     'toast.ig_copied': "📷 Link copied — paste it in your Instagram post or story",
     'toast.share_dismissed': "OK, we won't show this anymore",
     'toast.sale_not_found': "Sale not found",
+    'detail.curated_title': "Collected by YardiGo",
+    'detail.curated_desc_prefix': "Compiled from publicly available information at",
+    'detail.curated_claim_btn': "✨ Claim this listing",
+    'detail.curated_report_btn': "🚩 Report an issue",
+    'detail.curated_claimed_note': "✓ Claimed by organizer",
+    'claim.title': "✨ Claim this listing",
+    'claim.intro': "Are you the organizer? Fill in your details. Our admin verifies claims within 2 business days. Once approved you can add photos and extra info.",
+    'claim.field_name': "Your name *",
+    'claim.field_email': "Email (official domain preferred) *",
+    'claim.field_phone': "Phone (optional)",
+    'claim.field_evidence': "Evidence link (website/Facebook where you confirm the claim)",
+    'claim.field_notes': "Notes (optional)",
+    'claim.btn_cancel': "Cancel",
+    'claim.btn_submit': "Submit claim",
+    'claim.btn_close': "Close",
+    'claim.success_title': "✓ Claim submitted",
+    'claim.success_step1': "To prevent abuse we'd like you to do one thing now:",
+    'claim.success_step2': "Place the verification code below on your official channel (website/Facebook):",
+    'claim.success_step3': "Send the URL where the code is visible by email to",
+    'claim.copy_token': "Copy",
+    'toast.claim_already_claimed': "This listing has already been claimed",
+    'toast.claim_name_required': "Please enter your name",
+    'toast.claim_email_required': "Please enter a valid email address",
+    'toast.claim_failed': "Submitting the claim failed",
+    'toast.claim_token_copied': "📋 Verification code copied",
     'toast.rate_limit_wait': "Please wait. You can publish again in {sec} seconds.",
     'toast.search_radius': "Search radius: {km} km",
     'toast.map_type': "Map type: {label}",
@@ -5422,6 +5549,31 @@ var I18N = {
     'toast.ig_copied': "📷 Lien copié — collez-le dans votre publication ou story Instagram",
     'toast.share_dismissed': "OK, nous ne l'afficherons plus",
     'toast.sale_not_found': "Vente introuvable",
+    'detail.curated_title': "Rassemblé par YardiGo",
+    'detail.curated_desc_prefix': "Compilé à partir d'informations publiques de",
+    'detail.curated_claim_btn': "✨ Revendiquer cette annonce",
+    'detail.curated_report_btn': "🚩 Signaler un problème",
+    'detail.curated_claimed_note': "✓ Revendiqué par l'organisateur",
+    'claim.title': "✨ Revendiquer cette annonce",
+    'claim.intro': "Êtes-vous l'organisateur ? Remplissez vos coordonnées. Notre admin vérifie les revendications dans les 2 jours ouvrables. Une fois approuvée, vous pourrez ajouter des photos et infos.",
+    'claim.field_name': "Votre nom *",
+    'claim.field_email': "E-mail (domaine officiel préféré) *",
+    'claim.field_phone': "Téléphone (optionnel)",
+    'claim.field_evidence': "Lien de preuve (site/Facebook où vous confirmez la revendication)",
+    'claim.field_notes': "Notes (optionnel)",
+    'claim.btn_cancel': "Annuler",
+    'claim.btn_submit': "Soumettre",
+    'claim.btn_close': "Fermer",
+    'claim.success_title': "✓ Revendication soumise",
+    'claim.success_step1': "Pour éviter les abus, une dernière étape :",
+    'claim.success_step2': "Placez le code de vérification ci-dessous sur votre canal officiel (site/Facebook) :",
+    'claim.success_step3': "Envoyez l'URL où le code est visible par e-mail à",
+    'claim.copy_token': "Copier",
+    'toast.claim_already_claimed': "Cette annonce a déjà été revendiquée",
+    'toast.claim_name_required': "Veuillez indiquer votre nom",
+    'toast.claim_email_required': "Veuillez fournir un e-mail valide",
+    'toast.claim_failed': "L'envoi de la revendication a échoué",
+    'toast.claim_token_copied': "📋 Code de vérification copié",
     'toast.rate_limit_wait': "Patiente. Tu pourras publier à nouveau dans {sec} secondes.",
     'toast.search_radius': "Rayon de recherche : {km} km",
     'toast.map_type': "Type de carte : {label}",
@@ -6030,6 +6182,31 @@ var I18N = {
     'toast.ig_copied': "📷 Link kopiert — füge ihn in deinen Instagram-Beitrag oder deine Story ein",
     'toast.share_dismissed': "OK, das zeigen wir nicht mehr",
     'toast.sale_not_found': "Verkauf nicht gefunden",
+    'detail.curated_title': "Von YardiGo gesammelt",
+    'detail.curated_desc_prefix': "Zusammengestellt auf Basis öffentlich verfügbarer Informationen von",
+    'detail.curated_claim_btn': "✨ Diesen Eintrag beanspruchen",
+    'detail.curated_report_btn': "🚩 Problem melden",
+    'detail.curated_claimed_note': "✓ Vom Organisator beansprucht",
+    'claim.title': "✨ Diesen Eintrag beanspruchen",
+    'claim.intro': "Bist du der Organisator? Trage deine Daten ein. Unser Admin prüft den Anspruch innerhalb von 2 Werktagen. Nach Genehmigung kannst du Fotos und weitere Infos hinzufügen.",
+    'claim.field_name': "Dein Name *",
+    'claim.field_email': "E-Mail (offizielle Domain bevorzugt) *",
+    'claim.field_phone': "Telefon (optional)",
+    'claim.field_evidence': "Nachweis-Link (Website/Facebook, wo du den Anspruch bestätigst)",
+    'claim.field_notes': "Anmerkungen (optional)",
+    'claim.btn_cancel': "Abbrechen",
+    'claim.btn_submit': "Anspruch absenden",
+    'claim.btn_close': "Schließen",
+    'claim.success_title': "✓ Anspruch eingereicht",
+    'claim.success_step1': "Um Missbrauch zu verhindern bitten wir dich, jetzt noch eines zu tun:",
+    'claim.success_step2': "Platziere den Verifizierungscode unten auf deinem offiziellen Kanal (Website/Facebook):",
+    'claim.success_step3': "Sende die URL, auf der der Code sichtbar ist, per E-Mail an",
+    'claim.copy_token': "Kopieren",
+    'toast.claim_already_claimed': "Dieser Eintrag wurde bereits beansprucht",
+    'toast.claim_name_required': "Bitte gib deinen Namen an",
+    'toast.claim_email_required': "Bitte gib eine gültige E-Mail-Adresse an",
+    'toast.claim_failed': "Anspruch konnte nicht eingereicht werden",
+    'toast.claim_token_copied': "📋 Verifizierungscode kopiert",
     'toast.rate_limit_wait': "Bitte warte. Du kannst in {sec} Sekunden wieder veröffentlichen.",
     'toast.search_radius': "Suchradius: {km} km",
     'toast.map_type': "Kartentyp: {label}",
@@ -7714,11 +7891,15 @@ function initMap() {
 function makeMarkerIcon(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type];
+  // Curated (door YardiGo verzameld) pins krijgen een subtiele stippellijn-rand
+  // in plaats van een solid rand — herkenbaar bij close-up, niet storend bij overzicht
+  var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
+  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="2" stroke-dasharray="2.5 1.5"' : 'stroke="white" stroke-width="2"';
   var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" stroke="white" stroke-width="2"/>'
+    + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
     + '<circle cx="18" cy="16" r="8" fill="white"/>'
     + '</svg>';
-  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 function createListingPopup(sale) {
@@ -7894,11 +8075,13 @@ function createSmallPin(sale) {
   var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
   var c = colors[sale.type] || '#E07B39';
   var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
+  var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
+  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="1.5" stroke-dasharray="1.8 1.2"' : 'stroke="white" stroke-width="1.5"';
   var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="' + p + '" fill="' + c + '" stroke="white" stroke-width="1.5"/>'
+    + '<path d="' + p + '" fill="' + c + '" ' + strokeAttrs + '/>'
     + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
     + '</svg>';
-  return L.divIcon({ className: '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
 var clusterGroups = [];
@@ -8572,7 +8755,7 @@ function createListingCard(s, i) {
       ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
       : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(_thumbIcon) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
-    + '<div class="card-top"><div class="card-title">' + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
+    + '<div class="card-top"><div class="card-title">' + ((s.placed_by === 'yardigo' && !s.claimed_by_user_id) ? '<span title="Door YardiGo verzameld" style="font-size:11px;opacity:0.65;margin-right:4px">🔍</span>' : '') + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
     + '<div class="card-addr">' + addr + '</div>'
     + '<div class="card-tags">' + tags + '</div>'
@@ -8908,6 +9091,30 @@ function openDetail(id) {
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
   document.getElementById('det-title').textContent = s.title;
   document.getElementById('det-meta').textContent = '📅 ' + fmtDate(s.date) + ' · 🕐 ' + s.from + '–' + s.till;
+  // Curated banner: alleen tonen voor 'Door YardiGo verzameld' evenementen
+  (function() {
+    var banner = document.getElementById('det-curated-banner');
+    if (!banner) return;
+    if (s.placed_by === 'yardigo') {
+      banner.style.display = '';
+      var link = document.getElementById('det-curated-source-link');
+      if (link) {
+        link.href = s.source_url || '#';
+        link.textContent = (s.source_label || s.source_url || '—') + ' ↗';
+      }
+      var claimBtn   = document.getElementById('det-claim-btn');
+      var claimedTag = document.getElementById('det-curated-claimed');
+      if (s.claimed_by_user_id) {
+        if (claimBtn) claimBtn.style.display = 'none';
+        if (claimedTag) claimedTag.style.display = '';
+      } else {
+        if (claimBtn) claimBtn.style.display = '';
+        if (claimedTag) claimedTag.style.display = 'none';
+      }
+    } else {
+      banner.style.display = 'none';
+    }
+  })();
   // Photos
   var photos = document.getElementById('det-photos'), noPhoto = document.getElementById('det-no-photo');
   noPhoto.textContent = _detIcon; noPhoto.style.display = 'flex'; photos.innerHTML = '';
@@ -9374,6 +9581,72 @@ function _shareAddr(s) {
     return city || i18n('share.addr_hidden', 'Adres nog niet zichtbaar');
   }
   return s.address || '';
+}
+
+// ══════════════════════════════════════════════════
+// CLAIM curated listing (organisator)
+// ══════════════════════════════════════════════════
+var _currentClaimToken = null;
+
+function openClaimModal() {
+  if (isGuest) { guestGate('default'); return; }
+  var s = sales.find(function(x){ return x.id === detailSaleId; });
+  if (!s || s.placed_by !== 'yardigo') return;
+  if (s.claimed_by_user_id) { toast(i18n('toast.claim_already_claimed', 'Deze vermelding is al geclaimd')); return; }
+  // Reset form
+  ['claim-name','claim-email','claim-phone','claim-evidence-url','claim-notes'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  // Voorvul naam/e-mail vanuit profiel als beschikbaar
+  if (currentUser && currentUser.name) document.getElementById('claim-name').value = currentUser.name;
+  if (currentUser && currentUser.email) document.getElementById('claim-email').value = currentUser.email;
+  document.getElementById('claim-form-wrap').style.display = '';
+  document.getElementById('claim-result-wrap').style.display = 'none';
+  document.getElementById('claimOv').classList.add('open');
+}
+
+function closeClaimModal() {
+  document.getElementById('claimOv').classList.remove('open');
+}
+
+async function submitClaim() {
+  var s = sales.find(function(x){ return x.id === detailSaleId; });
+  if (!s) return;
+  var name  = (document.getElementById('claim-name').value || '').trim();
+  var email = (document.getElementById('claim-email').value || '').trim();
+  var phone = (document.getElementById('claim-phone').value || '').trim() || null;
+  var evUrl = (document.getElementById('claim-evidence-url').value || '').trim() || null;
+  var notes = (document.getElementById('claim-notes').value || '').trim() || null;
+  if (name.length < 2) { toast(i18n('toast.claim_name_required', 'Geef je naam op')); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast(i18n('toast.claim_email_required', 'Geef een geldig e-mailadres op')); return; }
+  try {
+    var res = await sbClient.rpc('request_listing_claim', {
+      p_listing_id: s.id,
+      p_organizer_name: name,
+      p_organizer_email: email,
+      p_organizer_phone: phone,
+      p_evidence_url: evUrl,
+      p_evidence_notes: notes
+    });
+    if (res.error) throw res.error;
+    var row = (res.data && res.data[0]) || res.data || {};
+    var token = row.verification_token || row.token || null;
+    if (!token) throw new Error('Geen token ontvangen');
+    _currentClaimToken = token;
+    document.getElementById('claim-token-display').textContent = token;
+    document.getElementById('claim-form-wrap').style.display = 'none';
+    document.getElementById('claim-result-wrap').style.display = '';
+  } catch (e) {
+    console.error('Claim mislukt:', e);
+    toast('❌ ' + (e.message || i18n('toast.claim_failed', 'Claim indienen mislukt')));
+  }
+}
+
+function copyClaimToken() {
+  if (!_currentClaimToken) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(_currentClaimToken).then(function(){
+    toast(i18n('toast.claim_token_copied', '📋 Verificatiecode gekopieerd'));
+  });
 }
 
 function detailShare() {

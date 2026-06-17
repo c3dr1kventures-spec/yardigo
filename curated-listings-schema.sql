@@ -348,8 +348,102 @@ CREATE TRIGGER trg_listing_claims_updated_at
   FOR EACH ROW EXECUTE FUNCTION public.listing_claims_set_updated_at();
 
 
+-- 9. Update get_listings_for_user RPC: voeg curated-velden toe
+-- ─────────────────────────────────────────────────────────────────────────
+-- De RPC retourneert nu ook placed_by, source_url, source_label, claim_token,
+-- claimed_by_user_id, claimed_at + event_subtype. Frontend kan zo bepalen
+-- of een listing een curated-banner moet tonen en of er een claim-knop
+-- moet verschijnen.
+DROP FUNCTION IF EXISTS public.get_listings_for_user();
+
+CREATE OR REPLACE FUNCTION public.get_listings_for_user()
+RETURNS TABLE (
+  id uuid, user_id uuid, title text, description text, category text,
+  address text, city text, postal_code text,
+  latitude double precision, longitude double precision,
+  date_start date, date_end date, time_start time, time_end time,
+  images text[], tags text[], status text, view_count integer,
+  created_at timestamptz, updated_at timestamptz,
+  address_reveal_mode text, address_visible_at timestamptz,
+  neighborhood_group_id text, confirmation_status text, confirmation_method text,
+  event_subtype text,
+  placed_by text, source_url text, source_label text,
+  claim_token text, claimed_by_user_id uuid, claimed_at timestamptz
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  uid uuid := auth.uid();
+BEGIN
+  IF uid IS NULL THEN
+    RETURN QUERY
+      SELECT
+        l.id, l.user_id, l.title, l.description, l.category,
+        NULL::text AS address,
+        l.city, l.postal_code, l.latitude, l.longitude,
+        l.date_start, l.date_end, l.time_start, l.time_end,
+        l.images, l.tags, l.status, l.view_count,
+        l.created_at, l.updated_at,
+        l.address_reveal_mode,
+        CASE
+          WHEN l.address_reveal_mode = 'day_before'
+            THEN ((l.date_start + COALESCE(l.time_start, TIME '08:00'))::timestamp
+                  AT TIME ZONE 'Europe/Amsterdam') - INTERVAL '24 hours'
+          ELSE NULL
+        END AS address_visible_at,
+        l.neighborhood_group_id::text,
+        l.confirmation_status, l.confirmation_method, l.event_subtype,
+        l.placed_by, l.source_url, l.source_label,
+        l.claim_token, l.claimed_by_user_id, l.claimed_at
+      FROM public.listings l
+      WHERE l.status = 'active'
+        AND l.date_start >= CURRENT_DATE
+        AND l.confirmation_status = 'confirmed';
+  ELSE
+    RETURN QUERY
+      SELECT
+        l.id, l.user_id, l.title, l.description, l.category,
+        CASE
+          WHEN l.user_id = uid THEN l.address
+          WHEN l.confirmation_status <> 'confirmed' THEN NULL
+          WHEN l.address_reveal_mode = 'instant' THEN l.address
+          WHEN l.address_reveal_mode = 'day_before' AND NOW() >=
+               (((l.date_start + COALESCE(l.time_start, TIME '08:00'))::timestamp
+                  AT TIME ZONE 'Europe/Amsterdam') - INTERVAL '24 hours')
+               THEN l.address
+          ELSE NULL
+        END AS address,
+        l.city, l.postal_code, l.latitude, l.longitude,
+        l.date_start, l.date_end, l.time_start, l.time_end,
+        l.images, l.tags, l.status, l.view_count,
+        l.created_at, l.updated_at,
+        l.address_reveal_mode,
+        CASE
+          WHEN l.user_id = uid THEN NULL
+          WHEN l.address_reveal_mode = 'instant' THEN NULL
+          ELSE ((l.date_start + COALESCE(l.time_start, TIME '08:00'))::timestamp
+                AT TIME ZONE 'Europe/Amsterdam') - INTERVAL '24 hours'
+        END AS address_visible_at,
+        l.neighborhood_group_id::text,
+        l.confirmation_status, l.confirmation_method, l.event_subtype,
+        l.placed_by, l.source_url, l.source_label,
+        l.claim_token, l.claimed_by_user_id, l.claimed_at
+      FROM public.listings l
+      WHERE l.status = 'active'
+        AND l.date_start >= CURRENT_DATE
+        AND (l.confirmation_status = 'confirmed' OR l.user_id = uid);
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_listings_for_user() TO anon, authenticated;
+
+
 -- ═════════════════════════════════════════════════════════════════════════
 -- Smoke test (uitvoeren als admin):
 --   SELECT * FROM public.listings WHERE placed_by = 'yardigo' LIMIT 5;
 --   SELECT * FROM public.listing_claims_queue;
+--   SELECT placed_by, count(*) FROM public.get_listings_for_user() GROUP BY 1;
 -- ═════════════════════════════════════════════════════════════════════════
