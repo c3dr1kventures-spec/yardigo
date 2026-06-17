@@ -3059,16 +3059,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div><span id="det-addr-pending-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒</div>
         <div style="margin-top:4px;font-size:11px;color:#3A6B4A;font-weight:600"><span data-i18n="detail.addr_visible_in">⏳ Volledig adres zichtbaar over</span> <span id="det-addr-countdown">—</span></div>
       </div>
-      <!-- Curated banner (door YardiGo verzameld) -->
-      <div id="det-curated-banner" style="display:none;font-size:12px;color:#5A4A3A;margin:8px 0 12px;border:1.5px dashed #DDD0BC;background:#FBF6EE;border-radius:10px;padding:10px 12px;line-height:1.55">
-        <div style="font-weight:600;color:#7A5C1C">🔍 <span data-i18n="detail.curated_title">Door YardiGo verzameld</span></div>
-        <div style="margin-top:3px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
-        <div id="det-curated-actions" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">
-          <button id="det-claim-btn" onclick="openClaimModal()" style="background:var(--terra);color:white;border:none;border-radius:6px;padding:5px 10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer" data-i18n="detail.curated_claim_btn">✨ Claim deze vermelding</button>
-          <button onclick="openReport()" style="background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:6px;padding:5px 10px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer" data-i18n="detail.curated_report_btn">🚩 Meld een probleem</button>
-        </div>
-        <div id="det-curated-claimed" style="display:none;margin-top:6px;color:#3A6B4A;font-weight:600" data-i18n="detail.curated_claimed_note">✓ Geclaimd door organisator</div>
-      </div>
       <div id="det-interest-wrap" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;padding:4px 8px;border-radius:8px">
         <span style="font-size:16px;font-weight:800;color:var(--terra)" id="det-interest-num">0</span>
         <span style="font-size:11px;color:var(--muted)" id="det-interest-label" data-i18n="detail.going">gaan erheen</span>
@@ -3087,6 +3077,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Mini map -->
       <div id="det-minimap-wrap" style="margin-bottom:14px">
         <div id="det-minimap" style="height:130px;border-radius:10px;overflow:hidden"></div>
+      </div>
+      <!-- Curated banner (door YardiGo verzameld) — onder de kaart -->
+      <div id="det-curated-banner" style="display:none;font-size:12px;color:#5A4A3A;margin-bottom:14px;border:1.5px dashed #DDD0BC;background:#FBF6EE;border-radius:10px;padding:12px 14px;line-height:1.55">
+        <div style="font-weight:700;color:#7A5C1C;font-size:13px">🔍 <span data-i18n="detail.curated_title">Door YardiGo verzameld</span></div>
+        <div style="margin-top:4px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-actions" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
+          <button id="det-claim-btn" onclick="openClaimModal()" style="background:var(--terra);color:white;border:none;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_claim_btn">✨ Claim deze vermelding</button>
+          <button onclick="openReport()" style="background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_report_btn">🚩 Meld een probleem</button>
+        </div>
+        <div id="det-curated-claimed" style="display:none;margin-top:8px;color:#3A6B4A;font-weight:600" data-i18n="detail.curated_claimed_note">✓ Geclaimd door organisator</div>
       </div>
       <!-- Plattegrond (buurtverkoop) -->
       <div id="det-floorplan-wrap" style="display:none;margin-bottom:14px">
@@ -4676,6 +4676,8 @@ var I18N = {
     'gate.adres.desc': 'Log in om het volledige adres te zien.',
     'gate.interesse.title': 'Aanmelden',
     'gate.interesse.desc': 'Maak een gratis account aan om je aan te melden.',
+    'gate.claim.title': 'Claim je vermelding',
+    'gate.claim.desc': 'Maak een gratis account aan om als organisator deze vermelding te beheren.',
     'gate.default.title': 'Account nodig',
     'gate.default.desc': 'Maak een gratis account aan.',
     'gate.btn_signup': 'Gratis account aanmaken →',
@@ -5311,6 +5313,8 @@ var I18N = {
     'gate.adres.desc': 'Sign in to see the full address.',
     'gate.interesse.title': "I'm going",
     'gate.interesse.desc': 'Create a free account to register your interest.',
+    'gate.claim.title': 'Claim your listing',
+    'gate.claim.desc': 'Create a free account to manage this listing as the organizer.',
     'gate.default.title': 'Account needed',
     'gate.default.desc': 'Create a free account.',
     'gate.btn_signup': 'Create free account →',
@@ -5946,6 +5950,8 @@ var I18N = {
     'gate.adres.desc': 'Connectez-vous pour voir l\'adresse complète.',
     'gate.interesse.title': 'Je participe',
     'gate.interesse.desc': 'Créez un compte gratuit pour vous inscrire.',
+    'gate.claim.title': 'Revendiquer votre annonce',
+    'gate.claim.desc': 'Créez un compte gratuit pour gérer cette annonce en tant qu\'organisateur.',
     'gate.default.title': 'Compte requis',
     'gate.default.desc': 'Créez un compte gratuit.',
     'gate.btn_signup': 'Créer un compte gratuit →',
@@ -6546,6 +6552,8 @@ var I18N = {
     'gate.favoriet.title': 'Favorit speichern',
     'gate.interesse.desc': 'Erstelle ein kostenloses Konto, um dich anzumelden.',
     'gate.interesse.title': 'Anmelden',
+    'gate.claim.title': 'Eintrag beanspruchen',
+    'gate.claim.desc': 'Erstelle ein kostenloses Konto, um diesen Eintrag als Organisator zu verwalten.',
     'gate.route.desc': 'Melde dich an, um zu diesem Verkauf zu navigieren.',
     'gate.route.title': 'Route planen',
     'list.count_found': 'gefunden',
@@ -9589,7 +9597,7 @@ function _shareAddr(s) {
 var _currentClaimToken = null;
 
 function openClaimModal() {
-  if (isGuest) { guestGate('default'); return; }
+  if (isGuest) { guestGate('claim'); return; }
   var s = sales.find(function(x){ return x.id === detailSaleId; });
   if (!s || s.placed_by !== 'yardigo') return;
   if (s.claimed_by_user_id) { toast(i18n('toast.claim_already_claimed', 'Deze vermelding is al geclaimd')); return; }
@@ -10059,7 +10067,7 @@ function promoShareFB() {
 function guestGate(feature) {
   // Icons + i18n keys per feature; titel/desc komen via i18n() zodat
   // ze in de actieve taal getoond worden ipv hardcoded NL.
-  var icons = { route:'🧭', favoriet:'⭐', adres:'📍', interesse:'🎉' };
+  var icons = { route:'🧭', favoriet:'⭐', adres:'📍', interesse:'🎉', claim:'✨' };
   var icon = icons[feature] || '🔓';
   var titleKey = 'gate.' + feature + '.title';
   var descKey  = 'gate.' + feature + '.desc';

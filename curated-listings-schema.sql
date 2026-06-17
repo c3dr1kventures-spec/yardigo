@@ -110,10 +110,14 @@ CREATE POLICY "claims_self_insert" ON public.listing_claims
   );
 
 
--- 4. RPC: claim aanvragen (door organisator)
+-- 4. RPC: claim aanvragen (door organisator) — met anti-fraude A+B+C
 -- ─────────────────────────────────────────────────────────────────────────
 -- Genereert een verification_token die de organisator publiekelijk moet
 -- plaatsen op hun officiële kanaal (website/FB). Admin checkt later.
+-- Anti-fraude:
+--   (A) max 1 pending claim per user globaal
+--   (B) max 3 totale claims per listing
+--   (C) 30-dagen cooldown na rejection op dezelfde listing door dezelfde user
 CREATE OR REPLACE FUNCTION public.request_listing_claim(
   p_listing_id     uuid,
   p_organizer_name text,
@@ -142,19 +146,34 @@ BEGIN
     RAISE EXCEPTION 'Deze vermelding is niet door YardiGo verzameld en kan niet worden geclaimd';
   END IF;
 
-  -- Geen openstaande claim van deze user voor deze listing
+  -- Niet als al goedgekeurd voor iemand anders
+  IF EXISTS (SELECT 1 FROM public.listings WHERE id = p_listing_id AND claimed_by_user_id IS NOT NULL) THEN
+    RAISE EXCEPTION 'Deze vermelding is al door iemand anders geclaimd';
+  END IF;
+
+  -- (A) Rate-limit: max 1 actieve pending claim per user globaal
+  IF EXISTS (
+    SELECT 1 FROM public.listing_claims
+    WHERE requested_by_user_id = auth.uid()
+      AND status = 'pending'
+  ) THEN
+    RAISE EXCEPTION 'Je hebt al een openstaande claim. Wacht tot die is beslist voordat je een nieuwe indient.';
+  END IF;
+
+  -- (B) Per-listing cap: max 3 totale claims (alle statussen) op één listing
+  IF (SELECT COUNT(*) FROM public.listing_claims WHERE listing_id = p_listing_id) >= 3 THEN
+    RAISE EXCEPTION 'Te veel claim-aanvragen op deze vermelding. Neem contact op via claim@yardigo.nl.';
+  END IF;
+
+  -- (C) Cooldown 30 dagen na rejection (op dezelfde listing door dezelfde user)
   IF EXISTS (
     SELECT 1 FROM public.listing_claims
     WHERE listing_id = p_listing_id
       AND requested_by_user_id = auth.uid()
-      AND status = 'pending'
+      AND status = 'rejected'
+      AND decision_at > now() - INTERVAL '30 days'
   ) THEN
-    RAISE EXCEPTION 'Je hebt al een openstaande claim voor deze vermelding';
-  END IF;
-
-  -- Niet als al goedgekeurd voor iemand anders
-  IF EXISTS (SELECT 1 FROM public.listings WHERE id = p_listing_id AND claimed_by_user_id IS NOT NULL) THEN
-    RAISE EXCEPTION 'Deze vermelding is al door iemand anders geclaimd';
+    RAISE EXCEPTION 'Je claim op deze vermelding is recent afgewezen. Probeer over 30 dagen opnieuw of neem contact op via claim@yardigo.nl.';
   END IF;
 
   -- Basis-validatie
