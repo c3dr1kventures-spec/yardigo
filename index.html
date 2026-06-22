@@ -12047,7 +12047,12 @@ async function publishSale() {
           var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: contentType, upsert: true });
           if (up.error) {
             console.error('Foto upload mislukt:', up.error);
-            logError(up.error.message || 'foto upload failed', { action: 'photo_upload', index: i, blobSize: blob.size });
+            logError(up.error.message || 'foto upload failed', {
+              action: 'photo_upload', index: i, blobSize: blob.size,
+              blobType: blob.type || 'none', ext: ext,
+              statusCode: up.error.statusCode || up.error.status || null,
+              errorName: up.error.error || up.error.name || null
+            });
             errors.push(up.error.message || String(up.error));
             continue;
           }
@@ -15136,7 +15141,16 @@ async function handleEditPhotos(input) {
       var rand = Math.random().toString(36).substring(2, 8);
       var path = currentUser.id + '/' + Date.now() + '-' + i + '-' + rand + '.' + ext;
       var up = await sbClient.storage.from('listings').upload(path, blob, { contentType: blob.type, upsert: true });
-      if (up.error) { toast('⚠️ Foto ' + (i + 1) + ' mislukt: ' + up.error.message); logError(up.error.message, { action: 'edit_photo_upload', index: i }); continue; }
+      if (up.error) {
+        toast('⚠️ Foto ' + (i + 1) + ' mislukt: ' + up.error.message);
+        logError(up.error.message, {
+          action: 'edit_photo_upload', index: i, blobSize: blob.size,
+          blobType: blob.type || 'none', ext: ext,
+          statusCode: up.error.statusCode || up.error.status || null,
+          errorName: up.error.error || up.error.name || null
+        });
+        continue;
+      }
       var urlRes = sbClient.storage.from('listings').getPublicUrl(path);
       if (urlRes.data && urlRes.data.publicUrl) newUrls.push(urlRes.data.publicUrl);
     } catch(e) { toast('⚠️ Foto ' + (i + 1) + ' mislukt'); logError(e.message || String(e), { action: 'edit_photo_upload_ex', index: i }); console.error(e); }
