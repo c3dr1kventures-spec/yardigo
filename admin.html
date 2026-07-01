@@ -557,7 +557,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap">
           <div>
             <div style="font-weight:800;font-size:14px;color:var(--text)">✨ Plak &amp; parse (AI)</div>
-            <div class="muted" style="font-size:11px;margin-top:2px">Plak de tekst van een gevonden verkoop-post — de velden hieronder worden vooringevuld.</div>
+            <div class="muted" style="font-size:11px;margin-top:2px">Plak tekst óf een screenshot van een verkoop-post — de velden hieronder worden vooringevuld.</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <select id="cu-parse-country" style="padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:12px">
@@ -568,7 +568,24 @@ textarea.setting-input{min-height:72px;resize:vertical;}
             <button id="cu-parse-btn" class="btn btn-primary btn-sm" type="button">Parse</button>
           </div>
         </div>
-        <textarea id="cu-parse-text" rows="4" placeholder="Plak hier bv. een Facebook-post of gemeente-aankondiging…" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;resize:vertical"></textarea>
+        <textarea id="cu-parse-text" rows="4" placeholder="Plak hier tekst (bv. Facebook-post of gemeente-aankondiging) — of gebruik cmd/ctrl+V voor een screenshot." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;resize:vertical"></textarea>
+
+        <!-- Screenshot dropzone -->
+        <div id="cu-parse-dropzone" style="margin-top:10px;padding:14px;border:2px dashed var(--border);border-radius:10px;background:var(--bg2);text-align:center;font-size:12px;color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s">
+          <div id="cu-parse-dz-empty">
+            📸 <strong>Sleep hier een screenshot</strong>, klik om te kiezen, of plak met cmd/ctrl+V
+            <div style="font-size:10px;margin-top:3px">JPEG / PNG / WebP / GIF — max ~5 MB (wordt lokaal verkleind naar 1568px)</div>
+          </div>
+          <div id="cu-parse-dz-preview" style="display:none;flex-direction:column;gap:8px;align-items:center">
+            <img id="cu-parse-thumb" alt="preview" style="max-height:140px;max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.12)">
+            <div style="display:flex;gap:8px;align-items:center;font-size:11px">
+              <span id="cu-parse-imgmeta"></span>
+              <button id="cu-parse-clear" class="btn btn-ghost btn-sm" type="button" style="padding:4px 10px">🗑️ Verwijderen</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="cu-parse-file" accept="image/*" style="display:none">
+
         <div id="cu-parse-status" style="margin-top:8px;font-size:12px;min-height:16px"></div>
       </div>
 
@@ -3109,9 +3126,96 @@ async function curatedGeocode() {
 }
 
 // ── Paste-en-parse (AI) ──
-// Roept edge function `parse-event` aan, mapt de response op de curated-
-// formvelden en triggert vervolgens `curatedGeocode()` (die zelf al terugvalt
-// op alleen plaats als adres leeg is → dan wordt de wijk-coördinaat gebruikt).
+// Roept edge function `parse-event` aan met tekst en/of een base64-image,
+// mapt de response op de curated-formvelden en triggert vervolgens
+// `curatedGeocode()` (die zelf al terugvalt op alleen plaats als adres leeg
+// is → dan wordt de wijk-coördinaat gebruikt).
+
+// Huidige geselecteerde afbeelding (na client-side resize, base64 zonder
+// data: prefix). null als er niets is.
+var _cuParseImage = null; // { data: string, media_type: string, previewUrl: string, kb: number }
+
+// Verklein afbeelding tot maxSide px op de langste zijde en geef base64
+// terug (zonder data: prefix). PNG blijft PNG, GIF blijft GIF, de rest
+// wordt JPEG voor kleinere payloads.
+async function curatedResizeToBase64(file, maxSide) {
+  return new Promise(function(resolve, reject) {
+    if (!file || !/^image\//i.test(file.type || '')) {
+      return reject(new Error('Bestand is geen afbeelding'));
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      try {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) throw new Error('Kan afmetingen niet lezen');
+        var scale = Math.min(1, maxSide / Math.max(w, h));
+        var tw = Math.round(w * scale), th = Math.round(h * scale);
+        var canvas = document.createElement('canvas');
+        canvas.width = tw; canvas.height = th;
+        var ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, tw, th);
+        URL.revokeObjectURL(url);
+
+        // Kies mime-type: behoud PNG/GIF (transparantie/animatie),
+        // rest → JPEG voor efficiënte payload.
+        var srcType = (file.type || '').toLowerCase();
+        var outType = (srcType === 'image/png' || srcType === 'image/gif' || srcType === 'image/webp')
+          ? srcType : 'image/jpeg';
+        var dataUrl = canvas.toDataURL(outType, 0.85);
+        var m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) throw new Error('Kon canvas niet naar base64 converteren');
+        resolve({ data: m[2], media_type: m[1], previewUrl: dataUrl, kb: Math.round(m[2].length * 0.75 / 1024) });
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      reject(new Error('Kon afbeelding niet laden'));
+    };
+    img.src = url;
+  });
+}
+
+async function curatedSetParseImage(file) {
+  var statusEl = document.getElementById('cu-parse-status');
+  try {
+    if (statusEl) { statusEl.style.color = 'var(--muted)'; statusEl.textContent = 'Afbeelding verkleinen…'; }
+    var out = await curatedResizeToBase64(file, 1568);
+    _cuParseImage = out;
+    var thumb = document.getElementById('cu-parse-thumb');
+    var meta  = document.getElementById('cu-parse-imgmeta');
+    var empty = document.getElementById('cu-parse-dz-empty');
+    var prev  = document.getElementById('cu-parse-dz-preview');
+    if (thumb) thumb.src = out.previewUrl;
+    if (meta)  meta.textContent = out.media_type.replace('image/','').toUpperCase() + ' · ' + out.kb + ' KB';
+    if (empty) empty.style.display = 'none';
+    if (prev)  prev.style.display  = 'flex';
+    if (statusEl) statusEl.textContent = '';
+  } catch (e) {
+    if (statusEl) {
+      statusEl.style.color = '#C0392B';
+      statusEl.textContent = '❌ ' + (e && e.message ? e.message : e);
+    }
+  }
+}
+
+function curatedClearParseImage() {
+  _cuParseImage = null;
+  var thumb = document.getElementById('cu-parse-thumb');
+  var empty = document.getElementById('cu-parse-dz-empty');
+  var prev  = document.getElementById('cu-parse-dz-preview');
+  var file  = document.getElementById('cu-parse-file');
+  if (thumb) thumb.src = '';
+  if (empty) empty.style.display = '';
+  if (prev)  prev.style.display  = 'none';
+  if (file)  file.value = '';
+}
+
 async function curatedParsePasted() {
   var btn      = document.getElementById('cu-parse-btn');
   var txtEl    = document.getElementById('cu-parse-text');
@@ -3119,9 +3223,10 @@ async function curatedParsePasted() {
   var ccEl     = document.getElementById('cu-parse-country');
   if (!btn || !txtEl || !statusEl) return;
   var text = (txtEl.value || '').trim();
-  if (text.length < 10) {
+  var hasImage = !!_cuParseImage;
+  if (!hasImage && text.length < 10) {
     statusEl.style.color = 'var(--muted)';
-    statusEl.textContent = 'Plak eerst een tekst van minstens 10 tekens.';
+    statusEl.textContent = 'Plak eerst een tekst (≥10 tekens) of voeg een screenshot toe.';
     return;
   }
 
@@ -3129,13 +3234,19 @@ async function curatedParsePasted() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;vertical-align:middle;margin-right:6px"></span>Parsen…';
   statusEl.style.color = 'var(--muted)';
-  statusEl.textContent = 'AI leest de tekst…';
+  statusEl.textContent = hasImage
+    ? (text ? 'AI leest tekst + screenshot…' : 'AI leest de screenshot…')
+    : 'AI leest de tekst…';
 
   try {
     var session = (await sb.auth.getSession()).data.session;
     if (!session || !session.access_token) {
       throw new Error('Geen geldige sessie. Log opnieuw in.');
     }
+    var body = { hint_country: ccEl ? ccEl.value : '' };
+    if (text) body.text = text;
+    if (hasImage) body.image = { data: _cuParseImage.data, media_type: _cuParseImage.media_type };
+
     var res = await fetch(SUPABASE_URL + '/functions/v1/parse-event', {
       method: 'POST',
       headers: {
@@ -3143,22 +3254,29 @@ async function curatedParsePasted() {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_ANON,
       },
-      body: JSON.stringify({ text: text, hint_country: ccEl ? ccEl.value : '' }),
+      body: JSON.stringify(body),
     });
     var data = null;
     try { data = await res.json(); } catch(_) { data = null; }
-    if (!res.ok || !data || !data.ok) {
+    if (!res.ok) {
       var msg = (data && data.error) ? data.error : ('HTTP ' + res.status);
       throw new Error(msg);
     }
+    // Model gaf expliciet "geen event gevonden" terug.
+    if (data && data.ok === false && data.reason === 'no_event') {
+      statusEl.style.color = '#C08000';
+      statusEl.textContent = '⚠️ Geen event herkend in deze bron. Probeer een duidelijker screenshot of vul handmatig in.';
+      return;
+    }
+    if (!data || !data.ok) {
+      throw new Error((data && data.error) || 'onverwacht antwoord');
+    }
 
-    // Zorg dat het formulier open is
     curatedShowAdd();
     curatedApplyParsedEvent(data.data);
 
     statusEl.style.color = 'var(--terra)';
     statusEl.textContent = '✅ Formulier vooringevuld. Controleer en klik op Publiceren.';
-    // Adres/plaats → geocoding starten (curatedGeocode gebruikt beide velden)
     setTimeout(function() {
       if (document.getElementById('cu-address').value || document.getElementById('cu-city').value) {
         curatedGeocode();
@@ -3672,10 +3790,67 @@ window.addEventListener('resize',checkLayout); checkLayout();
 (function(){
   var btn = document.getElementById('cu-parse-btn');
   if (btn) btn.addEventListener('click', curatedParsePasted);
+
   var txt = document.getElementById('cu-parse-text');
-  if (txt) txt.addEventListener('keydown', function(e){
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); curatedParsePasted(); }
-  });
+  if (txt) {
+    txt.addEventListener('keydown', function(e){
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); curatedParsePasted(); }
+    });
+    // Cmd/Ctrl+V met image op clipboard → vang op ipv als tekst plakken
+    txt.addEventListener('paste', function(e){
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'file' && /^image\//i.test(it.type)) {
+          var f = it.getAsFile();
+          if (f) { e.preventDefault(); curatedSetParseImage(f); return; }
+        }
+      }
+    });
+  }
+
+  var dz    = document.getElementById('cu-parse-dropzone');
+  var file  = document.getElementById('cu-parse-file');
+  var clr   = document.getElementById('cu-parse-clear');
+  if (dz && file) {
+    dz.addEventListener('click', function(e){
+      // Verwijder-knop is inside dropzone; die niet opnieuw file-picker triggeren
+      if (e.target && e.target.closest && e.target.closest('#cu-parse-clear')) return;
+      file.click();
+    });
+    file.addEventListener('change', function(){
+      if (file.files && file.files[0]) curatedSetParseImage(file.files[0]);
+    });
+    var setHover = function(on){
+      dz.style.borderColor = on ? 'var(--terra)' : 'var(--border)';
+      dz.style.background  = on ? '#FFF0E8' : 'var(--bg2)';
+    };
+    ['dragenter','dragover'].forEach(function(ev){
+      dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); setHover(true); });
+    });
+    ['dragleave','drop'].forEach(function(ev){
+      dz.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); setHover(false); });
+    });
+    dz.addEventListener('drop', function(e){
+      var files = e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files : [];
+      for (var i = 0; i < files.length; i++) {
+        if (/^image\//i.test(files[i].type)) { curatedSetParseImage(files[i]); return; }
+      }
+    });
+    // Cmd/Ctrl+V direct op de dropzone (na klik gefocust)
+    dz.setAttribute('tabindex', '0');
+    dz.addEventListener('paste', function(e){
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'file' && /^image\//i.test(it.type)) {
+          var f = it.getAsFile();
+          if (f) { e.preventDefault(); curatedSetParseImage(f); return; }
+        }
+      }
+    });
+  }
+  if (clr) clr.addEventListener('click', function(e){ e.stopPropagation(); curatedClearParseImage(); });
 })();
 </script>
 </body>
