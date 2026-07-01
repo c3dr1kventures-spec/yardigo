@@ -700,6 +700,61 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         </div>
       </div>
 
+      <!-- ═══ Discovery-laag (ontdekt) ═══ -->
+      <div class="section-header" style="margin-top:22px">
+        <span class="section-title">🔎 Ontdekt (voorgestelde bronnen)</span>
+        <div class="section-actions">
+          <span class="section-count" id="discovery-voorgesteld-count">—</span>
+          <button class="btn btn-ghost btn-sm" id="discovery-refresh-btn">🔄 Ververs</button>
+          <button class="btn btn-primary btn-sm" id="discovery-run-btn">✨ Nu speuren</button>
+        </div>
+      </div>
+      <div id="discovery-run-status" style="margin-bottom:10px;font-size:12px;min-height:16px"></div>
+      <div id="discovery-voorgesteld-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
+
+      <!-- Beheer: queries + blocklist (collapsible) -->
+      <details style="margin-top:14px" id="discovery-beheer-details">
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--text);padding:8px 0">⚙️ Beheer zoekopdrachten &amp; blocklist</summary>
+        <div style="padding-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:14px" id="discovery-beheer-grid">
+          <!-- Queries -->
+          <div class="panel" style="padding:12px">
+            <div style="font-size:12px;font-weight:800;margin-bottom:8px">Zoekopdrachten</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="dq-nieuw-tekst" placeholder="Nieuwe query… (gebruik {maand} {jaar} enz.)" style="flex:1;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:12px">
+              <select id="dq-nieuw-land" style="padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:12px">
+                <option value="NL">NL</option><option value="BE">BE</option><option value="FR">FR</option><option value="DE">DE</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" id="dq-nieuw-btn">+ Toevoegen</button>
+            </div>
+            <div id="discovery-queries-list" style="font-size:12px"><em class="muted">Laden…</em></div>
+          </div>
+          <!-- Blocklist -->
+          <div class="panel" style="padding:12px">
+            <div style="font-size:12px;font-weight:800;margin-bottom:8px">Geblokte domeinen</div>
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <input type="text" id="dbl-nieuw-domein" placeholder="voorbeeld.com" style="flex:1;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:12px">
+              <input type="text" id="dbl-nieuw-reden" placeholder="reden (optioneel)" style="flex:1;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:12px">
+              <button class="btn btn-ghost btn-sm" id="dbl-nieuw-btn">+ Blokkeer</button>
+            </div>
+            <div id="discovery-blocklist-list" style="font-size:12px"><em class="muted">Laden…</em></div>
+          </div>
+        </div>
+      </details>
+
+      <!-- ═══ Pending events (in beoordeling) ═══ -->
+      <div class="section-header" style="margin-top:24px">
+        <span class="section-title">📥 In beoordeling</span>
+        <div class="section-actions">
+          <span class="section-count" id="pending-events-count">—</span>
+          <button class="btn btn-ghost btn-sm" id="pending-events-refresh-btn">🔄 Ververs</button>
+        </div>
+      </div>
+      <div id="pending-events-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
+
+      <!-- ═══ Gepubliceerde curated ═══ -->
+      <div class="section-header" style="margin-top:24px">
+        <span class="section-title">✅ Gepubliceerd (curated)</span>
+      </div>
       <!-- Lijst van curated listings -->
       <div id="curated-list"><div class="loading"><div class="spinner"></div>Laden…</div></div>
 
@@ -1377,7 +1432,11 @@ function switchTab(name,el){
   if(name==='analytics') loadAnalytics();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
   if(name==='reviews') loadReviews();
-  if(name==='curated') { loadCurated(); loadClaimsQueue(); }
+  if(name==='curated') {
+    loadCurated(); loadClaimsQueue();
+    loadDiscoveryVoorgesteld(); loadPendingEvents();
+    loadDiscoveryQueries();     loadDiscoveryBlocklist();
+  }
   if(name==='buurt') loadBuurt();
   if(name==='reminders') loadReminders();
 }
@@ -3388,6 +3447,260 @@ async function curatedSubmit() {
   loadCurated();
 }
 
+// ══════════════════════════════════════════════════════════════════
+// DISCOVERY-LAAG
+// ══════════════════════════════════════════════════════════════════
+
+async function discoveryRunNow(dryRun) {
+  var btn    = document.getElementById('discovery-run-btn');
+  var status = document.getElementById('discovery-run-status');
+  if (!btn || !status) return;
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;vertical-align:middle;margin-right:6px"></span>Speurend…';
+  status.style.color = 'var(--muted)';
+  status.textContent = 'Discover-events draait — dit kan enkele minuten duren…';
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if (!session || !session.access_token) throw new Error('Geen geldige sessie. Log opnieuw in.');
+    var res = await fetch(SUPABASE_URL + '/functions/v1/discover-events', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify(dryRun ? { dryRun: true } : {}),
+    });
+    var data = null;
+    try { data = await res.json(); } catch(_) {}
+    if (!res.ok || !data) throw new Error((data && data.error) || ('HTTP ' + res.status));
+    var s = data.summary || {};
+    status.style.color = 'var(--terra)';
+    status.textContent = '✅ Klaar. ' + (s.urls_new||0) + ' nieuw · ' + (s.events_inserted||0) + ' events → wachtrij · ' + (s.sources_voorgesteld||0) + ' bronnen voorgesteld · ' + (s.events_deduped||0) + ' dubbele overgeslagen.';
+    loadDiscoveryVoorgesteld();
+    loadPendingEvents();
+  } catch (e) {
+    status.style.color = '#C0392B';
+    status.textContent = '❌ ' + (e && e.message ? e.message : e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+async function loadDiscoveryVoorgesteld() {
+  var el = document.getElementById('discovery-voorgesteld-list');
+  var cnt = document.getElementById('discovery-voorgesteld-count');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res = await sb.from('scrape_sources')
+    .select('id, domain, base_url, country, voorstel_reden, created_at')
+    .eq('voorgesteld', true)
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (res.error) { el.innerHTML = '<div class="log-empty">Fout: ' + esc(res.error.message) + '</div>'; return; }
+  var rows = res.data || [];
+  if (cnt) cnt.textContent = rows.length;
+  if (!rows.length) { el.innerHTML = '<div class="log-empty" style="padding:14px;text-align:center;font-size:12px">Nog geen voorgestelde bronnen. Klik "Nu speuren" om te starten.</div>'; return; }
+  el.innerHTML = rows.map(function(r){
+    var country = r.country ? ('<span style="background:var(--bg2);border-radius:4px;padding:1px 6px;font-size:10px;margin-left:6px">' + esc(r.country) + '</span>') : '';
+    return '<div class="panel" style="padding:12px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start">'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:13px;font-weight:700"><a href="' + esc(r.base_url || 'https://' + r.domain) + '" target="_blank" rel="noopener" style="color:var(--terra);text-decoration:none">' + esc(r.domain) + '</a>' + country + '</div>'
+        + '<div style="font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5">' + esc(r.voorstel_reden || '—') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:5px">'
+        + '<button class="btn btn-ghost btn-sm" data-act="activeren" data-id="' + r.id + '" style="font-size:11px;padding:5px 10px;background:#3A6B4A;color:white;border:none;border-radius:6px;cursor:pointer">✓ Activeren</button>'
+        + '<button class="btn btn-ghost btn-sm" data-act="afwijzen"  data-id="' + r.id + '" data-domain="' + esc(r.domain) + '" style="font-size:11px;padding:5px 10px;background:white;color:#d04545;border:1px solid #d04545;border-radius:6px;cursor:pointer">✕ Afwijzen</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function discoveryVoorgesteldActie(id, act, domain) {
+  if (act === 'activeren') {
+    var res = await sb.from('scrape_sources').update({ voorgesteld: false, actief: true }).eq('id', id);
+    if (res.error) { toast('❌ ' + res.error.message); return; }
+    toast('✓ Bron geactiveerd');
+  } else if (act === 'afwijzen') {
+    if (!confirm('Bron afwijzen en domein op blocklist?')) return;
+    // 1) delete de source-row 2) domein → blocklist
+    var d1 = await sb.from('scrape_sources').delete().eq('id', id);
+    if (d1.error) { toast('❌ ' + d1.error.message); return; }
+    if (domain) {
+      await sb.from('discovery_blocklist').insert({ domein: domain, reden: 'Handmatig afgewezen na voorstel' });
+    }
+    toast('✕ Afgewezen + domein geblokt');
+  }
+  loadDiscoveryVoorgesteld();
+  loadDiscoveryBlocklist();
+}
+
+async function loadDiscoveryQueries() {
+  var el = document.getElementById('discovery-queries-list');
+  if (!el) return;
+  var res = await sb.from('discovery_queries').select('*').order('land').order('id');
+  if (res.error) { el.innerHTML = '<em style="color:#C0392B">' + esc(res.error.message) + '</em>'; return; }
+  var rows = res.data || [];
+  if (!rows.length) { el.innerHTML = '<em class="muted">Nog geen queries.</em>'; return; }
+  el.innerHTML = rows.map(function(q){
+    var last = q.laatste_run ? new Date(q.laatste_run).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}) : 'nooit';
+    return '<div style="display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'
+      + '<span style="width:22px;font-weight:700">' + esc(q.land) + '</span>'
+      + '<span style="flex:1;min-width:0;word-break:break-word">' + esc(q.query_tekst) + '</span>'
+      + '<span style="color:var(--muted);font-size:10px;white-space:nowrap">🕐 ' + last + '</span>'
+      + '<button data-dq-toggle="' + q.id + '" data-actief="' + (q.actief?'1':'0') + '" style="font-size:10.5px;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:' + (q.actief?'#3A6B4A':'white') + ';color:' + (q.actief?'white':'var(--text)') + ';cursor:pointer">' + (q.actief?'aan':'uit') + '</button>'
+      + '<button data-dq-del="' + q.id + '" style="font-size:10.5px;padding:3px 6px;border-radius:5px;border:1px solid #d04545;background:white;color:#d04545;cursor:pointer" title="Verwijder">🗑️</button>'
+    + '</div>';
+  }).join('');
+}
+
+async function discoveryQueryAdd() {
+  var t = document.getElementById('dq-nieuw-tekst').value.trim();
+  var l = document.getElementById('dq-nieuw-land').value;
+  if (!t) { toast('⚠️ Query mag niet leeg zijn'); return; }
+  var res = await sb.from('discovery_queries').insert({ query_tekst: t, land: l, actief: true });
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  document.getElementById('dq-nieuw-tekst').value = '';
+  loadDiscoveryQueries();
+}
+async function discoveryQueryToggle(id, currentlyActief) {
+  var res = await sb.from('discovery_queries').update({ actief: !currentlyActief }).eq('id', id);
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  loadDiscoveryQueries();
+}
+async function discoveryQueryDelete(id) {
+  if (!confirm('Query verwijderen?')) return;
+  var res = await sb.from('discovery_queries').delete().eq('id', id);
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  loadDiscoveryQueries();
+}
+
+async function loadDiscoveryBlocklist() {
+  var el = document.getElementById('discovery-blocklist-list');
+  if (!el) return;
+  var res = await sb.from('discovery_blocklist').select('*').order('domein');
+  if (res.error) { el.innerHTML = '<em style="color:#C0392B">' + esc(res.error.message) + '</em>'; return; }
+  var rows = res.data || [];
+  if (!rows.length) { el.innerHTML = '<em class="muted">Geen geblokte domeinen.</em>'; return; }
+  el.innerHTML = rows.map(function(b){
+    return '<div style="display:flex;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'
+      + '<span style="flex:1;min-width:0;word-break:break-word"><strong>' + esc(b.domein) + '</strong></span>'
+      + '<span style="color:var(--muted);font-size:11px">' + esc(b.reden || '—') + '</span>'
+      + '<button data-dbl-del="' + b.id + '" style="font-size:10.5px;padding:3px 6px;border-radius:5px;border:1px solid #d04545;background:white;color:#d04545;cursor:pointer">🗑️</button>'
+    + '</div>';
+  }).join('');
+}
+async function discoveryBlocklistAdd() {
+  var d = document.getElementById('dbl-nieuw-domein').value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  var r = document.getElementById('dbl-nieuw-reden').value.trim() || null;
+  if (!d) { toast('⚠️ Domein mag niet leeg zijn'); return; }
+  var res = await sb.from('discovery_blocklist').insert({ domein: d, reden: r });
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  document.getElementById('dbl-nieuw-domein').value = '';
+  document.getElementById('dbl-nieuw-reden').value = '';
+  loadDiscoveryBlocklist();
+}
+async function discoveryBlocklistDelete(id) {
+  if (!confirm('Domein deblokken?')) return;
+  var res = await sb.from('discovery_blocklist').delete().eq('id', id);
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  loadDiscoveryBlocklist();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PENDING EVENTS (in beoordeling)
+// ══════════════════════════════════════════════════════════════════
+async function loadPendingEvents() {
+  var el = document.getElementById('pending-events-list');
+  var cnt = document.getElementById('pending-events-count');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res = await sb.from('pending_events').select('*').eq('status','nieuw').order('date_start').limit(200);
+  if (res.error) { el.innerHTML = '<div class="log-empty">Fout: ' + esc(res.error.message) + '</div>'; return; }
+  var rows = res.data || [];
+  if (cnt) cnt.textContent = rows.length;
+  if (!rows.length) { el.innerHTML = '<div class="log-empty" style="padding:14px;text-align:center;font-size:12px">Wachtrij is leeg.</div>'; return; }
+  el.innerHTML = rows.map(function(p){
+    var d = p.date_start ? new Date(p.date_start + 'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}) : '—';
+    var tijd = (p.time_start||'') + (p.time_end ? '–' + p.time_end : '');
+    var geo = (p.latitude && p.longitude) ? '📍' : '⚠️ geen coörd.';
+    return '<div class="panel" style="padding:12px;margin-bottom:8px">'
+      + '<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:6px">'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:13.5px;font-weight:700">' + esc(p.title) + '</div>'
+          + '<div style="font-size:11.5px;color:var(--muted);margin-top:2px">' + d + ' · ' + esc(tijd) + ' · ' + esc(p.city || '—') + ' · ' + geo + '</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:5px">'
+          + '<button data-pev-act="approve" data-id="' + p.id + '" style="font-size:11px;padding:5px 10px;background:#3A6B4A;color:white;border:none;border-radius:6px;cursor:pointer">✓ Goedkeuren</button>'
+          + '<button data-pev-act="reject"  data-id="' + p.id + '" style="font-size:11px;padding:5px 10px;background:white;color:#d04545;border:1px solid #d04545;border-radius:6px;cursor:pointer">✕ Afwijzen</button>'
+        + '</div>'
+      + '</div>'
+      + '<div style="font-size:11.5px;color:var(--muted);line-height:1.55;background:var(--bg2);border-radius:6px;padding:8px 10px">'
+        + (p.description ? esc(p.description) : '<em>Geen beschrijving</em>')
+        + '<div style="margin-top:6px;font-size:10.5px">🔗 <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener" style="color:var(--terra)">' + esc(p.source_domain) + '</a>'
+        + (p.address ? ' · adres: ' + esc(p.address) : '')
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function pendingEventApprove(id) {
+  var row = await sb.from('pending_events').select('*').eq('id', id).maybeSingle();
+  if (row.error || !row.data) { toast('❌ Kan pending event niet ophalen'); return; }
+  var p = row.data;
+  var u = (await sb.auth.getUser()).data.user;
+  var payload = {
+    placed_by: 'yardigo',
+    status: 'active',
+    confirmation_status: 'confirmed',
+    category: 'rommelmarkt',
+    event_subtype:       p.event_subtype || null,
+    title:               p.title,
+    description:         p.description,
+    city:                p.city,
+    address:             p.address || p.city || '—',
+    date_start:          p.date_start,
+    date_end:            p.date_end,
+    time_start:          p.time_start,
+    time_end:            p.time_end,
+    latitude:            p.latitude,
+    longitude:           p.longitude,
+    source_url:          p.source_url,
+    source_label:        p.source_label || p.source_domain,
+    address_reveal_mode: 'instant',
+    images:              [],
+    user_id:             u ? u.id : null,
+    curator_user_id:     u ? u.id : null,
+  };
+  var ins = await sb.from('listings').insert(payload).select('id').single();
+  if (ins.error) { toast('❌ ' + ins.error.message); return; }
+  await sb.from('pending_events').update({
+    status: 'goedgekeurd',
+    reviewer_user_id: u ? u.id : null,
+    reviewed_at: new Date().toISOString(),
+    approved_listing_id: ins.data.id,
+  }).eq('id', id);
+  toast('✅ Gepubliceerd');
+  loadPendingEvents();
+  loadCurated();
+}
+async function pendingEventReject(id) {
+  var reden = prompt('Reden voor afwijzing (optioneel):') || null;
+  var u = (await sb.auth.getUser()).data.user;
+  var res = await sb.from('pending_events').update({
+    status: 'afgewezen',
+    review_notes: reden,
+    reviewer_user_id: u ? u.id : null,
+    reviewed_at: new Date().toISOString(),
+  }).eq('id', id);
+  if (res.error) { toast('❌ ' + res.error.message); return; }
+  toast('✕ Afgewezen');
+  loadPendingEvents();
+}
+
 async function loadCurated() {
   var el = document.getElementById('curated-list'); if (!el) return;
   el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
@@ -3785,6 +4098,61 @@ document.addEventListener('keydown',function(e){
 });
 function checkLayout(){var g=document.getElementById('dash-grid');if(g)g.style.gridTemplateColumns=window.innerWidth<800?'1fr':'1fr 1fr';}
 window.addEventListener('resize',checkLayout); checkLayout();
+
+// ── Discovery: statische knoppen + delegatie voor dynamische knoppen ──
+(function(){
+  var runBtn = document.getElementById('discovery-run-btn');
+  if (runBtn) runBtn.addEventListener('click', function(){ discoveryRunNow(false); });
+  var refBtn = document.getElementById('discovery-refresh-btn');
+  if (refBtn) refBtn.addEventListener('click', loadDiscoveryVoorgesteld);
+  var pRefBtn = document.getElementById('pending-events-refresh-btn');
+  if (pRefBtn) pRefBtn.addEventListener('click', loadPendingEvents);
+
+  var dqAddBtn = document.getElementById('dq-nieuw-btn');
+  if (dqAddBtn) dqAddBtn.addEventListener('click', discoveryQueryAdd);
+  var dblAddBtn = document.getElementById('dbl-nieuw-btn');
+  if (dblAddBtn) dblAddBtn.addEventListener('click', discoveryBlocklistAdd);
+
+  // Delegatie: klikken binnen de curated-tab handles dynamische knoppen
+  var curatedPane = document.getElementById('tab-curated');
+  if (curatedPane) {
+    curatedPane.addEventListener('click', function(e){
+      var t = e.target;
+      if (!(t instanceof Element)) return;
+      // Voorgestelde bronnen — Activeren / Afwijzen
+      var actEl = t.closest('[data-act]');
+      if (actEl && curatedPane.contains(actEl)) {
+        var id = actEl.getAttribute('data-id');
+        var act = actEl.getAttribute('data-act');
+        var dom = actEl.getAttribute('data-domain') || '';
+        discoveryVoorgesteldActie(id, act, dom);
+        return;
+      }
+      // Query toggle/delete
+      var toggleEl = t.closest('[data-dq-toggle]');
+      if (toggleEl) {
+        var qid = toggleEl.getAttribute('data-dq-toggle');
+        var actief = toggleEl.getAttribute('data-actief') === '1';
+        discoveryQueryToggle(qid, actief);
+        return;
+      }
+      var delEl = t.closest('[data-dq-del]');
+      if (delEl) { discoveryQueryDelete(delEl.getAttribute('data-dq-del')); return; }
+      // Blocklist delete
+      var bDelEl = t.closest('[data-dbl-del]');
+      if (bDelEl) { discoveryBlocklistDelete(bDelEl.getAttribute('data-dbl-del')); return; }
+      // Pending events approve/reject
+      var pevEl = t.closest('[data-pev-act]');
+      if (pevEl) {
+        var pid = pevEl.getAttribute('data-id');
+        var pact = pevEl.getAttribute('data-pev-act');
+        if (pact === 'approve') pendingEventApprove(pid);
+        else if (pact === 'reject') pendingEventReject(pid);
+        return;
+      }
+    });
+  }
+})();
 
 // Bindings voor curated paste-en-parse (id + addEventListener, geen inline onclick).
 (function(){
