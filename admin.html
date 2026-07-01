@@ -552,6 +552,26 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         Hier plaats je evenementen (rommelmarkten, vlooienmarkten, braderies, kerstmarkten, rommelroutes) op basis van <strong>openbare bronnen</strong> (gemeentekalenders, officiële organisator-pagina's). <strong>Niet</strong> overnemen: posters, foto's, ingekopieerde teksten van Facebook. <strong>Wel</strong>: feitelijke data (titel, datum, plaats), eigen korte beschrijving, link naar bron. Organisatoren kunnen vermeldingen claimen — claims verschijnen in de queue onderaan.
       </div>
 
+      <!-- Paste-en-parse (AI-invulling van formulier) -->
+      <div class="panel" id="cu-parse-box" style="padding:14px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:800;font-size:14px;color:var(--text)">✨ Plak &amp; parse (AI)</div>
+            <div class="muted" style="font-size:11px;margin-top:2px">Plak de tekst van een gevonden verkoop-post — de velden hieronder worden vooringevuld.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="cu-parse-country" style="padding:7px 9px;border:1.5px solid var(--border);border-radius:8px;font-size:12px">
+              <option value="">🌍 Auto</option>
+              <option value="NL">🇳🇱 NL</option>
+              <option value="BE">🇧🇪 BE</option>
+            </select>
+            <button id="cu-parse-btn" class="btn btn-primary btn-sm" type="button">Parse</button>
+          </div>
+        </div>
+        <textarea id="cu-parse-text" rows="4" placeholder="Plak hier bv. een Facebook-post of gemeente-aankondiging…" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;resize:vertical"></textarea>
+        <div id="cu-parse-status" style="margin-top:8px;font-size:12px;min-height:16px"></div>
+      </div>
+
       <!-- Quick-add form (initieel verborgen) -->
       <div id="curated-add-form" class="panel" style="display:none;padding:18px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -3088,6 +3108,100 @@ async function curatedGeocode() {
   }
 }
 
+// ── Paste-en-parse (AI) ──
+// Roept edge function `parse-event` aan, mapt de response op de curated-
+// formvelden en triggert vervolgens `curatedGeocode()` (die zelf al terugvalt
+// op alleen plaats als adres leeg is → dan wordt de wijk-coördinaat gebruikt).
+async function curatedParsePasted() {
+  var btn      = document.getElementById('cu-parse-btn');
+  var txtEl    = document.getElementById('cu-parse-text');
+  var statusEl = document.getElementById('cu-parse-status');
+  var ccEl     = document.getElementById('cu-parse-country');
+  if (!btn || !txtEl || !statusEl) return;
+  var text = (txtEl.value || '').trim();
+  if (text.length < 10) {
+    statusEl.style.color = 'var(--muted)';
+    statusEl.textContent = 'Plak eerst een tekst van minstens 10 tekens.';
+    return;
+  }
+
+  var originalBtnHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;vertical-align:middle;margin-right:6px"></span>Parsen…';
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'AI leest de tekst…';
+
+  try {
+    var session = (await sb.auth.getSession()).data.session;
+    if (!session || !session.access_token) {
+      throw new Error('Geen geldige sessie. Log opnieuw in.');
+    }
+    var res = await fetch(SUPABASE_URL + '/functions/v1/parse-event', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+      },
+      body: JSON.stringify({ text: text, hint_country: ccEl ? ccEl.value : '' }),
+    });
+    var data = null;
+    try { data = await res.json(); } catch(_) { data = null; }
+    if (!res.ok || !data || !data.ok) {
+      var msg = (data && data.error) ? data.error : ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+
+    // Zorg dat het formulier open is
+    curatedShowAdd();
+    curatedApplyParsedEvent(data.data);
+
+    statusEl.style.color = 'var(--terra)';
+    statusEl.textContent = '✅ Formulier vooringevuld. Controleer en klik op Publiceren.';
+    // Adres/plaats → geocoding starten (curatedGeocode gebruikt beide velden)
+    setTimeout(function() {
+      if (document.getElementById('cu-address').value || document.getElementById('cu-city').value) {
+        curatedGeocode();
+      }
+    }, 100);
+  } catch (e) {
+    statusEl.style.color = '#C0392B';
+    statusEl.textContent = '❌ Parse mislukt: ' + (e && e.message ? e.message : e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalBtnHtml;
+  }
+}
+
+// Mapt het door `parse-event` teruggegeven schema op de curated-form-velden.
+// De sub-type mapping vertaalt "buurtverkoop"/"opritverkoop" (niet in de
+// dropdown-opties) naar 'rommelroute' resp. leeg (admin kiest dan zelf).
+function curatedApplyParsedEvent(ev) {
+  if (!ev || typeof ev !== 'object') return;
+  var subtypeMap = {
+    rommelmarkt:   'rommelmarkt',
+    rommelroute:   'rommelroute',
+    buurtverkoop:  'rommelroute',
+    opritverkoop:  '',
+    overig:        ''
+  };
+  var setVal = function(id, v) {
+    var el = document.getElementById(id);
+    if (el && v != null) el.value = v;
+  };
+  setVal('cu-title',       ev.titel || '');
+  setVal('cu-date',        ev.datum || '');
+  setVal('cu-city',        ev.plaats || '');
+  setVal('cu-address',     ev.adres || '');
+  setVal('cu-time-from',   ev.starttijd || '10:00');
+  setVal('cu-time-till',   ev.eindtijd  || '16:00');
+  setVal('cu-description', ev.beschrijving || '');
+  setVal('cu-source-url',  ev.bron_url || '');
+  setVal('cu-source-label',ev.bron_naam || '');
+  var mapped = ev.event_type ? (subtypeMap[ev.event_type] || '') : '';
+  setVal('cu-event-subtype', mapped);
+}
+
 function curatedGenerateTemplate() {
   var type = document.getElementById('cu-event-subtype').value || 'evenement';
   var typeMap = {
@@ -3553,6 +3667,16 @@ document.addEventListener('keydown',function(e){
 });
 function checkLayout(){var g=document.getElementById('dash-grid');if(g)g.style.gridTemplateColumns=window.innerWidth<800?'1fr':'1fr 1fr';}
 window.addEventListener('resize',checkLayout); checkLayout();
+
+// Bindings voor curated paste-en-parse (id + addEventListener, geen inline onclick).
+(function(){
+  var btn = document.getElementById('cu-parse-btn');
+  if (btn) btn.addEventListener('click', curatedParsePasted);
+  var txt = document.getElementById('cu-parse-text');
+  if (txt) txt.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); curatedParsePasted(); }
+  });
+})();
 </script>
 </body>
 </html>
