@@ -14716,16 +14716,22 @@ document.addEventListener('DOMContentLoaded', async function() {
   setTimeout(_hideAppSplash, 200);
 
   // ─── Deep-link vanaf prerendered /v/{id} pagina ──
-  // Het build-time gegenereerde stub-bestand redirect naar /?v=ID.
-  // Wij vangen dat hier op en openen het juiste detail-overlay, en
-  // wissen de query daarna uit de URL met history.replaceState zodat
-  // hij weer schoon is.
+  // Bron 1: prerendered stub-bestand redirect naar /?v=ID.
+  // Bron 2: sessionStorage 'yg-open-sale' (zelfde stub).
+  // Bron 3: directe /v/<id> URL (Vercel rewrite naar /index.html voor
+  //         listings die tussen twee builds zijn aangemaakt en dus geen
+  //         eigen prerendered pagina hebben).
   (function handleSaleDeepLink() {
     var params = new URLSearchParams(location.search);
     var vid = params.get('v');
     // Fallback: sessionStorage-flag (gezet door /v/{id}/index.html)
     if (!vid) {
       try { vid = sessionStorage.getItem('yg-open-sale'); if (vid) sessionStorage.removeItem('yg-open-sale'); } catch(e) {}
+    }
+    // Fallback: /v/<id> in pathname (Vercel-rewrite naar index.html)
+    if (!vid) {
+      var m = (location.pathname || '').match(/^\/v\/([^\/?#]+)\/?$/);
+      if (m) vid = decodeURIComponent(m[1]);
     }
     if (!vid) return;
     function tryOpen(retries) {
