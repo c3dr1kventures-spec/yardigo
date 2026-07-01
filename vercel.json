@@ -5,6 +5,9 @@
   "outputDirectory": ".",
   "installCommand": "",
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/v/:id", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
