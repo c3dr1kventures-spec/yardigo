@@ -51,3 +51,6 @@ rommelmarkt/
 vlooienmarkt/
 opritverkoop/
 garageverkoop/
+
+# Supabase CLI lokale link-state (per-machine)
+supabase/.temp/

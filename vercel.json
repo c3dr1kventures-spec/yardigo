@@ -6,6 +6,7 @@
   "installCommand": "",
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/v/:id", "destination": "/api/share/:id" },
     { "source": "/v/:id", "destination": "/index.html" }
   ],
   "headers": [
