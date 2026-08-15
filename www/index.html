@@ -130,6 +130,30 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{overscroll-behavior:none;}
 body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:hidden;overscroll-behavior:none;}
+.yg-icon{width:1.18em;height:1.18em;display:inline-flex;align-items:center;justify-content:center;vertical-align:-.2em;line-height:1;flex-shrink:0;color:var(--terra);}
+.yg-icon svg{width:100%;height:100%;display:block;overflow:visible;}
+.yg-icon .yg-i-terra{fill:var(--terra);}
+.yg-icon .yg-i-terra-dark{fill:var(--terra-dark);}
+.yg-icon .yg-i-forest{fill:var(--forest);}
+.yg-icon .yg-i-forest-dark{fill:var(--forest-dark);}
+.yg-icon .yg-i-amber{fill:var(--amber);}
+.yg-icon .yg-i-birch{fill:var(--birch);}
+.yg-icon .yg-i-bark{fill:var(--bark);}
+.yg-icon .yg-i-muted{fill:var(--muted);}
+.yg-icon .yg-i-stroke{stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.yg-icon .yg-i-white-stroke{stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.yg-icon--flag svg text{font-family:'Poppins',sans-serif;font-weight:800;font-size:9px;letter-spacing:.2px;fill:#fff;}
+.yg-icon--plain{color:currentColor;}
+.yg-icon--muted{color:var(--muted);}
+.ob-feature-icon .yg-icon{width:28px;height:28px;}
+.ob-perm-icon .yg-icon,.srow-icon .yg-icon,.btn-inbox .yg-icon,.btn-login-icon .yg-icon,.s-ico .yg-icon{width:18px;height:18px;}
+.ob-cat-tile .cat-icon .yg-icon{width:30px;height:30px;margin-bottom:3px;}
+.tab .yg-icon,.type-pill .yg-icon,.fdd-btn .yg-icon,.ls-opt .yg-icon,.cat-picker-opt .yg-icon,.atag .yg-icon{width:1.2em;height:1.2em;}
+.card-thumb>.yg-icon,.empty-icon .yg-icon,.inbox-empty-icon .yg-icon{width:42px;height:42px;}
+.enc-thumb .yg-icon,.ea-icon .yg-icon,.badge-icon .yg-icon{width:24px;height:24px;}
+.share-icon-circle .yg-icon{width:28px;height:28px;color:white;}
+.dm-ball .yg-icon{width:13px;height:13px;color:var(--amber);}
+.lang-flag .yg-icon,.lang-opt-flag .yg-icon{width:24px;height:24px;}
 /* Op de kaartweergave: blokkeer body-scroll zodat iOS touch-events direct
    naar Leaflet gaan i.p.v. de page-scroll-handler. overflow-x:hidden zet
    overflow-y impliciet op auto (CSS-spec), waardoor iOS touch-start kaapt
@@ -2033,16 +2057,16 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           </div>
         </div>
         <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:120px">
-          <option value="newest" data-i18n="list.sort.newest">🆕 Nieuwste eerst</option>
-          <option value="date-asc" data-i18n="list.sort.date_asc" selected>📅 Op datum</option>
-          <option value="date-desc" data-i18n="list.sort.date_desc">📅 Laatste eerst</option>
-          <option value="nearby" data-i18n="list.sort.nearby">📍 Dichtstbijzijnde</option>
-          <option value="interest" data-i18n="list.sort.interest">🔥 Meest populair</option>
+          <option value="newest" data-i18n="list.sort.newest">Nieuwste eerst</option>
+          <option value="date-asc" data-i18n="list.sort.date_asc" selected>Op datum</option>
+          <option value="date-desc" data-i18n="list.sort.date_desc">Laatste eerst</option>
+          <option value="nearby" data-i18n="list.sort.nearby">Dichtstbijzijnde</option>
+          <option value="interest" data-i18n="list.sort.interest">Meest populair</option>
         </select>
         <!-- Weergave-kiezer (alleen zichtbaar op desktop): bepaalt hoeveel
              advertenties naast elkaar staan in de grid. -->
         <select id="gridSizeSelect" class="grid-size-select" onchange="applyGridSize(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:130px">
-          <option value="auto" selected>📐 Auto</option>
+          <option value="auto" selected>Auto</option>
           <option value="4col">▦ 4 per rij</option>
           <option value="3col">▥ 3 per rij</option>
           <option value="2col">▤ 2 per rij (groter)</option>
@@ -2800,9 +2824,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="adm-field">
           <label for="adm-type">Type</label>
           <select id="adm-type">
-            <option value="news">📰 Nieuws</option>
-            <option value="blog">📝 Blog</option>
-            <option value="info">ℹ️ Info / Help</option>
+            <option value="news">Nieuws</option>
+            <option value="blog">Blog</option>
+            <option value="info">Info / Help</option>
           </select>
         </div>
         <div class="adm-field">
@@ -3361,14 +3385,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px" data-i18n="publish.event.subtype_label">WAT VOOR EVENEMENT?</div>
           <select id="aEventType" class="form-input" onchange="toggleEventAnders(this.value)" style="width:100%;cursor:pointer">
             <option value="" data-i18n="event_subtype.placeholder">Kies een type</option>
-            <option value="Vlooienmarkt" data-i18n="event_subtype.vlooienmarkt">🎪 Vlooienmarkt</option>
-            <option value="Rommelmarkt" data-i18n="event_subtype.rommelmarkt">🛒 Rommelmarkt</option>
-            <option value="Kofferbakverkoop" data-i18n="event_subtype.kofferbak">🚗 Kofferbakverkoop</option>
-            <option value="Braderie" data-i18n="event_subtype.braderie">🏪 Braderie</option>
-            <option value="Kerstmarkt" data-i18n="event_subtype.kerstmarkt">🎄 Kerstmarkt</option>
-            <option value="Boekenmarkt" data-i18n="event_subtype.boekenmarkt">📚 Boekenmarkt</option>
-            <option value="Antiekmarkt" data-i18n="event_subtype.antiekmarkt">🏺 Antiekmarkt</option>
-            <option value="Anders" data-i18n="event_subtype.other">✏️ Anders</option>
+            <option value="Vlooienmarkt" data-i18n="event_subtype.vlooienmarkt">Vlooienmarkt</option>
+            <option value="Rommelmarkt" data-i18n="event_subtype.rommelmarkt">Rommelmarkt</option>
+            <option value="Kofferbakverkoop" data-i18n="event_subtype.kofferbak">Kofferbakverkoop</option>
+            <option value="Braderie" data-i18n="event_subtype.braderie">Braderie</option>
+            <option value="Kerstmarkt" data-i18n="event_subtype.kerstmarkt">Kerstmarkt</option>
+            <option value="Boekenmarkt" data-i18n="event_subtype.boekenmarkt">Boekenmarkt</option>
+            <option value="Antiekmarkt" data-i18n="event_subtype.antiekmarkt">Antiekmarkt</option>
+            <option value="Anders" data-i18n="event_subtype.other">Anders</option>
           </select>
           <div id="evenement-anders-wrap" style="display:none;margin-top:8px">
             <input class="form-input" id="aEventAnders" placeholder="Omschrijf het evenement type..." data-i18n-placeholder="event_subtype.other_placeholder" style="width:100%">
@@ -3744,18 +3768,18 @@ function renderTagChips(tags, type, opts) {
   if (unique.length <= limit) {
     return unique.map(function(tg) {
       var inline = opts.tagStyle ? ' style="' + opts.tagStyle + '"' : '';
-      return '<span class="' + chipClass + '"' + inline + '>' + escapeHtml(tg) + '</span>';
+      return '<span class="' + chipClass + '"' + inline + '>' + ygTagIcon(tg) + ' ' + escapeHtml(ygTagLabel(tg)) + '</span>';
     }).join('');
   }
   var visible = unique.slice(0, limit);
   var hidden = unique.slice(limit);
   var html = visible.map(function(tg) {
     var inline = opts.tagStyle ? ' style="' + opts.tagStyle + '"' : '';
-    return '<span class="' + chipClass + '"' + inline + '>' + escapeHtml(tg) + '</span>';
+    return '<span class="' + chipClass + '"' + inline + '>' + ygTagIcon(tg) + ' ' + escapeHtml(ygTagLabel(tg)) + '</span>';
   }).join('');
   html += hidden.map(function(tg) {
     var inline = opts.tagStyle ? opts.tagStyle + ';' : '';
-    return '<span class="' + chipClass + ' tag-hidden" data-tg="' + groupId + '" style="' + inline + 'display:none">' + escapeHtml(tg) + '</span>';
+    return '<span class="' + chipClass + ' tag-hidden" data-tg="' + groupId + '" style="' + inline + 'display:none">' + ygTagIcon(tg) + ' ' + escapeHtml(ygTagLabel(tg)) + '</span>';
   }).join('');
   var moreLabel = '+' + hidden.length + ' ' + i18n('tags.more', 'meer');
   html += '<span class="' + chipClass + ' tag-more" data-tg="' + groupId + '" onclick="toggleTagsMore(this);event.stopPropagation()">' + escapeHtml(moreLabel) + '</span>';
@@ -4608,11 +4632,11 @@ var I18N = {
     // Type pills + lijst-view
     'types.heading': 'TYPES',
     'list.sort_by': 'Sorteer op:',
-    'list.sort.newest': '🆕 Nieuwste eerst',
-    'list.sort.date_asc': '📅 Op datum',
-    'list.sort.date_desc': '📅 Laatste eerst',
-    'list.sort.nearby': '📍 Dichtstbijzijnde',
-    'list.sort.interest': '🔥 Meest populair',
+    'list.sort.newest': 'Nieuwste eerst',
+    'list.sort.date_asc': 'Op datum',
+    'list.sort.date_desc': 'Laatste eerst',
+    'list.sort.nearby': 'Dichtstbijzijnde',
+    'list.sort.interest': 'Meest populair',
     // Cookie-notice
     'cookie.title': '🍪 Geen trackers op YardiGo',
     'cookie.body': 'YardiGo gebruikt <strong>geen</strong> analytics- of advertentiecookies. Alleen functionele opslag om je ingelogd te houden en je voorkeuren te onthouden. Meer in onze <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacyverklaring</a>.',
@@ -4743,14 +4767,14 @@ var I18N = {
     'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy-tip:</strong> zorg dat er géén gezichten van omstanders, kentekens, persoonlijke documenten of andere herleidbare details op je foto\'s staan. Je foto\'s worden openbaar zichtbaar.',
     // Evenement subtypes
     'event_subtype.placeholder': 'Kies een type',
-    'event_subtype.vlooienmarkt': '🎪 Vlooienmarkt',
-    'event_subtype.rommelmarkt': '🛒 Rommelmarkt',
-    'event_subtype.kofferbak': '🚗 Kofferbakverkoop',
-    'event_subtype.braderie': '🏪 Braderie',
-    'event_subtype.kerstmarkt': '🎄 Kerstmarkt',
-    'event_subtype.boekenmarkt': '📚 Boekenmarkt',
-    'event_subtype.antiekmarkt': '🏺 Antiekmarkt',
-    'event_subtype.other': '✏️ Anders',
+    'event_subtype.vlooienmarkt': 'Vlooienmarkt',
+    'event_subtype.rommelmarkt': 'Rommelmarkt',
+    'event_subtype.kofferbak': 'Kofferbakverkoop',
+    'event_subtype.braderie': 'Braderie',
+    'event_subtype.kerstmarkt': 'Kerstmarkt',
+    'event_subtype.boekenmarkt': 'Boekenmarkt',
+    'event_subtype.antiekmarkt': 'Antiekmarkt',
+    'event_subtype.other': 'Anders',
     'event_subtype.other_placeholder': 'Omschrijf het evenement type...',
     // Detail-view
     'detail.addr_visible_in': '⏳ Volledig adres zichtbaar over',
@@ -5256,11 +5280,11 @@ var I18N = {
     // Type pills + list view
     'types.heading': 'TYPES',
     'list.sort_by': 'Sort by:',
-    'list.sort.newest': '🆕 Newest first',
-    'list.sort.date_asc': '📅 By date',
-    'list.sort.date_desc': '📅 Latest first',
-    'list.sort.nearby': '📍 Nearest',
-    'list.sort.interest': '🔥 Most popular',
+    'list.sort.newest': 'Newest first',
+    'list.sort.date_asc': 'By date',
+    'list.sort.date_desc': 'Latest first',
+    'list.sort.nearby': 'Nearest',
+    'list.sort.interest': 'Most popular',
     // Cookie-notice
     'cookie.title': '🍪 No trackers on YardiGo',
     'cookie.body': 'YardiGo uses <strong>no</strong> analytics or advertising cookies. Only functional storage to keep you logged in and remember your preferences. More in our <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">privacy statement</a>.',
@@ -5391,14 +5415,14 @@ var I18N = {
     'publish.photos.privacy_tip': '<strong style="color:#C5612A">⚠️ Privacy tip:</strong> make sure no faces of bystanders, license plates, personal documents or other identifiable details are in your photos. Your photos will be publicly visible.',
     // Event subtypes
     'event_subtype.placeholder': 'Pick a type',
-    'event_subtype.vlooienmarkt': '🎪 Flea market',
-    'event_subtype.rommelmarkt': '🛒 Jumble sale',
-    'event_subtype.kofferbak': '🚗 Car boot sale',
-    'event_subtype.braderie': '🏪 Street fair',
-    'event_subtype.kerstmarkt': '🎄 Christmas market',
-    'event_subtype.boekenmarkt': '📚 Book market',
-    'event_subtype.antiekmarkt': '🏺 Antique market',
-    'event_subtype.other': '✏️ Other',
+    'event_subtype.vlooienmarkt': 'Flea market',
+    'event_subtype.rommelmarkt': 'Jumble sale',
+    'event_subtype.kofferbak': 'Car boot sale',
+    'event_subtype.braderie': 'Street fair',
+    'event_subtype.kerstmarkt': 'Christmas market',
+    'event_subtype.boekenmarkt': 'Book market',
+    'event_subtype.antiekmarkt': 'Antique market',
+    'event_subtype.other': 'Other',
     'event_subtype.other_placeholder': 'Describe the event type...',
     // Detail view
     'detail.addr_visible_in': '⏳ Full address visible in',
@@ -5904,11 +5928,11 @@ var I18N = {
     // Type pills + vue liste
     'types.heading': 'TYPES',
     'list.sort_by': 'Trier par :',
-    'list.sort.newest': '🆕 Plus récents',
-    'list.sort.date_asc': '📅 Par date',
-    'list.sort.date_desc': '📅 Plus tard',
-    'list.sort.nearby': '📍 Plus proches',
-    'list.sort.interest': '🔥 Plus populaires',
+    'list.sort.newest': 'Plus récents',
+    'list.sort.date_asc': 'Par date',
+    'list.sort.date_desc': 'Plus tard',
+    'list.sort.nearby': 'Plus proches',
+    'list.sort.interest': 'Plus populaires',
     // Cookie-notice
     'cookie.title': '🍪 Aucun traceur sur YardiGo',
     'cookie.body': 'YardiGo n\'utilise <strong>aucun</strong> cookie d\'analyse ou de publicité. Uniquement du stockage fonctionnel pour vous garder connecté et mémoriser vos préférences. Plus d\'infos dans notre <a href="/privacy" target="_blank" rel="noopener" style="color:#F2A830;text-decoration:underline">politique de confidentialité</a>.',
@@ -6039,14 +6063,14 @@ var I18N = {
     'publish.photos.privacy_tip': "<strong style=\"color:#C5612A\">⚠️ Conseil vie privée :</strong> assurez-vous qu'aucun visage de passants, plaque d'immatriculation, document personnel ou autre détail identifiable ne figure sur vos photos. Vos photos seront publiquement visibles.",
     // Sous-types d'événement
     'event_subtype.placeholder': 'Choisissez un type',
-    'event_subtype.vlooienmarkt': '🎪 Marché aux puces',
-    'event_subtype.rommelmarkt': '🛒 Brocante',
-    'event_subtype.kofferbak': '🚗 Vente de coffre',
-    'event_subtype.braderie': '🏪 Braderie',
-    'event_subtype.kerstmarkt': '🎄 Marché de Noël',
-    'event_subtype.boekenmarkt': '📚 Marché du livre',
-    'event_subtype.antiekmarkt': "🏺 Marché d'antiquités",
-    'event_subtype.other': '✏️ Autre',
+    'event_subtype.vlooienmarkt': 'Marché aux puces',
+    'event_subtype.rommelmarkt': 'Brocante',
+    'event_subtype.kofferbak': 'Vente de coffre',
+    'event_subtype.braderie': 'Braderie',
+    'event_subtype.kerstmarkt': 'Marché de Noël',
+    'event_subtype.boekenmarkt': 'Marché du livre',
+    'event_subtype.antiekmarkt': "Marché d'antiquités",
+    'event_subtype.other': 'Autre',
     'event_subtype.other_placeholder': "Décrivez le type d'événement...",
     // Vue détail
     'detail.addr_visible_in': "⏳ Adresse complète visible dans",
@@ -6543,11 +6567,11 @@ var I18N = {
     'publish.btn_publish': 'Veröffentlichen 🎉',
     'types.heading': 'TYPEN',
     'list.sort_by': 'Sortieren nach:',
-    'list.sort.newest': '🆕 Neueste zuerst',
-    'list.sort.date_asc': '📅 Nach Datum',
-    'list.sort.date_desc': '📅 Neueste zuerst',
-    'list.sort.nearby': '📍 Am nächsten',
-    'list.sort.interest': '🔥 Am beliebtesten',
+    'list.sort.newest': 'Neueste zuerst',
+    'list.sort.date_asc': 'Nach Datum',
+    'list.sort.date_desc': 'Neueste zuerst',
+    'list.sort.nearby': 'Am nächsten',
+    'list.sort.interest': 'Am beliebtesten',
     'toast.welcome_guest': 'Du nutzt YardiGo als Gast 👁️',
     'toast.logged_out': 'Du wurdest abgemeldet',
     'lang.switched_nl': '🇳🇱 Nederlands',
@@ -6565,16 +6589,16 @@ var I18N = {
     'detail.floorplan.guest_sub': 'Erstelle ein kostenloses Konto für Adressdaten und ggf. Lageplan',
     'detail.floorplan.guest_title': 'Lageplan & Adressdaten',
     'detail.going': 'sind dabei',
-    'event_subtype.antiekmarkt': '🏺 Antikmarkt',
-    'event_subtype.boekenmarkt': '📚 Büchermarkt',
-    'event_subtype.braderie': '🏪 Krammarkt',
-    'event_subtype.kerstmarkt': '🎄 Weihnachtsmarkt',
-    'event_subtype.kofferbak': '🚗 Kofferraumflohmarkt',
+    'event_subtype.antiekmarkt': 'Antikmarkt',
+    'event_subtype.boekenmarkt': 'Büchermarkt',
+    'event_subtype.braderie': 'Krammarkt',
+    'event_subtype.kerstmarkt': 'Weihnachtsmarkt',
+    'event_subtype.kofferbak': 'Kofferraumflohmarkt',
     'event_subtype.other_placeholder': 'Beschreibe den Veranstaltungstyp...',
-    'event_subtype.other': '✏️ Sonstiges',
+    'event_subtype.other': 'Sonstiges',
     'event_subtype.placeholder': 'Typ wählen',
-    'event_subtype.rommelmarkt': '🛒 Flohmarkt',
-    'event_subtype.vlooienmarkt': '🎪 Trödelmarkt',
+    'event_subtype.rommelmarkt': 'Flohmarkt',
+    'event_subtype.vlooienmarkt': 'Trödelmarkt',
     'filter.clear': '✕ Filter löschen',
     'filter.date_label': '📅 Datum',
     'filter.date.all_short': 'Alle',
@@ -7012,6 +7036,167 @@ function applyCountryToPlaceholders() {
     _ygI18nBoot();
   }
 })();
+
+// ══════════════════════════════════════════════════
+// YardiGo brand icons
+// ══════════════════════════════════════════════════
+// De app bewaart bestaande categorie-tags met emoji-prefix voor
+// datacompatibiliteit. In de UI vervangen we die tekens centraal door eigen
+// compacte SVG-iconen in de YardiGo-kleuren.
+const YG_ICON_SYMBOLS = {
+  pin: '<path class="yg-i-terra" d="M12 2.2c-4.2 0-7.5 3.3-7.5 7.4 0 5.2 7.5 12.2 7.5 12.2s7.5-7 7.5-12.2c0-4.1-3.3-7.4-7.5-7.4Z"/><circle class="yg-i-birch" cx="12" cy="9.5" r="3.6"/><path class="yg-i-forest" d="M7.3 21.1c1.2.6 2.8.9 4.7.9s3.5-.3 4.7-.9c-.7 1.1-2.4 1.9-4.7 1.9s-4-.8-4.7-1.9Z"/>',
+  map: '<path class="yg-i-forest" d="M3 5.2 8.6 3l6.8 2.4L21 3v15.8L15.4 21l-6.8-2.4L3 21V5.2Z"/><path class="yg-i-amber" d="M8.6 3v15.6l6.8 2.4V5.4L8.6 3Z"/><path class="yg-i-birch" d="M5.2 7.3 8 6.2v9.9l-2.8 1.1V7.3Zm12.8-.4 1-.4v9.9l-1 .4V6.9Z"/>',
+  route: '<path class="yg-i-forest" d="M6.3 5.2a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Zm11.4 7.2a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z"/><path class="yg-i-stroke" d="M7.8 11.2c2.8 3.3 5.6-2.4 8.2.9" style="color:var(--terra)"/><path class="yg-i-amber" d="M6.3 3.4 8 6H4.6l1.7-2.6Zm11.4 7.2 1.7 2.6H16l1.7-2.6Z"/>',
+  bell: '<path class="yg-i-amber" d="M12 3.2a5 5 0 0 0-5 5v3.1c0 1.1-.4 2.1-1.2 2.9L4.7 15.3v1.4h14.6v-1.4l-1.1-1.1a4.1 4.1 0 0 1-1.2-2.9V8.2a5 5 0 0 0-5-5Z"/><path class="yg-i-terra-dark" d="M9.4 18.2h5.2a2.7 2.7 0 0 1-5.2 0Z"/>',
+  lock: '<rect class="yg-i-forest" x="5" y="10" width="14" height="10" rx="2.4"/><path class="yg-i-white-stroke" d="M8.5 10V7.7a3.5 3.5 0 0 1 7 0V10"/><circle class="yg-i-amber" cx="12" cy="15" r="1.6"/>',
+  tag: '<path class="yg-i-terra" d="M4 5.5A1.5 1.5 0 0 1 5.5 4h7.2l7.1 7.1a2 2 0 0 1 0 2.8l-5.9 5.9a2 2 0 0 1-2.8 0L4 12.7V5.5Z"/><circle class="yg-i-birch" cx="8" cy="8" r="1.7"/><path class="yg-i-white-stroke" d="M10.5 13.4h5.1"/>',
+  house: '<path class="yg-i-amber" d="M4 11 12 4l8 7v8.7a1.3 1.3 0 0 1-1.3 1.3H5.3A1.3 1.3 0 0 1 4 19.7V11Z"/><path class="yg-i-forest" d="M9.2 21v-6.2h5.6V21H9.2Z"/><path class="yg-i-terra" d="m3 11 9-8 9 8-1.5 1.7L12 6 4.5 12.7 3 11Z"/>',
+  homes: '<path class="yg-i-terra" d="M3.5 12 9 7.3l5.5 4.7v7H3.5v-7Z"/><path class="yg-i-amber" d="M10 9.8 15.5 5l5 4.2V19h-6v-7L10 9.8Z"/><path class="yg-i-forest" d="M7.3 19v-4.5h3V19h-3Z"/>',
+  market: '<path class="yg-i-forest" d="M4 9h16l-1.3-4.5H5.3L4 9Z"/><path class="yg-i-terra" d="M5 9h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Z"/><path class="yg-i-amber" d="M8 9h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Z"/><rect class="yg-i-forest" x="5.5" y="13" width="13" height="7.5" rx="1.5"/><path class="yg-i-amber" d="M8.2 16h7.6v4.5H8.2V16Z"/><path class="yg-i-white-stroke" d="M8 14.9h8M10.7 17.4h2.6"/>',
+  clothes: '<path class="yg-i-terra" d="M9 4h6l2.3 2.3 3 1.1-2 4-2.2-.9V20H7.9v-9.5l-2.2.9-2-4 3-1.1L9 4Z"/><path class="yg-i-birch" d="M9 4a3 3 0 0 0 6 0h-2a1 1 0 0 1-2 0H9Z"/>',
+  shoe: '<path class="yg-i-forest" d="M4 15.3c2.8-.2 5.6-2 7.1-5.6l2.6 1.2c1.2.6 2.3 1.7 3.5 2.2l2 .9c.7.3 1.1 1 1.1 1.8v1.5H4v-2Z"/><path class="yg-i-amber" d="M4 17.2h16.3v1.2c0 .9-.7 1.6-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.4v-1.2Z"/><path class="yg-i-white-stroke" d="M11.1 12.2 9.9 14m3.4-.8-1.1 1.6"/>',
+  bag: '<rect class="yg-i-terra" x="5" y="8" width="14" height="12" rx="2.2"/><path class="yg-i-white-stroke" d="M8.5 8V7a3.5 3.5 0 0 1 7 0v1"/><circle class="yg-i-amber" cx="12" cy="14.5" r="2.1"/>',
+  jewelry: '<path class="yg-i-amber" d="m12 3 6.2 6.6L12 21 5.8 9.6 12 3Z"/><path class="yg-i-birch" d="M8.4 9.6 12 5.4l3.6 4.2H8.4Z"/><path class="yg-i-terra-dark" d="M8.4 9.6h7.2L12 21 8.4 9.6Z" opacity=".45"/>',
+  vintage: '<path class="yg-i-terra" d="M9 5h6l1.4 4.4c1.7 1.2 2.6 3 2.6 5.1 0 3.9-3.1 6.5-7 6.5s-7-2.6-7-6.5c0-2.1.9-3.9 2.6-5.1L9 5Z"/><path class="yg-i-birch" d="M9.4 7h5.2l.7 2.2H8.7L9.4 7Z"/><path class="yg-i-white-stroke" d="M9 14h6m-4 3h2"/>',
+  radio: '<rect class="yg-i-forest" x="4" y="8" width="16" height="11" rx="2.2"/><path class="yg-i-stroke" d="m7 7 8-4" style="color:var(--terra)"/><circle class="yg-i-amber" cx="9" cy="13.5" r="2.6"/><path class="yg-i-white-stroke" d="M14 12h3m-3 3h3"/>',
+  furniture: '<path class="yg-i-terra" d="M6.5 10h11A2.5 2.5 0 0 1 20 12.5V17H4v-4.5A2.5 2.5 0 0 1 6.5 10Z"/><path class="yg-i-amber" d="M5 7h14v5H5V7Z"/><path class="yg-i-bark" d="M6 17h2v3H6v-3Zm10 0h2v3h-2v-3Z"/>',
+  pan: '<path class="yg-i-forest" d="M5 11h10.5v4.2A4.8 4.8 0 0 1 10.7 20H9.8A4.8 4.8 0 0 1 5 15.2V11Z"/><path class="yg-i-stroke" d="M15.5 12h5M8 7c.9-.8.9-1.8 0-2.7m4 2.7c.9-.8.9-1.8 0-2.7" style="color:var(--terra)"/>',
+  toy: '<rect class="yg-i-amber" x="5" y="9" width="14" height="10" rx="2.5"/><circle class="yg-i-birch" cx="9" cy="14" r="1.5"/><circle class="yg-i-birch" cx="15" cy="14" r="1.5"/><path class="yg-i-stroke" d="M8 9 6.5 6M16 9l1.5-3" style="color:var(--forest)"/>',
+  baby: '<circle class="yg-i-amber" cx="12" cy="11" r="6.2"/><path class="yg-i-terra" d="M8.7 7.7c.7-2 2.2-3.2 4.4-3.4-.4 1.9-1.8 3.2-4.4 3.4Z"/><circle class="yg-i-bark" cx="9.8" cy="11" r=".8"/><circle class="yg-i-bark" cx="14.2" cy="11" r=".8"/><path class="yg-i-stroke" d="M10 14.3c1.2.8 2.8.8 4 0" style="color:var(--bark)"/>',
+  phone: '<rect class="yg-i-forest" x="7" y="3" width="10" height="18" rx="2.2"/><rect class="yg-i-birch" x="8.5" y="5.8" width="7" height="11.4" rx="1"/><circle class="yg-i-amber" cx="12" cy="19" r="1"/>',
+  game: '<path class="yg-i-terra" d="M7.8 10h8.4a5 5 0 0 1 4.8 3.6l.6 2.1a3 3 0 0 1-5 2.9L14.8 17H9.2l-1.8 1.6a3 3 0 0 1-5-2.9l.6-2.1A5 5 0 0 1 7.8 10Z"/><path class="yg-i-white-stroke" d="M7 14h4m-2-2v4"/><circle class="yg-i-birch" cx="16.2" cy="13.4" r="1"/><circle class="yg-i-birch" cx="18.2" cy="15.4" r="1"/>',
+  books: '<path class="yg-i-terra" d="M5 5h4v15H5V5Zm5 2h4v13h-4V7Zm5-2h4v15h-4V5Z"/><path class="yg-i-birch" d="M6 8h2v1H6V8Zm5 3h2v1h-2v-1Zm5-3h2v1h-2V8Z"/>',
+  music: '<path class="yg-i-forest" d="M9 5v10.2A3 3 0 1 1 7 12.4V6.5L18 4v9.2a3 3 0 1 1-2-2.8V7.1L9 8.6V5Z"/><path class="yg-i-amber" d="M9 5 18 3.2v3.2L9 8.2V5Z"/>',
+  sport: '<circle class="yg-i-amber" cx="12" cy="12" r="8.5"/><path class="yg-i-stroke" d="M5.4 10.2c3.5 1.4 7.1 4.6 8.8 8.9M18.6 13.8c-3.5-1.4-7.1-4.6-8.8-8.9M6.2 15.7c4.1-2.2 8-2.5 11.7-.8" style="color:var(--bark)"/>',
+  bike: '<circle class="yg-i-birch" cx="7" cy="16" r="4.1"/><circle class="yg-i-birch" cx="17" cy="16" r="4.1"/><path class="yg-i-stroke" d="M7 16h4l3-5 3 5m-6 0-2.5-5H6.5m7.5 0h2.5" style="color:var(--forest)"/>',
+  leaf: '<path class="yg-i-forest" d="M20 4C11 4.5 5 8.8 5 16.2c0 2.6 1.9 4.8 4.6 4.8C16.3 21 20.1 13.4 20 4Z"/><path class="yg-i-white-stroke" d="M7.8 18.5C10 13 13.8 9.6 18 7.2"/>',
+  tools: '<path class="yg-i-terra" d="M6.4 4.2 10 7.8 7.8 10 4.2 6.4a4.4 4.4 0 0 0 5.9 5.9l7.1 7.1a2 2 0 0 0 2.8-2.8l-7.1-7.1a4.4 4.4 0 0 0-6.5-5.3Z"/><path class="yg-i-forest" d="m14.5 5 2.2-2.2 1.8 1.8L16.3 7l3.2 3.2-1.7 1.7-5-5L14.5 5Z"/>',
+  art: '<path class="yg-i-amber" d="M12 3.5a8.5 8.5 0 0 0-8.5 8.4c0 4.5 3.4 8.1 7.7 8.5 1.3.1 2-.7 1.5-1.8-.5-1.2.3-2.1 1.7-2.1H16a4.5 4.5 0 0 0 0-9h-1.2A3.6 3.6 0 0 1 12 3.5Z"/><circle class="yg-i-terra" cx="8" cy="10" r="1.2"/><circle class="yg-i-forest" cx="11.2" cy="8.2" r="1.2"/><circle class="yg-i-birch" cx="13.8" cy="11" r="1.2"/>',
+  scope: '<path class="yg-i-forest" d="M8.5 5h7.8l2 4.6-7.1 3.1L8.5 5Z"/><path class="yg-i-amber" d="m6.4 12 7.9-3.4 1.4 3.2-7.9 3.4L6.4 12Z"/><path class="yg-i-stroke" d="M11 14.2 8 21m3-6.8 4 6.8M7 21h10" style="color:var(--bark)"/>',
+  box: '<path class="yg-i-amber" d="M4 8.5 12 4l8 4.5v9L12 22l-8-4.5v-9Z"/><path class="yg-i-terra" d="m4 8.5 8 4.5 8-4.5-8-4.5-8 4.5Z"/><path class="yg-i-stroke" d="M12 13v8.5" style="color:var(--bark)"/>',
+  calendar: '<rect class="yg-i-birch" x="4" y="5.5" width="16" height="15" rx="2.2"/><path class="yg-i-terra" d="M4 8h16V6.8c0-.7-.6-1.3-1.3-1.3H5.3C4.6 5.5 4 6.1 4 6.8V8Z"/><path class="yg-i-stroke" d="M8 3.7v3.1M16 3.7v3.1" style="color:var(--forest)"/><rect class="yg-i-amber" x="7" y="11" width="3" height="3" rx=".6"/><rect class="yg-i-forest" x="12" y="11" width="5" height="3" rx=".6"/>',
+  clock: '<circle class="yg-i-birch" cx="12" cy="12" r="8.5"/><path class="yg-i-stroke" d="M12 7.5V12l3.5 2" style="color:var(--forest)"/><path class="yg-i-terra" d="M12 1.8 14 4h-4l2-2.2Z"/>',
+  list: '<rect class="yg-i-birch" x="5" y="4" width="14" height="16" rx="2"/><path class="yg-i-stroke" d="M8 8h8M8 12h8M8 16h5" style="color:var(--forest)"/><circle class="yg-i-terra" cx="6.8" cy="8" r=".8"/><circle class="yg-i-terra" cx="6.8" cy="12" r=".8"/><circle class="yg-i-terra" cx="6.8" cy="16" r=".8"/>',
+  star: '<path class="yg-i-amber" d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.9L12 3Z"/>',
+  user: '<circle class="yg-i-forest" cx="12" cy="8.2" r="4"/><path class="yg-i-amber" d="M4.8 20.6c.8-4 3.4-6.2 7.2-6.2s6.4 2.2 7.2 6.2H4.8Z"/>',
+  settings: '<path class="yg-i-forest" d="M13.8 3.2 14.6 6c.5.2.9.4 1.3.7l2.7-.8 1.8 3.1-2 2c.1.5.1 1 0 1.5l2 2-1.8 3.1-2.7-.8c-.4.3-.8.5-1.3.7l-.8 2.8h-3.6l-.8-2.8c-.5-.2-.9-.4-1.3-.7l-2.7.8-1.8-3.1 2-2a5 5 0 0 1 0-1.5l-2-2 1.8-3.1 2.7.8c.4-.3.8-.5 1.3-.7l.8-2.8h3.6Z"/><circle class="yg-i-birch" cx="12" cy="12" r="3"/>',
+  search: '<circle class="yg-i-birch" cx="10.5" cy="10.5" r="6.5"/><path class="yg-i-stroke" d="m15.4 15.4 4.1 4.1" style="color:var(--terra)"/><path class="yg-i-stroke" d="M8 10.5h5" style="color:var(--forest)"/>',
+  camera: '<path class="yg-i-forest" d="M5 7h3l1.3-2h5.4L16 7h3a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle class="yg-i-birch" cx="12" cy="13.4" r="4"/><circle class="yg-i-terra" cx="18" cy="9.8" r="1"/>',
+  chat: '<path class="yg-i-forest" d="M4 5h16v10.5a2 2 0 0 1-2 2h-6.5L7 21v-3.5H6a2 2 0 0 1-2-2V5Z"/><path class="yg-i-white-stroke" d="M8 10h8M8 13h5"/>',
+  mail: '<rect class="yg-i-birch" x="4" y="6" width="16" height="12" rx="2"/><path class="yg-i-stroke" d="m5 8 7 5 7-5" style="color:var(--forest)"/>',
+  key: '<circle class="yg-i-amber" cx="8" cy="12" r="4"/><path class="yg-i-stroke" d="M11.5 12H21m-3 0v3m-3-3v2" style="color:var(--forest)"/><circle class="yg-i-birch" cx="8" cy="12" r="1.4"/>',
+  moon: '<path class="yg-i-forest" d="M18.7 15.3A7.6 7.6 0 0 1 8.7 5.3 8 8 0 1 0 18.7 15.3Z"/><path class="yg-i-amber" d="M16.5 4.5 17.3 6l1.7.3-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7L14 6.3l1.7-.3.8-1.5Z"/>',
+  sun: '<circle class="yg-i-amber" cx="12" cy="12" r="4.4"/><path class="yg-i-stroke" d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5" style="color:var(--terra)"/>',
+  target: '<circle class="yg-i-birch" cx="12" cy="12" r="8.5"/><circle class="yg-i-forest" cx="12" cy="12" r="5.2"/><circle class="yg-i-amber" cx="12" cy="12" r="2"/><path class="yg-i-stroke" d="m16 8 3-3" style="color:var(--terra)"/>',
+  ruler: '<path class="yg-i-amber" d="M4 16.5 16.5 4 20 7.5 7.5 20 4 16.5Z"/><path class="yg-i-stroke" d="M8.2 15.3 10 17m1-5.3 1.7 1.7m1-5.2 1.7 1.7" style="color:var(--bark)"/>',
+  mailbox: '<path class="yg-i-terra" d="M5 12a7 7 0 0 1 14 0v5H5v-5Z"/><path class="yg-i-birch" d="M5 12h7v5H5v-5Z"/><path class="yg-i-stroke" d="M12 17v4M9 21h6M13 8h4v3h-4V8Z" style="color:var(--forest)"/>',
+  megaphone: '<path class="yg-i-forest" d="M4 11h4l9-5v12l-9-5H4v-2Z"/><path class="yg-i-amber" d="M8 13 10 20H7.5L6 13h2Z"/><path class="yg-i-stroke" d="M19 9.5c.7.7 1 1.5 1 2.5s-.3 1.8-1 2.5" style="color:var(--terra)"/>',
+  chart: '<rect class="yg-i-birch" x="4" y="4" width="16" height="16" rx="2"/><path class="yg-i-terra" d="M7 16h2.6v2H7v-2Zm4.1-5h2.6v7h-2.6v-7Zm4.1-3h2.6v10h-2.6V8Z"/><path class="yg-i-stroke" d="M7 13.5 11 10l3 1.8 3.5-4" style="color:var(--forest)"/>',
+  shield: '<path class="yg-i-forest" d="M12 3 19 6v5.2c0 4.5-2.6 8-7 9.8-4.4-1.8-7-5.3-7-9.8V6l7-3Z"/><path class="yg-i-white-stroke" d="m8.6 12.2 2.1 2.1 4.7-5"/>',
+  trash: '<path class="yg-i-terra" d="M7 8h10l-.8 12H7.8L7 8Z"/><path class="yg-i-stroke" d="M5.5 8h13M9 8V5.5h6V8m-4 3v6m3-6v6" style="color:var(--bark)"/>',
+  warn: '<path class="yg-i-amber" d="M12 3 21 20H3L12 3Z"/><path class="yg-i-stroke" d="M12 8.5v5M12 17.2v.1" style="color:var(--bark)"/>',
+  sparkle: '<path class="yg-i-amber" d="M12 2.5 14.2 9l6.8 3-6.8 3L12 21.5 9.8 15 3 12l6.8-3L12 2.5Z"/><path class="yg-i-terra" d="m5.3 3 1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1 1-2.2Z"/>',
+  flag: '<circle class="yg-i-forest" cx="12" cy="12" r="10"/><text x="12" y="15" text-anchor="middle">NL</text>',
+  flagbe: '<circle class="yg-i-terra" cx="12" cy="12" r="10"/><text x="12" y="15" text-anchor="middle">BE</text>',
+  flagfr: '<circle class="yg-i-forest" cx="12" cy="12" r="10"/><text x="12" y="15" text-anchor="middle">FR</text>',
+  flaggb: '<circle class="yg-i-amber" cx="12" cy="12" r="10"/><text x="12" y="15" text-anchor="middle">EN</text>',
+  flagde: '<circle class="yg-i-bark" cx="12" cy="12" r="10"/><text x="12" y="15" text-anchor="middle">DE</text>',
+  print: '<path class="yg-i-forest" d="M7 4h10v5H7V4Zm-2 7h14a2 2 0 0 1 2 2v5h-4v3H7v-3H3v-5a2 2 0 0 1 2-2Z"/><path class="yg-i-birch" d="M8 15h8v5H8v-5Z"/><circle class="yg-i-amber" cx="18" cy="13.5" r="1"/>',
+  download: '<path class="yg-i-stroke" d="M12 4v10m0 0 4-4m-4 4-4-4" style="color:var(--forest)"/><path class="yg-i-terra" d="M5 17h14v3H5v-3Z"/>',
+  link: '<path class="yg-i-stroke" d="M9.5 8.5 11 7a4 4 0 0 1 5.7 5.7l-1.5 1.5M14.5 15.5 13 17a4 4 0 1 1-5.7-5.7l1.5-1.5M9.5 14.5l5-5" style="color:var(--forest)"/>',
+  flagreport: '<path class="yg-i-terra" d="M6 4h10l-1.5 3L16 10H6V4Z"/><path class="yg-i-stroke" d="M6 4v17" style="color:var(--bark)"/>',
+  cookie: '<circle class="yg-i-amber" cx="12" cy="12" r="8.5"/><circle class="yg-i-terra-dark" cx="9" cy="9" r="1.1"/><circle class="yg-i-terra-dark" cx="14" cy="8" r="1"/><circle class="yg-i-terra-dark" cx="15" cy="14" r="1.2"/><circle class="yg-i-terra-dark" cx="10" cy="16" r=".9"/>'
+};
+
+const YG_EMOJI_ICON_MAP = {
+  '🗺️':'map','🧭':'route','🔔':'bell','🔐':'lock','🔒':'lock','📍':'pin','🏷️':'tag',
+  '🏠':'house','🏘️':'homes','🎪':'market','🛒':'market','🏪':'market',
+  '👗':'clothes','👟':'shoe','👜':'bag','💍':'jewelry','🏺':'vintage','📻':'radio','🛋️':'furniture','🍳':'pan','🍽️':'pan',
+  '🧸':'toy','👶':'baby','📱':'phone','🎮':'game','📚':'books','🎵':'music','⚽':'sport','🚲':'bike','🌿':'leaf','🔧':'tools','🎨':'art','🔭':'scope','📦':'box',
+  '📅':'calendar','🕐':'clock','📋':'list','⭐':'star','☆':'star','👤':'user','👁️':'user','⚙️':'settings','🔍':'search','🚗':'route','📷':'camera','📸':'camera',
+  '😊':'user','👋':'sparkle','🎉':'sparkle','✨':'sparkle','💡':'sparkle','💬':'chat','📧':'mail','✉️':'mail','💌':'mail','🔑':'key','🚪':'user','🛍️':'bag',
+  '🌐':'map','🌙':'moon','☀️':'sun','🎯':'target','📏':'ruler','📬':'mailbox','📭':'mailbox','📢':'megaphone','📊':'chart','🛡️':'shield','🗑️':'trash','⚠️':'warn','🚨':'warn',
+  '🍎':'phone','📰':'megaphone','📝':'list','ℹ️':'tag','🛠️':'tools','🍪':'cookie','🖨️':'print','📥':'download','🔗':'link','🚩':'flagreport','🧪':'sparkle','💎':'jewelry','👑':'star',
+  '🆕':'sparkle','🔥':'sparkle','🎄':'leaf','💾':'download','📡':'pin','📮':'mailbox','📎':'link','⏳':'clock','⌛':'clock','⬇️':'download','📁':'box',
+  '🚶':'route','🚦':'route','🔓':'lock','📘':'books','🌍':'map','✅':'shield','❌':'warn','⏸':'clock','🚀':'sparkle','🙈':'user','🙏':'sparkle','👍':'sparkle','📌':'pin','🌅':'leaf','📨':'mail',
+  '🇳🇱':'flag','🇧🇪':'flagbe','🇫🇷':'flagfr','🇬🇧':'flaggb','🇩🇪':'flagde'
+};
+var YG_BRAND_ICON_REGEX = null;
+
+function ygBrandIcon(name, label) {
+  var svgBody = YG_ICON_SYMBOLS[name] || YG_ICON_SYMBOLS.tag;
+  var cls = 'yg-icon yg-icon--' + name + (/^flag/.test(name) ? ' yg-icon--flag' : '');
+  return '<span class="' + cls + '" role="img" aria-label="' + escapeHtml(label || name) + '"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + svgBody + '</svg></span>';
+}
+
+function ygStripEmojiPrefix(value) {
+  return String(value || '').replace(/^[\s\uFE0F]*(?:[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\uFE0F?)\s*/u, '').trim();
+}
+
+function ygTagLabel(tag) {
+  return ygStripEmojiPrefix(tag);
+}
+
+function ygTagIcon(tag) {
+  var str = String(tag || '');
+  var key = Object.keys(YG_EMOJI_ICON_MAP).find(function(k) { return str.indexOf(k) === 0; });
+  return key ? ygBrandIcon(YG_EMOJI_ICON_MAP[key], ygTagLabel(str) || key) : ygBrandIcon('tag', ygTagLabel(str) || 'Categorie');
+}
+
+function ygApplyBrandIcons(root) {
+  if (!root || !YG_EMOJI_ICON_MAP) return;
+  if (!YG_BRAND_ICON_REGEX) {
+    var keys = Object.keys(YG_EMOJI_ICON_MAP).sort(function(a, b) { return b.length - a.length; });
+    var pattern = keys.map(function(k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+    YG_BRAND_ICON_REGEX = new RegExp(pattern, 'gu');
+  }
+  var re = YG_BRAND_ICON_REGEX;
+  function processText(node) {
+    var parent = node.parentElement;
+    if (parent && parent.closest('script,style,textarea,input,select,option,svg,canvas,code,pre,.yg-icon')) return;
+    var value = node.nodeValue;
+    if (!value || !re.test(value)) { re.lastIndex = 0; return; }
+    re.lastIndex = 0;
+    var frag = document.createDocumentFragment();
+    var last = 0, match;
+    while ((match = re.exec(value))) {
+      if (match.index > last) frag.appendChild(document.createTextNode(value.slice(last, match.index)));
+      var emoji = match[0];
+      var tpl = document.createElement('template');
+      tpl.innerHTML = ygBrandIcon(YG_EMOJI_ICON_MAP[emoji], emoji);
+      frag.appendChild(tpl.content.firstChild);
+      last = re.lastIndex;
+    }
+    if (last < value.length) frag.appendChild(document.createTextNode(value.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  }
+  function walk(node) {
+    if (!node) return;
+    if (node.nodeType === 3) { processText(node); return; }
+    if (node.nodeType !== 1) return;
+    var tag = node.tagName;
+    if (/^(SCRIPT|STYLE|TEXTAREA|INPUT|SELECT|OPTION|SVG|CANVAS|CODE|PRE)$/i.test(tag)) return;
+    if (node.classList && node.classList.contains('yg-icon')) return;
+    Array.from(node.childNodes).forEach(walk);
+  }
+  walk(root);
+}
+
+function ygStartBrandIconObserver() {
+  ygApplyBrandIcons(document.body);
+  var mo = new MutationObserver(function(records) {
+    records.forEach(function(rec) {
+      rec.addedNodes.forEach(function(node) { ygApplyBrandIcons(node); });
+    });
+  });
+  mo.observe(document.body, { childList: true, subtree: true });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', ygStartBrandIconObserver);
+} else {
+  ygStartBrandIconObserver();
+}
 
 // ══════════════════════════════════════════════════
 // DATA
@@ -10709,7 +10894,7 @@ function updateTagsForType(t) {
   addTagsSelected.clear();
   if (label) label.textContent = TYPE_TAGS_LABEL[t] || 'CATEGORIEËN';
   grid.innerHTML = (TYPE_TAGS[t] || TYPE_TAGS.particulier).map(function(tag) {
-    return '<div class="atag" data-tag="' + tag + '" onclick="toggleAddTag(this)">' + tag + '</div>';
+    return '<div class="atag" data-tag="' + escapeHtml(tag) + '" onclick="toggleAddTag(this)">' + ygTagIcon(tag) + ' ' + escapeHtml(ygTagLabel(tag)) + '</div>';
   }).join('');
 }
 
@@ -14716,16 +14901,22 @@ document.addEventListener('DOMContentLoaded', async function() {
   setTimeout(_hideAppSplash, 200);
 
   // ─── Deep-link vanaf prerendered /v/{id} pagina ──
-  // Het build-time gegenereerde stub-bestand redirect naar /?v=ID.
-  // Wij vangen dat hier op en openen het juiste detail-overlay, en
-  // wissen de query daarna uit de URL met history.replaceState zodat
-  // hij weer schoon is.
+  // Bron 1: prerendered stub-bestand redirect naar /?v=ID.
+  // Bron 2: sessionStorage 'yg-open-sale' (zelfde stub).
+  // Bron 3: directe /v/<id> URL (Vercel rewrite naar /index.html voor
+  //         listings die tussen twee builds zijn aangemaakt en dus geen
+  //         eigen prerendered pagina hebben).
   (function handleSaleDeepLink() {
     var params = new URLSearchParams(location.search);
     var vid = params.get('v');
     // Fallback: sessionStorage-flag (gezet door /v/{id}/index.html)
     if (!vid) {
       try { vid = sessionStorage.getItem('yg-open-sale'); if (vid) sessionStorage.removeItem('yg-open-sale'); } catch(e) {}
+    }
+    // Fallback: /v/<id> in pathname (Vercel-rewrite naar index.html)
+    if (!vid) {
+      var m = (location.pathname || '').match(/^\/v\/([^\/?#]+)\/?$/);
+      if (m) vid = decodeURIComponent(m[1]);
     }
     if (!vid) return;
     function tryOpen(retries) {
