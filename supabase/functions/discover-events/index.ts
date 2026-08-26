@@ -1,15 +1,23 @@
 // YardiGo – discover-events Edge Function
 //
-// Speurt online naar rommelroutes/garageverkopen/rommelmarkten/
-// buurtverkopen via Brave Search, laat Anthropic (Claude Haiku 4.5)
-// beoordelen of de bron origineel + relevant is, en importeert events
-// dedupe-safe naar `pending_events`. Structurele agenda-domeinen
-// worden als 'voorgesteld' in `scrape_sources` gezet.
+// Twee fases:
+//   Fase 1 — vaste bronnen: elke scrape_sources met actief=true wordt
+//            opnieuw uitgelezen. Dit houdt gemeente- en verenigings-
+//            agenda's doorlopend bij i.p.v. eenmalig bij ontdekking.
+//   Fase 2 — zoeklaag: Brave Search op de actieve discovery_queries,
+//            langst-niet-gedraaide eerst zodat het URL-budget roteert.
+//
+// Anthropic (Claude Haiku 4.5) leest elke pagina en extraheert events.
+// is_originele_bron wordt vastgelegd maar is GEEN poort meer: ook
+// aggregator-agenda's leveren events aan, want alles gaat sowieso naar
+// pending_events voor handmatige review. Alleen marktplaats-achtige
+// sites leveren niets. Structurele agenda-domeinen worden als
+// 'voorgesteld' in `scrape_sources` gezet.
 //
 // Aanroep (POST, JSON):
 //   {}                          — normale run
 //   { "dryRun": true }          — geen writes, alleen samenvatting
-//   { "max_urls": 25 }          — override standaard-limiet
+//   { "max_urls": 30 }          — override standaard-limiet
 //
 // Auth:
 //   - Cron: header x-cron-secret = app_config.cron_secret
@@ -30,13 +38,16 @@ const CORS_HEADERS = {
 
 const ANTHROPIC_MODEL      = 'claude-haiku-4-5';
 const BRAVE_ENDPOINT       = 'https://api.search.brave.com/res/v1/web/search';
-const DEFAULT_MAX_URLS     = 25;
+const DEFAULT_MAX_URLS     = 30;
 const DEFAULT_MAX_TEXT     = 8000;
 const FETCH_INTERVAL_MS    = 1000;   // 1 fetch per sec
-const BRAVE_RESULTS        = 10;
+const BRAVE_RESULTS        = 20;
 const PAGE_FETCH_TIMEOUT   = 12000;  // 12s per pagina
 const ANTHROPIC_TIMEOUT    = 30000;
 const DUPE_RADIUS_M        = 500;
+// Edge functions worden hard afgekapt. Stop zelf ruim daarvoor, zodat de run
+// zijn summary nog kan wegschrijven i.p.v. met finished_at=null te blijven staan.
+const RUN_BUDGET_MS        = 110000;
 
 // ── Interfaces ─────────────────────────────────────────────────────
 interface DiscoveryQuery { id: number; query_tekst: string; land: string; laatste_run: string | null; }
@@ -214,7 +225,8 @@ function buildSystemPrompt(today: string, country: string): string {
     'Regels:',
     '- adres = alleen bij duidelijk publieke locatie (sporthal, plein, kerk, markthal, schoolplein, gemeentekantoor). Bij privéadres van particulier: adres=null.',
     '- Neem GEEN events over waarvan de datum al voorbij is (< vandaag).',
-    '- Bij aggregators (rommelmarkten.nl, meukisleuk.nl, marktplaats.nl, Facebook, 2dehands, leboncoin) is is_originele_bron=false, events=[] en toelichting benoemt dat het een aggregator is.',
+    '- Verzamelsites/agenda-aggregators (bv. meukisleuk.nl, rommelmarkten.be, brocabrac.fr, vide-greniers.org): zet is_originele_bron=false, maar EXTRAHEER de events WEL. Ze gaan naar handmatige review, dus liever aanleveren dan weggooien.',
+    '- Alleen bij marktplaats-achtige sites (marktplaats.nl, 2dehands.be, leboncoin.fr, ebay) geldt: is_originele_bron=false EN events=[].',
     '- Verzin niets. Onduidelijk = null.',
   ].join('\n');
 }
@@ -279,6 +291,66 @@ function normalizeEvent(e: EventParsed): {
   };
 }
 
+// ── Herbruikbaar: pagina ophalen + events importeren ──────────────
+async function fetchPageText(url: string): Promise<string> {
+  const pRes = await fetchWithTimeout(url, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; YardiGoDiscover/1.0)' },
+  }, PAGE_FETCH_TIMEOUT);
+  if (!pRes.ok) throw new Error('HTTP ' + pRes.status);
+  return stripHtml(await pRes.text(), DEFAULT_MAX_TEXT);
+}
+
+// Normaliseert, geocodeert, dedupet en schrijft naar pending_events.
+// Gedeeld door de zoeklaag en de vaste-bronnen-laag.
+async function importEvents(
+  sb: any, events: EventParsed[], url: string, domain: string,
+  land: string, viaLabel: string, summary: any,
+): Promise<void> {
+  for (const raw of events) {
+    summary.events_found++;
+    const ne = normalizeEvent(raw);
+    if (!ne) continue;
+
+    const geo = await geocode(ne.adres, ne.plaats, land);
+    const lat = geo?.lat ?? null;
+    const lng = geo?.lng ?? null;
+
+    const hashRes = await sb.rpc('discovery_content_hash', {
+      p_title: ne.titel, p_date: ne.datum, p_city: ne.plaats,
+    });
+    if (hashRes.error) { summary.errors.push('hash_rpc: ' + hashRes.error.message); continue; }
+    const contentHash = hashRes.data as string;
+
+    const sim = await sb.rpc('discovery_find_similar', {
+      p_hash: contentHash, p_lat: lat, p_lng: lng,
+      p_date: ne.datum, p_radius_m: DUPE_RADIUS_M,
+    });
+    if (sim.error) { summary.errors.push('dupe_rpc: ' + sim.error.message); continue; }
+    if (sim.data) { summary.events_deduped++; continue; }
+
+    const insEv = await sb.from('pending_events').insert({
+      title:                ne.titel,
+      description:          ne.beschrijving,
+      event_subtype:        ne.event_subtype,
+      date_start:           ne.datum,
+      time_start:           ne.starttijd,
+      time_end:             ne.eindtijd,
+      city:                 ne.plaats,
+      address:              ne.adres,
+      latitude:             lat,
+      longitude:            lng,
+      source_url:           url,
+      source_domain:        domain,
+      source_label:         (raw.bron_naam || '').slice(0, 200) || null,
+      discovered_via_query: viaLabel,
+      content_hash:         contentHash,
+      raw_ai_response:      raw as any,
+    });
+    if (insEv.error) { summary.errors.push('insert_pending: ' + insEv.error.message); continue; }
+    summary.events_inserted++;
+  }
+}
+
 // ── Auth helper ────────────────────────────────────────────────────
 async function isAuthorized(req: Request, adminClient: any): Promise<{ ok: true; via: 'cron' | 'admin' } | { ok: false; status: number; error: string }> {
   const cronHdr = req.headers.get('x-cron-secret') ?? '';
@@ -327,20 +399,26 @@ serve(async (req: Request) => {
   const runInsert = await sb.from('discovery_runs').insert({ started_at: new Date().toISOString() }).select('id').single();
   const runId = runInsert.data?.id;
 
+  const deadline = Date.now() + RUN_BUDGET_MS;
+  const tijdOp = () => Date.now() > deadline;
+
   const summary: any = {
     queries_run: 0, brave_results: 0, urls_new: 0, urls_skipped_blocklist: 0,
     urls_skipped_known_source: 0, urls_skipped_seen: 0, urls_beoordeeld: 0, urls_afgewezen: 0,
     events_found: 0, events_deduped: 0, events_inserted: 0,
-    sources_voorgesteld: 0, errors: [] as string[],
+    sources_voorgesteld: 0, sources_gecrawld: 0, sources_events: 0,
+    budget_op: false,
+    errors: [] as string[],
     dryRun, via: auth.via,
   };
 
   try {
     // Actieve queries + blocklist + bekende bronnen ophalen
     const [qRes, blRes, srcRes] = await Promise.all([
-      sb.from('discovery_queries').select('id, query_tekst, land, laatste_run').eq('actief', true),
+      sb.from('discovery_queries').select('id, query_tekst, land, laatste_run').eq('actief', true)
+        .order('laatste_run', { ascending: true, nullsFirst: true }),
       sb.from('discovery_blocklist').select('domein'),
-      sb.from('scrape_sources').select('domain'),
+      sb.from('scrape_sources').select('id, domain, base_url, country, actief'),
     ]);
     if (qRes.error)   throw new Error('queries: '   + qRes.error.message);
     if (blRes.error)  throw new Error('blocklist: ' + blRes.error.message);
@@ -348,13 +426,48 @@ serve(async (req: Request) => {
 
     const blockSet = new Set<string>((blRes.data || []).map((r: any) => (r.domein || '').toLowerCase()));
     const knownSrc  = new Set<string>((srcRes.data || []).map((r: any) => (r.domain || '').toLowerCase()));
+    // Alleen ACTIEVE bronnen overslaan in de zoeklaag: die worden hieronder apart gecrawld.
+    // Voorgestelde/inactieve bronnen mogen gewoon opnieuw via search binnenkomen.
+    const activeSrc = new Set<string>((srcRes.data || []).filter((r: any) => r.actief === true).map((r: any) => (r.domain || '').toLowerCase()));
 
+    // ══ Fase 1: vaste bronnen opnieuw uitlezen ═══════════════════════
+    // Actieve scrape_sources zijn al door een admin goedgekeurd, dus hier
+    // geldt de is_originele_bron-check niet. Dit is de laag die gemeente-
+    // en verenigingsagenda's doorlopend bijhoudt in plaats van eenmalig.
+    for (const bron of (srcRes.data || []).filter((r: any) => r.actief === true)) {
+      if (tijdOp()) { summary.budget_op = true; break; }
+      const bronUrl = String(bron.base_url || ('https://' + bron.domain)).trim();
+      const bronLand = bron.country || 'NL';
+      summary.sources_gecrawld++;
+      try {
+        await sleep(FETCH_INTERVAL_MS);
+        const tekst = await fetchPageText(bronUrl);
+        if (tekst.length < 200) throw new Error('te_kort (' + tekst.length + ' chars)');
+
+        const bo = await beoordeelPagina(anthropicKey, bronUrl, tekst, bronLand);
+        if (!bo) throw new Error('ai_parse_failed');
+
+        if (!dryRun) {
+          const voor = summary.events_inserted;
+          await importEvents(sb, bo.events, bronUrl, bron.domain, bronLand, 'bron:' + bron.domain, summary);
+          summary.sources_events += (summary.events_inserted - voor);
+          await sb.from('scrape_sources')
+            .update({ last_scraped_at: new Date().toISOString() })
+            .eq('id', bron.id);
+        }
+      } catch (e) {
+        summary.errors.push('bron ' + bronUrl + ': ' + (e as Error).message);
+      }
+    }
+
+    // ══ Fase 2: zoeklaag ═════════════════════════════════════════════
     const queries = (qRes.data || []) as DiscoveryQuery[];
     let newUrlsProcessed = 0;
 
     outer:
     for (const q of queries) {
       if (newUrlsProcessed >= maxUrls) break;
+      if (tijdOp()) { summary.budget_op = true; break; }
       summary.queries_run++;
 
       // 2 varianten: huidige + volgende maand
@@ -379,16 +492,17 @@ serve(async (req: Request) => {
 
         for (const r of results) {
           if (newUrlsProcessed >= maxUrls) break outer;
+          if (tijdOp()) { summary.budget_op = true; break outer; }
           const url = (r.url || '').trim();
           if (!url) continue;
           const domain = extractDomain(url);
           if (!domain) continue;
 
-          // Filter: blocklist / known source / al gezien
+          // Filter: blocklist / actieve bron / al gezien
           if ([...blockSet].some(b => domain === b || domain.endsWith('.' + b))) {
             summary.urls_skipped_blocklist++; continue;
           }
-          if (knownSrc.has(domain)) { summary.urls_skipped_known_source++; continue; }
+          if (activeSrc.has(domain)) { summary.urls_skipped_known_source++; continue; }
 
           const seenRes = await sb.from('discovered_urls').select('id').eq('url', url).maybeSingle();
           if (seenRes.data) { summary.urls_skipped_seen++; continue; }
@@ -400,10 +514,7 @@ serve(async (req: Request) => {
           await sleep(FETCH_INTERVAL_MS);
           let pageText = '';
           try {
-            const pRes = await fetchWithTimeout(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; YardiGoDiscover/1.0)' } }, PAGE_FETCH_TIMEOUT);
-            if (!pRes.ok) throw new Error('HTTP ' + pRes.status);
-            const html = await pRes.text();
-            pageText = stripHtml(html, DEFAULT_MAX_TEXT);
+            pageText = await fetchPageText(url);
           } catch (e) {
             summary.errors.push('fetch ' + url + ': ' + (e as Error).message);
             if (!dryRun) {
@@ -444,23 +555,26 @@ serve(async (req: Request) => {
           }
 
           summary.urls_beoordeeld++;
-          if (!beoordeling.is_originele_bron) summary.urls_afgewezen++;
+          if (!Array.isArray(beoordeling.events) || beoordeling.events.length === 0) summary.urls_afgewezen++;
 
           if (dryRun) continue;
 
-          // Log URL-beoordeling
+          // Log URL-beoordeling. Let op: is_originele_bron is GEEN harde poort meer.
+          // Alles wat bruikbare events oplevert gaat door naar pending_events, waar
+          // een mens het alsnog goed- of afkeurt. Zonder events = afgewezen.
+          const heeftEvents = Array.isArray(beoordeling.events) && beoordeling.events.length > 0;
           await sb.from('discovered_urls').insert({
             url, domein: domain, gevonden_via_query: expanded,
-            status: beoordeling.is_originele_bron ? 'beoordeeld' : 'afgewezen',
+            status: heeftEvents ? 'beoordeeld' : 'afgewezen',
             beoordeling: beoordeling as any,
           });
 
-          if (!beoordeling.is_originele_bron) continue;
+          if (!heeftEvents) continue;
 
           // Structurele agenda → voorstel voor scrape_sources
           if (beoordeling.is_structurele_agenda && !knownSrc.has(domain)) {
             const ins = await sb.from('scrape_sources').insert({
-              domain, base_url: 'https://' + domain,
+              domain, base_url: url,   // de gevonden agendapagina, niet de domeinwortel
               country: q.land, actief: false, voorgesteld: true,
               voorstel_reden: (beoordeling.toelichting || 'AI-detectie: doorlopende agenda').slice(0, 500),
               notes: 'Gedetecteerd door discover-events op ' + new Date().toISOString().slice(0,10),
@@ -468,54 +582,8 @@ serve(async (req: Request) => {
             if (!ins.error) { summary.sources_voorgesteld++; knownSrc.add(domain); }
           }
 
-          // Events verwerken
-          for (const raw of beoordeling.events) {
-            summary.events_found++;
-            const ne = normalizeEvent(raw);
-            if (!ne) continue;
-
-            // Geocoding (best-effort)
-            const geo = await geocode(ne.adres, ne.plaats, q.land);
-            const lat = geo?.lat ?? null;
-            const lng = geo?.lng ?? null;
-
-            // Content hash + dedupe
-            const hashRes = await sb.rpc('discovery_content_hash', {
-              p_title: ne.titel, p_date: ne.datum, p_city: ne.plaats,
-            });
-            if (hashRes.error) { summary.errors.push('hash_rpc: ' + hashRes.error.message); continue; }
-            const contentHash = hashRes.data as string;
-            const sim = await sb.rpc('discovery_find_similar', {
-              p_hash: contentHash, p_lat: lat, p_lng: lng,
-              p_date: ne.datum, p_radius_m: DUPE_RADIUS_M,
-            });
-            if (sim.error) { summary.errors.push('dupe_rpc: ' + sim.error.message); continue; }
-            if (sim.data) { summary.events_deduped++; continue; }
-
-            const insEv = await sb.from('pending_events').insert({
-              title:                ne.titel,
-              description:          ne.beschrijving,
-              event_subtype:        ne.event_subtype,
-              date_start:           ne.datum,
-              time_start:           ne.starttijd,
-              time_end:             ne.eindtijd,
-              city:                 ne.plaats,
-              address:              ne.adres,
-              latitude:             lat,
-              longitude:            lng,
-              source_url:           url,
-              source_domain:        domain,
-              source_label:         (raw.bron_naam || '').slice(0, 200) || null,
-              discovered_via_query: expanded,
-              content_hash:         contentHash,
-              raw_ai_response:      raw as any,
-            });
-            if (insEv.error) {
-              summary.errors.push('insert_pending: ' + insEv.error.message);
-              continue;
-            }
-            summary.events_inserted++;
-          }
+          // Events verwerken (gedeelde helper, zelfde pad als de bronnen-laag)
+          await importEvents(sb, beoordeling.events, url, domain, q.land, expanded, summary);
         }
 
         // laatste_run bijwerken
