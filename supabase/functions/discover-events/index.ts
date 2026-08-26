@@ -54,6 +54,7 @@ interface DiscoveryQuery { id: number; query_tekst: string; land: string; laatst
 interface BraveResult    { title: string; url: string; description?: string; }
 interface EventParsed {
   titel: string | null;
+  land: string | null;
   event_type: string | null;
   datum: string | null;
   starttijd: string | null;
@@ -154,41 +155,125 @@ async function fetchWithTimeout(url: string, opts: RequestInit, timeoutMs: numbe
   finally { clearTimeout(t); }
 }
 
-// ── Geocoding: PDOK (NL) → BAN (FR) → Nominatim (BE/DE/fallback) ─
-async function geocode(address: string | null, city: string | null, country: string): Promise<{ lat: number; lng: number } | null> {
-  const query = [address, city].filter(Boolean).join(', ').trim();
-  if (!query) return null;
+// ── Geocoding ─────────────────────────────────────────────────────
+// Ketting: landspecifiek (PDOK/BAN) → Nominatim met landfilter → Nominatim
+// zonder landfilter → alleen de plaatsnaam. Die laatste twee stappen zijn
+// er omdat het land van een event niet altijd klopt met het land van de
+// zoekquery waarmee het gevonden is (een BE-query vindt ook NL-pagina's).
+//
+// Cache per (query|land) zodat 20 events in dezelfde gemeente één lookup
+// kosten i.p.v. twintig. Blijft warm binnen dezelfde isolate.
+const geoCache = new Map<string, { lat: number; lng: number } | null>();
+
+function landNaarCc(land: string): string {
+  switch ((land || '').toUpperCase()) {
+    case 'NL': return 'nl';
+    case 'BE': return 'be';
+    case 'FR': return 'fr';
+    case 'DE': return 'de';
+    default:   return '';
+  }
+}
+
+async function nominatimLookup(query: string, cc: string): Promise<{ lat: number; lng: number } | null> {
+  // Nominatim-beleid: max 1 request/sec en een herkenbare User-Agent met contact.
+  await sleep(1100);
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1'
+    + (cc ? '&countrycodes=' + cc : '') + '&q=' + encodeURIComponent(query);
   try {
-    if (country === 'NL') {
-      const r = await fetchWithTimeout('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' + encodeURIComponent(query) + '&rows=1&fq=type:(adres+woonplaats)&fl=weergavenaam,centroide_ll', { headers: { Accept: 'application/json' } }, 8000);
-      if (r.ok) {
-        const j = await r.json();
-        const doc = j?.response?.docs?.[0];
-        const cll = doc?.centroide_ll; // "POINT(lng lat)"
-        if (typeof cll === 'string') {
-          const m = cll.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-          if (m) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
-        }
-      }
+    const r = await fetchWithTimeout(url, {
+      headers: { Accept: 'application/json', 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl; yardigo.app@gmail.com)' },
+    }, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (Array.isArray(j) && j[0]?.lat && j[0]?.lon) {
+      return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
     }
-    if (country === 'FR') {
-      const r = await fetchWithTimeout('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(query), { headers: { Accept: 'application/json' } }, 8000);
-      if (r.ok) {
-        const j = await r.json();
-        const c = j?.features?.[0]?.geometry?.coordinates;
-        if (Array.isArray(c) && c.length >= 2) return { lng: c[0], lat: c[1] };
-      }
-    }
-    // Fallback: Nominatim (BE/DE/rest)
-    const cc = country === 'BE' ? 'be' : country === 'DE' ? 'de' : country === 'NL' ? 'nl' : country === 'FR' ? 'fr' : '';
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1' + (cc ? '&countrycodes=' + cc : '') + '&q=' + encodeURIComponent(query);
-    const r = await fetchWithTimeout(url, { headers: { Accept: 'application/json', 'User-Agent': 'YardiGo-discover-events' } }, 8000);
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j) && j[0]?.lat && j[0]?.lon) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-    }
-  } catch (_) { /* geocode is best-effort */ }
+  } catch (_) { /* best-effort */ }
   return null;
+}
+
+async function pdokLookup(query: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const r = await fetchWithTimeout(
+      'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?q=' + encodeURIComponent(query)
+      + '&rows=1&fq=type:(adres+woonplaats)&fl=weergavenaam,centroide_ll',
+      { headers: { Accept: 'application/json' } }, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const cll = j?.response?.docs?.[0]?.centroide_ll; // "POINT(lng lat)"
+    if (typeof cll === 'string') {
+      const m = cll.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+      if (m) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
+    }
+  } catch (_) { /* best-effort */ }
+  return null;
+}
+
+async function banLookup(query: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const r = await fetchWithTimeout(
+      'https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(query),
+      { headers: { Accept: 'application/json' } }, 8000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const c = j?.features?.[0]?.geometry?.coordinates;
+    if (Array.isArray(c) && c.length >= 2) return { lng: c[0], lat: c[1] };
+  } catch (_) { /* best-effort */ }
+  return null;
+}
+
+// Ruwe landgok op basis van de TLD van het brondomein. Alleen bedoeld als
+// hint bij het bijwerken van oude rijen; de geocode-ketting valt sowieso
+// terug op een zoekopdracht zonder landfilter.
+function landUitDomein(domain: string): string {
+  const d = (domain || '').toLowerCase();
+  if (d.endsWith('.nl')) return 'NL';
+  if (d.endsWith('.be')) return 'BE';
+  if (d.endsWith('.fr')) return 'FR';
+  if (d.endsWith('.de')) return 'DE';
+  return '';
+}
+
+async function zoekLosseTerm(term: string, country: string, cc: string): Promise<{ lat: number; lng: number } | null> {
+  let h: { lat: number; lng: number } | null = null;
+  if (country === 'NL') h = await pdokLookup(term);
+  if (!h && cc)         h = await nominatimLookup(term, cc);
+  if (!h)               h = await nominatimLookup(term, '');
+  return h;
+}
+
+async function geocode(address: string | null, city: string | null, country: string): Promise<{ lat: number; lng: number } | null> {
+  const volledig = [address, city].filter(Boolean).join(', ').trim();
+  if (!volledig) return null;
+
+  const cacheKey = volledig.toLowerCase() + '|' + (country || '');
+  if (geoCache.has(cacheKey)) return geoCache.get(cacheKey)!;
+
+  const cc = landNaarCc(country);
+  let hit: { lat: number; lng: number } | null = null;
+
+  if (country === 'NL') hit = await pdokLookup(volledig);
+  if (!hit && country === 'FR') hit = await banLookup(volledig);
+  if (!hit && cc)       hit = await nominatimLookup(volledig, cc);
+  if (!hit)             hit = await nominatimLookup(volledig, '');
+
+  // Straat onvindbaar? Val terug op de plaatsnaam alleen.
+  if (!hit && address && city) {
+    hit = await zoekLosseTerm(city.trim(), country, cc);
+  }
+
+  // Samengestelde plaatsnaam ("Rosekapellewijk, Borsbeek" of
+  // "Einville-au-Jard, centre ville")? Probeer de losse delen.
+  if (!hit && city && city.includes(',')) {
+    for (const deel of city.split(',').map(d => d.trim()).filter(d => d.length > 2)) {
+      hit = await zoekLosseTerm(deel, country, cc);
+      if (hit) break;
+    }
+  }
+
+  geoCache.set(cacheKey, hit);
+  return hit;
 }
 
 // ── Anthropic beoordeling ─────────────────────────────────────────
@@ -215,8 +300,9 @@ function buildSystemPrompt(today: string, country: string): string {
     '  "datum": "YYYY-MM-DD" | null,',
     '  "starttijd": "HH:MM" | null,',
     '  "eindtijd": "HH:MM" | null,',
-    '  "plaats": string | null,',
+    '  "plaats": string | null,             // ALLEEN de gemeente/woonplaats, geen wijknaam erbij',
     '  "adres": string | null,',
+    '  "land": "NL"|"BE"|"FR"|"DE" | null,   // land van de LOCATIE van dit event',
     '  "beschrijving": string | null,       // EIGEN korte formulering, max 240 tekens, geen letterlijke overname',
     '  "bron_naam": string | null,',
     '  "bron_url": string | null',
@@ -227,6 +313,7 @@ function buildSystemPrompt(today: string, country: string): string {
     '- Neem GEEN events over waarvan de datum al voorbij is (< vandaag).',
     '- Verzamelsites/agenda-aggregators (bv. meukisleuk.nl, rommelmarkten.be, brocabrac.fr, vide-greniers.org): zet is_originele_bron=false, maar EXTRAHEER de events WEL. Ze gaan naar handmatige review, dus liever aanleveren dan weggooien.',
     '- Alleen bij marktplaats-achtige sites (marktplaats.nl, 2dehands.be, leboncoin.fr, ebay) geldt: is_originele_bron=false EN events=[].',
+    '- "land" is het land waar het event PLAATSVINDT, af te leiden uit plaats/adres. Dat hoeft niet het land van deze website te zijn: een Belgische site kan best een Nederlandse verkoop vermelden. Bij twijfel: null.',
     '- Verzin niets. Onduidelijk = null.',
   ].join('\n');
 }
@@ -264,10 +351,13 @@ async function beoordeelPagina(anthropicKey: string, url: string, tekst: string,
 // ── Event normalisatie + insert ───────────────────────────────────
 const ALLOWED_EVENT_TYPES = new Set(['opritverkoop','rommelroute','rommelmarkt','buurtverkoop','overig']);
 
+const ALLOWED_LANDEN = new Set(['NL','BE','FR','DE']);
+
 function normalizeEvent(e: EventParsed): {
   titel: string; event_subtype: string | null;
   datum: string; starttijd: string | null; eindtijd: string | null;
   plaats: string | null; adres: string | null; beschrijving: string | null;
+  land: string | null;
 } | null {
   const titel = (e.titel || '').trim();
   const datum = (e.datum || '').trim();
@@ -288,6 +378,7 @@ function normalizeEvent(e: EventParsed): {
     plaats:       (e.plaats || '').trim() || null,
     adres:        (e.adres  || '').trim() || null,
     beschrijving: (e.beschrijving || '').trim() || null,
+    land: ALLOWED_LANDEN.has((e.land || '').trim().toUpperCase()) ? (e.land as string).trim().toUpperCase() : null,
   };
 }
 
@@ -311,9 +402,14 @@ async function importEvents(
     const ne = normalizeEvent(raw);
     if (!ne) continue;
 
-    const geo = await geocode(ne.adres, ne.plaats, land);
+    // Land van het event zelf; de zoekquery is slechts terugval. Een BE-query
+    // vindt geregeld NL-pagina's, en dan zocht de geocoder vroeger in het
+    // verkeerde land en gaf niets terug.
+    const eventLand = ne.land || land;
+    const geo = await geocode(ne.adres, ne.plaats, eventLand);
     const lat = geo?.lat ?? null;
     const lng = geo?.lng ?? null;
+    if (geo) summary.geocode_gelukt++; else summary.geocode_mislukt++;
 
     const hashRes = await sb.rpc('discovery_content_hash', {
       p_title: ne.titel, p_date: ne.datum, p_city: ne.plaats,
@@ -390,10 +486,62 @@ serve(async (req: Request) => {
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   // Body
-  let body: { dryRun?: boolean; max_urls?: number } = {};
+  let body: { dryRun?: boolean; max_urls?: number; backfill?: boolean; backfill_limit?: number } = {};
   try { body = await req.json(); } catch (_) {}
   const dryRun  = body.dryRun === true;
   const maxUrls = Math.max(1, Math.min(100, body.max_urls ?? DEFAULT_MAX_URLS));
+
+  // ══ Backfill-modus ══════════════════════════════════════════════════
+  // Repareert rijen die eerder zonder coordinaat zijn opgeslagen, bv. omdat
+  // de geocoder destijds het land van de zoekquery gebruikte i.p.v. dat van
+  // het event. Zoekt niets nieuws, importeert niets nieuws.
+  if (body.backfill === true) {
+    const limiet     = Math.max(1, Math.min(200, body.backfill_limit ?? 60));
+    const bfDeadline = Date.now() + RUN_BUDGET_MS;
+    const bf: any = {
+      pending_hersteld: 0, pending_mislukt: 0,
+      listings_hersteld: 0, listings_mislukt: 0,
+      budget_op: false, fouten: [] as string[],
+    };
+
+    const pend = await sb.from('pending_events')
+      .select('id, city, address, source_domain')
+      .is('latitude', null).eq('status', 'nieuw').limit(limiet);
+    if (pend.error) return json({ error: 'backfill pending: ' + pend.error.message }, 500);
+
+    for (const r of (pend.data || [])) {
+      if (Date.now() > bfDeadline) { bf.budget_op = true; break; }
+      const g = await geocode(r.address, r.city, landUitDomein(r.source_domain));
+      if (g) {
+        const u = await sb.from('pending_events')
+          .update({ latitude: g.lat, longitude: g.lng }).eq('id', r.id);
+        if (u.error) { bf.fouten.push('pending ' + r.id + ': ' + u.error.message); bf.pending_mislukt++; }
+        else bf.pending_hersteld++;
+      } else bf.pending_mislukt++;
+    }
+
+    if (!bf.budget_op) {
+      const lst = await sb.from('listings')
+        .select('id, city, address, source_url')
+        .is('latitude', null).eq('placed_by', 'yardigo').limit(limiet);
+      if (lst.error) return json({ error: 'backfill listings: ' + lst.error.message }, 500);
+
+      for (const r of (lst.data || [])) {
+        if (Date.now() > bfDeadline) { bf.budget_op = true; break; }
+        let dom = '';
+        try { dom = new URL(r.source_url || '').hostname; } catch (_) {}
+        const g = await geocode(r.address, r.city, landUitDomein(dom));
+        if (g) {
+          const u = await sb.from('listings')
+            .update({ latitude: g.lat, longitude: g.lng }).eq('id', r.id);
+          if (u.error) { bf.fouten.push('listing ' + r.id + ': ' + u.error.message); bf.listings_mislukt++; }
+          else bf.listings_hersteld++;
+        } else bf.listings_mislukt++;
+      }
+    }
+
+    return json({ ok: true, modus: 'backfill', resultaat: bf }, 200);
+  }
 
   // Run start
   const runInsert = await sb.from('discovery_runs').insert({ started_at: new Date().toISOString() }).select('id').single();
@@ -407,7 +555,7 @@ serve(async (req: Request) => {
     urls_skipped_known_source: 0, urls_skipped_seen: 0, urls_beoordeeld: 0, urls_afgewezen: 0,
     events_found: 0, events_deduped: 0, events_inserted: 0,
     sources_voorgesteld: 0, sources_gecrawld: 0, sources_events: 0,
-    budget_op: false,
+    budget_op: false, geocode_gelukt: 0, geocode_mislukt: 0,
     errors: [] as string[],
     dryRun, via: auth.via,
   };
