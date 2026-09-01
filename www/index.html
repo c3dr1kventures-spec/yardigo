@@ -6831,6 +6831,17 @@ function i18n(key, fallback) {
   return (fallback !== undefined ? fallback : key);
 }
 
+// True als elk kindelement een brand-icon is, d.w.z. alles wat in dit element
+// staat is door ygApplyBrandIcons() gegenereerd en mag opnieuw opgebouwd worden.
+function ygOnlyBrandIconChildren(el) {
+  var kids = el.children;
+  if (!kids.length) return false;
+  for (var i = 0; i < kids.length; i++) {
+    if (!kids[i].classList || !kids[i].classList.contains('yg-icon')) return false;
+  }
+  return true;
+}
+
 function applyLang() {
   try {
     // data-i18n → tekstknoop
@@ -6841,8 +6852,19 @@ function applyLang() {
       if (t == null) return;
       if (el.children.length === 0) {
         el.textContent = t;
+      } else if (ygOnlyBrandIconChildren(el)) {
+        // De enige kindelementen zijn brand-icons die ygApplyBrandIcons() uit
+        // de emoji in deze string heeft gemaakt. De oude aanpak verving hier
+        // alleen de eerste tekstknoop, waardoor de emoji uit de vertaling er
+        // als losse tekst NAAST het icoon kwam te staan (dubbel icoon), en bij
+        // strings met een emoji midden in de zin de staart dubbel bleef staan.
+        // Zet de vertaling terug als platte tekst en laat de icon-pass er
+        // opnieuw overheen lopen.
+        el.textContent = t;
+        if (typeof ygApplyBrandIcons === 'function') ygApplyBrandIcons(el);
       } else {
-        // vervang eerste niet-lege textnode, anders aria-label
+        // Echte markup als kind (<a>, <strong>, ...): die mag niet verdwijnen,
+        // dus alleen de eerste niet-lege tekstknoop vervangen, anders aria-label.
         var replaced = false;
         for (var i=0;i<el.childNodes.length;i++) {
           var n = el.childNodes[i];
@@ -7202,7 +7224,11 @@ function ygApplyBrandIcons(root) {
   var re = YG_BRAND_ICON_REGEX;
   function processText(node) {
     var parent = node.parentElement;
-    if (parent && parent.closest('script,style,textarea,input,select,option,svg,canvas,code,pre,.yg-icon')) return;
+    // Losgekoppelde node: de MutationObserver levert tekstknopen aan die
+    // inmiddels al vervangen zijn door een directe ygApplyBrandIcons()-run
+    // (zie applyLang). Zonder deze check knalt replaceChild() hieronder.
+    if (!parent) return;
+    if (parent.closest('script,style,textarea,input,select,option,svg,canvas,code,pre,.yg-icon')) return;
     var value = node.nodeValue;
     if (!value || !re.test(value)) { re.lastIndex = 0; return; }
     re.lastIndex = 0;
