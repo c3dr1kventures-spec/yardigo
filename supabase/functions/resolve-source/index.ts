@@ -188,14 +188,46 @@ function maandNaam(datum: string, land: string): string {
   return NL_MAANDEN[idx];
 }
 
-// Zoekopdracht uit de feiten. De titel tussen aanhalingstekens zodat we
-// niet op losse woorden matchen, plus plaats en maand+jaar als context.
-function bouwZoekQuery(item: TeResolven, uitsluiten: string[]): string {
+// Soortwoord uit de titel, voor de bredere tweede poging. Valt terug op
+// 'rommelmarkt' omdat dat de meest voorkomende noemer is.
+const SOORTWOORDEN = [
+  'garagesale', 'garageverkoop', 'opritverkoop', 'rommelroute', 'rommelmarkt',
+  'buurtverkoop', 'kofferbakverkoop', 'vlooienmarkt', 'kleedjesmarkt',
+  'brocante', 'vide-grenier', 'braderie', 'jaarmarkt',
+];
+
+function soortUitTitel(titel: string): string {
+  const t = titel.toLowerCase();
+  for (const w of SOORTWOORDEN) if (t.includes(w)) return w;
+  return 'rommelmarkt';
+}
+
+// Zoekopdracht uit de feiten. Twee varianten, want één strategie is niet
+// genoeg gebleken:
+//
+//   variant 0 — titel + plaats + maand + jaar. De titel komt alleen tussen
+//     aanhalingstekens als hij kort is. Een lange titel als "Garageverkoop
+//     Grevenbicht, Papenhoven, Schipperskerk" als exacte zin levert nul
+//     resultaten op; dat was de eerste dryRun.
+//   variant 1 — breder: plaats + soortwoord + volledige datum, zonder
+//     titel. Vangt de gevallen waarin de organisator het evenement anders
+//     noemt dan de verzamelsite.
+function bouwZoekQuery(item: TeResolven, uitsluiten: string[], variant: number): string {
   const jaar  = item.date_start.slice(0, 4);
   const maand = maandNaam(item.date_start, item.land);
-  const delen = ['"' + item.title.replace(/"/g, '').trim() + '"'];
-  if (item.city) delen.push(item.city.trim());
-  delen.push(maand, jaar);
+  const dag   = String(parseInt(item.date_start.slice(8, 10), 10));
+  const titel = item.title.replace(/["']/g, '').trim();
+
+  const delen: string[] = [];
+  if (variant === 0) {
+    const woorden = titel.split(/\s+/).filter(Boolean);
+    delen.push(woorden.length <= 4 ? '"' + titel + '"' : titel);
+    if (item.city) delen.push(item.city.trim());
+    delen.push(maand, jaar);
+  } else {
+    if (item.city) delen.push(item.city.trim());
+    delen.push(soortUitTitel(titel), dag, maand, jaar);
+  }
 
   let q = delen.join(' ');
   for (const d of uitsluiten) {
@@ -352,34 +384,45 @@ async function resolveEen(
 ): Promise<Uitkomst> {
   const leadDomein = extractDomain(item.source_url || '');
   const uitsluiten = [...new Set([leadDomein, ...blockDomeinen, 'yardigo.nl', 'yardigo.be', 'yardigo.app'].filter(Boolean))];
-  const query = bouwZoekQuery(item, uitsluiten);
 
-  let braveJson: any = null;
-  try {
-    const res = await fetchWithTimeout(
-      BRAVE_ENDPOINT + '?q=' + encodeURIComponent(query) + '&count=' + BRAVE_RESULTS + braveLandParam(item.land),
-      { headers: { Accept: 'application/json', 'X-Subscription-Token': braveKey } }, 10000);
-    if (!res.ok) throw new Error('Brave ' + res.status);
-    braveJson = await res.json();
-  } catch (e) {
-    return { gevonden: false, notitie: 'zoekfout: ' + (e as Error).message, bekeken: 0 };
-  }
-
-  const resultaten = extractPathValue<BraveResult[]>(braveJson, 'web.results', []);
   const gezien = new Set<string>();
   const kandidaten: string[] = [];
-  for (const r of resultaten) {
-    const url = (r.url || '').trim();
-    if (!url) continue;
-    const d = extractDomain(url);
-    if (!d || gezien.has(d)) continue;
-    if (uitsluiten.some(b => d === b || d.endsWith('.' + b))) continue;
-    gezien.add(d);
-    kandidaten.push(url);
+  const zoekfouten: string[] = [];
+
+  // Twee pogingen: eerst gericht op de titel, dan breder op plaats+soort+datum.
+  for (const variant of [0, 1]) {
     if (kandidaten.length >= MAX_KANDIDATEN) break;
+    if (Date.now() > deadline) break;
+    const query = bouwZoekQuery(item, uitsluiten, variant);
+
+    let braveJson: any = null;
+    try {
+      const res = await fetchWithTimeout(
+        BRAVE_ENDPOINT + '?q=' + encodeURIComponent(query) + '&count=' + BRAVE_RESULTS + braveLandParam(item.land),
+        { headers: { Accept: 'application/json', 'X-Subscription-Token': braveKey } }, 10000);
+      if (!res.ok) throw new Error('Brave ' + res.status);
+      braveJson = await res.json();
+    } catch (e) {
+      zoekfouten.push('variant ' + variant + ': ' + (e as Error).message);
+      continue;
+    }
+
+    for (const r of extractPathValue<BraveResult[]>(braveJson, 'web.results', [])) {
+      const url = (r.url || '').trim();
+      if (!url) continue;
+      const d = extractDomain(url);
+      if (!d || gezien.has(d)) continue;
+      if (uitsluiten.some(b => d === b || d.endsWith('.' + b))) continue;
+      gezien.add(d);
+      kandidaten.push(url);
+      if (kandidaten.length >= MAX_KANDIDATEN) break;
+    }
   }
 
-  if (!kandidaten.length) return { gevonden: false, notitie: 'geen bruikbare zoekresultaten', bekeken: 0 };
+  if (!kandidaten.length) {
+    const reden = zoekfouten.length ? 'zoekfout: ' + zoekfouten.join(' | ') : 'geen bruikbare zoekresultaten';
+    return { gevonden: false, notitie: reden, bekeken: 0 };
+  }
 
   let beste: { url: string; v: Verificatie } | null = null;
   const redenen: string[] = [];
