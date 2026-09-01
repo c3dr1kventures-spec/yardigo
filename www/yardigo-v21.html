@@ -276,6 +276,8 @@ body.dark #dm-toggle-row .toggle-ball{left:21px;}
 
 /* CTA "Ik ga erheen" pulserende gloed */
 @keyframes ctaGlow{0%,100%{box-shadow:0 4px 18px rgba(224,123,57,.4),0 0 0 0 rgba(224,123,57,.3);}50%{box-shadow:0 6px 24px rgba(224,123,57,.55),0 0 0 8px rgba(224,123,57,.0);}}
+#det-cta{background:var(--terra);color:#fff;}
+#det-cta.going{background:var(--forest);}
 #det-cta:not(.going){animation:ctaGlow 2.4s ease-in-out infinite;}
 #det-cta.going{animation:none;}
 
@@ -3145,7 +3147,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div style="color:white;font-size:18px">›</div>
       </div>
       <!-- CTA -->
-      <button id="det-cta" onclick="toggleInterest()" style="width:100%;padding:18px 15px;border-radius:16px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.2px;margin-top:4px">
+      <button id="det-cta" onclick="toggleInterest()" style="width:100%;padding:18px 15px;border-radius:16px;border:none;font-family:'Poppins',sans-serif;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.2px;margin-top:4px">
         <span id="det-cta-icon" style="font-size:20px">🎉</span><span id="det-cta-text" data-i18n="detail.cta_going">Ik ga erheen!</span>
       </button>
       <!-- Melden knop (alleen ingelogde leden) -->
@@ -9866,8 +9868,13 @@ function updateInterestUI(s) {
   var icon = document.getElementById('det-cta-icon'), txt = document.getElementById('det-cta-text'), cta = document.getElementById('det-cta');
   if (numEl) numEl.textContent = count;
   if (lblEl) lblEl.textContent = going ? 'jij + ' + Math.max(0, count - 1) + ' anderen' : (count === 1 ? 'gaat erheen' : 'gaan erheen');
-  if (going) { if (cta) { cta.style.background = '#3A6B4A'; cta.classList.add('going'); } if (icon) icon.textContent = '✓'; if (txt) txt.textContent = 'Ik ga! Aangemeld'; }
-  else { if (cta) { cta.style.background = ''; cta.classList.remove('going'); } if (icon) icon.textContent = '🎉'; if (txt) txt.textContent = 'Ik ga erheen!'; }
+  // Kleur zit in de stylesheet op #det-cta en #det-cta.going. Eerder werd die
+  // hier inline gezet en met style.background='' weer "gereset" — maar de
+  // oranje achtergrond stond zelf ook inline, dus die werd daarmee gewist en
+  // viel de knop terug op het grijs van de browser, met witte tekst erop.
+  if (cta) cta.classList.toggle('going', going);
+  if (going) { if (icon) icon.textContent = '✓'; if (txt) txt.textContent = 'Ik ga! Aangemeld'; }
+  else { if (icon) icon.textContent = '🎉'; if (txt) txt.textContent = 'Ik ga erheen!'; }
 }
 
 // ══════════════════════════════════════════════════
