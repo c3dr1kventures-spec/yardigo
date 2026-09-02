@@ -7,6 +7,11 @@
 -- doet; de edge function weigert boven de limiet (nu 10/uur, 30/dag — de
 -- waarden staan in AI_PARSE_LIMIT_HOUR / AI_PARSE_LIMIT_DAY).
 --
+-- STATUS: al toegepast op productie (project fwehqudhwzcnkcuypuqw) op
+-- 2026-09-02, als migratie `ai_parse_usage`. Dit bestand blijft staan als
+-- documentatie en om het schema opnieuw te kunnen opzetten; alle statements
+-- zijn idempotent, dus opnieuw draaien kan geen kwaad.
+--
 -- Draai in Supabase SQL Editor (Dashboard → SQL Editor → New query).
 -- ═══════════════════════════════════════════════════════════════════
 
