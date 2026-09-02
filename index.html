@@ -3409,6 +3409,41 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <img src="cedrik-ob-s2.png" alt="Cedrik" style="width:64px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
           <div class="cedrik-speech" data-i18n="publish.cedrik.s1">Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!</div>
         </div>
+        <!-- ── AI-invulling vanaf affiche / flyer (optioneel) ──
+             Snelkoppeling, geen verplichte stap: upload een afbeelding waar de
+             gegevens al op staan en laat `parse-event` (mode 'organizer') de
+             velden hieronder invullen. Wie de kaart negeert, typt gewoon zelf
+             verder — er verandert niets aan de bestaande flow.
+             Het type staat op stap 0 al vast en gaat als gegeven mee; dat
+             sturen we hier nooit vanuit de AI om, want selType() wist bij een
+             wijziging de gekozen categorieën (zie updateTagsForType). -->
+        <div id="ai-fill-card" style="margin-bottom:14px;padding:12px;background:var(--bg2);border:1.5px solid var(--border);border-radius:12px">
+          <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px" data-i18n="publish.ai.title">✨ Heb je een affiche of flyer?</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:10px" data-i18n="publish.ai.sub">Upload 'm, dan vult AI de velden hieronder alvast in. Je kunt daarna alles nog aanpassen.</div>
+          <div id="ai-fill-pick">
+            <button type="button" onclick="ygAiChoosePoster()" style="width:100%;padding:11px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer" data-i18n="publish.ai.btn">📷 Affiche kiezen</button>
+            <input type="file" id="ai-fill-file" accept="image/*" style="display:none" onchange="ygAiPickPoster(this)">
+            <div style="font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.5" data-i18n="publish.ai.privacy">De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard — tenzij je hem hieronder zelf als foto meestuurt.</div>
+          </div>
+          <div id="ai-fill-result" style="display:none">
+            <div style="display:flex;gap:10px;align-items:flex-start">
+              <img id="ai-fill-thumb" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid var(--border);background:var(--bg)">
+              <div style="min-width:0;flex:1">
+                <div id="ai-fill-status" style="font-size:12px;font-weight:700;line-height:1.45;word-break:break-word"></div>
+                <div id="ai-fill-detail" style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px;word-break:break-word"></div>
+              </div>
+              <button type="button" onclick="ygAiClearPoster()" style="background:none;border:none;font-size:15px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 4px;flex-shrink:0" data-i18n-title="publish.ai.remove" title="Afbeelding verwijderen">✕</button>
+            </div>
+            <label id="ai-fill-photo-wrap" style="display:none;align-items:flex-start;gap:8px;margin-top:10px;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;cursor:pointer">
+              <input type="checkbox" id="ai-fill-as-photo" onchange="ygAiTogglePoster(this)" style="margin-top:1px;accent-color:#2D6A4F;flex-shrink:0">
+              <span style="font-size:11.5px;line-height:1.5;min-width:0">
+                <span data-i18n="publish.ai.as_photo">Deze afbeelding ook als foto bij mijn advertentie tonen</span>
+                <span id="ai-fill-contact-warn" style="display:none;margin-top:4px;color:#C5612A;font-weight:600"></span>
+              </span>
+            </label>
+            <div id="ai-fill-type-hint" style="display:none;margin-top:10px;padding:9px 11px;background:#FFF8F0;border:1px solid #F4D7B0;border-radius:9px;font-size:11px;color:#7A5A2E;line-height:1.5"></div>
+          </div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <input class="form-input" id="aTitle" placeholder="Titel bijv. 'Zolder opruiming'" data-i18n-placeholder="publish.title_placeholder">
           <!-- Naam-override per advertentie -->
@@ -4672,6 +4707,38 @@ var I18N = {
     'publish.cedrik.event.antiekmarkt': 'Een antiekmarkt! Laat weten welke stukken er zijn, dan trekt dat de juiste kopers aan. 🏺',
     'publish.cedrik.event.anders': 'Prima! Omschrijf het evenement zo duidelijk mogelijk, dan vinden de juiste mensen jou. ✏️',
     'publish.cedrik.s1': 'Geef je verkoop een pakkende titel en duidelijke datum. Hoe meer info, hoe meer bezoekers!',
+    // ── AI-invulling vanaf affiche (stap 1) ──
+    'toast.photo_max_reached': '📷 Je zit al op het maximum van {max} foto\'s',
+    'publish.ai.title': '✨ Heb je een affiche of flyer?',
+    'publish.ai.sub': 'Upload \'m, dan vult AI de velden hieronder alvast in. Je kunt daarna alles nog aanpassen.',
+    'publish.ai.btn': '📷 Affiche kiezen',
+    'publish.ai.privacy': 'De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard — tenzij je hem hieronder zelf als foto meestuurt.',
+    'publish.ai.as_photo': 'Deze afbeelding ook als foto bij mijn advertentie tonen',
+    'publish.ai.remove': 'Afbeelding verwijderen',
+    'publish.ai.reading': 'AI leest je affiche…',
+    'publish.ai.preparing': 'Afbeelding voorbereiden…',
+    'publish.ai.done': '✅ Ingevuld',
+    'publish.ai.filled': 'Overgenomen: {fields}. Loop het even na.',
+    'publish.ai.nothing': 'Er viel niets bruikbaars uit te lezen. Vul de velden zelf in.',
+    'publish.ai.desc_skipped': 'De omschrijving is overgeslagen: er stonden contactgegevens in.',
+    'publish.ai.no_event': '🤔 Hier kon ik geen verkoop uit lezen',
+    'publish.ai.no_event_hint': 'Vul de velden zelf in. Je kunt de afbeelding wel als foto meesturen.',
+    'publish.ai.err_image': '❌ Kon deze afbeelding niet lezen',
+    'publish.ai.err_image_hint': 'Probeer een JPG of PNG.',
+    'publish.ai.err_generic': '❌ Invullen mislukt',
+    'publish.ai.contact_warn': '⚠️ Er staan contactgegevens op deze afbeelding. Foto\'s bij een advertentie zijn openbaar zichtbaar.',
+    'publish.ai.type_hint': 'Deze affiche lijkt eerder {suggestie} te beschrijven dan wat je op de vorige stap koos. Klopt dat? Ga dan terug en pas het type aan — let op: je verliest dan de gekozen categorieën.',
+    'publish.ai.type_particulier': 'een opritverkoop',
+    'publish.ai.type_buurt': 'een rommelroute of buurtverkoop',
+    'publish.ai.type_evenement': 'een evenement',
+    'publish.ai.f_title': 'titel',
+    'publish.ai.f_date': 'datum',
+    'publish.ai.f_time': 'tijden',
+    'publish.ai.f_addr': 'adres',
+    'publish.ai.f_desc': 'omschrijving',
+    'publish.ai.f_cats': 'categorieën',
+    'publish.ai.f_subtype': 'type evenement',
+    'toast.ai_login_required': '🔒 Log in of maak een account aan om AI je advertentie te laten invullen',
     'publish.cedrik.s2': 'Typ je adres en selecteer een suggestie. Bezoekers zien eerst alleen je buurt, niet je exacte adres.',
     'publish.cedrik.s3': "Bijna klaar! Voeg je mooiste spullen in beeld, of sla over als je liever geen foto's deelt.",
     'publish.type.particulier': 'Opritverkoop: eigen spullen',
@@ -5320,6 +5387,38 @@ var I18N = {
     'publish.cedrik.event.antiekmarkt': 'An antique market! Let people know what kind of pieces to expect. 🏺',
     'publish.cedrik.event.anders': 'Perfect! Describe your event as clearly as possible so the right people can find you. ✏️',
     'publish.cedrik.s1': 'Give your sale a catchy title and clear date. The more info, the more visitors!',
+    // ── AI-invulling vanaf affiche (stap 1) ──
+    'toast.photo_max_reached': '📷 You have already reached the maximum of {max} photos',
+    'publish.ai.title': '✨ Got a poster or flyer?',
+    'publish.ai.sub': 'Upload it and AI will fill in the fields below for you. You can still change everything afterwards.',
+    'publish.ai.btn': '📷 Choose poster',
+    'publish.ai.privacy': 'The image is read once by AI to fill in the fields and is not stored afterwards — unless you choose to include it as a photo below.',
+    'publish.ai.as_photo': 'Also show this image as a photo on my listing',
+    'publish.ai.remove': 'Remove image',
+    'publish.ai.reading': 'AI is reading your poster…',
+    'publish.ai.preparing': 'Preparing image…',
+    'publish.ai.done': '✅ Filled in',
+    'publish.ai.filled': 'Taken over: {fields}. Please double-check it.',
+    'publish.ai.nothing': 'Nothing usable could be read. Please fill in the fields yourself.',
+    'publish.ai.desc_skipped': 'The description was skipped: it contained contact details.',
+    'publish.ai.no_event': '🤔 I couldn\'t read a sale from this',
+    'publish.ai.no_event_hint': 'Fill in the fields yourself. You can still include the image as a photo.',
+    'publish.ai.err_image': '❌ Couldn\'t read this image',
+    'publish.ai.err_image_hint': 'Try a JPG or PNG.',
+    'publish.ai.err_generic': '❌ Couldn\'t fill in the form',
+    'publish.ai.contact_warn': '⚠️ This image contains contact details. Photos on a listing are publicly visible.',
+    'publish.ai.type_hint': 'This poster looks more like {suggestie} than what you picked in the previous step. If that\'s right, go back and change the type — note that you\'ll lose the selected categories.',
+    'publish.ai.type_particulier': 'a driveway sale',
+    'publish.ai.type_buurt': 'a neighbourhood sale',
+    'publish.ai.type_evenement': 'an event',
+    'publish.ai.f_title': 'title',
+    'publish.ai.f_date': 'date',
+    'publish.ai.f_time': 'times',
+    'publish.ai.f_addr': 'address',
+    'publish.ai.f_desc': 'description',
+    'publish.ai.f_cats': 'categories',
+    'publish.ai.f_subtype': 'event type',
+    'toast.ai_login_required': '🔒 Log in or create an account to let AI fill in your listing',
     'publish.cedrik.s2': 'Type your address and pick a suggestion. Visitors first see only your neighborhood, not your exact address.',
     'publish.cedrik.s3': "Almost done! Show off your best items, or skip if you'd rather not share photos.",
     'publish.type.particulier': 'Driveway sale: your own items',
@@ -5968,6 +6067,38 @@ var I18N = {
     'publish.cedrik.event.antiekmarkt': 'Un marché antique ! Dites quels types de pièces seront disponibles pour attirer les bons acheteurs. 🏺',
     'publish.cedrik.event.anders': 'Parfait ! Décrivez votre événement aussi clairement que possible pour que les bonnes personnes vous trouvent. ✏️',
     'publish.cedrik.s1': 'Donnez un titre accrocheur et une date claire. Plus d\'infos = plus de visiteurs !',
+    // ── AI-invulling vanaf affiche (stap 1) ──
+    'toast.photo_max_reached': '📷 Vous avez déjà atteint le maximum de {max} photos',
+    'publish.ai.title': '✨ Vous avez une affiche ou un flyer ?',
+    'publish.ai.sub': 'Téléchargez-la et l\'IA remplira les champs ci-dessous. Vous pourrez tout modifier ensuite.',
+    'publish.ai.btn': '📷 Choisir une affiche',
+    'publish.ai.privacy': 'L\'image est lue une seule fois par l\'IA pour remplir les champs, puis n\'est pas conservée — sauf si vous choisissez de l\'ajouter comme photo ci-dessous.',
+    'publish.ai.as_photo': 'Afficher aussi cette image comme photo de mon annonce',
+    'publish.ai.remove': 'Supprimer l\'image',
+    'publish.ai.reading': 'L\'IA lit votre affiche…',
+    'publish.ai.preparing': 'Préparation de l\'image…',
+    'publish.ai.done': '✅ Rempli',
+    'publish.ai.filled': 'Repris : {fields}. Vérifiez le résultat.',
+    'publish.ai.nothing': 'Rien d\'exploitable n\'a pu être lu. Remplissez les champs vous-même.',
+    'publish.ai.desc_skipped': 'La description a été ignorée : elle contenait des coordonnées.',
+    'publish.ai.no_event': '🤔 Je n\'ai pas pu y lire de vente',
+    'publish.ai.no_event_hint': 'Remplissez les champs vous-même. Vous pouvez tout de même ajouter l\'image comme photo.',
+    'publish.ai.err_image': '❌ Impossible de lire cette image',
+    'publish.ai.err_image_hint': 'Essayez un JPG ou un PNG.',
+    'publish.ai.err_generic': '❌ Échec du remplissage',
+    'publish.ai.contact_warn': '⚠️ Cette image contient des coordonnées. Les photos d\'une annonce sont visibles publiquement.',
+    'publish.ai.type_hint': 'Cette affiche ressemble davantage à {suggestie} qu\'au type choisi à l\'étape précédente. Si c\'est le cas, revenez en arrière et modifiez le type — attention, vous perdrez les catégories sélectionnées.',
+    'publish.ai.type_particulier': 'une vente devant chez soi',
+    'publish.ai.type_buurt': 'une vente de quartier',
+    'publish.ai.type_evenement': 'un événement',
+    'publish.ai.f_title': 'titre',
+    'publish.ai.f_date': 'date',
+    'publish.ai.f_time': 'horaires',
+    'publish.ai.f_addr': 'adresse',
+    'publish.ai.f_desc': 'description',
+    'publish.ai.f_cats': 'catégories',
+    'publish.ai.f_subtype': 'type d\'événement',
+    'toast.ai_login_required': '🔒 Connectez-vous ou créez un compte pour que l\'IA remplisse votre annonce',
     'publish.cedrik.s2': 'Tapez votre adresse et choisissez une suggestion. Les visiteurs verront d\'abord votre quartier, pas votre adresse exacte.',
     'publish.cedrik.s3': "Presque fini ! Mettez vos plus belles affaires en image, ou ignorez si vous préférez.",
     'publish.type.particulier': 'Vente sur allée : vos propres objets',
@@ -6608,6 +6739,38 @@ var I18N = {
     'publish.cedrik.event.antiekmarkt': 'Ein Antiquitätenmarkt! Lass die Leute wissen, welche Stücke es gibt. 🏺',
     'publish.cedrik.event.anders': 'Prima! Beschreibe dein Event so klar wie möglich, damit die richtigen Leute dich finden. ✏️',
     'publish.cedrik.s1': 'Gib deinem Verkauf einen einprägsamen Titel und ein klares Datum. Mehr Infos = mehr Besucher!',
+    // ── AI-invulling vanaf affiche (stap 1) ──
+    'toast.photo_max_reached': '📷 Du hast bereits das Maximum von {max} Fotos erreicht',
+    'publish.ai.title': '✨ Hast du ein Plakat oder einen Flyer?',
+    'publish.ai.sub': 'Lade es hoch, dann füllt die KI die Felder unten schon mal aus. Danach kannst du alles noch ändern.',
+    'publish.ai.btn': '📷 Plakat auswählen',
+    'publish.ai.privacy': 'Das Bild wird einmalig von der KI gelesen, um die Felder auszufüllen, und danach nicht gespeichert — außer du fügst es unten selbst als Foto hinzu.',
+    'publish.ai.as_photo': 'Dieses Bild auch als Foto bei meiner Anzeige zeigen',
+    'publish.ai.remove': 'Bild entfernen',
+    'publish.ai.reading': 'Die KI liest dein Plakat…',
+    'publish.ai.preparing': 'Bild wird vorbereitet…',
+    'publish.ai.done': '✅ Ausgefüllt',
+    'publish.ai.filled': 'Übernommen: {fields}. Bitte kurz prüfen.',
+    'publish.ai.nothing': 'Es ließ sich nichts Brauchbares auslesen. Fülle die Felder selbst aus.',
+    'publish.ai.desc_skipped': 'Die Beschreibung wurde übersprungen: Sie enthielt Kontaktdaten.',
+    'publish.ai.no_event': '🤔 Daraus konnte ich keinen Verkauf lesen',
+    'publish.ai.no_event_hint': 'Fülle die Felder selbst aus. Das Bild kannst du trotzdem als Foto hinzufügen.',
+    'publish.ai.err_image': '❌ Dieses Bild konnte nicht gelesen werden',
+    'publish.ai.err_image_hint': 'Versuche ein JPG oder PNG.',
+    'publish.ai.err_generic': '❌ Ausfüllen fehlgeschlagen',
+    'publish.ai.contact_warn': '⚠️ Auf diesem Bild stehen Kontaktdaten. Fotos bei einer Anzeige sind öffentlich sichtbar.',
+    'publish.ai.type_hint': 'Dieses Plakat sieht eher nach {suggestie} aus als nach dem im vorigen Schritt gewählten Typ. Falls das stimmt, geh zurück und ändere den Typ — Achtung: Die gewählten Kategorien gehen dabei verloren.',
+    'publish.ai.type_particulier': 'einem Hofverkauf',
+    'publish.ai.type_buurt': 'einem Nachbarschaftsverkauf',
+    'publish.ai.type_evenement': 'einer Veranstaltung',
+    'publish.ai.f_title': 'Titel',
+    'publish.ai.f_date': 'Datum',
+    'publish.ai.f_time': 'Zeiten',
+    'publish.ai.f_addr': 'Adresse',
+    'publish.ai.f_desc': 'Beschreibung',
+    'publish.ai.f_cats': 'Kategorien',
+    'publish.ai.f_subtype': 'Veranstaltungstyp',
+    'toast.ai_login_required': '🔒 Melde dich an oder erstelle ein Konto, damit die KI deine Anzeige ausfüllt',
     'publish.cedrik.s2': 'Gib deine Adresse ein und wähle einen Vorschlag. Besucher sehen zunächst nur dein Viertel, nicht deine genaue Adresse.',
     'publish.cedrik.s3': 'Fast fertig! Zeig deine schönsten Stücke, oder überspring es, wenn du keine Fotos teilen möchtest.',
     'publish.type.particulier': 'Garagenverkauf: deine eigenen Sachen',
@@ -10864,10 +11027,432 @@ function closeShareBuurtLinks() {
   document.body.style.overflow = '';
 }
 
+// ══════════════════════════════════════════════════
+// AI-INVULLING VANAF AFFICHE  (stap 1 van het plaatsingsformulier)
+// ══════════════════════════════════════════════════
+// Optioneel pad náást handmatig invullen — niemand hoeft hier langs.
+//
+// Uit één gekozen bestand komen twee versies:
+//   • een parse-versie (max 1568px) die naar de edge function gaat;
+//   • een foto-versie via compressImage(), exact zoals handleAddPhotos() een
+//     gewone foto maakt, zodat de poster in de opslag niets bijzonders is.
+//
+// De foto-versie belandt pas in uploadedPhotos als de gebruiker dat zélf
+// aanvinkt. Bewust uit by default: foto's bij een advertentie zijn openbaar,
+// en op een affiche staat vaak een telefoonnummer.
+
+var _ygAiPoster = null;       // { photoDataUrl } van de gekozen afbeelding
+var _ygAiPosterPhoto = null;  // exact de string die in uploadedPhotos staat
+
+// Guard vóór de bestandskiezer. openAdd() laat gasten het formulier bewust
+// invullen zonder account, maar een parse kost een echte API-call en vereist
+// een JWT — dus dit ene onderdeel zit wel achter inloggen.
+function ygAiChoosePoster() {
+  if (isGuest || !sbClient) {
+    toast(i18n('toast.ai_login_required', '🔒 Log in of maak een account aan om AI je advertentie te laten invullen'));
+    return;
+  }
+  var f = document.getElementById('ai-fill-file');
+  if (f) f.click();
+}
+
+// Verklein tot maxSide en geef base64 zonder data:-prefix terug. PNG/WebP
+// blijven zichzelf (scherpere letters op een poster), de rest wordt JPEG.
+// Het mime-type lezen we terug uit de data-URL, zodat een door de browser
+// geweigerd formaat (GIF → PNG) vanzelf klopt.
+function ygAiResizeForParse(file, maxSide) {
+  return new Promise(function(resolve, reject) {
+    if (!file || !/^image\//i.test(file.type || '')) {
+      return reject(new Error('Bestand is geen afbeelding'));
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      try {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) throw new Error('Kan afmetingen niet lezen');
+        var scale = Math.min(1, maxSide / Math.max(w, h));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        var srcType = (file.type || '').toLowerCase();
+        var outType = (srcType === 'image/png' || srcType === 'image/webp') ? srcType : 'image/jpeg';
+        var m = canvas.toDataURL(outType, 0.85).match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) throw new Error('Kon canvas niet omzetten');
+        resolve({ media_type: m[1], data: m[2] });
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      reject(new Error('Kon afbeelding niet laden'));
+    };
+    img.src = url;
+  });
+}
+
+async function ygAiPickPoster(input) {
+  var file = (input && input.files && input.files[0]) || null;
+  // Meteen legen, anders vuurt onchange niet als dezelfde file opnieuw
+  // wordt gekozen (bv. na een mislukte parse).
+  if (input) input.value = '';
+  if (!file) return;
+
+  var pick   = document.getElementById('ai-fill-pick');
+  var result = document.getElementById('ai-fill-result');
+  var statusEl = document.getElementById('ai-fill-status');
+  var detailEl = document.getElementById('ai-fill-detail');
+  var thumb  = document.getElementById('ai-fill-thumb');
+  var photoWrap = document.getElementById('ai-fill-photo-wrap');
+  var hint   = document.getElementById('ai-fill-type-hint');
+  var warn   = document.getElementById('ai-fill-contact-warn');
+  if (!result || !statusEl) return;
+
+  // Een eventuele vorige poster eerst netjes loskoppelen.
+  ygAiDetachPoster();
+  _ygAiPoster = null;
+  if (photoWrap) photoWrap.style.display = 'none';
+  if (hint) { hint.style.display = 'none'; hint.textContent = ''; }
+  if (warn) { warn.style.display = 'none'; warn.textContent = ''; }
+  var cb = document.getElementById('ai-fill-as-photo');
+  if (cb) cb.checked = false;
+  if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
+
+  if (pick) pick.style.display = 'none';
+  result.style.display = 'block';
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = i18n('publish.ai.preparing', 'Afbeelding voorbereiden…');
+  if (detailEl) detailEl.textContent = '';
+  if (thumb) thumb.src = '';
+
+  // Foto-versie: mag falen zonder de parse te blokkeren — dan is alleen het
+  // vinkje "ook als foto" niet beschikbaar.
+  var photoDataUrl = null;
+  try {
+    photoDataUrl = await compressImage(file, 1600, 0.85);
+  } catch (e) {
+    console.warn('Poster-compressie faalde, foto-optie vervalt:', e);
+  }
+
+  // Parse-versie: hierzonder valt er niets te lezen.
+  var aiImage = null;
+  try {
+    aiImage = await ygAiResizeForParse(file, 1568);
+  } catch (e) {
+    statusEl.style.color = '#C0392B';
+    statusEl.textContent = i18n('publish.ai.err_image', '❌ Kon deze afbeelding niet lezen');
+    if (detailEl) detailEl.textContent = i18n('publish.ai.err_image_hint', 'Probeer een JPG of PNG.');
+    return;
+  }
+
+  if (photoDataUrl) {
+    _ygAiPoster = { photoDataUrl: photoDataUrl };
+    if (thumb) thumb.src = photoDataUrl;
+    // Het vinkje komt meteen beschikbaar, ook als de parse straks niets
+    // oplevert — de afbeelding kan op zichzelf een prima foto zijn.
+    if (photoWrap) photoWrap.style.display = 'flex';
+  }
+
+  statusEl.textContent = i18n('publish.ai.reading', 'AI leest je affiche…');
+  await ygAiParse(aiImage);
+}
+
+async function ygAiParse(aiImage) {
+  var statusEl = document.getElementById('ai-fill-status');
+  var detailEl = document.getElementById('ai-fill-detail');
+  try {
+    var sessionRes = await sbClient.auth.getSession();
+    var token = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+    if (!token) throw new Error(i18n('toast.session_expired', 'Je sessie is verlopen. Log opnieuw in.'));
+
+    // Categorieën en subtypes komen uit de DOM, zodat die lijsten maar op
+    // één plek onderhouden hoeven te worden. De edge function laat het model
+    // er alleen uit kiezen; ygAiApply() matcht daarna nóg een keer tegen het
+    // raster, dus een afwijkende string kan nooit als tag blijven hangen.
+    var cats = Array.prototype.map.call(
+      document.querySelectorAll('#add-tags-grid .atag'),
+      function(el) { return el.dataset.tag; }
+    ).filter(Boolean);
+    var subs = Array.prototype.map.call(
+      document.querySelectorAll('#aEventType option'),
+      function(o) { return o.value; }
+    ).filter(function(v) { return v && v !== 'Anders'; });
+
+    var res = await fetch(SUPABASE_URL + '/functions/v1/parse-event', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        mode: 'organizer',
+        listing_type: selTypeVal,
+        image: aiImage,
+        hint_country: (document.getElementById('aCountry') || {}).value || '',
+        categories: cats,
+        subtypes: subs
+      })
+    });
+
+    var data = null;
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) {
+      throw new Error((data && data.error) || ('Status ' + res.status));
+    }
+    if (!data || data.ok !== true || !data.data) {
+      if (statusEl) {
+        statusEl.style.color = 'var(--muted)';
+        statusEl.textContent = i18n('publish.ai.no_event', '🤔 Hier kon ik geen verkoop uit lezen');
+      }
+      if (detailEl) {
+        detailEl.textContent = i18n('publish.ai.no_event_hint', 'Vul de velden zelf in. Je kunt de afbeelding wel als foto meesturen.');
+      }
+      return;
+    }
+    ygAiApply(data.data);
+  } catch (e) {
+    if (statusEl) {
+      statusEl.style.color = '#C0392B';
+      statusEl.textContent = i18n('publish.ai.err_generic', '❌ Invullen mislukt');
+    }
+    if (detailEl) detailEl.textContent = (e && e.message) ? e.message : String(e);
+  }
+}
+
+// Zet de gelezen gegevens in het formulier. Alles wat ontbreekt blijft leeg:
+// liever een veld dat de organisator zelf invult dan een veld dat hij moet
+// corrigeren zonder te weten dat het fout staat.
+function ygAiApply(d) {
+  var filled = [], notes = [];
+
+  // Land als eerste: het stuurt de placeholder en postcodevalidatie van het
+  // adresveld aan. Bewust 'silent' — de gewone variant wist juist het adres
+  // en toont een toast, en dat is bedoeld voor een handmatige landwissel.
+  if (d.land && typeof setListingCountry === 'function') {
+    setListingCountry(d.land, { silent: true });
+  }
+
+  function setField(id, val, key, fallback) {
+    if (val === null || val === undefined || val === '') return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.value = val;
+    filled.push(i18n(key, fallback));
+  }
+
+  setField('aTitle', d.titel, 'publish.ai.f_title', 'titel');
+  setField('aDate',  d.datum, 'publish.ai.f_date',  'datum');
+
+  if (d.starttijd || d.eindtijd) {
+    var af = document.getElementById('aFrom'), at = document.getElementById('aTill');
+    if (af && d.starttijd) af.value = d.starttijd;
+    if (at && d.eindtijd)  at.value = d.eindtijd;
+    filled.push(i18n('publish.ai.f_time', 'tijden'));
+  }
+
+  // Omschrijving langs dezelfde controle als validateDesc(). Het model is
+  // geïnstrueerd contactgegevens weg te laten, maar één gemiste regel zou
+  // hier wél openbaar worden — dan liever een leeg veld.
+  var desc = d.beschrijving || '';
+  if (desc && /(\+31|0031|0)[0-9\s\-\.]{8,12}|[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}|(www\.|https?:\/\/)[^\s]+/i.test(desc)) {
+    desc = '';
+    notes.push(i18n('publish.ai.desc_skipped', 'De omschrijving is overgeslagen: er stonden contactgegevens in.'));
+  }
+  if (desc) {
+    var dEl = document.getElementById('aDesc');
+    if (dEl) {
+      dEl.value = desc;
+      if (typeof validateDesc === 'function') validateDesc(desc);
+    }
+    filled.push(i18n('publish.ai.f_desc', 'omschrijving'));
+  }
+
+  // Adres alleen bij de enkel-adres-types. Bij buurtverkoop gaat het om
+  // adressen van buren, met een eigen AVG-toestemmingsflow; die vullen we
+  // niet namens de organisator in.
+  if (selTypeVal !== 'buurt') {
+    var addr = (d.adres || '').trim();
+    var plaats = (d.plaats || '').trim();
+    if (addr && plaats && addr.toLowerCase().indexOf(plaats.toLowerCase()) === -1) {
+      addr = addr + ', ' + plaats;
+    }
+    if (!addr && plaats) addr = plaats;
+    if (addr) {
+      var aEl = document.getElementById('aAddr');
+      if (aEl) {
+        aEl.value = addr;
+        // Bewust GEEN dataset.lat/lng: dit adres komt niet uit een gekozen
+        // suggestie, dus het is niet gegeocodeerd. Daarmee staat het exact
+        // zoals een handmatig getypt adres, en geocodeert publishSale() het
+        // alsnog via Nominatim. Oude coords van een vorige poging moeten
+        // hier weg, anders koppelt publishSale die aan de nieuwe tekst.
+        if (aEl.dataset) { delete aEl.dataset.lat; delete aEl.dataset.lng; }
+      }
+      filled.push(i18n('publish.ai.f_addr', 'adres'));
+    }
+  }
+
+  // Categorieën: alleen tegels die echt in het raster van dit type staan.
+  var wanted = Array.isArray(d.categorieen) ? d.categorieen : [];
+  if (wanted.length) {
+    var hits = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('#add-tags-grid .atag'), function(el) {
+      if (wanted.indexOf(el.dataset.tag) !== -1 && !el.classList.contains('sel')) {
+        toggleAddTag(el);
+        hits++;
+      }
+    });
+    if (hits) filled.push(i18n('publish.ai.f_cats', 'categorieën'));
+  }
+
+  if (selTypeVal === 'evenement' && d.evenement_subtype) {
+    var sel = document.getElementById('aEventType');
+    if (sel && Array.prototype.some.call(sel.options, function(o) { return o.value === d.evenement_subtype; })) {
+      sel.value = d.evenement_subtype;
+      if (typeof toggleEventAnders === 'function') toggleEventAnders(sel.value);
+      filled.push(i18n('publish.ai.f_subtype', 'type evenement'));
+    }
+  }
+
+  // Type-afwijking alleen melden, nooit stilzwijgend omzetten: selType()
+  // wist via updateTagsForType() de zojuist gekozen categorieën.
+  var hint = document.getElementById('ai-fill-type-hint');
+  if (hint) {
+    if (d.type_suggestie && d.type_suggestie !== selTypeVal) {
+      hint.textContent = i18n('publish.ai.type_hint', 'Deze affiche lijkt eerder {suggestie} te beschrijven dan wat je op de vorige stap koos.')
+        .replace('{suggestie}', i18n('publish.ai.type_' + d.type_suggestie, d.type_suggestie));
+      hint.style.display = 'block';
+    } else {
+      hint.style.display = 'none';
+      hint.textContent = '';
+    }
+  }
+
+  // Contactgegevens op de afbeelding: dat telt pas als iemand hem als foto
+  // meestuurt, dus de waarschuwing hoort bij het vinkje — daar wordt de
+  // beslissing genomen.
+  var warn = document.getElementById('ai-fill-contact-warn');
+  if (warn) {
+    if (d.contactgegevens_zichtbaar) {
+      warn.textContent = i18n('publish.ai.contact_warn', "⚠️ Er staan contactgegevens op deze afbeelding. Foto's bij een advertentie zijn openbaar zichtbaar.");
+      warn.style.display = 'block';
+    } else {
+      warn.style.display = 'none';
+      warn.textContent = '';
+    }
+  }
+
+  var statusEl = document.getElementById('ai-fill-status');
+  var detailEl = document.getElementById('ai-fill-detail');
+  var extra = notes.length ? ' ' + notes.join(' ') : '';
+  if (filled.length) {
+    if (statusEl) {
+      statusEl.style.color = '#3A6B4A';
+      statusEl.textContent = i18n('publish.ai.done', '✅ Ingevuld');
+    }
+    if (detailEl) {
+      detailEl.textContent = i18n('publish.ai.filled', 'Overgenomen: {fields}. Loop het even na.')
+        .replace('{fields}', filled.join(', ')) + extra;
+    }
+  } else {
+    if (statusEl) {
+      statusEl.style.color = 'var(--muted)';
+      statusEl.textContent = i18n('publish.ai.no_event', '🤔 Hier kon ik geen verkoop uit lezen');
+    }
+    if (detailEl) {
+      detailEl.textContent = i18n('publish.ai.nothing', 'Er viel niets bruikbaars uit te lezen. Vul de velden zelf in.') + extra;
+    }
+  }
+}
+
+// Poster als foto aan/uit. Standaard uit: openbare foto's vink je bewust aan.
+function ygAiTogglePoster(cb) {
+  var on = !!(cb && cb.checked);
+  if (on) {
+    if (!_ygAiPoster || !_ygAiPoster.photoDataUrl) {
+      if (cb) cb.checked = false;
+      return;
+    }
+    var max = (selTypeVal === 'buurt') ? 5 : 10;
+    if (uploadedPhotos.length >= max) {
+      if (cb) cb.checked = false;
+      toast(i18n('toast.photo_max_reached', '📷 Je zit al op het maximum van {max} foto\'s').replace('{max}', max));
+      return;
+    }
+    _ygAiPosterPhoto = _ygAiPoster.photoDataUrl;
+    uploadedPhotos.unshift(_ygAiPosterPhoto);
+  } else {
+    ygAiDetachPoster();
+  }
+  if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
+}
+
+// Haalt de poster uit uploadedPhotos, als hij erin zit. Laat andere foto's
+// met rust — vandaar indexOf op de exacte string in plaats van een vaste index.
+function ygAiDetachPoster() {
+  if (!_ygAiPosterPhoto) return;
+  var i = uploadedPhotos.indexOf(_ygAiPosterPhoto);
+  if (i !== -1) uploadedPhotos.splice(i, 1);
+  _ygAiPosterPhoto = null;
+}
+
+// Houdt het vinkje gelijk aan de werkelijkheid: haalt iemand de poster in
+// stap 3 met de ✕ weg, dan gaat het vinkje in stap 1 vanzelf mee uit.
+// Wordt aangeroepen vanuit renderPhotoGrid().
+function ygAiSyncPhotoCheckbox() {
+  var cb = document.getElementById('ai-fill-as-photo');
+  if (!cb) return;
+  var inList = !!_ygAiPosterPhoto && uploadedPhotos.indexOf(_ygAiPosterPhoto) !== -1;
+  if (!inList) _ygAiPosterPhoto = null;
+  if (cb.checked !== inList) cb.checked = inList;
+}
+
+// Handmatig weggooien van de gekozen afbeelding: terug naar de kiesknop.
+function ygAiClearPoster() {
+  ygAiResetCard();
+  if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
+}
+
+// Kaart terug naar de beginstand. uploadedPhotos wordt hier alleen ontdaan
+// van de poster; resetAddForm() leegt de rest zelf al.
+function ygAiResetCard() {
+  ygAiDetachPoster();
+  _ygAiPoster = null;
+  var pick   = document.getElementById('ai-fill-pick');
+  var result = document.getElementById('ai-fill-result');
+  var photoWrap = document.getElementById('ai-fill-photo-wrap');
+  var hint   = document.getElementById('ai-fill-type-hint');
+  var warn   = document.getElementById('ai-fill-contact-warn');
+  var cb     = document.getElementById('ai-fill-as-photo');
+  var thumb  = document.getElementById('ai-fill-thumb');
+  var fileEl = document.getElementById('ai-fill-file');
+  var statusEl = document.getElementById('ai-fill-status');
+  var detailEl = document.getElementById('ai-fill-detail');
+  if (pick) pick.style.display = '';
+  if (result) result.style.display = 'none';
+  if (photoWrap) photoWrap.style.display = 'none';
+  if (hint) { hint.style.display = 'none'; hint.textContent = ''; }
+  if (warn) { warn.style.display = 'none'; warn.textContent = ''; }
+  if (cb) cb.checked = false;
+  if (thumb) thumb.src = '';
+  if (fileEl) fileEl.value = '';
+  if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; }
+  if (detailEl) detailEl.textContent = '';
+}
+
 function resetAddForm() {
   addStep = 0;
   selTypeVal = 'particulier';
   uploadedPhotos = [];
+  ygAiResetCard();
   addTagsSelected.clear();
   buurtAdressen = [];
   updateTagsForType('particulier');
@@ -12017,6 +12602,10 @@ function renderPhotoGrid() {
       pc.innerHTML = '<span style="color:#3A6B4A;font-weight:600">✓ ' + uploadedPhotos.length + ' foto' + (uploadedPhotos.length > 1 ? '\'s' : '') + '</span> · max ' + _maxPh;
     }
   }
+  // De ✕ hierboven werkt rechtstreeks op uploadedPhotos, ook op de poster uit
+  // stap 1. Dan moet het vinkje daar mee uit — anders staat het aan terwijl de
+  // foto weg is.
+  if (typeof ygAiSyncPhotoCheckbox === 'function') ygAiSyncPhotoCheckbox();
 }
 
 // Client-side beeldcompressie: resize + JPEG-encode.

@@ -4,18 +4,40 @@
 // event uithalen. Response is altijd JSON conform het schema hieronder —
 // nooit een letterlijke overname van de brontekst.
 //
-// Auth: Bearer JWT van een ingelogde admin (profiles.is_admin = true of
-// admin_badges bevat 'admin').
+// Twee modi, met verschillende auth, prompt én uitvoerschema:
+//
+//   mode: 'admin'      (standaard) — admin neemt een vermelding over van een
+//                      openbare bron. Privéadressen worden bewust weggelaten
+//                      en er wordt bronvermelding gevraagd.
+//                      Auth: profiles.is_admin = true of badge 'admin'.
+//
+//   mode: 'organizer'  — een organisator vult zijn EIGEN advertentie in vanaf
+//                      een affiche/flyer. Het adres hoort er hier juist wél
+//                      in (het is zijn eigen verkoop), bronvelden vervallen,
+//                      en de uitvoer gebruikt de vocabulaire van het
+//                      plaatsingsformulier. Auth: elke ingelogde gebruiker,
+//                      met een gebruikslimiet (zie AI_PARSE_LIMIT_*).
 //
 // Aanroep (POST, JSON):
 //   {
-//     "text":          "<geplakte tekst>"      (optioneel als er een image is)
+//     "mode":          "admin" | "organizer"     (optioneel, default 'admin')
+//     "text":          "<geplakte tekst>"        (optioneel als er een image is)
 //     "image": {
 //       "data":       "<base64 zonder data: prefix>",
 //       "media_type": "image/jpeg" | "image/png" | "image/webp" | "image/gif"
 //     }                                          (optioneel als er tekst is)
 //     "hint_country": "NL" | "BE"                (optioneel)
+//
+//     // alleen bij mode 'organizer':
+//     "listing_type":  "particulier" | "buurt" | "evenement"   (verplicht)
+//     "categories":    ["👗 Kleding", ...]        (optioneel, max 40)
+//     "subtypes":      ["Vlooienmarkt", ...]      (optioneel, max 20)
 //   }
+//
+// De client stuurt zijn eigen categorie- en subtypelijst mee zodat die niet
+// op twee plekken onderhouden hoeft te worden. Het model mag daar alleen uit
+// kiezen, en de client matcht de teruggegeven strings daarna nogmaals tegen
+// zijn eigen lijst — wat niet exact matcht wordt genegeerd.
 //
 // Response:
 //   { "ok": true, "data": { ...event schema... } }
@@ -25,6 +47,9 @@
 // Required secrets:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (auto-injected)
 //   ANTHROPIC_API_KEY                        (handmatig zetten)
+//
+// Vereist voor mode 'organizer': tabel public.ai_parse_usage
+// (zie ai-parse-usage-setup.sql in de repo-root).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -40,6 +65,20 @@ const MAX_INPUT_CHARS = 8000;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // Anthropic-limiet
 const ALLOWED_MEDIA = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
+// Gebruikslimiet voor mode 'organizer'. Een parse kost een echte API-call,
+// dus zonder limiet is dit endpoint een open kostenpost. Admins vallen hier
+// buiten — die hebben hun eigen (impliciete) rem.
+const AI_PARSE_LIMIT_HOUR = 10;
+const AI_PARSE_LIMIT_DAY  = 30;
+
+// Wat de client mag meesturen aan keuzelijsten.
+const MAX_CATEGORIES = 40;
+const MAX_SUBTYPES   = 20;
+const MAX_CHOICE_LEN = 60;
+
+const LISTING_TYPES = new Set(['particulier', 'buurt', 'evenement']);
+const COUNTRIES     = new Set(['NL', 'BE', 'FR', 'DE']);
+
 interface EventSchema {
   titel: string | null;
   event_type: 'opritverkoop' | 'rommelroute' | 'rommelmarkt' | 'buurtverkoop' | 'overig' | null;
@@ -51,6 +90,25 @@ interface EventSchema {
   beschrijving: string | null;
   bron_naam: string | null;
   bron_url: string | null;
+}
+
+// Uitvoer voor mode 'organizer'. Volgt de velden van het plaatsingsformulier,
+// niet die van de admin-curatie. `type_suggestie` is expres een suggestie: het
+// type is al door de organisator gekozen en stuurt de rest van het formulier
+// aan (categorieën, adres-UI), dus dat overschrijven we nooit stilzwijgend.
+interface OrganizerSchema {
+  titel: string | null;
+  datum: string | null;
+  starttijd: string | null;
+  eindtijd: string | null;
+  adres: string | null;
+  plaats: string | null;
+  land: string | null;
+  beschrijving: string | null;
+  categorieen: string[];
+  type_suggestie: string | null;
+  evenement_subtype: string | null;
+  contactgegevens_zichtbaar: boolean;
 }
 
 interface ImagePayload {
@@ -77,7 +135,7 @@ serve(async (req: Request) => {
       return json({ error: 'Server misconfigured: ANTHROPIC_API_KEY missing' }, 500);
     }
 
-    // ── Auth: bearer JWT van een admin ──
+    // ── Auth: geldige bearer JWT (welke rol nodig is, hangt van de modus af) ──
     const authHeader = req.headers.get('Authorization') ?? '';
     const match = authHeader.match(/^Bearer\s+(.+)$/i);
     if (!match) {
@@ -92,30 +150,64 @@ serve(async (req: Request) => {
     }
     const callerId = userRes.data.user.id;
 
-    const profRes = await adminClient
-      .from('profiles')
-      .select('is_admin, admin_badges')
-      .eq('id', callerId)
-      .maybeSingle();
-    if (profRes.error) {
-      return json({ error: 'Cannot verify admin: ' + profRes.error.message }, 500);
-    }
-    const isAdmin = profRes.data?.is_admin === true;
-    const badges = parseBadges(profRes.data?.admin_badges);
-    if (!isAdmin && !badges.includes('admin')) {
-      return json({ error: 'Forbidden: admin role required' }, 403);
-    }
-
     // ── Body parsen ──
-    let payload: { text?: string; image?: ImagePayload; hint_country?: string };
+    // Moet vóór de rolcheck, want de modus bepaalt wélke check geldt.
+    let payload: {
+      mode?: string;
+      text?: string;
+      image?: ImagePayload;
+      hint_country?: string;
+      listing_type?: string;
+      categories?: unknown;
+      subtypes?: unknown;
+    };
     try {
       payload = await req.json();
     } catch {
       return json({ error: 'Invalid JSON body' }, 400);
     }
+
+    const mode = (payload.mode ?? 'admin').toLowerCase();
+    if (mode !== 'admin' && mode !== 'organizer') {
+      return json({ error: "mode moet 'admin' of 'organizer' zijn" }, 400);
+    }
+
+    // ── Rolcheck ──
+    // 'admin' blijft achter de adminrol. 'organizer' staat open voor elke
+    // ingelogde gebruiker (de JWT hierboven is al geverifieerd), maar met een
+    // gebruikslimiet in plaats van een rol.
+    if (mode === 'admin') {
+      const profRes = await adminClient
+        .from('profiles')
+        .select('is_admin, admin_badges')
+        .eq('id', callerId)
+        .maybeSingle();
+      if (profRes.error) {
+        return json({ error: 'Cannot verify admin: ' + profRes.error.message }, 500);
+      }
+      const isAdmin = profRes.data?.is_admin === true;
+      const badges = parseBadges(profRes.data?.admin_badges);
+      if (!isAdmin && !badges.includes('admin')) {
+        return json({ error: 'Forbidden: admin role required' }, 403);
+      }
+    } else {
+      const quota = await checkParseQuota(adminClient, callerId);
+      if (!quota.ok) {
+        return json({ error: quota.message, reason: quota.reason }, quota.status);
+      }
+    }
+
     const text = (payload.text ?? '').trim().slice(0, MAX_INPUT_CHARS);
     const hintCountry = (payload.hint_country ?? '').toUpperCase();
     const image = payload.image ?? null;
+
+    // ── Organizer-specifieke invoer ──
+    const listingType = (payload.listing_type ?? '').toLowerCase();
+    const categories  = sanitizeChoices(payload.categories, MAX_CATEGORIES);
+    const subtypes    = sanitizeChoices(payload.subtypes, MAX_SUBTYPES);
+    if (mode === 'organizer' && !LISTING_TYPES.has(listingType)) {
+      return json({ error: "listing_type moet 'particulier', 'buurt' of 'evenement' zijn" }, 400);
+    }
 
     if (!text && !image) {
       return json({ error: 'text of image is verplicht' }, 400);
@@ -139,7 +231,9 @@ serve(async (req: Request) => {
 
     // ── Claude aanroepen ──
     const today = new Date().toISOString().slice(0, 10);
-    const systemPrompt = buildSystemPrompt(today, hintCountry);
+    const systemPrompt = mode === 'organizer'
+      ? buildOrganizerPrompt(today, hintCountry, listingType, categories, subtypes)
+      : buildSystemPrompt(today, hintCountry);
 
     const contentBlocks: unknown[] = [];
     if (image) {
@@ -159,6 +253,16 @@ serve(async (req: Request) => {
         type: 'text',
         text: 'Extract het event uit deze afbeelding volgens het JSON-schema.',
       });
+    }
+
+    // Registreer het verbruik vlak vóór de betaalde call: dít is het moment
+    // dat geld kost. Faalt de registratie, dan gaat de parse gewoon door —
+    // een kapotte teller mag de gebruiker niet blokkeren.
+    if (mode === 'organizer') {
+      const usageRes = await adminClient.from('ai_parse_usage').insert({ user_id: callerId });
+      if (usageRes.error) {
+        console.warn('ai_parse_usage insert faalde:', usageRes.error.message);
+      }
     }
 
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -202,10 +306,18 @@ serve(async (req: Request) => {
       return json({ ok: false, reason: 'no_event', message: parsed.error }, 200);
     }
 
-    const cleaned = normalizeEvent(parsed);
+    const cleaned = mode === 'organizer'
+      ? normalizeOrganizer(parsed, categories, subtypes)
+      : normalizeEvent(parsed);
 
-    // Als àlle velden null zijn, tellen we dat als "geen event gevonden".
-    const anyFilled = Object.values(cleaned).some((v) => v !== null);
+    // Als àlle velden leeg zijn, tellen we dat als "geen event gevonden".
+    // `contactgegevens_zichtbaar` (false) en `categorieen` (lege array) tellen
+    // niet mee — dat zijn geen uit de bron gelezen gegevens.
+    const anyFilled = Object.entries(cleaned).some(([k, v]) => {
+      if (k === 'contactgegevens_zichtbaar') return false;
+      if (Array.isArray(v)) return v.length > 0;
+      return v !== null;
+    });
     if (!anyFilled) {
       return json({ ok: false, reason: 'no_event', message: 'geen event gevonden' }, 200);
     }
@@ -253,6 +365,157 @@ function buildSystemPrompt(today: string, hintCountry: string): string {
     'Als de bron GEEN lokaal-verkoop-evenement bevat (onleesbaar, ander onderwerp, alleen een meme, enz.), antwoord dan met EXACT:',
     '{"error": "geen event gevonden"}',
   ].join('\n');
+}
+
+// ── Gebruikslimiet (alleen mode 'organizer') ──────────────────────
+// Haalt het venster van 24 uur in één query op en telt het laatste uur er
+// lokaal uit, zodat er maar één database-rondje nodig is.
+async function checkParseQuota(
+  adminClient: any,
+  userId: string,
+): Promise<{ ok: true } | { ok: false; status: number; reason: string; message: string }> {
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const res = await adminClient
+    .from('ai_parse_usage')
+    .select('created_at')
+    .eq('user_id', userId)
+    .gte('created_at', dayAgo);
+
+  if (res.error) {
+    return {
+      ok: false,
+      status: 500,
+      reason: 'quota_check_failed',
+      message: 'Kan de gebruikslimiet niet controleren: ' + res.error.message,
+    };
+  }
+
+  const rows: Array<{ created_at: string }> = res.data ?? [];
+  if (rows.length >= AI_PARSE_LIMIT_DAY) {
+    return {
+      ok: false,
+      status: 429,
+      reason: 'rate_limited_day',
+      message: 'Je hebt vandaag het maximum van ' + AI_PARSE_LIMIT_DAY +
+        ' AI-invullingen bereikt. Vul het formulier handmatig in, of probeer het morgen opnieuw.',
+    };
+  }
+
+  const hourAgo = Date.now() - 60 * 60 * 1000;
+  const lastHour = rows.filter((r) => new Date(r.created_at).getTime() >= hourAgo).length;
+  if (lastHour >= AI_PARSE_LIMIT_HOUR) {
+    return {
+      ok: false,
+      status: 429,
+      reason: 'rate_limited_hour',
+      message: 'Je hebt het maximum van ' + AI_PARSE_LIMIT_HOUR +
+        ' AI-invullingen per uur bereikt. Vul het formulier handmatig in, of probeer het over een uur opnieuw.',
+    };
+  }
+
+  return { ok: true };
+}
+
+// Keuzelijst van de client opschonen: alleen korte, niet-lege strings, geen
+// duplicaten, en afgekapt op een maximum. Voorkomt dat er via de body een
+// eindeloze of rommelige lijst de prompt in glipt.
+function sanitizeChoices(raw: unknown, max: number): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string') continue;
+    const t = item.trim();
+    if (!t || t.length > MAX_CHOICE_LEN) continue;
+    if (out.includes(t)) continue;
+    out.push(t);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+// ── Prompt voor mode 'organizer' ──────────────────────────────────
+// Fundamenteel andere uitgangspositie dan de adminprompt: dit is de EIGEN
+// verkoop van degene die het formulier invult, dus het adres hoort er juist
+// wél in. Het type is al gekozen en wordt hier als gegeven meegegeven, zodat
+// het model gericht kan zoeken in plaats van ook nog te classificeren.
+function buildOrganizerPrompt(
+  today: string,
+  hintCountry: string,
+  listingType: string,
+  categories: string[],
+  subtypes: string[],
+): string {
+  const typeUitleg: Record<string, string> = {
+    particulier: 'een opritverkoop: één huishouden dat eigen spullen verkoopt bij het eigen huis',
+    buurt: 'een rommelroute of buurtverkoop: meerdere huizen in dezelfde buurt op dezelfde dag',
+    evenement: 'een georganiseerd evenement, zoals een rommelmarkt, vlooienmarkt of braderie',
+  };
+
+  const countryLine = hintCountry
+    ? 'De organisator zit waarschijnlijk in ' + (hintCountry === 'BE' ? 'België' : 'Nederland') + '.'
+    : 'De verkoop is waarschijnlijk in Nederland of België.';
+
+  const lines = [
+    'Je vult een advertentieformulier voor van iemand die zijn EIGEN lokale verkoop op YardiGo plaatst.',
+    'De bron is zijn eigen affiche, flyer, poster of aankondiging — geen bron van derden.',
+    '',
+    'De organisator heeft zelf al gekozen dat dit ' + (typeUitleg[listingType] ?? 'een lokale verkoop') + ' is.',
+    'Ga daarvan uit bij het lezen; je hoeft het type niet te bepalen.',
+    countryLine,
+    'Vandaag is ' + today + '. Interpreteer een datum als "zaterdag 20 juni" als de eerstvolgende keer dat die datum valt, in de toekomst.',
+    '',
+    'Antwoord UITSLUITEND met één JSON-object, geen uitleg, geen markdown-fences:',
+    '{',
+    '  "titel": string | null,',
+    '  "datum": "YYYY-MM-DD" | null,',
+    '  "starttijd": "HH:MM" | null,',
+    '  "eindtijd": "HH:MM" | null,',
+    '  "adres": string | null,',
+    '  "plaats": string | null,',
+    '  "land": "NL" | "BE" | "FR" | "DE" | null,',
+    '  "beschrijving": string | null,',
+    '  "categorieen": string[],',
+    '  "type_suggestie": "particulier" | "buurt" | "evenement" | null,',
+    '  "evenement_subtype": string | null,',
+    '  "contactgegevens_zichtbaar": boolean',
+    '}',
+    '',
+    'Regels:',
+    '- adres = het volledige adres van de verkoop zoals het er staat (straat, huisnummer, eventueel postcode en plaats). Dit is de eigen verkoop van de invuller, dus een woonadres hoort er gewoon in. Staat er geen adres: null.',
+    '- plaats = alleen de plaatsnaam (bijvoorbeeld "Groningen").',
+    '- titel = kort en wervend, max 60 tekens. Geen datum of adres in de titel; die staan al in eigen velden.',
+    '- beschrijving = je EIGEN korte, feitelijke samenvatting van max 240 tekens. Neem de brontekst niet letterlijk over.',
+    '- ZET NOOIT een telefoonnummer, e-mailadres of website in "titel" of "beschrijving", ook niet als die op de bron staan. Het formulier weigert ze, en bezoekers nemen contact op via YardiGo zelf.',
+    '- Ontbrekend veld = null. Verzin niets, ook geen plausibele tijden.',
+    '- type_suggestie = wat de bron in werkelijkheid lijkt te beschrijven. Meestal gelijk aan het gekozen type; wijk daar alleen van af als de bron duidelijk iets anders is (bijvoorbeeld een markt met tientallen kramen terwijl "particulier" gekozen is). Dit is puur een signaal, geen correctie.',
+  ];
+
+  if (categories.length > 0) {
+    lines.push(
+      '- categorieen = maximaal 6 items, LETTERLIJK overgenomen uit deze lijst (exact dezelfde tekst, inclusief het emoji-teken vooraan). Kies alleen wat de bron echt noemt; noemt de bron niets bruikbaars, geef dan een lege lijst:',
+      '  ' + JSON.stringify(categories),
+    );
+  } else {
+    lines.push('- categorieen = lege lijst.');
+  }
+
+  if (listingType === 'evenement' && subtypes.length > 0) {
+    lines.push(
+      '- evenement_subtype = één waarde, LETTERLIJK uit deze lijst, of null als geen enkele past:',
+      '  ' + JSON.stringify(subtypes),
+    );
+  } else {
+    lines.push('- evenement_subtype = null.');
+  }
+
+  lines.push(
+    '- contactgegevens_zichtbaar = true als er in de MEEGESTUURDE AFBEELDING een telefoonnummer, e-mailadres of een volledig woonadres leesbaar in beeld staat. De afbeelding kan als foto bij de advertentie worden gepubliceerd, dus dit is een privacywaarschuwing voor de organisator. Is er geen afbeelding meegestuurd, dan is dit false.',
+    '',
+    'Als de bron GEEN aankondiging van een lokale verkoop is (onleesbaar, ander onderwerp, alleen een logo of meme), antwoord dan met EXACT:',
+    '{"error": "geen event gevonden"}',
+  );
+
+  return lines.join('\n');
 }
 
 function extractTextContent(anthropicJson: any): string {
@@ -307,6 +570,55 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
     beschrijving: clean(raw.beschrijving),
     bron_naam:    clean(raw.bron_naam),
     bron_url:     clean(raw.bron_url),
+  };
+}
+
+// Normalisatie voor mode 'organizer'. Alles wat niet exact aan het verwachte
+// formaat voldoet wordt null — het formulier vult liever niets in dan iets
+// verkeerds, want de organisator ziet niet wat hij niet nakijkt.
+function normalizeOrganizer(
+  raw: Record<string, unknown>,
+  allowedCategories: string[],
+  allowedSubtypes: string[],
+): OrganizerSchema {
+  const clean = (v: unknown): string | null => {
+    if (typeof v !== 'string') return null;
+    const t = v.trim();
+    return t === '' ? null : t;
+  };
+
+  const dt = clean(raw.datum);
+  const st = clean(raw.starttijd);
+  const en = clean(raw.eindtijd);
+  const land = (clean(raw.land) ?? '').toUpperCase();
+  const typeSug = (clean(raw.type_suggestie) ?? '').toLowerCase();
+  const subtype = clean(raw.evenement_subtype);
+
+  // Alleen categorieën die letterlijk in de lijst van de client staan. De
+  // client filtert daarna nóg een keer tegen zijn eigen DOM, dus een
+  // afwijkende string kan nooit als tag blijven hangen.
+  const cats: string[] = [];
+  if (Array.isArray(raw.categorieen)) {
+    for (const item of raw.categorieen) {
+      const t = clean(item);
+      if (t && allowedCategories.includes(t) && !cats.includes(t)) cats.push(t);
+      if (cats.length >= 6) break;
+    }
+  }
+
+  return {
+    titel:        clean(raw.titel),
+    datum:        (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) ? dt : null,
+    starttijd:    (st && /^\d{1,2}:\d{2}$/.test(st)) ? padTime(st) : null,
+    eindtijd:     (en && /^\d{1,2}:\d{2}$/.test(en)) ? padTime(en) : null,
+    adres:        clean(raw.adres),
+    plaats:       clean(raw.plaats),
+    land:         COUNTRIES.has(land) ? land : null,
+    beschrijving: clean(raw.beschrijving),
+    categorieen:  cats,
+    type_suggestie: LISTING_TYPES.has(typeSug) ? typeSug : null,
+    evenement_subtype: (subtype && allowedSubtypes.includes(subtype)) ? subtype : null,
+    contactgegevens_zichtbaar: raw.contactgegevens_zichtbaar === true,
   };
 }
 
