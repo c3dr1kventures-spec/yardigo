@@ -489,6 +489,14 @@ body.dark .yg-footer{border-top-color:var(--border);}
 .fdd-opt:hover{background:var(--bg2);}
 .fdd-opt.sel{font-weight:700;color:var(--forest);}
 
+/* Compacte variant: filter-bar verplaatst naar boven de resultatenlijst
+   (mobiel/tablet, alleen op het Lijst-tabblad — zie ygRelocateFilterBar()).
+   Geen volle-breedte groene balk meer, past zich aan het witte list-wrap
+   aan i.p.v. aan de header-strip. */
+.filter-bar--inline{background:transparent;padding:0 0 10px;margin:0;justify-content:flex-start;}
+.filter-bar--inline .fdd-btn{background:var(--bg2);border:1.5px solid var(--border);color:var(--text);}
+body.dark .filter-bar--inline .fdd-btn{background:var(--bg);color:var(--text);}
+
 /* ── TYPE FILTER + TABS ── */
 .type-row{display:flex;align-items:center;gap:6px;padding:8px 14px;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
 .type-row::-webkit-scrollbar{display:none;}
@@ -1920,8 +1928,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   </div>
 </div>
 
-<!-- Filter bar -->
-<div class="filter-bar">
+<!-- Filter bar — verplaatst op mobiel naar boven de lijst zodra Lijst actief is,
+     zie ygRelocateFilterBar() / sv(). Dit anker markeert de originele plek. -->
+<div id="filter-bar-anchor"></div>
+<div class="filter-bar" id="filter-bar">
   <div style="position:relative">
     <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')"><span data-i18n="filter.dist_label">📍 Afstand</span>: <span id="lbl-afstand" data-i18n="filter.dist.everywhere">Overal</span> ▾</button>
     <div class="fdd-menu" id="dd-afstand">
@@ -2033,6 +2043,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
   </aside>
   <div class="list-wrap">
+    <div id="list-filter-bar-slot"></div>
     <div class="list-header" style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap">
       <span id="lcount" style="flex-shrink:0;white-space:nowrap">0 gevonden</span>
       <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap">
@@ -3435,7 +3446,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
               <button type="button" onclick="ygAiClearPoster()" style="background:none;border:none;font-size:15px;line-height:1;cursor:pointer;color:var(--muted);padding:2px 4px;flex-shrink:0" data-i18n-title="publish.ai.remove" title="Afbeelding verwijderen">✕</button>
             </div>
             <label id="ai-fill-photo-wrap" style="display:none;align-items:flex-start;gap:8px;margin-top:10px;padding:10px;background:white;border:1.5px solid var(--border);border-radius:10px;cursor:pointer">
-              <input type="checkbox" id="ai-fill-as-photo" onchange="ygAiTogglePoster(this)" style="margin-top:1px;accent-color:#2D6A4F;flex-shrink:0">
+              <input type="checkbox" id="ai-fill-as-photo" checked onchange="ygAiTogglePoster(this)" style="margin-top:1px;accent-color:#2D6A4F;flex-shrink:0">
               <span style="font-size:11.5px;line-height:1.5;min-width:0">
                 <span data-i18n="publish.ai.as_photo">Deze afbeelding ook als foto bij mijn advertentie tonen</span>
                 <span id="ai-fill-contact-warn" style="display:none;margin-top:4px;color:#C5612A;font-weight:600"></span>
@@ -7289,6 +7300,7 @@ const YG_ICON_SYMBOLS = {
   house: '<path class="yg-i-amber" d="M4 11 12 4l8 7v8.7a1.3 1.3 0 0 1-1.3 1.3H5.3A1.3 1.3 0 0 1 4 19.7V11Z"/><path class="yg-i-forest" d="M9.2 21v-6.2h5.6V21H9.2Z"/><path class="yg-i-terra" d="m3 11 9-8 9 8-1.5 1.7L12 6 4.5 12.7 3 11Z"/>',
   homes: '<path class="yg-i-terra" d="M3.5 12 9 7.3l5.5 4.7v7H3.5v-7Z"/><path class="yg-i-amber" d="M10 9.8 15.5 5l5 4.2V19h-6v-7L10 9.8Z"/><path class="yg-i-forest" d="M7.3 19v-4.5h3V19h-3Z"/>',
   market: '<path class="yg-i-forest" d="M4 9h16l-1.3-4.5H5.3L4 9Z"/><path class="yg-i-terra" d="M5 9h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Z"/><path class="yg-i-amber" d="M8 9h3v3a1.5 1.5 0 0 1-3 0V9Zm6 0h3v3a1.5 1.5 0 0 1-3 0V9Z"/><rect class="yg-i-forest" x="5.5" y="13" width="13" height="7.5" rx="1.5"/><path class="yg-i-amber" d="M8.2 16h7.6v4.5H8.2V16Z"/><path class="yg-i-white-stroke" d="M8 14.9h8M10.7 17.4h2.6"/>',
+  fleatable: '<rect class="yg-i-forest" x="3.5" y="15" width="17" height="2.6" rx="1"/><rect class="yg-i-forest-dark" x="5" y="17.6" width="2" height="3.4"/><rect class="yg-i-forest-dark" x="17" y="17.6" width="2" height="3.4"/><circle class="yg-i-amber" cx="8.5" cy="12.5" r="2.3"/><rect class="yg-i-terra" x="12" y="10" width="5" height="4.5" rx="1"/>',
   clothes: '<path class="yg-i-terra" d="M9 4h6l2.3 2.3 3 1.1-2 4-2.2-.9V20H7.9v-9.5l-2.2.9-2-4 3-1.1L9 4Z"/><path class="yg-i-birch" d="M9 4a3 3 0 0 0 6 0h-2a1 1 0 0 1-2 0H9Z"/>',
   shoe: '<path class="yg-i-forest" d="M4 15.3c2.8-.2 5.6-2 7.1-5.6l2.6 1.2c1.2.6 2.3 1.7 3.5 2.2l2 .9c.7.3 1.1 1 1.1 1.8v1.5H4v-2Z"/><path class="yg-i-amber" d="M4 17.2h16.3v1.2c0 .9-.7 1.6-1.6 1.6H5.6A1.6 1.6 0 0 1 4 18.4v-1.2Z"/><path class="yg-i-white-stroke" d="M11.1 12.2 9.9 14m3.4-.8-1.1 1.6"/>',
   bag: '<rect class="yg-i-terra" x="5" y="8" width="14" height="12" rx="2.2"/><path class="yg-i-white-stroke" d="M8.5 8V7a3.5 3.5 0 0 1 7 0v1"/><circle class="yg-i-amber" cx="12" cy="14.5" r="2.1"/>',
@@ -7346,7 +7358,7 @@ const YG_ICON_SYMBOLS = {
 
 const YG_EMOJI_ICON_MAP = {
   '🗺️':'map','🧭':'route','🔔':'bell','🔐':'lock','🔒':'lock','📍':'pin','🏷️':'tag',
-  '🏠':'house','🏘️':'homes','🎪':'market','🛒':'market','🏪':'market',
+  '🏠':'house','🏘️':'homes','🎪':'market','🛒':'market','🏪':'market','🧺':'fleatable',
   '👗':'clothes','👟':'shoe','👜':'bag','💍':'jewelry','🏺':'vintage','📻':'radio','🛋️':'furniture','🍳':'pan','🍽️':'pan',
   '🧸':'toy','👶':'baby','📱':'phone','🎮':'game','📚':'books','🎵':'music','⚽':'sport','🚲':'bike','🌿':'leaf','🔧':'tools','🎨':'art','🔭':'scope','📦':'box',
   '📅':'calendar','🕐':'clock','📋':'list','⭐':'star','☆':'star','👤':'user','👁️':'user','⚙️':'settings','🔍':'search','🚗':'route','📷':'camera','📸':'camera',
@@ -7454,7 +7466,7 @@ const TYPES = {
 // Onbekende of custom (Anders) waarden vallen terug op de tent-emoji.
 const EVENT_SUBTYPE_ICONS = {
   Vlooienmarkt:     '🎪',
-  Rommelmarkt:      '🛒',
+  Rommelmarkt:      '🧺',
   Kofferbakverkoop: '🚗',
   Braderie:         '🏪',
   Kerstmarkt:       '🎄',
@@ -9496,6 +9508,33 @@ function sv(name, tabEl) {
   if (name === 'kaart' && typeof _syncKaartSideList === 'function') {
     setTimeout(_syncKaartSideList, 80);
   }
+  ygRelocateFilterBar(name);
+}
+
+// Op mobiel voelde de losse Afstand/Datum/Filter-balk bovenaan (boven de
+// type-pills én de tabs) te ver van de resultaten af. Op desktop bestaat
+// hiervoor al de vaste .lijst-side sidebar, dus daar raken we niets aan —
+// dit is puur de mobiele/tablet-laag, waar .filter-bar zelf verplaatst
+// (niet gekloond: de dropdowns/labels hebben unieke id's, dus twee kopieën
+// zou ze laten botsen). Bij Lijst schuift de balk naar boven de resultaten-
+// teller; bij elke andere view staat hij weer op zijn vaste plek.
+function ygRelocateFilterBar(name) {
+  if (document.body.classList.contains('is-desktop')) return;
+  var bar = document.getElementById('filter-bar');
+  if (!bar) return;
+  if (name === 'lijst') {
+    var slot = document.getElementById('list-filter-bar-slot');
+    if (slot && bar.parentElement !== slot) {
+      slot.appendChild(bar);
+      bar.classList.add('filter-bar--inline');
+    }
+  } else {
+    var anchor = document.getElementById('filter-bar-anchor');
+    if (anchor && bar.previousElementSibling !== anchor) {
+      anchor.after(bar);
+      bar.classList.remove('filter-bar--inline');
+    }
+  }
 }
 function ptab(i) {
   document.querySelectorAll('.pp').forEach(function(p) { p.classList.remove('active'); });
@@ -11158,6 +11197,19 @@ async function ygAiPickPoster(input) {
     // Het vinkje komt meteen beschikbaar, ook als de parse straks niets
     // oplevert — de afbeelding kan op zichzelf een prima foto zijn.
     if (photoWrap) photoWrap.style.display = 'flex';
+    // Standaard aangevinkt: de afbeelding gaat direct mee als foto, tenzij
+    // het fotomaximum al bereikt is. cb.checked hier zetten vuurt geen
+    // onchange, dus de daadwerkelijke toevoeging aan uploadedPhotos moet
+    // hier expliciet gebeuren (zie ygAiTogglePoster voor dezelfde logica).
+    var maxPhotos = (selTypeVal === 'buurt') ? 5 : 10;
+    if (cb && uploadedPhotos.length < maxPhotos) {
+      cb.checked = true;
+      _ygAiPosterPhoto = photoDataUrl;
+      uploadedPhotos.unshift(_ygAiPosterPhoto);
+      if (typeof renderPhotoGrid === 'function') renderPhotoGrid();
+    } else if (cb) {
+      cb.checked = false;
+    }
   }
 
   statusEl.textContent = i18n('publish.ai.reading', 'AI leest je affiche…');
@@ -14651,6 +14703,19 @@ function _goHome() {
     // Kaart-sidebar bijwerken op desktop
     if (on && typeof renderList === 'function') {
       setTimeout(function() { try { _syncKaartSideList(); } catch(_e) {} }, 50);
+    }
+    // filter-bar terugzetten op zijn vaste plek zodra desktop-layout ingaat
+    // (op mobiel kan hij verplaatst zijn naar boven de lijst, zie sv()).
+    if (on) {
+      var bar = document.getElementById('filter-bar');
+      var anchor = document.getElementById('filter-bar-anchor');
+      if (bar && anchor && bar.previousElementSibling !== anchor) {
+        anchor.after(bar);
+        bar.classList.remove('filter-bar--inline');
+      }
+    } else if (typeof ygRelocateFilterBar === 'function') {
+      var activeTab = document.querySelector('.view.active');
+      if (activeTab && activeTab.id === 'view-lijst') ygRelocateFilterBar('lijst');
     }
   }
   _apply(mq);

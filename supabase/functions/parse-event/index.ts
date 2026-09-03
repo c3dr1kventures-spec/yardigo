@@ -307,7 +307,7 @@ serve(async (req: Request) => {
     }
 
     const cleaned = mode === 'organizer'
-      ? normalizeOrganizer(parsed, categories, subtypes)
+      ? normalizeOrganizer(parsed, categories, subtypes, today)
       : normalizeEvent(parsed);
 
     // Als àlle velden leeg zijn, tellen we dat als "geen event gevonden".
@@ -580,6 +580,7 @@ function normalizeOrganizer(
   raw: Record<string, unknown>,
   allowedCategories: string[],
   allowedSubtypes: string[],
+  today: string,
 ): OrganizerSchema {
   const clean = (v: unknown): string | null => {
     if (typeof v !== 'string') return null;
@@ -606,9 +607,17 @@ function normalizeOrganizer(
     }
   }
 
+  // De prompt vraagt om de eerstvolgende toekomstige datum, maar het model
+  // volgt dat niet altijd (bijvoorbeeld "zaterdag 20 juni" teruggeven voor
+  // dit jaar, ook als die datum al voorbij is). Een datum in het verleden is
+  // voor een advertentie die nu geplaatst wordt sowieso nooit correct, dus
+  // die vangen we hier hard af i.p.v. te vertrouwen op het model — liever
+  // een leeg veld dat de organisator zelf invult dan een stille foute datum.
+  const isValidDate = dt && /^\d{4}-\d{2}-\d{2}$/.test(dt) && dt >= today;
+
   return {
     titel:        clean(raw.titel),
-    datum:        (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) ? dt : null,
+    datum:        isValidDate ? dt : null,
     starttijd:    (st && /^\d{1,2}:\d{2}$/.test(st)) ? padTime(st) : null,
     eindtijd:     (en && /^\d{1,2}:\d{2}$/.test(en)) ? padTime(en) : null,
     adres:        clean(raw.adres),
