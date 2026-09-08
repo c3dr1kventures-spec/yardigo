@@ -1,0 +1,6 @@
+app_identifier("nl.yardigo.app")
+team_id("8XQPVYJFUN")
+
+# Geen apple_id() hier: we authenticeren via de App Store Connect API key
+# (zie Fastfile), niet via een Apple-ID + wachtwoord/2FA. Dat is de reden
+# dat dit vanaf de command line kan draaien zonder interactieve login.

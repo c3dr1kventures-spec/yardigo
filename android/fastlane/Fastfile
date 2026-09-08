@@ -1,0 +1,28 @@
+default_platform(:android)
+
+platform :android do
+  desc "Bouwt de signed release AAB en uploadt 'm naar het interne testspoor (geen review nodig)"
+  lane :internal do
+    gradle(task: "bundle", build_type: "Release")
+    upload_to_play_store(
+      track: "internal",
+      aab: "../app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Bouwt de signed release AAB en uploadt 'm naar productie (NIET automatisch uitrollen naar 100%)"
+  lane :release do
+    gradle(task: "bundle", build_type: "Release")
+    upload_to_play_store(
+      track: "production",
+      rollout: "0.1",           # begin voorzichtig met een staged rollout
+      aab: "../app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

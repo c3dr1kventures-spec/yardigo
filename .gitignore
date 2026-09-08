@@ -36,6 +36,20 @@ android/app/debug/
 *.keystore
 keystore.properties
 
+# ── App store CLI-automatisering (fastlane) — NOOIT in git ──
+# API-keys/service-accounts en fastlane's eigen run-artefacten.
+*.p8
+play-console-service-account*.json
+**/fastlane/.env
+**/fastlane/.env.*
+!**/fastlane/.env.example
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots/**/*.png
+**/fastlane/test_output
+**/fastlane/README.md
+ios/App/build/
+
 # Play Store-assets (apart bewaard, niet in repo)
 play-store-assets/
 

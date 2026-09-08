@@ -1,0 +1,2 @@
+json_key_file(ENV.fetch("SUPPLY_JSON_KEY_FILE", "../play-console-service-account.json"))
+package_name("nl.yardigo.app")

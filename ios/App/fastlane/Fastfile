@@ -1,0 +1,52 @@
+default_platform(:ios)
+
+# Authenticatie via App Store Connect API key (geen Apple-ID/wachtwoord/2FA
+# nodig). Verwacht drie env-vars, normaal gezet via `ios/App/fastlane/.env`
+# (gitignored) — zie NOTIFICATIONS-SETUP.md-achtige uitleg in APPSTORE-CLI-SETUP.md.
+#   ASC_KEY_ID       — Key ID uit App Store Connect
+#   ASC_ISSUER_ID    — Issuer ID uit App Store Connect
+#   ASC_KEY_FILEPATH — pad naar de gedownloade .p8-sleutel (NOOIT in git)
+def asc_api_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_filepath: ENV.fetch("ASC_KEY_FILEPATH"),
+    duration: 1200,
+    in_house: false
+  )
+end
+
+platform :ios do
+  desc "Bouwt de app en uploadt 'm naar TestFlight (geen review, alleen intern testen)"
+  lane :beta do
+    asc_api_key
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      output_directory: "./build"
+    )
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Bouwt de app en uploadt 'm naar App Store Connect (NIET automatisch indienen voor review)"
+  lane :release do
+    asc_api_key
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      output_directory: "./build"
+    )
+    upload_to_app_store(
+      skip_screenshots: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      submit_for_review: false,   # bewust uit — indienen voor review doe je zelf, na een laatste check
+      automatic_release: false,
+      force: true
+    )
+  end
+end
