@@ -45,20 +45,23 @@ export async function sendWebPush(sub: WebPushSubscription, payload: Record<stri
 // Stuurt native push via OneSignal aan een set player ids. Geeft stil `false`
 // terug (geen throw) zolang ONESIGNAL_APP_ID nog niet is ingesteld, zodat de
 // cron-functies werken vóórdat OneSignal is aangesloten.
-export async function sendOneSignal(playerIds: string[], title: string, body: string, url: string): Promise<boolean> {
+export async function sendOneSignal(subscriptionIds: string[], title: string, body: string, url: string): Promise<boolean> {
   const appId = Deno.env.get('ONESIGNAL_APP_ID') ?? ''
   const apiKey = Deno.env.get('ONESIGNAL_REST_API_KEY') ?? ''
-  if (!appId || !apiKey || playerIds.length === 0) return false
+  if (!appId || !apiKey || subscriptionIds.length === 0) return false
   try {
-    const res = await fetch('https://onesignal.com/api/v1/notifications', {
+    // Huidige OneSignal REST API (api.onesignal.com, "Key"-auth, include_subscription_ids
+    // i.p.v. het verouderde include_player_ids op de oude onesignal.com/api/v1 host).
+    const res = await fetch('https://api.onesignal.com/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${apiKey}`,
+        'Authorization': `Key ${apiKey}`,
       },
       body: JSON.stringify({
         app_id: appId,
-        include_player_ids: playerIds,
+        target_channel: 'push',
+        include_subscription_ids: subscriptionIds,
         headings: { en: title, nl: title },
         contents: { en: body, nl: body },
         url,
