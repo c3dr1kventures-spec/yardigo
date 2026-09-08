@@ -971,43 +971,71 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.dark.is-desktop .hsc-title,
   body.dark.is-desktop .hsc-body{color:var(--text);}
 
-  /* ── Berichtenbord (gastenboek) sidebar-card ── */
+  /* ── Berichtenbord (gastenboek) sidebar-card, chatbox-stijl ── */
   .gb-card-wrap{position:relative;}
-  #gb-form{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
-  .gb-input,.gb-textarea{
-    width:100%;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
-    background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;
-    padding:7px 9px;outline:none;resize:vertical;
+  .gb-chat-header{display:flex;align-items:center;justify-content:space-between;}
+  .gb-chat-live{font-size:9.5px;font-weight:700;color:var(--forest);display:flex;align-items:center;gap:4px;}
+  .gb-chat-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--forest);display:inline-block;animation:gbPulse 1.6s ease-in-out infinite;}
+  @keyframes gbPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .gb-chatlog{
+    display:flex;flex-direction:column;gap:10px;
+    max-height:210px;overflow-y:auto;transition:max-height .25s ease;
+    padding:10px 3px 2px;margin-bottom:6px;
+    background:linear-gradient(180deg,var(--bg2),rgba(0,0,0,0) 28px);
+    border-radius:10px;
   }
-  .gb-input:focus,.gb-textarea:focus{border-color:var(--terra);}
-  .gb-form-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .gb-counter{font-size:10.5px;color:var(--muted);}
-  .gb-submit-btn{
-    font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:700;color:#fff;
-    background:var(--terra);border:none;border-radius:8px;padding:6px 14px;cursor:pointer;
+  .gb-chatlog.gb-expanded{max-height:640px;}
+  .gb-bubble-row{display:flex;align-items:flex-start;gap:7px;}
+  .gb-avatar{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;margin-top:1px;
+    background:linear-gradient(135deg,var(--terra),#C5612A);color:#fff;
+    font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;
   }
-  .gb-submit-btn:disabled{opacity:.6;cursor:default;}
-  .gb-status{font-size:11px;min-height:14px;}
+  .gb-bubble{
+    background:#fff;border-radius:3px 14px 14px 14px;padding:7px 11px;
+    box-shadow:0 1px 3px rgba(44,36,22,.08);max-width:calc(100% - 33px);
+  }
+  .gb-bubble-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:1px;flex-wrap:wrap;}
+  .gb-bubble-name{font-size:11px;font-weight:700;color:var(--terra);}
+  .gb-bubble-time{font-size:9px;color:var(--muted);}
+  .gb-bubble-text{font-size:12px;color:#4A3E32;line-height:1.45;white-space:pre-wrap;word-break:break-word;}
+  .gb-loading,.gb-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 0;}
+  .gb-expand-btn{
+    display:block;width:100%;margin-bottom:8px;background:transparent;border:none;
+    font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;color:var(--terra);cursor:pointer;
+  }
+
+  .gb-composer{border-top:1px solid var(--border);padding-top:9px;}
+  .gb-name-input{
+    width:100%;font-family:'Poppins',sans-serif;font-size:11px;color:var(--text);
+    background:transparent;border:none;border-bottom:1px solid var(--border);
+    padding:2px 2px 6px;outline:none;margin-bottom:7px;
+  }
+  .gb-name-input:focus{border-color:var(--terra);}
+  .gb-composer-row{display:flex;align-items:flex-end;gap:6px;}
+  .gb-composer-input{
+    flex:1;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
+    background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;
+    padding:8px 13px;outline:none;resize:none;max-height:70px;
+  }
+  .gb-composer-input:focus{border-color:var(--terra);}
+  .gb-send-btn{
+    flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--terra);
+    color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;display:flex;
+    align-items:center;justify-content:center;transition:transform .12s;
+  }
+  .gb-send-btn:hover{transform:scale(1.07);}
+  .gb-send-btn:disabled{opacity:.5;cursor:default;transform:none;}
+  .gb-composer-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;min-height:13px;}
+  .gb-counter{font-size:10px;color:var(--muted);}
+  .gb-status{font-size:10.5px;}
   .gb-status.ok{color:var(--forest);}
   .gb-status.err{color:#C5612A;}
-  .gb-list{
-    display:flex;flex-direction:column;gap:8px;
-    max-height:190px;overflow-y:auto;transition:max-height .25s ease;
-    padding-right:2px;border-top:1px solid var(--border);padding-top:10px;
-  }
-  .gb-list.gb-expanded{max-height:600px;}
-  .gb-msg{background:var(--bg2);border-radius:8px;padding:8px 10px;}
-  .gb-msg-meta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px;}
-  .gb-msg-name{font-size:11.5px;font-weight:700;color:var(--text);}
-  .gb-msg-date{font-size:10px;color:var(--muted);white-space:nowrap;}
-  .gb-msg-text{font-size:12px;color:#4A3E32;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
-  .gb-loading,.gb-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;}
-  .gb-expand-btn{
-    display:block;width:100%;margin-top:8px;background:transparent;border:none;
-    font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--terra);cursor:pointer;
-  }
-  body.dark.is-desktop .gb-input,body.dark.is-desktop .gb-textarea,
-  body.dark.is-desktop .gb-msg{background:var(--bg);}
+
+  body.dark.is-desktop .gb-bubble{background:var(--bg2);}
+  body.dark.is-desktop .gb-composer-input{background:var(--bg);}
+  body.dark.is-desktop .gb-chatlog{background:linear-gradient(180deg,var(--bg),rgba(0,0,0,0) 28px);}
 
   /* ── ROUTE / MIJN max-width ── */
   body.is-desktop .route-wrap,
@@ -2861,28 +2889,35 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="hsc-body">Komende rommelmarkten in jouw regio worden hier binnenkort uitgelicht.</div>
       </div>
 
-      <!-- Berichtenbord: ouderwets gastenboek, geen account nodig om te posten.
-           Zelfde backend (guestbook_messages + post-guestbook-message) als
-           op de marketing-homepage (home.html). -->
+      <!-- Berichtenbord: ouderwets gastenboek als chatbox, geen account
+           nodig om te posten. Zelfde backend (guestbook_messages +
+           post-guestbook-message) als voorheen op home.html. -->
       <div class="home-sidebar-card gb-card-wrap">
-        <div class="hsc-title">💬 Berichtenbord</div>
-        <div class="hsc-body" style="margin-bottom:10px">Laat een kort berichtje achter voor de buurt.</div>
-        <form id="gb-form" onsubmit="gbSubmit(event)">
-          <input type="text" id="gb-name" class="gb-input" placeholder="Je naam" maxlength="40" required>
+        <div class="gb-chat-header">
+          <div class="hsc-title" style="margin-bottom:0">💬 Berichtenbord</div>
+          <span class="gb-chat-live">live</span>
+        </div>
+        <div class="hsc-body" style="margin-bottom:10px">Iets te melden, een vraag of gewoon een praatje? Cedrik luistert mee 🦆</div>
+
+        <div class="gb-chatlog" id="gb-list"><div class="gb-loading">Berichten laden…</div></div>
+        <button class="gb-expand-btn" id="gb-expand-btn" onclick="gbToggleExpand()" style="display:none">Toon alles ▾</button>
+
+        <form id="gb-form" class="gb-composer" onsubmit="gbSubmit(event)">
+          <input type="text" id="gb-name" class="gb-name-input" placeholder="Je naam" maxlength="40" required>
           <!-- Honeypot: onzichtbaar voor mensen, vangt de meeste bots -->
           <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
             <label for="gb-website">Website</label>
             <input type="text" id="gb-website" tabindex="-1" autocomplete="off">
           </div>
-          <textarea id="gb-message" class="gb-textarea" placeholder="Je berichtje…" maxlength="280" rows="2" required oninput="gbUpdateCounter()"></textarea>
-          <div class="gb-form-foot">
-            <span class="gb-counter" id="gb-counter">280 over</span>
-            <button type="submit" class="gb-submit-btn" id="gb-submit-btn">Plaatsen</button>
+          <div class="gb-composer-row">
+            <textarea id="gb-message" class="gb-composer-input" placeholder="Typ een berichtje…" maxlength="280" rows="1" required oninput="gbUpdateCounter()"></textarea>
+            <button type="submit" class="gb-send-btn" id="gb-submit-btn" title="Plaatsen" aria-label="Plaatsen">➤</button>
           </div>
-          <div class="gb-status" id="gb-status"></div>
+          <div class="gb-composer-foot">
+            <span class="gb-counter" id="gb-counter">280 over</span>
+            <span class="gb-status" id="gb-status"></span>
+          </div>
         </form>
-        <div class="gb-list" id="gb-list"><div class="gb-loading">Berichten laden…</div></div>
-        <button class="gb-expand-btn" id="gb-expand-btn" onclick="gbToggleExpand()" style="display:none">Toon alles ▾</button>
       </div>
 
       <div class="home-sidebar-card">
@@ -15382,19 +15417,34 @@ function gbToggleExpand() {
   var expanded = list.classList.toggle('gb-expanded');
   btn.textContent = expanded ? 'Minder tonen ▴' : 'Toon alles ▾';
 }
+function _gbRelativeTime(iso) {
+  var mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return 'nu';
+  if (mins < 60) return mins + 'm';
+  var hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'u';
+  var days = Math.round(hrs / 24);
+  if (days < 7) return days + 'd';
+  return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+}
 function _gbRenderList() {
   var list = document.getElementById('gb-list');
   var expandBtn = document.getElementById('gb-expand-btn');
   if (!list) return;
   if (!_gbMessages.length) {
-    list.innerHTML = '<div class="gb-empty">Nog geen berichten — plaats de eerste!</div>';
+    list.innerHTML = '<div class="gb-empty">Nog geen berichten — plaats de eerste! 🦆</div>';
     if (expandBtn) expandBtn.style.display = 'none';
     return;
   }
   list.innerHTML = _gbMessages.map(function(m) {
-    var d = new Date(m.created_at);
-    var dateStr = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
-    return '<div class="gb-msg"><div class="gb-msg-meta"><span class="gb-msg-name">' + escapeHtml(m.name) + '</span><span class="gb-msg-date">' + dateStr + '</span></div><div class="gb-msg-text">' + escapeHtml(m.message) + '</div></div>';
+    var initial = (m.name || '?').trim().charAt(0).toUpperCase();
+    return '<div class="gb-bubble-row">'
+      + '<div class="gb-avatar">' + escapeHtml(initial) + '</div>'
+      + '<div class="gb-bubble">'
+        + '<div class="gb-bubble-meta"><span class="gb-bubble-name">' + escapeHtml(m.name) + '</span><span class="gb-bubble-time">' + _gbRelativeTime(m.created_at) + '</span></div>'
+        + '<div class="gb-bubble-text">' + escapeHtml(m.message) + '</div>'
+      + '</div>'
+    + '</div>';
   }).join('');
   if (expandBtn) expandBtn.style.display = _gbMessages.length > 3 ? 'block' : 'none';
 }
@@ -15434,17 +15484,17 @@ function gbSubmit(e) {
     return res.json().then(function(json) { return { ok: res.ok, json: json }; });
   }).then(function(r) {
     if (!r.ok) throw new Error(r.json.error || 'Plaatsen mislukt');
-    statusEl.textContent = '✓ Bedankt voor je berichtje!';
+    statusEl.textContent = '✓ Geplaatst!';
     statusEl.className = 'gb-status ok';
     document.getElementById('gb-form').reset();
     gbUpdateCounter();
     loadGuestbookSidebar();
   }).catch(function(err) {
-    statusEl.textContent = err.message || 'Er ging iets mis, probeer het later opnieuw.';
+    statusEl.textContent = err.message || 'Er ging iets mis, probeer opnieuw.';
     statusEl.className = 'gb-status err';
   }).finally(function() {
     btn.disabled = false;
-    btn.textContent = 'Plaatsen';
+    btn.textContent = '➤';
   });
 }
 
