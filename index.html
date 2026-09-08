@@ -4603,6 +4603,15 @@ function lcCountryCode() {
 }
 
 var currentLang = (function(){
+  // 0. Expliciete ?lang= in de URL wint altijd voor déze pageview (maar wordt
+  //    niet onthouden) — nodig zodat bv. de fr-be hreflang-variant
+  //    (yardigo.be/?lang=fr) ook daadwerkelijk Frans toont aan Google en
+  //    social crawlers. Zonder deze check deed die query-param helemaal niets.
+  try {
+    var urlLang = new URLSearchParams(location.search).get('lang');
+    if (urlLang && I18N_LANGS.indexOf(urlLang) !== -1) return urlLang;
+  } catch(e){}
+
   // 1. Expliciete keuze in localStorage wint altijd
   try {
     var s = localStorage.getItem('yg-lang');
@@ -4630,6 +4639,9 @@ var currentLang = (function(){
 var I18N = {
   nl: {
     'page.title': 'YardiGo: Ontdek garagesales bij jou in de buurt',
+    'meta.description': 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.',
+    'og.description': 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.',
+    'twitter.description': 'Vind rommelmarkten, rommelroutes en garagesales op de kaart.',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Vul een titel in",
     'toast.address_required': "Vul een adres in",
@@ -5311,6 +5323,9 @@ var I18N = {
   },
   en: {
     'page.title': 'YardiGo: Discover garage sales near you',
+    'meta.description': 'Find flea markets, garage sale routes and garage sales on the map. Plan your route, discover hidden gems nearby and list your own sale for free.',
+    'og.description': 'Find flea markets, garage sale routes and garage sales on the map. Plan your route and list your own sale for free.',
+    'twitter.description': 'Find flea markets, garage sale routes and garage sales on the map.',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Enter a title",
     'toast.address_required': "Enter an address",
@@ -5992,6 +6007,9 @@ var I18N = {
   },
   fr: {
     'page.title': 'YardiGo : Découvrez les vide-greniers près de chez vous',
+    'meta.description': 'Trouvez des brocantes, vide-greniers et ventes de garage sur la carte. Planifiez votre itinéraire, découvrez des trésors près de chez vous et publiez gratuitement votre propre vente.',
+    'og.description': 'Trouvez des brocantes, vide-greniers et ventes de garage sur la carte. Planifiez votre itinéraire et publiez gratuitement votre vente.',
+    'twitter.description': 'Trouvez des brocantes, vide-greniers et ventes de garage sur la carte.',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Saisis un titre",
     'toast.address_required': "Saisis une adresse",
@@ -6673,6 +6691,9 @@ var I18N = {
   },
   de: {
     'page.title': 'YardiGo: Entdecke Garagenverkäufe in deiner Nähe',
+    'meta.description': 'Finde Flohmärkte, Hofflohmärkte und Garagenverkäufe auf der Karte. Plane deine Route, entdecke Schätze in deiner Nähe und stelle deinen eigenen Verkauf kostenlos ein.',
+    'og.description': 'Finde Flohmärkte, Hofflohmärkte und Garagenverkäufe auf der Karte. Plane deine Route und stelle deinen Verkauf kostenlos ein.',
+    'twitter.description': 'Finde Flohmärkte, Hofflohmärkte und Garagenverkäufe auf der Karte.',
     // Toasts (cross-border + algemene flow)
     'toast.title_required': "Titel eingeben",
     'toast.address_required': "Adresse eingeben",
@@ -7402,6 +7423,31 @@ function applyLang() {
     document.documentElement.lang = currentLang;
     var pageTitle = i18n('page.title', null);
     if (pageTitle) document.title = pageTitle;
+    // SEO: title stond hierboven al goed, maar meta description/OG/Twitter
+    // bleven altijd de statische NL-tekst tonen ongeacht taal — dat is nu
+    // gefixt door ze hier gewoon met dezelfde i18n-mechaniek te vullen.
+    var metaDesc = i18n('meta.description', null);
+    var ogDesc = i18n('og.description', null);
+    var twDesc = i18n('twitter.description', null);
+    var mdEl = document.querySelector('meta[name="description"]');
+    if (mdEl && metaDesc) mdEl.setAttribute('content', metaDesc);
+    var ogTitleEl = document.querySelector('meta[property="og:title"]');
+    if (ogTitleEl && pageTitle) ogTitleEl.setAttribute('content', pageTitle);
+    var ogDescEl = document.querySelector('meta[property="og:description"]');
+    if (ogDescEl && ogDesc) ogDescEl.setAttribute('content', ogDesc);
+    var twTitleEl = document.querySelector('meta[name="twitter:title"]');
+    if (twTitleEl && pageTitle) twTitleEl.setAttribute('content', pageTitle);
+    var twDescEl = document.querySelector('meta[name="twitter:description"]');
+    if (twDescEl && twDesc) twDescEl.setAttribute('content', twDesc);
+    // og:locale preciezer dan de hostname-only gok in de <head>-inline-script:
+    // die kent alleen het land (bv. nl_BE voor elke .be-bezoeker), dit kent
+    // ook de daadwerkelijk actieve taal (fr_BE voor een Franstalige Belg).
+    var OG_LOCALE_MAP = { nl: { BE: 'nl_BE', default: 'nl_NL' }, fr: { BE: 'fr_BE', default: 'fr_FR' }, de: { default: 'de_DE' }, en: { default: 'en_US' } };
+    var ogLocEl = document.querySelector('meta[property="og:locale"]');
+    if (ogLocEl && OG_LOCALE_MAP[currentLang]) {
+      var m = OG_LOCALE_MAP[currentLang];
+      ogLocEl.setAttribute('content', m[YG_COUNTRY] || m.default);
+    }
     document.body.classList.toggle('lang-en', currentLang === 'en');
     document.body.classList.toggle('lang-de', currentLang === 'de');
     document.body.classList.toggle('lang-fr', currentLang === 'fr');
