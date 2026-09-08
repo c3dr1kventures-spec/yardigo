@@ -376,6 +376,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="nav-tab" onclick="switchTab('errors',this)">🐛 Fouten <span class="tab-badge" id="error-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('broadcast',this)">📢 Berichten</div>
     <div class="nav-tab" onclick="switchTab('reviews',this)">⭐ Reviews</div>
+    <div class="nav-tab" onclick="switchTab('guestbook',this)">💬 Gastenboek</div>
     <div class="nav-tab" onclick="switchTab('buurt',this)">🏘️ Buurtverkopen</div>
     <div class="nav-tab" onclick="switchTab('reminders',this)">📅 Herinneringen</div>
     <div class="nav-tab" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
@@ -1071,6 +1072,24 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       </div>
     </div>
 
+    <!-- ════ GASTENBOEK ════ -->
+    <div class="tab-pane" id="tab-guestbook">
+      <div class="section-header">
+        <span class="section-title">💬 Gastenboek</span>
+        <div class="section-actions">
+          <span class="section-count" id="guestbook-count">—</span>
+          <button class="btn btn-ghost btn-sm" onclick="loadGuestbookAdmin()">🔄 Ververs</button>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:14px">Berichten uit het Berichtenbord op de Home-tab (yardigo.nl app). Iedereen kan zonder account posten — max 3/dag per IP, links worden geweigerd. "Verbergen" haalt een bericht direct van de site zonder het te verwijderen.</div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <input class="search-input" type="text" id="guestbook-search" placeholder="Zoek op naam of bericht…" oninput="filterGuestbook()">
+        </div>
+        <div class="table-scroll"><div id="guestbook-table-body"><div class="loading"><div class="spinner"></div>Laden…</div></div></div>
+      </div>
+    </div>
+
     <!-- ════ BUURTVERKOPEN ════ -->
     <div class="tab-pane" id="tab-buurt">
       <div class="section-header">
@@ -1432,6 +1451,7 @@ function switchTab(name,el){
   if(name==='analytics') loadAnalytics();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
   if(name==='reviews') loadReviews();
+  if(name==='guestbook') loadGuestbookAdmin();
   if(name==='curated') {
     loadCurated(); loadClaimsQueue();
     loadDiscoveryVoorgesteld(); loadPendingEvents();
@@ -3062,6 +3082,61 @@ async function deleteReview(id){
   document.getElementById('reviews-count').textContent=allReviews.length+' reviews';
   filterReviews(); toast('✅ Review verwijderd');
 }
+// ══════════════════════════════════════════════════
+// GASTENBOEK (Home-sidebar berichtenbord)
+// ══════════════════════════════════════════════════
+var allGuestbook=[];
+async function loadGuestbookAdmin(){
+  var el=document.getElementById('guestbook-table-body'); if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div>Laden…</div>';
+  var res=await sb.from('guestbook_messages').select('*').order('created_at',{ascending:false}).limit(500);
+  if(res.error){el.innerHTML='<div class="log-empty">Fout: '+esc(res.error.message)+'</div>';return;}
+  allGuestbook=res.data||[];
+  document.getElementById('guestbook-count').textContent=allGuestbook.length+' berichten';
+  filterGuestbook();
+}
+function renderGuestbookTable(rows){
+  var el=document.getElementById('guestbook-table-body');
+  if(!rows.length){el.innerHTML='<div class="empty"><div class="e-icon">💬</div><div class="e-text">Geen berichten gevonden</div></div>';return;}
+  el.innerHTML='<table><thead><tr><th>Naam</th><th>Bericht</th><th>Datum</th><th>Status</th><th></th></tr></thead><tbody>'
+    +rows.map(function(m){
+      return '<tr style="opacity:'+(m.is_visible?'1':'.5')+'">'
+        +'<td style="font-weight:600;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(m.name)+'</td>'
+        +'<td style="font-size:12px;color:var(--muted);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(m.message)+'">'+esc(m.message)+'</td>'
+        +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+fmtRelTime(m.created_at)+'</td>'
+        +'<td style="font-size:11px;white-space:nowrap">'+(m.is_visible?'✅ Zichtbaar':'🚫 Verborgen')+'</td>'
+        +'<td onclick="event.stopPropagation()" style="white-space:nowrap">'
+          +'<button class="btn btn-sm btn-ghost" onclick="toggleGuestbookVisibility(\''+m.id+'\','+(!m.is_visible)+')">'+(m.is_visible?'🙈 Verbergen':'👁️ Tonen')+'</button> '
+          +'<button class="btn btn-sm btn-danger" onclick="deleteGuestbookMessage(\''+m.id+'\')">🗑️</button>'
+        +'</td>'
+        +'</tr>';
+    }).join('')+'</tbody></table>';
+}
+function filterGuestbook(){
+  var q=(document.getElementById('guestbook-search').value||'').toLowerCase();
+  var rows=allGuestbook.filter(function(m){
+    return !q||(m.name||'').toLowerCase().includes(q)||(m.message||'').toLowerCase().includes(q);
+  });
+  renderGuestbookTable(rows);
+}
+async function toggleGuestbookVisibility(id,newVal){
+  var {error}=await sb.from('guestbook_messages').update({is_visible:newVal}).eq('id',id);
+  if(error){toast('❌ '+error.message);return;}
+  var m=allGuestbook.find(function(x){return x.id===id;});
+  if(m) m.is_visible=newVal;
+  filterGuestbook();
+  toast(newVal?'✅ Bericht weer zichtbaar':'✅ Bericht verborgen');
+}
+async function deleteGuestbookMessage(id){
+  if(!confirm('Bericht definitief verwijderen?'))return;
+  var {error}=await sb.from('guestbook_messages').delete().eq('id',id);
+  if(error){toast('❌ '+error.message);return;}
+  allGuestbook=allGuestbook.filter(function(m){return m.id!==id;});
+  document.getElementById('guestbook-count').textContent=allGuestbook.length+' berichten';
+  filterGuestbook();
+  toast('✅ Bericht verwijderd');
+}
+
 function exportReviewsCSV(){
   if(!allReviews.length){toast('Geen reviews');return;}
   var csv='id;reviewer;verkoper;sterren;review;datum\n';
