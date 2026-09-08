@@ -488,6 +488,9 @@ body.dark .yg-footer{border-top-color:var(--border);}
 .fdd-opt{padding:11px 16px;font-family:'Poppins',sans-serif;font-size:13px;cursor:pointer;color:var(--text);}
 .fdd-opt:hover{background:var(--bg2);}
 .fdd-opt.sel{font-weight:700;color:var(--forest);}
+/* Categorie-picker hergebruikt in de filter-bar (Kaart-tab) — moet er als
+   de andere fdd-btn's uitzien i.p.v. zijn eigen (lichte) list-header-stijl. */
+.filter-bar .cat-picker-btn{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;max-width:none;}
 
 /* Compacte variant: filter-bar verplaatst naar boven de resultatenlijst
    (mobiel/tablet, alleen op het Lijst-tabblad — zie ygRelocateFilterBar()).
@@ -496,6 +499,15 @@ body.dark .yg-footer{border-top-color:var(--border);}
 .filter-bar--inline{background:transparent;padding:0 0 10px;margin:0;justify-content:flex-start;}
 .filter-bar--inline .fdd-btn{background:var(--bg2);border:1.5px solid var(--border);color:var(--text);}
 body.dark .filter-bar--inline .fdd-btn{background:var(--bg);color:var(--text);}
+.filter-bar--inline .cat-picker-btn{background:var(--bg2);border:1.5px solid var(--border);color:var(--text);}
+body.dark .filter-bar--inline .cat-picker-btn{background:var(--bg);color:var(--text);}
+/* Op mobiel verhuist de hele filter-bar bij Lijst naar boven de resultaten
+   (zie ygRelocateFilterBar) — daar staat al een eigen categorie-picker en
+   sorteer-select in de list-header. Verberg hier dus de duplicaten zodat
+   je niet 2x hetzelfde ziet; op de Kaart-tab (niet-inline) blijven ze gewoon
+   staan, dat is precies waar deze uitbreiding voor bedoeld is. */
+.filter-bar--inline .cat-picker,
+.filter-bar--inline .filter-reset-btn{display:none;}
 
 /* ── TYPE FILTER + TABS ── */
 .type-row{display:flex;align-items:center;gap:6px;padding:8px 14px;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
@@ -1935,33 +1947,55 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <div style="position:relative">
     <button class="fdd-btn" id="btn-afstand" onclick="openDD(event,'afstand')"><span data-i18n="filter.dist_label">📍 Afstand</span>: <span id="lbl-afstand" data-i18n="filter.dist.everywhere">Overal</span> ▾</button>
     <div class="fdd-menu" id="dd-afstand">
-      <div class="fdd-opt" onclick="pickR(5)">5 km</div>
-      <div class="fdd-opt" onclick="pickR(10)">10 km</div>
-      <div class="fdd-opt" onclick="pickR(25)">25 km</div>
-      <div class="fdd-opt" onclick="pickR(50)">50 km</div>
-      <div class="fdd-opt sel" onclick="pickR(9999)" data-i18n="filter.dist.everywhere">Overal</div>
+      <div class="fdd-opt" data-km="5" onclick="pickR(5)">5 km</div>
+      <div class="fdd-opt" data-km="10" onclick="pickR(10)">10 km</div>
+      <div class="fdd-opt" data-km="25" onclick="pickR(25)">25 km</div>
+      <div class="fdd-opt" data-km="50" onclick="pickR(50)">50 km</div>
+      <div class="fdd-opt sel" data-km="9999" onclick="pickR(9999)" data-i18n="filter.dist.everywhere">Overal</div>
     </div>
   </div>
   <div style="position:relative">
     <button class="fdd-btn" id="btn-datum" onclick="openDD(event,'datum')"><span data-i18n="filter.date_label">📅 Datum</span>: <span id="lbl-datum" data-i18n="filter.date.all_short">Alle</span> ▾</button>
     <div class="fdd-menu" id="dd-datum">
-      <div class="fdd-opt sel" onclick="pickD('all','filter.date.all_short')" data-i18n="filter.date.all">Alle datums</div>
-      <div class="fdd-opt" onclick="pickD('today','filter.date.today')" data-i18n="filter.date.today">Vandaag</div>
-      <div class="fdd-opt" onclick="pickD('weekend','filter.date.weekend')" data-i18n="filter.date.weekend">Dit weekend</div>
-      <div class="fdd-opt" onclick="pickD('week','filter.date.week')" data-i18n="filter.date.week">Deze week</div>
-      <div class="fdd-opt" onclick="pickD('next','filter.date.next_week')" data-i18n="filter.date.next_week">Volgende week</div>
+      <div class="fdd-opt sel" data-datekey="all" onclick="pickD('all','filter.date.all_short')" data-i18n="filter.date.all">Alle datums</div>
+      <div class="fdd-opt" data-datekey="today" onclick="pickD('today','filter.date.today')" data-i18n="filter.date.today">Vandaag</div>
+      <div class="fdd-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')" data-i18n="filter.date.weekend">Dit weekend</div>
+      <div class="fdd-opt" data-datekey="week" onclick="pickD('week','filter.date.week')" data-i18n="filter.date.week">Deze week</div>
+      <div class="fdd-opt" data-datekey="next" onclick="pickD('next','filter.date.next_week')" data-i18n="filter.date.next_week">Volgende week</div>
     </div>
   </div>
   <div style="position:relative">
     <button class="fdd-btn" id="btn-filter" onclick="openDD(event,'filter')"><span data-i18n="filter.label">⚙️ Filter</span></button>
     <div class="fdd-menu" id="dd-filter" style="min-width:200px">
       <div style="padding:12px 16px 8px;font-size:11px;font-weight:700;color:var(--muted)" data-i18n="filter.type">TYPE</div>
-      <div class="fdd-opt" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
-      <div class="fdd-opt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
-      <div class="fdd-opt" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
-      <div class="fdd-opt" style="color:var(--terra)" onclick="filterType('all')" data-i18n="filter.clear">✕ Wis filter</div>
+      <div class="fdd-opt" data-type="particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
+      <div class="fdd-opt" data-type="buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
+      <div class="fdd-opt" data-type="evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
+      <div class="fdd-opt" data-type="all" style="color:var(--terra)" onclick="filterType('all')" data-i18n="filter.clear">✕ Wis filter</div>
     </div>
   </div>
+  <!-- Categorie multi-picker, ook op de Kaart-tab (voorheen alleen bij Lijst) -->
+  <div class="cat-picker" style="position:relative">
+    <button class="cat-picker-btn" onclick="toggleCatPicker(event)" type="button">
+      <span class="cat-picker-label">🏷️ Alles</span> ▾
+    </button>
+    <div class="cat-picker-menu" role="menu">
+      <button class="cat-picker-opt cat-picker-all" onclick="catPickerClear()" type="button">
+        ✕ <span data-i18n="filter.clear">Wis alles</span>
+      </button>
+      <label class="cat-picker-opt"><input type="checkbox" value="👗 Kleding" onchange="catPickerToggle(this)"> 👗 Kleding</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="🧸 Speelgoed" onchange="catPickerToggle(this)"> 🧸 Speelgoed</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="🛋️ Meubels" onchange="catPickerToggle(this)"> 🛋️ Meubels</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="📚 Boeken" onchange="catPickerToggle(this)"> 📚 Boeken</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="📱 Elektronica" onchange="catPickerToggle(this)"> 📱 Elektronica</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="🌿 Tuin" onchange="catPickerToggle(this)"> 🌿 Tuin</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="🎨 Kunst" onchange="catPickerToggle(this)"> 🎨 Kunst</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="🏺 Antiek & Vintage" onchange="catPickerToggle(this)"> 🏺 Antiek &amp; Vintage</label>
+      <label class="cat-picker-opt"><input type="checkbox" value="📦 Overig" onchange="catPickerToggle(this)"> 📦 Overig</label>
+    </div>
+  </div>
+  <!-- Alleen zichtbaar zodra er minstens 1 filter actief is -->
+  <button class="fdd-btn filter-reset-btn" onclick="resetAllFilters()" style="display:none;border-style:dashed" data-i18n="filter.reset_all">✕ Alles wissen</button>
 </div>
 
 <!-- Type pills + tabs -->
@@ -2005,8 +2039,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 <!-- Sidebar lijst rechts (alleen zichtbaar op desktop). renderList()
      vult deze automatisch via _syncKaartSideList() na elke render. -->
 <aside class="kaart-side" id="kaart-side">
-  <div class="kaart-side-head">
+  <div class="kaart-side-head" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
     <span id="kaart-side-count">Verkopen</span>
+    <select class="list-sort-select" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:130px">
+      <option value="newest" data-i18n="list.sort.newest">Nieuwste eerst</option>
+      <option value="date-asc" data-i18n="list.sort.date_asc" selected>Op datum</option>
+      <option value="date-desc" data-i18n="list.sort.date_desc">Laatste eerst</option>
+      <option value="nearby" data-i18n="list.sort.nearby">Dichtstbijzijnde</option>
+      <option value="interest" data-i18n="list.sort.interest">Meest populair</option>
+    </select>
   </div>
   <div id="kaart-side-cards"></div>
 </aside>
@@ -2018,28 +2059,29 @@ body.dark .bv-addr-row:active { background: var(--bg); }
        toegang tot de filters zonder dropdown-menu's. -->
   <aside class="lijst-side">
     <div class="lijst-side-title">FILTERS</div>
+    <button class="fdd-btn filter-reset-btn" onclick="resetAllFilters()" style="display:none;width:100%;justify-content:center;background:transparent;border:1.5px dashed var(--terra);color:var(--terra);margin-bottom:10px" data-i18n="filter.reset_all">✕ Alles wissen</button>
     <div class="lijst-side-group">
       <div class="lijst-side-h">📍 Afstand</div>
-      <button class="ls-opt" onclick="pickR(5)">5 km</button>
-      <button class="ls-opt" onclick="pickR(10)">10 km</button>
-      <button class="ls-opt" onclick="pickR(25)">25 km</button>
-      <button class="ls-opt" onclick="pickR(50)">50 km</button>
-      <button class="ls-opt active" onclick="pickR(9999)">Overal</button>
+      <button class="ls-opt" data-km="5" onclick="pickR(5)">5 km</button>
+      <button class="ls-opt" data-km="10" onclick="pickR(10)">10 km</button>
+      <button class="ls-opt" data-km="25" onclick="pickR(25)">25 km</button>
+      <button class="ls-opt" data-km="50" onclick="pickR(50)">50 km</button>
+      <button class="ls-opt active" data-km="9999" onclick="pickR(9999)">Overal</button>
     </div>
     <div class="lijst-side-group">
       <div class="lijst-side-h">📅 Datum</div>
-      <button class="ls-opt active" onclick="pickD('all','filter.date.all_short')">Alle datums</button>
-      <button class="ls-opt" onclick="pickD('today','filter.date.today')">Vandaag</button>
-      <button class="ls-opt" onclick="pickD('weekend','filter.date.weekend')">Dit weekend</button>
-      <button class="ls-opt" onclick="pickD('week','filter.date.week')">Deze week</button>
-      <button class="ls-opt" onclick="pickD('next','filter.date.next_week')">Volgende week</button>
+      <button class="ls-opt active" data-datekey="all" onclick="pickD('all','filter.date.all_short')">Alle datums</button>
+      <button class="ls-opt" data-datekey="today" onclick="pickD('today','filter.date.today')">Vandaag</button>
+      <button class="ls-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')">Dit weekend</button>
+      <button class="ls-opt" data-datekey="week" onclick="pickD('week','filter.date.week')">Deze week</button>
+      <button class="ls-opt" data-datekey="next" onclick="pickD('next','filter.date.next_week')">Volgende week</button>
     </div>
     <div class="lijst-side-group">
       <div class="lijst-side-h">TYPE</div>
-      <button class="ls-opt" onclick="filterType('particulier')">🏠 Opritverkoop</button>
-      <button class="ls-opt" onclick="filterType('buurt')">🏘️ Rommelroute</button>
-      <button class="ls-opt" onclick="filterType('evenement')">🎪 Evenement</button>
-      <button class="ls-opt" onclick="filterType('all')">✕ Wis filter</button>
+      <button class="ls-opt" data-type="particulier" onclick="filterType('particulier')">🏠 Opritverkoop</button>
+      <button class="ls-opt" data-type="buurt" onclick="filterType('buurt')">🏘️ Rommelroute</button>
+      <button class="ls-opt" data-type="evenement" onclick="filterType('evenement')">🎪 Evenement</button>
+      <button class="ls-opt" data-type="all" onclick="filterType('all')">✕ Wis filter</button>
     </div>
   </aside>
   <div class="list-wrap">
@@ -2052,7 +2094,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
              categorieën tegelijk gekozen kunnen worden. -->
         <div class="cat-picker" id="catPickerWrap" style="position:relative">
           <button class="cat-picker-btn" id="catPickerBtn" onclick="toggleCatPicker(event)" type="button">
-            <span id="catPickerLabel">🏷️ Alles</span> ▾
+            <span id="catPickerLabel" class="cat-picker-label">🏷️ Alles</span> ▾
           </button>
           <div class="cat-picker-menu" id="catPickerMenu" role="menu">
             <button class="cat-picker-opt cat-picker-all" onclick="catPickerClear()" type="button">
@@ -2069,7 +2111,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
             <label class="cat-picker-opt"><input type="checkbox" value="📦 Overig" onchange="catPickerToggle(this)"> 📦 Overig</label>
           </div>
         </div>
-        <select id="listSortSelect" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:120px">
+        <select id="listSortSelect" class="list-sort-select" onchange="applyListSort(this.value)" style="font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;padding:5px 7px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;outline:none;max-width:120px">
           <option value="newest" data-i18n="list.sort.newest">Nieuwste eerst</option>
           <option value="date-asc" data-i18n="list.sort.date_asc" selected>Op datum</option>
           <option value="date-desc" data-i18n="list.sort.date_desc">Laatste eerst</option>
@@ -5047,6 +5089,7 @@ var I18N = {
     'filter.date.next_week': 'Volgende week',
     'filter.label': '⚙️ Filter',
     'filter.clear': '✕ Wis filter',
+    'filter.reset_all': '✕ Alles wissen',
     // Lijst
     'list.count_found': 'gevonden',
     'tags.more': 'meer',
@@ -5727,6 +5770,7 @@ var I18N = {
     'filter.date.next_week': 'Next week',
     'filter.label': '⚙️ Filter',
     'filter.clear': '✕ Clear filter',
+    'filter.reset_all': '✕ Clear all',
     // List view
     'list.count_found': 'found',
     'tags.more': 'more',
@@ -6407,6 +6451,7 @@ var I18N = {
     'filter.date.next_week': 'Semaine prochaine',
     'filter.label': '⚙️ Filtre',
     'filter.clear': '✕ Effacer le filtre',
+    'filter.reset_all': '✕ Tout effacer',
     // Vue liste
     'list.count_found': 'trouvées',
     'tags.more': 'autres',
@@ -7014,6 +7059,7 @@ var I18N = {
     'event_subtype.rommelmarkt': 'Flohmarkt',
     'event_subtype.vlooienmarkt': 'Trödelmarkt',
     'filter.clear': '✕ Filter löschen',
+    'filter.reset_all': '✕ Alles löschen',
     'filter.date_label': '📅 Datum',
     'filter.date.all_short': 'Alle',
     'filter.date.all': 'Alle Daten',
@@ -9005,26 +9051,40 @@ function persistUserLocation(lat, lng) {
 }
 function applyListSort(mode) {
   listSortMode = mode;
+  // Kaart-tab en Lijst-tab hebben elk hun eigen <select> (kunnen niet
+  // hetzelfde DOM-element delen); hou ze in sync ongeacht waar je sorteert.
+  document.querySelectorAll('.list-sort-select').forEach(function(sel) { sel.value = mode; });
   if (mode === 'nearby') {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(pos) {
         userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         persistUserLocation(pos.coords.latitude, pos.coords.longitude);
         renderList();
+        if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
       }, function() { toast(i18n('toast.location_unavailable_emoji', '📍 Locatie niet beschikbaar')); });
     }
-  } else { renderList(); }
+  } else {
+    renderList();
+    if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
+  }
 }
 function applyFilters() { renderMarkers(); renderList(); }
 function filterType(type) {
   if (type === 'all') { activeFilters.clear(); }
   else { if (activeFilters.has(type)) activeFilters.delete(type); else activeFilters.add(type); }
   ['all','particulier','buurt','evenement'].forEach(function(t) {
+    var isActive = t === 'all' ? activeFilters.size === 0 : activeFilters.has(t);
     var el = document.getElementById('leg-' + t);
-    if (!el) return;
-    el.classList.toggle('active', t === 'all' ? activeFilters.size === 0 : activeFilters.has(t));
+    if (el) el.classList.toggle('active', isActive);
+    // Zelfde state doorzetten naar de ⚙️ Filter-dropdown (Kaart) en TYPE-groep (Lijst-sidebar)
+    document.querySelectorAll('[data-type="' + t + '"]').forEach(function(b) {
+      b.classList.toggle('active', t !== 'all' && isActive);
+      b.classList.toggle('sel', t !== 'all' && isActive);
+    });
   });
   applyFilters();
+  updateActiveFilterBadge();
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
 }
 // Legacy: single-cat filter. Behoud voor de filter-bar dropdown.
 // Synced naar de nieuwe multi-cat state: `cat` wordt de enige actieve cat.
@@ -9038,10 +9098,17 @@ function filterByCat(cat) {
 }
 
 // ── Multi-categorie picker ──
+// Kan meerdere keren op de pagina voorkomen (Lijst-tab + Kaart-tab); alle
+// instanties delen dezelfde activeCatFilters-state en blijven via classes
+// (i.p.v. hardcoded ids) automatisch met elkaar gesynchroniseerd.
 function toggleCatPicker(e) {
   e.stopPropagation();
-  var menu = document.getElementById('catPickerMenu');
-  if (menu) menu.classList.toggle('open');
+  var wrap = e.currentTarget.closest('.cat-picker');
+  var menu = wrap ? wrap.querySelector('.cat-picker-menu') : null;
+  if (!menu) return;
+  var wasOpen = menu.classList.contains('open');
+  document.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  if (!wasOpen) menu.classList.add('open');
 }
 function catPickerToggle(cb) {
   var v = cb.value;
@@ -9051,37 +9118,84 @@ function catPickerToggle(cb) {
   _syncCatPickerUI();
   renderList();
   if (typeof renderMarkers === 'function') renderMarkers();
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
 }
 function catPickerClear() {
   activeCatFilters.clear();
   activeCatFilter = null;
-  document.querySelectorAll('#catPickerMenu input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
+  document.querySelectorAll('.cat-picker-menu input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
   _syncCatPickerUI();
   renderList();
   if (typeof renderMarkers === 'function') renderMarkers();
-  var menu = document.getElementById('catPickerMenu');
-  if (menu) menu.classList.remove('open');
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
+  document.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
 }
 function _syncCatPickerUI() {
-  // Update button label gebaseerd op aantal gekozen categorieën
-  var lbl = document.getElementById('catPickerLabel');
-  if (!lbl) return;
+  // Update alle button-labels (Lijst én Kaart) gebaseerd op aantal gekozen categorieën
   var n = activeCatFilters.size;
-  if (n === 0) lbl.textContent = '🏷️ Alles';
-  else if (n === 1) lbl.textContent = Array.from(activeCatFilters)[0];
-  else lbl.textContent = '🏷️ ' + n + ' categorieën';
-  // Sync checkboxes met state (voor het geval filterByCat() ze omgezet heeft)
-  document.querySelectorAll('#catPickerMenu input[type=checkbox]').forEach(function(cb) {
+  var text = n === 0 ? '🏷️ Alles' : (n === 1 ? Array.from(activeCatFilters)[0] : '🏷️ ' + n + ' categorieën');
+  document.querySelectorAll('.cat-picker-label').forEach(function(lbl) { lbl.textContent = text; });
+  // Sync checkboxes in alle instanties met state (voor het geval filterByCat() ze omgezet heeft)
+  document.querySelectorAll('.cat-picker-menu input[type=checkbox]').forEach(function(cb) {
     cb.checked = activeCatFilters.has(cb.value);
   });
+  updateActiveFilterBadge();
 }
-// Sluit picker bij klik buiten
+// Sluit een open picker bij klik buiten diens eigen wrap
 document.addEventListener('click', function(e) {
-  var wrap = document.getElementById('catPickerWrap');
-  var menu = document.getElementById('catPickerMenu');
-  if (!wrap || !menu || !menu.classList.contains('open')) return;
-  if (!wrap.contains(e.target)) menu.classList.remove('open');
+  document.querySelectorAll('.cat-picker-menu.open').forEach(function(menu) {
+    var wrap = menu.closest('.cat-picker');
+    if (wrap && !wrap.contains(e.target)) menu.classList.remove('open');
+  });
 });
+
+// ── Actieve-filter feedback + globale reset ──
+// Zet .active/.sel op alle elementen met het gegeven data-attribuut die de
+// huidige waarde matchen — werkt over Kaart-dropdown én Lijst-sidebar heen,
+// zodat beide altijd hetzelfde tonen ongeacht waar de gebruiker filterde.
+function _setFilterOptActive(selector, attr, value) {
+  document.querySelectorAll(selector).forEach(function(el) {
+    var match = String(el.dataset[attr]) === String(value);
+    el.classList.toggle('active', match);
+    el.classList.toggle('sel', match);
+  });
+}
+// Toont/verbergt de "✕ Alles wissen"-knop(pen) zodra er een filter actief is.
+function updateActiveFilterBadge() {
+  var anyActive = activeRadiusKm < 9999 || activeDateFilter !== 'all' || activeFilters.size > 0 || activeCatFilters.size > 0;
+  document.querySelectorAll('.filter-reset-btn').forEach(function(btn) {
+    btn.style.display = anyActive ? '' : 'none';
+  });
+}
+// Reset radius, datum, type én categorieën in één keer — voorheen moest je
+// per filter apart naar "Wis"/"Overal" klikken, nu 1 knop voor alles.
+function resetAllFilters() {
+  activeRadiusKm = 9999;
+  activeDateFilter = 'all';
+  activeFilters.clear();
+  activeCatFilters.clear();
+  activeCatFilter = null;
+
+  var lblA = document.getElementById('lbl-afstand');
+  if (lblA) { lblA.setAttribute('data-i18n', 'filter.dist.everywhere'); lblA.textContent = i18n('filter.dist.everywhere', 'Overal'); }
+  var lblD = document.getElementById('lbl-datum');
+  if (lblD) { lblD.setAttribute('data-i18n', 'filter.date.all_short'); lblD.textContent = i18n('filter.date.all_short', 'Alle'); }
+
+  _setFilterOptActive('[data-km]', 'km', 9999);
+  _setFilterOptActive('[data-datekey]', 'datekey', 'all');
+  document.querySelectorAll('[data-type]').forEach(function(el) { el.classList.remove('active'); el.classList.remove('sel'); });
+  var legAll = document.getElementById('leg-all'); if (legAll) legAll.classList.add('active');
+  ['particulier', 'buurt', 'evenement'].forEach(function(t) {
+    var el = document.getElementById('leg-' + t);
+    if (el) el.classList.remove('active');
+  });
+
+  document.querySelectorAll('.cat-picker-menu input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  _syncCatPickerUI();
+
+  applyFilters();
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
+}
 
 // ── Grid-size kiezer (Lijst): kies hoeveel kolommen op desktop ──
 function applyGridSize(size) {
@@ -9120,20 +9234,26 @@ function pickR(km) {
     if (lblEl) { lblEl.removeAttribute('data-i18n'); lblEl.textContent = km + ' km'; }
   }
   document.getElementById('dd-afstand').style.display = 'none';
+  _setFilterOptActive('[data-km]', 'km', km);
+  updateActiveFilterBadge();
   // Als er een afstandsfilter is én we nog geen locatie hebben, vraag locatie op
   if (km < 9999 && !userLocation && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       persistUserLocation(pos.coords.latitude, pos.coords.longitude);
       applyFilters();
+      if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
     }, function() {
       toast(i18n('toast.location_unavailable_filter', '📍 Locatie niet beschikbaar. Afstandsfilter werkt zonder locatie niet.'));
       activeRadiusKm = 9999;
       document.getElementById('lbl-afstand').textContent = 'Overal';
+      _setFilterOptActive('[data-km]', 'km', 9999);
+      updateActiveFilterBadge();
       applyFilters();
     });
   } else {
     applyFilters();
+    if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
   }
 }
 function pickD(key, i18nKey) {
@@ -9144,7 +9264,10 @@ function pickD(key, i18nKey) {
     lblEl.textContent = i18n(i18nKey, i18nKey);
   }
   document.getElementById('dd-datum').style.display = 'none';
+  _setFilterOptActive('[data-datekey]', 'datekey', key);
+  updateActiveFilterBadge();
   applyFilters();
+  if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
 }
 
 // ══════════════════════════════════════════════════
