@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YardiGo – Ontdek garagesales bij jou in de buurt</title>
-<meta name="description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Gratis registreren, gratis ontdekken. Jouw buurt vol verborgen schatten.">
+<title>YardiGo – Découvrez les brocantes et vide-greniers près de chez vous</title>
+<meta name="description" content="Trouvez des brocantes, vide-greniers et ventes de garage sur la carte. Inscription gratuite, découverte gratuite. Votre quartier regorge de trésors cachés.">
 <meta name="theme-color" content="#E07B39">
-<link rel="canonical" href="https://www.yardigo.nl/home">
+<link rel="canonical" href="https://www.yardigo.be/fr">
 <link rel="icon" href="/icon-192.png">
 
-<!-- hreflang: deze pagina (NL) is de default; fr.html is de Franstalige
-     variant voor België. Zelfde opzet als fr.html's eigen hreflang-block,
-     omgekeerd. -->
+<!-- hreflang: fr-be verwijst naar déze pagina, de andere talen naar home.html.
+     Zelfde opzet als home.html's eigen hreflang-block, omgekeerd. -->
 <link rel="alternate" hreflang="nl-nl" href="https://www.yardigo.nl/home">
 <link rel="alternate" hreflang="nl-be" href="https://www.yardigo.be/home">
 <link rel="alternate" hreflang="fr-be" href="https://www.yardigo.be/fr">
@@ -19,11 +18,11 @@
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://www.yardigo.nl/home">
-<meta property="og:title" content="YardiGo – Ontdek garagesales bij jou in de buurt">
-<meta property="og:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Gratis registreren, gratis ontdekken.">
+<meta property="og:url" content="https://www.yardigo.be/fr">
+<meta property="og:title" content="YardiGo – Découvrez les brocantes et vide-greniers près de chez vous">
+<meta property="og:description" content="Trouvez des brocantes, vide-greniers et ventes de garage sur la carte. Inscription gratuite, découverte gratuite.">
 <meta property="og:image" content="https://www.yardigo.nl/og-image.png">
-<meta property="og:locale" content="nl_NL">
+<meta property="og:locale" content="fr_BE">
 <meta property="og:site_name" content="YardiGo">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,9 +113,6 @@ nav {
 }
 .nav-links .btn-nav:hover { background: var(--terra-dk); }
 
-/* Mobiel: verberg de scroll-anchor-links, houd alleen logo + "Open app"-knop.
-   De anchor-links voegen weinig waarde toe op mobiel (gebruiker scrollt sowieso)
-   en zorgen anders voor overflow op smalle schermen (≤ 700px). */
 @media (max-width: 700px) {
   .nav-links a:not(.btn-nav) { display: none; }
   .nav-links .btn-nav { padding: 9px 16px; font-size: 13px; }
@@ -125,8 +121,6 @@ nav {
   .nav-logo img { width: 26px; height: 26px; }
 }
 
-/* Sticky CTA onderaan op mobiel — altijd binnen handbereik, voorkomt dat
-   gebruikers helemaal naar boven moeten scrollen om terug naar de kaart. */
 .sticky-app-cta {
   display: none;
   position: fixed;
@@ -149,8 +143,6 @@ nav {
 .sticky-app-cta:hover { background: var(--terra-dk); }
 @media (max-width: 700px) {
   .sticky-app-cta { display: inline-flex; }
-  /* Geef onderaan-padding aan de footer/CTA-block zodat de sticky-knop niet
-     content afdekt op de laatste scroll-positie. */
   body { padding-bottom: 72px; }
 }
 
@@ -506,22 +498,22 @@ footer {
 </head>
 <body>
 
-<!-- Sticky mobile CTA: altijd binnen handbereik om terug naar de kaart te gaan -->
-<a href="/" class="sticky-app-cta" aria-label="Open de YardiGo kaart">🗺️ Open de kaart</a>
+<!-- Sticky mobile CTA -->
+<a href="/?lang=fr" class="sticky-app-cta" aria-label="Ouvrir la carte YardiGo">🗺️ Ouvrir la carte</a>
 
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="/home" class="nav-logo">
-      <img src="/icon-192.png" alt="YardiGo icoon">
+    <a href="/fr" class="nav-logo">
+      <img src="/icon-192.png" alt="Icône YardiGo">
       YardiGo
     </a>
     <div class="nav-links">
-      <a href="#features">Functies</a>
-      <a href="#nieuws">Nieuws</a>
-      <a href="/organisatoren">Organisatoren</a>
-      <a href="/fr" style="font-size:12px">🇫🇷 FR</a>
-      <a href="/" class="btn-nav">Open app →</a>
+      <a href="#features">Fonctionnalités</a>
+      <a href="#nieuws">Actualités</a>
+      <a href="/organisatoren">Organisateurs</a>
+      <a href="/home" style="font-size:12px">🇳🇱 NL</a>
+      <a href="/?lang=fr" class="btn-nav">Ouvrir l'appli →</a>
     </div>
   </div>
 </nav>
@@ -530,19 +522,19 @@ footer {
 <section style="padding:0">
   <div class="hero">
     <div class="hero-text">
-      <div class="hero-eyebrow">🗺️ Nu beschikbaar in Nederland &amp; België</div>
-      <h1>Vind garagesales <span>bij jou in de buurt</span></h1>
-      <p class="hero-sub">Ontdek rommelmarkten, rommelroutes en opritverkopen op de kaart. Gratis registreren, gratis ontdekken.</p>
+      <div class="hero-eyebrow">🗺️ Disponible aux Pays-Bas &amp; en Belgique</div>
+      <h1>Trouvez des brocantes <span>près de chez vous</span></h1>
+      <p class="hero-sub">Découvrez vide-greniers, circuits brocante et ventes sur allée sur la carte. Inscription gratuite, découverte gratuite.</p>
       <div class="hero-actions">
-        <a href="/" class="btn-primary">🔍 Open de kaart</a>
-        <a href="/organisatoren" class="btn-secondary">Verkoop registreren</a>
+        <a href="/?lang=fr" class="btn-primary">🔍 Ouvrir la carte</a>
+        <a href="/organisatoren" class="btn-secondary">Publier une vente</a>
       </div>
     </div>
     <div class="hero-visual">
       <div class="phone-frame">
         <div class="phone-placeholder">
           <span class="big-icon">🗺️</span>
-          <span>Garagesales op de kaart</span>
+          <span>Brocantes sur la carte</span>
         </div>
       </div>
     </div>
@@ -554,15 +546,15 @@ footer {
   <div class="stats-inner" id="stats-inner">
     <div class="stat-item">
       <div class="stat-num" id="stat-events">—</div>
-      <div class="stat-label">Verkopen geregistreerd</div>
+      <div class="stat-label">Ventes enregistrées</div>
     </div>
     <div class="stat-item">
       <div class="stat-num" id="stat-places">NL &amp; BE</div>
-      <div class="stat-label">Landen actief</div>
+      <div class="stat-label">Pays actifs</div>
     </div>
     <div class="stat-item">
-      <div class="stat-num">Gratis</div>
-      <div class="stat-label">Altijd, voor iedereen</div>
+      <div class="stat-num">Gratuit</div>
+      <div class="stat-label">Toujours, pour tous</div>
     </div>
   </div>
 </div>
@@ -570,24 +562,24 @@ footer {
 <!-- FEATURES -->
 <section class="features" id="features">
   <div class="section-inner">
-    <div class="section-label">Wat kan je doen?</div>
-    <h2 class="section-title">Alles op één plek</h2>
-    <p class="section-sub">Van vinden tot verkopen — YardiGo maakt het makkelijk om mee te doen aan de garagesale-cultuur in jouw buurt.</p>
+    <div class="section-label">Que pouvez-vous faire ?</div>
+    <h2 class="section-title">Tout au même endroit</h2>
+    <p class="section-sub">De la recherche à la vente — YardiGo facilite votre participation à la culture de la brocante près de chez vous.</p>
     <div class="feat-grid">
       <div class="feat-card">
         <div class="feat-icon orange">🔍</div>
-        <h3>Ontdek op de kaart</h3>
-        <p>Bekijk alle garagesales, rommelroutes en evenementen in jouw omgeving op een interactieve kaart. Filter op type en datum.</p>
+        <h3>Découvrez sur la carte</h3>
+        <p>Consultez toutes les ventes sur allée, circuits brocante et événements de votre région sur une carte interactive. Filtrez par type et par date.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon green">📌</div>
-        <h3>Registreer gratis</h3>
-        <p>Zet jouw opritverkoop of rommelmarkt gratis op de kaart. Bereik kopers uit de buurt zonder gedoe.</p>
+        <h3>Inscription gratuite</h3>
+        <p>Publiez gratuitement votre vente sur allée ou votre brocante sur la carte. Touchez des acheteurs du quartier sans complications.</p>
       </div>
       <div class="feat-card">
         <div class="feat-icon yellow">🏘️</div>
-        <h3>Rommelroutes</h3>
-        <p>Organiseer of volg een buurtbrede rommelroute. Meerdere adressen op één route, één dag vol ontdekkingen.</p>
+        <h3>Circuits brocante</h3>
+        <p>Organisez ou suivez un circuit brocante à l'échelle du quartier. Plusieurs adresses sur un seul parcours, une journée pleine de découvertes.</p>
       </div>
     </div>
   </div>
@@ -596,24 +588,24 @@ footer {
 <!-- HOW IT WORKS -->
 <section class="how">
   <div class="section-inner">
-    <div class="section-label">Zo werkt het</div>
-    <h2 class="section-title">In drie stappen aan de slag</h2>
-    <p class="section-sub">Of je nu koopt of verkoopt — binnen een minuut ben je actief.</p>
+    <div class="section-label">Comment ça marche</div>
+    <h2 class="section-title">Prêt en trois étapes</h2>
+    <p class="section-sub">Que vous achetiez ou vendiez — vous êtes actif en moins d'une minute.</p>
     <div class="steps-grid">
       <div class="step-card">
         <div class="step-num">1</div>
-        <h3>Open de kaart</h3>
-        <p>Geen account nodig om te bekijken. Zoom in op jouw buurt en ontdek wat er speelt.</p>
+        <h3>Ouvrez la carte</h3>
+        <p>Pas besoin de compte pour consulter. Zoomez sur votre quartier et découvrez ce qui s'y passe.</p>
       </div>
       <div class="step-card">
         <div class="step-num">2</div>
-        <h3>Registreer je verkoop</h3>
-        <p>Maak een account, kies een datum en locatie, en zet je verkoop op de kaart. Gratis en in minder dan twee minuten.</p>
+        <h3>Publiez votre vente</h3>
+        <p>Créez un compte, choisissez une date et un lieu, et placez votre vente sur la carte. Gratuit et en moins de deux minutes.</p>
       </div>
       <div class="step-card">
         <div class="step-num">3</div>
-        <h3>Bereik kopers</h3>
-        <p>Mensen in de buurt zien jouw verkoop automatisch verschijnen. Geen advertentiekosten, geen moeite.</p>
+        <h3>Touchez des acheteurs</h3>
+        <p>Les personnes du quartier voient automatiquement votre vente apparaître. Aucun frais de publicité, aucun effort.</p>
       </div>
     </div>
   </div>
@@ -622,20 +614,20 @@ footer {
 <!-- NIEUWS & UPDATES -->
 <section class="news" id="nieuws">
   <div class="section-inner">
-    <div class="section-label">Nieuws &amp; updates</div>
-    <h2 class="section-title">Wat is er nieuw?</h2>
-    <p class="section-sub">Laatste updates, tips en berichten vanuit het YardiGo-team.</p>
+    <div class="section-label">Actualités</div>
+    <h2 class="section-title">Quoi de neuf ?</h2>
+    <p class="section-sub">Dernières mises à jour, conseils et messages de l'équipe YardiGo.</p>
     <div class="news-grid" id="news-grid">
-      <div class="news-loading">Berichten laden…</div>
+      <div class="news-loading">Chargement des messages…</div>
     </div>
   </div>
 </section>
 
 <!-- CTA BLOCK -->
 <div class="cta-block">
-  <h2>Klaar om te ontdekken?</h2>
-  <p>Open de kaart en zie welke garagesales er bij jou in de buurt zijn. Helemaal gratis.</p>
-  <a href="/" class="btn-white">🗺️ Open YardiGo</a>
+  <h2>Prêt à explorer ?</h2>
+  <p>Ouvrez la carte et découvrez les brocantes près de chez vous. Entièrement gratuit.</p>
+  <a href="/?lang=fr" class="btn-white">🗺️ Ouvrir YardiGo</a>
 </div>
 
 <!-- FOOTER -->
@@ -644,26 +636,26 @@ footer {
     <div class="footer-top">
       <div class="footer-brand">
         <div class="logo">🗺️ YardiGo</div>
-        <p>Garagesales en rommelmarkten op de kaart in Nederland en België.</p>
+        <p>Brocantes et vide-greniers sur la carte aux Pays-Bas et en Belgique.</p>
       </div>
       <div class="footer-col">
-        <h4>App</h4>
-        <a href="/">Kaart openen</a>
-        <a href="/organisatoren">Verkoop registreren</a>
-        <a href="/#over">Over YardiGo</a>
+        <h4>Appli</h4>
+        <a href="/?lang=fr">Ouvrir la carte</a>
+        <a href="/organisatoren">Publier une vente</a>
+        <a href="/home">🇳🇱 Site en néerlandais</a>
       </div>
       <div class="footer-col">
-        <h4>Info</h4>
-        <a href="/privacy">Privacybeleid</a>
-        <a href="/voorwaarden">Gebruiksvoorwaarden</a>
+        <h4>Infos</h4>
+        <a href="/privacy-fr">Politique de confidentialité</a>
+        <a href="/voorwaarden-fr">Conditions d'utilisation</a>
         <a href="mailto:info@yardigo.nl">Contact</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 YardiGo. Alle rechten voorbehouden.</span>
+      <span>© 2026 YardiGo. Tous droits réservés.</span>
       <div style="display:flex;gap:16px">
-        <a href="/privacy">Privacy</a>
-        <a href="/voorwaarden">Voorwaarden</a>
+        <a href="/privacy-fr">Confidentialité</a>
+        <a href="/voorwaarden-fr">Conditions</a>
       </div>
     </div>
   </div>
@@ -675,19 +667,21 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Datum formatteren
+// Date formatteren (FR-locale)
 function fmtDate(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// Badge class op basis van categorie
 function badgeClass(cat) {
   const map = { update: 'badge-update', nieuws: 'badge-nieuws', tip: 'badge-tip', vraag: 'badge-vraag' };
   return map[cat] || 'badge-update';
 }
 
-// Nieuws laden
+// Nieuws-items komen uit dezelfde (Nederlandstalige) news_items-tabel als
+// home.html — er is nog geen apart FR-redactieproces. De sectie-labels en
+// lege/laad-states zijn wel vertaald; de daadwerkelijke berichtinhoud kan
+// dus NL blijven totdat er FR nieuwsberichten worden geschreven.
 async function loadNews() {
   const grid = document.getElementById('news-grid');
   try {
@@ -701,7 +695,7 @@ async function loadNews() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      grid.innerHTML = '<div class="news-empty">Nog geen berichten geplaatst. Kom snel terug!</div>';
+      grid.innerHTML = '<div class="news-empty">Aucun message pour l\'instant. Revenez bientôt !</div>';
       return;
     }
 
@@ -717,24 +711,22 @@ async function loadNews() {
       </div>
     `).join('');
   } catch (e) {
-    grid.innerHTML = '<div class="news-empty">Berichten tijdelijk niet beschikbaar.</div>';
+    grid.innerHTML = '<div class="news-empty">Messages temporairement indisponibles.</div>';
     console.error('News load error:', e);
   }
 }
 
-// Stats laden
 async function loadStats() {
   try {
     const { count } = await sb
       .from('events')
       .select('*', { count: 'exact', head: true });
     if (count != null) {
-      document.getElementById('stat-events').textContent = count.toLocaleString('nl-NL') + '+';
+      document.getElementById('stat-events').textContent = count.toLocaleString('fr-FR') + '+';
     }
-  } catch (_) { /* stil falen, stat blijft op —  */ }
+  } catch (_) { /* stil falen */ }
 }
 
-// Eenvoudige HTML-escape
 function escHtml(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
