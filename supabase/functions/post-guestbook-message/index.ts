@@ -19,7 +19,7 @@ const CORS_HEADERS = {
 }
 
 const MAX_NAME_LEN = 40
-const MAX_MESSAGE_LEN = 300
+const MAX_MESSAGE_LEN = 280
 const MAX_PER_DAY = 3
 const RATE_WINDOW_HOURS = 24
 const LINK_PATTERN = /https?:\/\/|www\./i

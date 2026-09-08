@@ -1,4 +1,5 @@
--- YardiGo — Gastenboek (ouderwetse "messagebox") op de homepage.
+-- YardiGo — Gastenboek (ouderwetse "messagebox"), Home-sidebar in de app
+-- (tussen "Uitgelicht" en "Tip", alleen zichtbaar op desktop ≥1024px).
 -- Iedereen mag een kort berichtje achterlaten, geen account nodig — net als
 -- de gastenboeken van vroeger. Schrijven gaat NIET via de client/anon-key
 -- rechtstreeks (zou rate-limiting en link-filtering omzeilbaar maken), maar

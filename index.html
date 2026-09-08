@@ -971,6 +971,44 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.dark.is-desktop .hsc-title,
   body.dark.is-desktop .hsc-body{color:var(--text);}
 
+  /* ── Berichtenbord (gastenboek) sidebar-card ── */
+  .gb-card-wrap{position:relative;}
+  #gb-form{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+  .gb-input,.gb-textarea{
+    width:100%;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
+    background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;
+    padding:7px 9px;outline:none;resize:vertical;
+  }
+  .gb-input:focus,.gb-textarea:focus{border-color:var(--terra);}
+  .gb-form-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .gb-counter{font-size:10.5px;color:var(--muted);}
+  .gb-submit-btn{
+    font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:700;color:#fff;
+    background:var(--terra);border:none;border-radius:8px;padding:6px 14px;cursor:pointer;
+  }
+  .gb-submit-btn:disabled{opacity:.6;cursor:default;}
+  .gb-status{font-size:11px;min-height:14px;}
+  .gb-status.ok{color:var(--forest);}
+  .gb-status.err{color:#C5612A;}
+  .gb-list{
+    display:flex;flex-direction:column;gap:8px;
+    max-height:190px;overflow-y:auto;transition:max-height .25s ease;
+    padding-right:2px;border-top:1px solid var(--border);padding-top:10px;
+  }
+  .gb-list.gb-expanded{max-height:600px;}
+  .gb-msg{background:var(--bg2);border-radius:8px;padding:8px 10px;}
+  .gb-msg-meta{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px;}
+  .gb-msg-name{font-size:11.5px;font-weight:700;color:var(--text);}
+  .gb-msg-date{font-size:10px;color:var(--muted);white-space:nowrap;}
+  .gb-msg-text{font-size:12px;color:#4A3E32;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+  .gb-loading,.gb-empty{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;}
+  .gb-expand-btn{
+    display:block;width:100%;margin-top:8px;background:transparent;border:none;
+    font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;color:var(--terra);cursor:pointer;
+  }
+  body.dark.is-desktop .gb-input,body.dark.is-desktop .gb-textarea,
+  body.dark.is-desktop .gb-msg{background:var(--bg);}
+
   /* ── ROUTE / MIJN max-width ── */
   body.is-desktop .route-wrap,
   body.is-desktop #view-mijn > *{max-width:1100px;margin:0 auto;}
@@ -2822,6 +2860,31 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="hsc-title">⭐ Uitgelicht</div>
         <div class="hsc-body">Komende rommelmarkten in jouw regio worden hier binnenkort uitgelicht.</div>
       </div>
+
+      <!-- Berichtenbord: ouderwets gastenboek, geen account nodig om te posten.
+           Zelfde backend (guestbook_messages + post-guestbook-message) als
+           op de marketing-homepage (home.html). -->
+      <div class="home-sidebar-card gb-card-wrap">
+        <div class="hsc-title">💬 Berichtenbord</div>
+        <div class="hsc-body" style="margin-bottom:10px">Laat een kort berichtje achter voor de buurt.</div>
+        <form id="gb-form" onsubmit="gbSubmit(event)">
+          <input type="text" id="gb-name" class="gb-input" placeholder="Je naam" maxlength="40" required>
+          <!-- Honeypot: onzichtbaar voor mensen, vangt de meeste bots -->
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+            <label for="gb-website">Website</label>
+            <input type="text" id="gb-website" tabindex="-1" autocomplete="off">
+          </div>
+          <textarea id="gb-message" class="gb-textarea" placeholder="Je berichtje…" maxlength="280" rows="2" required oninput="gbUpdateCounter()"></textarea>
+          <div class="gb-form-foot">
+            <span class="gb-counter" id="gb-counter">280 over</span>
+            <button type="submit" class="gb-submit-btn" id="gb-submit-btn">Plaatsen</button>
+          </div>
+          <div class="gb-status" id="gb-status"></div>
+        </form>
+        <div class="gb-list" id="gb-list"><div class="gb-loading">Berichten laden…</div></div>
+        <button class="gb-expand-btn" id="gb-expand-btn" onclick="gbToggleExpand()" style="display:none">Toon alles ▾</button>
+      </div>
+
       <div class="home-sidebar-card">
         <div class="hsc-title">💡 Tip</div>
         <div class="hsc-body">Heb jij een leuke verkoop in jouw straat? Plaats hem gratis via <strong>+ Plaatsen</strong> bovenin.</div>
@@ -15301,9 +15364,94 @@ function _dnActivate(id) {
 var _homeCache = { ts: 0, data: null };
 var _homeTab = 'all';   // 'all' | 'news' | 'blog' | 'info'
 
+// ══════════════════════════════════════════════════
+// BERICHTENBORD (gastenboek) — Home-sidebar, tussen Uitgelicht en Tip.
+// Geen account nodig om te posten; anti-spam (rate-limit, links, honeypot)
+// zit server-side in de edge function, niet hier.
+// ══════════════════════════════════════════════════
+var _gbMessages = [];
+function gbUpdateCounter() {
+  var el = document.getElementById('gb-message');
+  var counter = document.getElementById('gb-counter');
+  if (el && counter) counter.textContent = (280 - el.value.length) + ' over';
+}
+function gbToggleExpand() {
+  var list = document.getElementById('gb-list');
+  var btn = document.getElementById('gb-expand-btn');
+  if (!list || !btn) return;
+  var expanded = list.classList.toggle('gb-expanded');
+  btn.textContent = expanded ? 'Minder tonen ▴' : 'Toon alles ▾';
+}
+function _gbRenderList() {
+  var list = document.getElementById('gb-list');
+  var expandBtn = document.getElementById('gb-expand-btn');
+  if (!list) return;
+  if (!_gbMessages.length) {
+    list.innerHTML = '<div class="gb-empty">Nog geen berichten — plaats de eerste!</div>';
+    if (expandBtn) expandBtn.style.display = 'none';
+    return;
+  }
+  list.innerHTML = _gbMessages.map(function(m) {
+    var d = new Date(m.created_at);
+    var dateStr = d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    return '<div class="gb-msg"><div class="gb-msg-meta"><span class="gb-msg-name">' + escapeHtml(m.name) + '</span><span class="gb-msg-date">' + dateStr + '</span></div><div class="gb-msg-text">' + escapeHtml(m.message) + '</div></div>';
+  }).join('');
+  if (expandBtn) expandBtn.style.display = _gbMessages.length > 3 ? 'block' : 'none';
+}
+function loadGuestbookSidebar() {
+  if (!sbClient) return;
+  sbClient.from('guestbook_messages')
+    .select('name,message,created_at')
+    .order('created_at', { ascending: false })
+    .limit(20)
+    .then(function(res) {
+      if (res.error) { console.warn('guestbook load error', res.error); return; }
+      _gbMessages = res.data || [];
+      _gbRenderList();
+    });
+}
+function gbSubmit(e) {
+  e.preventDefault();
+  var nameEl = document.getElementById('gb-name');
+  var msgEl = document.getElementById('gb-message');
+  var websiteEl = document.getElementById('gb-website');
+  var statusEl = document.getElementById('gb-status');
+  var btn = document.getElementById('gb-submit-btn');
+  var name = nameEl.value.trim();
+  var message = msgEl.value.trim();
+  var website = websiteEl ? websiteEl.value : '';
+
+  statusEl.textContent = '';
+  statusEl.className = 'gb-status';
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  fetch(SUPABASE_URL + '/functions/v1/post-guestbook-message', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, message: message, website: website })
+  }).then(function(res) {
+    return res.json().then(function(json) { return { ok: res.ok, json: json }; });
+  }).then(function(r) {
+    if (!r.ok) throw new Error(r.json.error || 'Plaatsen mislukt');
+    statusEl.textContent = '✓ Bedankt voor je berichtje!';
+    statusEl.className = 'gb-status ok';
+    document.getElementById('gb-form').reset();
+    gbUpdateCounter();
+    loadGuestbookSidebar();
+  }).catch(function(err) {
+    statusEl.textContent = err.message || 'Er ging iets mis, probeer het later opnieuw.';
+    statusEl.className = 'gb-status err';
+  }).finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Plaatsen';
+  });
+}
+
 function loadHomeView(force) {
   var adminBar = document.getElementById('home-admin-bar');
   if (adminBar) adminBar.style.display = (window.YG_IS_ADMIN === true) ? 'block' : 'none';
+  loadGuestbookSidebar();
 
   var now = Date.now();
   if (!force && _homeCache.data && (now - _homeCache.ts < 60000)) {
