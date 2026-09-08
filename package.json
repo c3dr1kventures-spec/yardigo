@@ -29,6 +29,7 @@
     "@capacitor/core": "^8.3.0",
     "@capacitor/ios": "^8.3.0",
     "@capacitor/splash-screen": "^8.0.1",
+    "@onesignal/capacitor-plugin": "^5.2.5",
     "@vercel/og": "^0.6.4"
   }
 }

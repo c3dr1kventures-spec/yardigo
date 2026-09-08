@@ -2363,6 +2363,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <!-- ── MELDINGEN ── -->
     <div class="settings-section">
       <div class="settings-section-header" data-i18n="settings.header_notif">🔔 Meldingen</div>
+      <button onclick="openNotifWizard()" style="width:100%;padding:11px;border-radius:12px;border:1px dashed var(--forest);background:transparent;color:var(--forest);font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:8px">🧭 Meldingen instellen met de wizard</button>
       <div class="settings-card" style="margin-bottom:4px;">
         <div class="srow">
           <div class="srow-icon" style="background:#FFF8E8;">🔔</div>
@@ -3267,6 +3268,91 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 </div>
 
 <!-- ═══════════ PROMOTIE-PAKKET overlay (poster + QR + share-tekst) ═══════════ -->
+<!-- ══ NOTIFICATIE-WIZARD ══ -->
+<div class="overlay" id="notifWizardOv" onclick="if(event.target===this)closeNotifWizard()">
+  <div class="sheet" style="max-height:88vh;max-width:440px">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 26px">
+
+      <!-- Stap 1: welkom -->
+      <div class="wiz-step" id="wiz-step-1">
+        <div style="font-size:40px;text-align:center;margin:6px 0 10px">🔔</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);text-align:center;margin-bottom:6px">Mis nooit meer een garagesale</div>
+        <div style="font-size:13px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px">In 3 korte stappen stel je in wanneer en waarover YardiGo je een seintje geeft. Je kunt dit altijd weer aanpassen.</div>
+        <button onclick="wizGoStep(2)" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Aan de slag →</button>
+        <button onclick="closeNotifWizard()" style="width:100%;padding:10px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;margin-top:6px">Overslaan</button>
+      </div>
+
+      <!-- Stap 2: welke meldingen -->
+      <div class="wiz-step" id="wiz-step-2" style="display:none">
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Waarover wil je een melding?</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Kies er zoveel als je wilt — je kunt dit later per type verfijnen.</div>
+        <div id="wiz-types" style="display:flex;flex-direction:column;gap:8px">
+          <div class="srow" style="cursor:pointer" onclick="wizToggleType(0)">
+            <div class="srow-icon" style="background:#FFF8E8">🏠</div>
+            <div class="srow-body"><div class="srow-title">Nieuwe verkopen in de buurt</div></div>
+            <div class="srow-right"><div class="toggle-wrap" id="wiz-type-0"><div class="toggle-ball"></div></div></div>
+          </div>
+          <div class="srow" style="cursor:pointer" onclick="wizToggleType(1)">
+            <div class="srow-icon" style="background:#FFF8E8">⭐</div>
+            <div class="srow-body"><div class="srow-title">Herinnering aan favorieten</div></div>
+            <div class="srow-right"><div class="toggle-wrap" id="wiz-type-1"><div class="toggle-ball"></div></div></div>
+          </div>
+          <div class="srow" style="cursor:pointer" onclick="wizToggleType(2)">
+            <div class="srow-icon" style="background:#FFF8E8">🌅</div>
+            <div class="srow-body"><div class="srow-title">Ochtendroute-overzicht</div></div>
+            <div class="srow-right"><div class="toggle-wrap off" id="wiz-type-2"><div class="toggle-ball"></div></div></div>
+          </div>
+          <div class="srow" style="cursor:pointer" onclick="wizToggleType(3)">
+            <div class="srow-icon" style="background:#FFF8E8">🏷️</div>
+            <div class="srow-body"><div class="srow-title">Nieuwe items in categorieën</div></div>
+            <div class="srow-right"><div class="toggle-wrap off" id="wiz-type-3"><div class="toggle-ball"></div></div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button onclick="wizGoStep(1)" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer">← Terug</button>
+          <button onclick="wizGoStep(3)" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--forest);color:white;font-size:13px;font-weight:700;cursor:pointer">Volgende →</button>
+        </div>
+      </div>
+
+      <!-- Stap 3: afstand -->
+      <div class="wiz-step" id="wiz-step-3" style="display:none">
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Hoe ver bij je in de buurt?</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Voor "nieuwe verkopen in de buurt" — geldt niet voor de andere types.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="notif-pill wiz-radius-pill active" data-v="1" onclick="wizSetRadius(1)">1 km</button>
+          <button class="notif-pill wiz-radius-pill active" data-v="2" onclick="wizSetRadius(2)">2 km</button>
+          <button class="notif-pill wiz-radius-pill" data-v="5" onclick="wizSetRadius(5)">5 km</button>
+          <button class="notif-pill wiz-radius-pill" data-v="10" onclick="wizSetRadius(10)">10 km</button>
+          <button class="notif-pill wiz-radius-pill" data-v="25" onclick="wizSetRadius(25)">25 km</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:22px">
+          <button onclick="wizGoStep(2)" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer">← Terug</button>
+          <button onclick="wizGoStep(4)" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--forest);color:white;font-size:13px;font-weight:700;cursor:pointer">Volgende →</button>
+        </div>
+      </div>
+
+      <!-- Stap 4: toestemming -->
+      <div class="wiz-step" id="wiz-step-4" style="display:none">
+        <div style="font-size:34px;text-align:center;margin:6px 0 10px">📲</div>
+        <div style="font-size:15px;font-weight:800;color:var(--text);text-align:center;margin-bottom:6px">Bijna klaar!</div>
+        <div style="font-size:12.5px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:18px">Je browser of telefoon vraagt zo om toestemming voor meldingen. Zonder deze toestemming worden je voorkeuren wel opgeslagen, maar krijg je geen pushmeldingen.</div>
+        <button onclick="wizEnable()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">🔔 Meldingen inschakelen</button>
+        <button onclick="wizGoStep(3)" style="width:100%;padding:10px;border:none;background:transparent;color:var(--muted);font-size:12px;cursor:pointer;margin-top:6px">← Terug</button>
+      </div>
+
+      <!-- Stap 5: klaar -->
+      <div class="wiz-step" id="wiz-step-5" style="display:none">
+        <div style="font-size:40px;text-align:center;margin:6px 0 10px">🎉</div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);text-align:center;margin-bottom:6px">Je voorkeuren zijn opgeslagen</div>
+        <div style="font-size:12.5px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px">Je kunt dit altijd fijnafstemmen — per type een eigen afstand, timing en stille uren instellen.</div>
+        <button onclick="closeNotifWizard()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Sluiten</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="promoPackOv" onclick="if(event.target===this)closePromoPack()">
   <div class="sheet" style="max-height:94vh;max-width:560px">
     <div class="sheet-handle"></div>
@@ -3963,6 +4049,109 @@ try {
   window.sbClient = sbClient; // Debug-hook voor console-diagnostics
 } catch(e) {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
+}
+
+// ══════════════════════════════════════════════════
+// WEB PUSH (VAPID) — browser-notificaties
+// ══════════════════════════════════════════════════
+const VAPID_PUBLIC_KEY = 'BP--F7CR2rnztws9CebMLUh298h0MlnAOJzaq8l7nh7LVeEnlaiV-_zd-FgXyVWbOWlYUPqnQ8_iJe6x1EqsWsQ';
+
+function urlB64ToUint8Array(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for (var i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+// Abonneert de browser op push en slaat de subscription server-side op.
+// Native app (Capacitor) gebruikt hiervoor OneSignal, niet deze functie.
+async function subscribeWebPush() {
+  if (window.Capacitor) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!sbClient || isGuest || !currentUser || !currentUser.id) return;
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    var json = sub.toJSON();
+    var sessionRes = await sbClient.auth.getSession();
+    var token = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+    if (!token) return;
+    await fetch(SUPABASE_URL + '/functions/v1/save-push-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys, user_agent: navigator.userAgent })
+    });
+  } catch(e) { console.warn('subscribeWebPush', e); }
+}
+
+// Zet browser-push helemaal uit (gebruiker trekt toestemming in via instellingen).
+async function unsubscribeWebPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      var endpoint = sub.endpoint;
+      await sub.unsubscribe();
+      if (sbClient && currentUser && currentUser.id) {
+        await sbClient.from('push_subscriptions').delete().eq('endpoint', endpoint);
+      }
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════
+// ONESIGNAL — native iOS/Android push (via Capacitor)
+// ══════════════════════════════════════════════════
+// App ID is publiek (vergelijkbaar met een Firebase config), geen secret.
+// Leeg totdat het OneSignal-account is aangemaakt — initOneSignalIfNative()
+// doet dan niets, zodat de rest van de app onaangetast blijft.
+//
+// LET OP bij aansluiten: dit project heeft geen bundler/build-stap voor de
+// web-bundel, dus we roepen het plugin via de door Capacitor auto-geregistreerde
+// global (window.Capacitor.Plugins.OneSignal) aan i.p.v. de ESM `import` uit de
+// officiële docs. Test dit op een echt toestel/simulator na `npm run sync` —
+// de exacte plugin-naam onder Plugins kan afwijken, controleer met
+// `console.log(Object.keys(Capacitor.Plugins))` in Safari/Chrome remote debug.
+const ONESIGNAL_APP_ID = ''; // TODO: invullen na aanmaken OneSignal-account
+
+function initOneSignalIfNative() {
+  try {
+    if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
+    if (!ONESIGNAL_APP_ID) return;
+    var OneSignalPlugin = window.Capacitor.Plugins && window.Capacitor.Plugins.OneSignal;
+    if (!OneSignalPlugin) { console.warn('OneSignal-plugin niet gevonden op Capacitor.Plugins'); return; }
+    OneSignalPlugin.initialize({ appId: ONESIGNAL_APP_ID });
+    OneSignalPlugin.requestPermission({ fallbackToSettings: false }).then(function() {
+      return OneSignalPlugin.getUser ? OneSignalPlugin.getUser() : null;
+    }).then(function(u) {
+      var playerId = u && (u.onesignalId || u.pushSubscriptionId);
+      if (playerId) saveDeviceToken(playerId);
+    }).catch(function(e) { console.warn('OneSignal permission/getUser', e); });
+  } catch(e) { console.warn('initOneSignalIfNative failed', e); }
+}
+
+async function saveDeviceToken(playerId) {
+  if (!sbClient || isGuest || !currentUser || !currentUser.id) return;
+  try {
+    var platform = /android/i.test(navigator.userAgent) ? 'android' : 'ios';
+    var sessionRes = await sbClient.auth.getSession();
+    var token = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
+    if (!token) return;
+    await fetch(SUPABASE_URL + '/functions/v1/save-device-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ onesignal_player_id: playerId, platform: platform })
+    });
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════════════════
@@ -7930,7 +8119,7 @@ function obRequestLocation() {
 function _obDoLocationRequest() {
   navigator.geolocation.getCurrentPosition(
     function(pos) {
-      try { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; } catch(e) {}
+      try { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; persistUserLocation(pos.coords.latitude, pos.coords.longitude); } catch(e) {}
       obSetPermStatus('ob-loc-card', 'granted', i18n('ob.s2.loc_granted', '✓ Toegang verleend'));
     },
     function(err) {
@@ -7944,10 +8133,17 @@ function _obDoLocationRequest() {
   );
 }
 function obRequestNotif() {
-  // In Capacitor (native app): meldingen via iOS Instellingen
+  // In Capacitor (native app): OneSignal vraagt de native permissie-prompt.
+  // Zolang ONESIGNAL_APP_ID nog leeg is (account nog niet aangesloten) valt dit
+  // terug op doorverwijzen naar de systeeminstellingen.
   if (window.Capacitor) {
-    obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_ios', '✓ Ingesteld via Instellingen'));
-    toast(i18n('toast.notif_ios_settings', 'Meldingen kun je beheren via iOS Instellingen'));
+    if (ONESIGNAL_APP_ID) {
+      initOneSignalIfNative();
+      obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+    } else {
+      obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_ios', '✓ Ingesteld via Instellingen'));
+      toast(i18n('toast.notif_ios_settings', 'Meldingen kun je beheren via iOS Instellingen'));
+    }
     return;
   }
   // In browser/PWA: gebruik web Notification API
@@ -7968,6 +8164,7 @@ function obRequestNotif() {
   // Reeds bekende state direct verwerken
   if (Notification.permission === 'granted') {
     obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+    subscribeWebPush();
     return;
   }
   if (Notification.permission === 'denied') {
@@ -7979,12 +8176,12 @@ function obRequestNotif() {
   try {
     var p = Notification.requestPermission(function(legacy) {
       // Safari oude API roept callback aan ipv promise
-      if (legacy === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+      if (legacy === 'granted') { obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan')); subscribeWebPush(); }
       else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
     });
     if (p && typeof p.then === 'function') {
       p.then(function(perm) {
-        if (perm === 'granted') obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan'));
+        if (perm === 'granted') { obSetPermStatus('ob-notif-card', 'granted', i18n('ob.s2.notif_granted', '✓ Meldingen aan')); subscribeWebPush(); }
         else obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_denied', '⚠️ Geblokkeerd. Wijzig dit in de browserinstellingen.'));
       }).catch(function() {
         obSetPermStatus('ob-notif-card', 'denied', i18n('ob.s2.notif_unavailable', '⚠️ Niet beschikbaar'));
@@ -8793,12 +8990,26 @@ function getDateRange(key) {
 }
 var listSortMode = 'date-asc';
 var userLocation = null;
+var _lastLocationPersistAt = 0;
+// Slaat de laatst bekende locatie server-side op (max 1x/uur) zodat de
+// "nieuwe verkopen in de buurt"-cron server-side kan matchen zonder dat de
+// gebruiker de app open heeft. Puur functioneel, geen tracking-doeleinden.
+function persistUserLocation(lat, lng) {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  var now = Date.now();
+  if (now - _lastLocationPersistAt < 3600000) return;
+  _lastLocationPersistAt = now;
+  sbClient.from('profiles').update({
+    home_lat: lat, home_lng: lng, location_updated_at: new Date().toISOString()
+  }).eq('id', currentUser.id).then(function(){}, function(){});
+}
 function applyListSort(mode) {
   listSortMode = mode;
   if (mode === 'nearby') {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(pos) {
         userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        persistUserLocation(pos.coords.latitude, pos.coords.longitude);
         renderList();
       }, function() { toast(i18n('toast.location_unavailable_emoji', '📍 Locatie niet beschikbaar')); });
     }
@@ -8913,6 +9124,7 @@ function pickR(km) {
   if (km < 9999 && !userLocation && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      persistUserLocation(pos.coords.latitude, pos.coords.longitude);
       applyFilters();
     }, function() {
       toast(i18n('toast.location_unavailable_filter', '📍 Locatie niet beschikbaar. Afstandsfilter werkt zonder locatie niet.'));
@@ -14069,9 +14281,178 @@ function updateNotifSubtitles() {
   if (activeCats.length && activeRad) document.getElementById('ncs-3').textContent = activeCats.slice(0,2).join(', ') + (activeCats.length > 2 ? ' +' + (activeCats.length-2) : '') + ' · binnen ' + activeRad.dataset.v + ' km';
 }
 
-function saveNotifSettings() {
+function _notifPillValue(g) {
+  var el = document.querySelector('.notif-pill[data-g="' + g + '"].active');
+  return el ? el.dataset.v : null;
+}
+function _notifPillValues(g) {
+  return Array.from(document.querySelectorAll('.notif-pill[data-g="' + g + '"].active')).map(function(p) { return p.dataset.v; });
+}
+function _setPillGroupSingle(g, value) {
+  var v = value === null || value === undefined ? '' : String(value);
+  document.querySelectorAll('.notif-pill[data-g="' + g + '"]').forEach(function(p) { p.classList.toggle('active', p.dataset.v === v); });
+}
+function _setPillGroupMulti(g, values) {
+  var set = (values || []).map(String);
+  document.querySelectorAll('.notif-pill[data-g="' + g + '"]').forEach(function(p) { p.classList.toggle('active', set.indexOf(p.dataset.v) !== -1); });
+}
+
+async function saveNotifSettings() {
   if (isGuest) { guestGate('meldingen'); return; }
-  toast(i18n('toast.notif_settings_saved', '✓ Meldingsinstellingen opgeslagen'));
+  if (!sbClient || !currentUser || !currentUser.id) return;
+  var payload = {
+    user_id: currentUser.id,
+    master_enabled: notifMasterOn,
+    nearby_enabled: notifTypeOn[0],
+    nearby_radius_km: parseInt(_notifPillValue(0) || '2', 10),
+    nearby_timing: _notifPillValue(1) || 'direct',
+    nearby_types: _notifPillValues(2).length ? _notifPillValues(2) : ['particulier', 'buurt', 'evenement'],
+    favorites_enabled: notifTypeOn[1],
+    favorites_advance_min: parseInt((document.getElementById('fav-slider') || {}).value || '20', 10),
+    favorites_morning_overview: !!(document.getElementById('fav-morning') || {}).checked,
+    favorites_route_reminder: !!(document.getElementById('fav-route') || {}).checked,
+    quiet_hours_start_min: (function() {
+      var v = parseInt((document.getElementById('quiet-start') || {}).value || '0', 10);
+      return v > 0 ? v : null;
+    })(),
+    morning_route_enabled: notifTypeOn[2],
+    morning_route_time_min: parseInt((document.getElementById('route-time') || {}).value || '480', 10),
+    morning_route_days: _notifPillValues(3).length ? _notifPillValues(3) : ['za', 'zo'],
+    morning_route_send_when: _notifPillValue(4) || 'altijd',
+    category_alerts_enabled: notifTypeOn[3],
+    category_alerts_categories: _notifPillValues(5),
+    category_alerts_radius_km: parseInt(_notifPillValue(6) || '25', 10),
+    category_alerts_freq: _notifPillValue(7) || 'direct'
+  };
+  try {
+    var res = await sbClient.from('notification_preferences').upsert(payload, { onConflict: 'user_id' });
+    if (res && res.error) {
+      console.error('saveNotifSettings', res.error);
+      toast(i18n('toast.notif_settings_error', '⚠️ Opslaan mislukt, probeer opnieuw'));
+      return;
+    }
+    toast(i18n('toast.notif_settings_saved', '✓ Meldingsinstellingen opgeslagen'));
+    var anyTypeOn = notifTypeOn[0] || notifTypeOn[1] || notifTypeOn[2] || notifTypeOn[3];
+    if (notifMasterOn && anyTypeOn && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      subscribeWebPush();
+    }
+  } catch(e) {
+    console.error('saveNotifSettings exception', e);
+    toast(i18n('toast.notif_settings_error', '⚠️ Opslaan mislukt, probeer opnieuw'));
+  }
+}
+
+// Laadt bestaande notificatievoorkeuren in de settings-UI (i.p.v. altijd de HTML-defaults).
+async function loadNotifPreferences() {
+  if (isGuest || !sbClient || !currentUser || !currentUser.id) return;
+  try {
+    var res = await sbClient.from('notification_preferences').select('*').eq('user_id', currentUser.id).maybeSingle();
+    var p = res && res.data;
+    maybeAutoOpenNotifWizard(!!p);
+    if (!p) return; // nieuwe gebruiker: HTML-defaults blijven staan tot de eerste keer opslaan
+    notifMasterOn = p.master_enabled !== false;
+    var master = document.getElementById('notif-master');
+    if (master) master.classList.toggle('off', !notifMasterOn);
+    var masterLbl = document.getElementById('notif-master-lbl');
+    if (masterLbl) masterLbl.textContent = notifMasterOn ? i18n('settings.notif.master_on', 'Ingeschakeld') : i18n('settings.notif.master_off', 'Alle meldingen uitgeschakeld');
+    var cards = document.getElementById('notif-cards');
+    if (cards) { cards.style.opacity = notifMasterOn ? '1' : '0.4'; cards.style.pointerEvents = notifMasterOn ? '' : 'none'; }
+
+    notifTypeOn = [!!p.nearby_enabled, !!p.favorites_enabled, !!p.morning_route_enabled, !!p.category_alerts_enabled];
+    notifTypeOn.forEach(function(on, idx) {
+      var tw = document.getElementById('nt-' + idx);
+      if (tw) tw.classList.toggle('off', !on);
+      var card = document.getElementById('nc-' + idx);
+      if (card) card.classList.toggle('disabled', !on);
+    });
+
+    _setPillGroupSingle(0, p.nearby_radius_km);
+    _setPillGroupSingle(1, p.nearby_timing);
+    _setPillGroupMulti(2, p.nearby_types);
+
+    var favSlider = document.getElementById('fav-slider');
+    if (favSlider) { favSlider.value = p.favorites_advance_min; updateSliderLabel('fav-slider', 'fav-lbl', p.favorites_advance_min + ' min voor aanvang'); }
+    var favMorning = document.getElementById('fav-morning');
+    if (favMorning) favMorning.checked = !!p.favorites_morning_overview;
+    var favRoute = document.getElementById('fav-route');
+    if (favRoute) favRoute.checked = p.favorites_route_reminder !== false;
+
+    var quietStart = document.getElementById('quiet-start');
+    if (quietStart) { quietStart.value = p.quiet_hours_start_min || 0; updateTimeSlider('quiet-start', 'qs-lbl'); }
+
+    var routeTime = document.getElementById('route-time');
+    if (routeTime) { routeTime.value = p.morning_route_time_min; updateTimeSlider('route-time', 'rt-lbl'); }
+    _setPillGroupMulti(3, p.morning_route_days);
+    _setPillGroupSingle(4, p.morning_route_send_when);
+
+    _setPillGroupMulti(5, p.category_alerts_categories);
+    _setPillGroupSingle(6, p.category_alerts_radius_km);
+    _setPillGroupSingle(7, p.category_alerts_freq);
+
+    updateNotifSubtitles();
+  } catch(e) { console.warn('loadNotifPreferences', e); }
+}
+
+// ══════════════════════════════════════════════════
+// NOTIFICATIE-WIZARD — geleide setup i.p.v. meteen de volledige instellingenlijst
+// ══════════════════════════════════════════════════
+var _wiz = { types: [true, true, false, false], radius: 2, step: 1 };
+
+function openNotifWizard() {
+  _wiz = { types: [true, true, false, false], radius: 2, step: 1 };
+  var ov = document.getElementById('notifWizardOv');
+  if (ov) ov.classList.add('open');
+  _wizRender();
+}
+function closeNotifWizard() {
+  var ov = document.getElementById('notifWizardOv');
+  if (ov) ov.classList.remove('open');
+  try { localStorage.setItem('yg_notif_wizard_seen', '1'); } catch(e) {}
+}
+function wizGoStep(n) { _wiz.step = n; _wizRender(); }
+function wizToggleType(idx) { _wiz.types[idx] = !_wiz.types[idx]; _wizRender(); }
+function wizSetRadius(km) { _wiz.radius = km; _wizRender(); }
+function _wizRender() {
+  document.querySelectorAll('#notifWizardOv .wiz-step').forEach(function(el) { el.style.display = 'none'; });
+  var cur = document.getElementById('wiz-step-' + _wiz.step);
+  if (cur) cur.style.display = 'block';
+  _wiz.types.forEach(function(on, idx) {
+    var el = document.getElementById('wiz-type-' + idx);
+    if (el) el.classList.toggle('off', !on);
+  });
+  document.querySelectorAll('#notifWizardOv .wiz-radius-pill').forEach(function(p) {
+    p.classList.toggle('active', parseInt(p.dataset.v, 10) === _wiz.radius);
+  });
+}
+function wizEnable() {
+  if (isGuest) { guestGate('meldingen'); return; }
+  notifMasterOn = true;
+  notifTypeOn = _wiz.types.slice();
+  var master = document.getElementById('notif-master');
+  if (master) master.classList.remove('off');
+  var masterLbl = document.getElementById('notif-master-lbl');
+  if (masterLbl) masterLbl.textContent = i18n('settings.notif.master_on', 'Ingeschakeld');
+  var cards = document.getElementById('notif-cards');
+  if (cards) { cards.style.opacity = '1'; cards.style.pointerEvents = ''; }
+  notifTypeOn.forEach(function(on, idx) {
+    var tw = document.getElementById('nt-' + idx);
+    if (tw) tw.classList.toggle('off', !on);
+    var card = document.getElementById('nc-' + idx);
+    if (card) card.classList.toggle('disabled', !on);
+  });
+  _setPillGroupSingle(0, _wiz.radius);
+  updateNotifSubtitles();
+  obRequestNotif();   // vraagt browser/OS-toestemming en abonneert bij goedkeuring
+  saveNotifSettings(); // voorkeuren blijven ook staan als toestemming geweigerd wordt
+  wizGoStep(5);
+}
+// Eerste keer dat een ingelogde gebruiker de instellingen opent zónder al
+// voorkeuren te hebben: toon de wizard automatisch (1x, via localStorage-vlag).
+function maybeAutoOpenNotifWizard(hasExistingPrefs) {
+  if (hasExistingPrefs || isGuest) return;
+  var seen = false;
+  try { seen = localStorage.getItem('yg_notif_wizard_seen') === '1'; } catch(e) {}
+  if (!seen) openNotifWizard();
 }
 
 // ══════════════════════════════════════════════════
@@ -14186,6 +14567,8 @@ async function loadSettingsTab() {
   }
   // LocalStorage-voorkeuren
   loadPrefToggles();
+  // Notificatievoorkeuren (Supabase)
+  loadNotifPreferences();
 }
 
 // Vult de profielpagina (view-mijn) met geladen profieldata.
@@ -15621,6 +16004,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   updateAttendanceUI();
   updateUserUI();
   loadAvatarFromProfile();
+  initOneSignalIfNative();
   initMap();
   // Splash loader weg — sales zijn geladen en de kaart is opgezet.
   // Korte microtask-vertraging zodat Leaflet de eerste tegels al kan
