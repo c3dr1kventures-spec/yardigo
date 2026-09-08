@@ -398,8 +398,16 @@ async function markInterestNotified(supabase: ReturnType<typeof createClient>, l
 // Bundelt "Ik ga erheen"-interesse tot max 1 e-mail per listing per run
 // (i.p.v. direct een mail per klik, wat populaire verkopen de organisator
 // met tientallen losse mails liet bestoken). Verstuurt alleen mislukte sends
-// niet als "afgehandeld" — die proberen we volgende run opnieuw.
+// niet als "afgehandeld" — die proberen we volgende run opnieuw. Stuurt nooit
+// tussen 23:00-07:00 (Europe/Amsterdam) — alles wat 's nachts binnenkomt
+// blijft gewoon pending en wordt in de eerstvolgende run na 07:00 gebundeld
+// meegenomen (levert vanzelf een fijn "overnachtingsoverzicht" op).
 async function runInterestDigest(supabase: ReturnType<typeof createClient>, baseUrl: string) {
+  const nowMin = minutesOfDay(nowInAmsterdam())
+  if (isWithinQuietHours(1380, nowMin)) { // 1380 = 23:00
+    return { pending: 0, listings: 0, emails_sent: 0, skipped: 'quiet_hours' }
+  }
+
   const { data: pending } = await supabase
     .from('interest_email_log')
     .select('listing_id, interested_user_id, listings(id, title, user_id)')
@@ -533,8 +541,11 @@ pg_cron schedule (Supabase SQL editor, na deploy van deze functie):
     );
   $$);
 
-  -- Interesse-mail bundelen: elke 20 min, max 1 mail per listing per run
-  select cron.schedule('notif-interest-digest', '*/20 * * * *', $$
+  -- Interesse-mail bundelen: elk uur, max 1 mail per listing per run.
+  -- Stuurt niets tussen 23:00-07:00 NL-tijd (check zit in de functie zelf,
+  -- DST-veilig via Europe/Amsterdam — het cron-schema hoeft geen rekening
+  -- te houden met zomer/wintertijd).
+  select cron.schedule('notif-interest-digest', '0 * * * *', $$
     select net.http_post(
       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=interest_digest',
       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
