@@ -8784,15 +8784,19 @@ function createListingPopup(sale) {
   // Beperk categorie-tags in popup tot 3 + "+N meer" — voorkomt dat veel
   // categorieën de popup-hoogte uit balans halen.
   var tagsHtml = renderTagChips(sale.tags || [], sale.type, { chipClass: 'pop-tag', limit: 3 });
-  var _popCity = (sale.address || '').split(',').slice(-1)[0].trim();
+  // XSS-fix: sale.address/title/from/till komen rechtstreeks van gebruikersinvoer
+  // (het publiceer-formulier) en werden hier ongefilterd in innerHTML gezet —
+  // een listing-titel als <img src=x onerror=...> voerde dus script uit zodra
+  // iemand de kaart-popup opende. Alles hieronder gaat nu via escapeHtml().
+  var _popCity = escapeHtml((sale.address || '').split(',').slice(-1)[0].trim());
   var addrHtml;
   if (isGuest) {
     addrHtml = '📍 ' + _popCity + ' <span style="filter:blur(3px)">••••••</span> 🔒';
   } else if (sale.address_hidden && sale.address_reveal_mode === 'day_before') {
     var _popCd = formatCountdownDetail(sale.address_visible_at);
-    addrHtml = '📍 ' + _popCity + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_popCd ? 'over ' + _popCd : '24u vooraf') + '</span>';
+    addrHtml = '📍 ' + _popCity + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_popCd ? 'over ' + escapeHtml(_popCd) : '24u vooraf') + '</span>';
   } else {
-    addrHtml = '📍 ' + sale.address;
+    addrHtml = '📍 ' + escapeHtml(sale.address || '');
   }
   var photoHtml = '';
   // Zachte placeholder voor oprit/buurt zonder foto's
@@ -8841,8 +8845,8 @@ function createListingPopup(sale) {
     + photoHtml
     + '<div class="pop-head ' + sale.type + '">'
     + '<div class="pop-type">' + _headIcon + ' ' + _headLabel + (sale.is_sample ? ' &nbsp;<span style="background:rgba(255,255,255,.25);color:inherit;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;vertical-align:middle;letter-spacing:.3px">Voorbeeld</span>' : '') + '</div>'
-    + '<div class="pop-title">' + sale.title + '</div>'
-    + '<div class="pop-meta">&#128197; ' + fmtDate(sale.date) + ' &middot; &#128336; ' + sale.from + '&ndash;' + sale.till + '</div>'
+    + '<div class="pop-title">' + escapeHtml(sale.title) + '</div>'
+    + '<div class="pop-meta">&#128197; ' + fmtDate(sale.date) + ' &middot; &#128336; ' + escapeHtml(sale.from || '') + '&ndash;' + escapeHtml(sale.till || '') + '</div>'
     + '</div>'
     + '<div class="pop-body">'
     + '<div class="pop-addr">' + addrHtml + '</div>'
@@ -14850,7 +14854,7 @@ function updateProfilePageFromData(d) {
   var metaEl = document.getElementById('profile-meta');
   if (metaEl) {
     var parts = [];
-    if (d.city && d.city.trim()) parts.push('📍 ' + d.city.trim());
+    if (d.city && d.city.trim()) parts.push('📍 ' + escapeHtml(d.city.trim()));
     var createdAt = d.created_at || _profileCreatedAt;
     if (createdAt) {
       try {
