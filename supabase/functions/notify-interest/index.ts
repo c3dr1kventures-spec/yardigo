@@ -103,6 +103,24 @@ serve(async (req: Request) => {
       })
     }
 
+    // Anti-spam: één specifieke persoon kan maar 1x per listing ooit een mail
+    // veroorzaken, ongeacht hoe vaak diegene "Ik ga erheen" aan/uit toggelt
+    // (elke toggle is een delete+insert in listing_interests, en zonder deze
+    // check triggerde elke insert opnieuw een e-mail).
+    const { error: dedupError } = await supabaseAdmin
+      .from('interest_email_log')
+      .insert({ listing_id: listing.id, interested_user_id: interestedUser.id })
+    if (dedupError) {
+      if (dedupError.code === '23505') {
+        return new Response(JSON.stringify({ ok: true, skipped: 'already_notified' }), {
+          status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+        })
+      }
+      console.error('notify-interest dedup insert error:', dedupError)
+      // Onverwachte DB-fout: mail alsnog versturen (fail-open), dedup is een
+      // extra beschermlaag, geen kernvereiste voor de feature zelf.
+    }
+
     const { data: organiserUser } = await supabaseAdmin.auth.admin.getUserById(listing.user_id)
     const organiserEmail = organiserUser?.user?.email
     if (!organiserEmail) {
