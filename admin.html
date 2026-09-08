@@ -3180,6 +3180,7 @@ function curatedResetForm() {
   var t2 = document.getElementById('cu-time-till'); if (t2) t2.value = '16:00';
   var rv = document.getElementById('cu-reveal-mode'); if (rv) rv.value = 'instant';
   if (_cuMiniMarker && _cuMiniMap) { _cuMiniMap.removeLayer(_cuMiniMarker); _cuMiniMarker = null; }
+  curatedClearParseImage();
 }
 
 function curatedEnsureLeaflet() {
@@ -3510,6 +3511,31 @@ async function curatedSubmit() {
   if (!u || !u.id) { toast('Niet ingelogd'); return; }
   payload.user_id = u.id;
   payload.curator_user_id = u.id;
+
+  // De geüploade affiche wordt de advertentiefoto — scheelt dubbel werk en
+  // maakt in de lijst/kaart meteen visueel duidelijk om welke verkoop het
+  // gaat. Let op: dit is bewust gekozen ondanks de "niet overnemen"-regel
+  // hierboven; alleen gebruiken als je het beeld ook echt mag publiceren.
+  if (_cuParseImage) {
+    try {
+      var bstr = atob(_cuParseImage.data);
+      var n = bstr.length;
+      var byteArr = new Uint8Array(n);
+      while (n--) byteArr[n] = bstr.charCodeAt(n);
+      var ext = (_cuParseImage.media_type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      var blob = new Blob([byteArr], { type: _cuParseImage.media_type });
+      var path = u.id + '/' + Date.now() + '-affiche.' + ext;
+      var up = await sb.storage.from('listings').upload(path, blob, { contentType: _cuParseImage.media_type, upsert: true });
+      if (!up.error) {
+        var pub = sb.storage.from('listings').getPublicUrl(path);
+        if (pub && pub.data && pub.data.publicUrl) payload.images = [pub.data.publicUrl];
+      } else {
+        console.warn('Affiche-upload mislukt, listing gaat door zonder foto:', up.error);
+      }
+    } catch (e) {
+      console.warn('Affiche-conversie mislukt, listing gaat door zonder foto:', e);
+    }
+  }
 
   var res = await sb.from('listings').insert(payload).select('id').single();
   if (res.error) {
