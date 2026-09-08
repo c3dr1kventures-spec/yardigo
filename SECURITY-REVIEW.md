@@ -4,6 +4,19 @@
 
 ---
 
+## Status-update — 8 september 2026
+
+Herverificatie van alle punten hieronder tegen de huidige productie-staat:
+
+- **#3 Rate limiting — ✅ Opgelost.** `enforce_listing_limit` (max 10 actieve) en `enforce_listing_rate` (max 5/uur) draaien als DB-triggers op `listings`, admin-uitzondering via `is_yg_admin()`.
+- **#4 Input sanitization / XSS — ✅ Opgelost.** De kritieke instantie (titel/adres/tijden onversleuteld in de kaart-popup, `createListingPopup`) was tot vandaag nog aanwezig en exploiteerbaar — gefixt (commit `41d64a7`). Rest van de app (list-cards, reviews, buurtverkoop-popup, comments) escapete al correct.
+- **#1 Telefoonnummer publiek leesbaar — ✅ Opgelost.** `profiles`-SELECT-policy was nog steeds `USING (true)`. Vervangen door eigen-rij + admin-only; cross-user reads (verkopersnaam, dubbele-naam-check, publiek profiel) gaan nu via de `profiles_public`-view (bevat geen `phone`). Field bevatte op moment van fix geen enkele waarde — geen data is ooit gelekt.
+- **#2 Storage bucket — ✅ Opgelost.** Foto's staan inmiddels echt in Supabase Storage met een publiek/privé-scheiding die klopt (foto's publiek, plattegronden privé).
+- **#5 Adresblurring is cosmetisch — ⏳ Nog open.** RLS geeft nog steeds het volledige adres mee aan elke `status='active'`-select, ongeacht login-status; de "blur" is puur CSS. Vereist een server-side vrijgave-mechanisme (RPC/edge function), grotere wijziging — bewust niet meegenomen in deze ronde.
+- **#6, #7 — Nog niet herverifieerd** deze ronde.
+
+---
+
 ## Overzicht
 
 | # | Onderwerp | Ernst |
