@@ -10253,27 +10253,18 @@ async function toggleInterest() {
       } else {
         await sbClient.from('listing_interests')
           .insert({ listing_id: s.id, user_id: currentUser.id });
-        // Stuur notificatie naar de organisator (fire-and-forget)
-        notifyOrganizerInterest(s.id);
+        // Registreer interesse voor de organisator-mail (fire-and-forget).
+        // Verzending gebeurt gebundeld via cron (max 1 mail per listing per
+        // ~20 min, met het aantal nieuwe geïnteresseerden sinds de vorige
+        // mail) i.p.v. direct per klik — voorkomt dat populaire verkopen de
+        // organisator met tientallen losse mails bestoken. Dubbele insert
+        // (nogmaals toggelen) botst stil op de primary key, geen probleem.
+        sbClient.from('interest_email_log')
+          .insert({ listing_id: s.id, interested_user_id: currentUser.id })
+          .then(function(){}, function(){});
       }
     } catch(e) {}
   }
-}
-
-// Roept de Edge Function aan om de organisator te mailen.
-async function notifyOrganizerInterest(listingId) {
-  if (!sbClient || !currentUser.id) return;
-  try {
-    var sessionRes = await sbClient.auth.getSession();
-    var token = sessionRes && sessionRes.data && sessionRes.data.session && sessionRes.data.session.access_token;
-    if (!token) return;
-    var projectRef = 'fwehqudhwzcnkcuypuqw';
-    fetch('https://' + projectRef + '.supabase.co/functions/v1/notify-interest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ listing_id: listingId })
-    }).catch(function() {}); // fire-and-forget, geen await
-  } catch(e) {}
 }
 function updateInterestUI(s) {
   if (!s) return;

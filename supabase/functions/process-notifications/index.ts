@@ -9,6 +9,7 @@
 //          POST /functions/v1/process-notifications?job=morning_route
 //          POST /functions/v1/process-notifications?job=digest_daily
 //          POST /functions/v1/process-notifications?job=digest_weekly
+//          POST /functions/v1/process-notifications?job=interest_digest
 //
 // Required env:
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
@@ -16,6 +17,7 @@
 //   ONESIGNAL_APP_ID, ONESIGNAL_REST_API_KEY             (native push, optioneel totdat aangesloten)
 //   NOTIF_CRON_SECRET                                    (shared secret, zelfde patroon als send-reminder-emails)
 //   NOTIF_BASE_URL                                        (bv. https://www.yardigo.nl)
+//   BREVO_API_KEY, REMINDER_FROM_EMAIL, REMINDER_FROM_NAME (interest_digest, hergebruikt reminder-secrets)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -97,6 +99,7 @@ serve(async (req: Request) => {
       case 'digest_weekly':
         result = { category: await runCategoryAlerts(supabase, baseUrl, 'wekelijks') }
         break
+      case 'interest_digest': result = await runInterestDigest(supabase, baseUrl); break
       default:
         return new Response(JSON.stringify({ error: 'Onbekende of ontbrekende job-parameter' }), {
           status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
@@ -371,6 +374,115 @@ async function runMorningRoute(supabase: ReturnType<typeof createClient>, baseUr
   return { candidates: prefs.length, notified }
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// Markeert een set (listing_id, interested_user_id)-rijen als afgehandeld,
+// zodat ze niet opnieuw meegenomen worden in de volgende cron-run.
+async function markInterestNotified(supabase: ReturnType<typeof createClient>, listingId: string, userIds: string[]) {
+  if (!userIds.length) return
+  await supabase
+    .from('interest_email_log')
+    .update({ notified_at: new Date().toISOString() })
+    .eq('listing_id', listingId)
+    .in('interested_user_id', userIds)
+    .is('notified_at', null)
+}
+
+// Bundelt "Ik ga erheen"-interesse tot max 1 e-mail per listing per run
+// (i.p.v. direct een mail per klik, wat populaire verkopen de organisator
+// met tientallen losse mails liet bestoken). Verstuurt alleen mislukte sends
+// niet als "afgehandeld" — die proberen we volgende run opnieuw.
+async function runInterestDigest(supabase: ReturnType<typeof createClient>, baseUrl: string) {
+  const { data: pending } = await supabase
+    .from('interest_email_log')
+    .select('listing_id, interested_user_id, listings(id, title, user_id)')
+    .is('notified_at', null)
+    .limit(2000)
+  if (!pending?.length) return { pending: 0, listings: 0, emails_sent: 0 }
+
+  const byListing = new Map<string, Array<{ interested_user_id: string; listings: { id: string; title: string; user_id: string } | null }>>()
+  for (const row of pending as Array<{ interested_user_id: string; listing_id: string; listings: { id: string; title: string; user_id: string } | null }>) {
+    const arr = byListing.get(row.listing_id) ?? []
+    arr.push(row)
+    byListing.set(row.listing_id, arr)
+  }
+
+  const brevoApiKey = Deno.env.get('BREVO_API_KEY') ?? ''
+  const fromEmail = Deno.env.get('REMINDER_FROM_EMAIL') ?? 'noreply@yardigo.nl'
+  const fromName = Deno.env.get('REMINDER_FROM_NAME') ?? 'YardiGo'
+  let emailsSent = 0
+
+  for (const [listingId, rows] of byListing) {
+    const allUserIds = rows.map((r) => r.interested_user_id)
+    const listing = rows[0].listings
+    if (!listing) { await markInterestNotified(supabase, listingId, allUserIds); continue }
+
+    // Eigen interesse in eigen verkoop telt niet mee
+    const realUserIds = allUserIds.filter((uid) => uid !== listing.user_id)
+    if (!realUserIds.length) { await markInterestNotified(supabase, listingId, allUserIds); continue }
+
+    const { data: organiserProfile } = await supabase
+      .from('profiles').select('notify_interest_email').eq('id', listing.user_id).maybeSingle()
+    if (organiserProfile?.notify_interest_email === false) {
+      await markInterestNotified(supabase, listingId, allUserIds)
+      continue
+    }
+
+    const { data: organiserUser } = await supabase.auth.admin.getUserById(listing.user_id)
+    const organiserEmail = organiserUser?.user?.email
+    if (!organiserEmail) { await markInterestNotified(supabase, listingId, allUserIds); continue }
+
+    const count = realUserIds.length
+    const title = escapeHtml(listing.title ?? 'jouw verkoop')
+    const subject = count === 1 ? `Iemand gaat naar "${listing.title}"!` : `${count} nieuwe mensen gaan naar "${listing.title}"!`
+    const introHtml = count === 1
+      ? `Iemand heeft aangegeven dat ze naar <strong>${title}</strong> toe gaan.`
+      : `<strong>${count} nieuwe mensen</strong> hebben aangegeven dat ze naar <strong>${title}</strong> toe gaan.`
+    const introText = count === 1
+      ? `Iemand heeft interesse in ${listing.title}.`
+      : `${count} nieuwe mensen hebben interesse in ${listing.title}.`
+    const html = `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+        <h2>🎉 ${count === 1 ? 'Iemand heeft interesse!' : 'Nieuwe interesse!'}</h2>
+        <p>${introHtml}</p>
+        <p><a href="${baseUrl}/v/${listing.id}" style="display:inline-block;background:#3F6B4A;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none">Bekijk je verkoop</a></p>
+        <p style="color:#888;font-size:12px">Je kunt deze meldingen uitzetten in je YardiGo-instellingen onder Meldingen.</p>
+      </div>`
+
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'accept': 'application/json', 'api-key': brevoApiKey, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: fromName, email: fromEmail },
+          to: [{ email: organiserEmail }],
+          subject,
+          htmlContent: html,
+          textContent: `${introText} Bekijk: ${baseUrl}/v/${listing.id}`,
+          tags: ['notify-interest-digest'],
+        }),
+      })
+      if (res.ok) {
+        emailsSent++
+        await markInterestNotified(supabase, listingId, allUserIds)
+      } else {
+        console.error('runInterestDigest Brevo error:', res.status, await res.text())
+        // niet markeren: volgende run opnieuw proberen
+      }
+    } catch (e) {
+      console.error('runInterestDigest exception:', (e as Error).message)
+    }
+  }
+  return { pending: pending.length, listings: byListing.size, emails_sent: emailsSent }
+}
+
 /*
 pg_cron schedule (Supabase SQL editor, na deploy van deze functie):
 
@@ -417,6 +529,14 @@ pg_cron schedule (Supabase SQL editor, na deploy van deze functie):
   select cron.schedule('notif-digest-weekly', '0 6 * * 1', $$
     select net.http_post(
       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=digest_weekly',
+      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
+    );
+  $$);
+
+  -- Interesse-mail bundelen: elke 20 min, max 1 mail per listing per run
+  select cron.schedule('notif-interest-digest', '*/20 * * * *', $$
+    select net.http_post(
+      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=interest_digest',
       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
     );
   $$);
