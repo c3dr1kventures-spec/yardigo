@@ -611,11 +611,17 @@ serve(async (req: Request) => {
       const ins = await sb.from('listing_source_leads').upsert(lead, { onConflict: 'listing_id' });
       if (ins.error) samenvatting.errors.push('lead ' + item.id + ': ' + ins.error.message);
 
+      // Niet gevonden: verzamelsite toch niet als bron tonen (lead staat
+      // in listing_source_leads). Wel gevonden: ook als contactweg vastleggen.
+      const up = await sb.from('listings')
+        .update(uit.gevonden ? { source_url: uit.url, source_label: uit.label } : { source_url: null, source_label: null })
+        .eq('id', item.id);
+      if (up.error) samenvatting.errors.push('update listing ' + item.id + ': ' + up.error.message);
       if (uit.gevonden) {
-        const up = await sb.from('listings')
-          .update({ source_url: uit.url, source_label: uit.label })
-          .eq('id', item.id);
-        if (up.error) samenvatting.errors.push('update listing ' + item.id + ': ' + up.error.message);
+        const c = await sb.from('listing_contacts').upsert(
+          { listing_id: item.id, organizer_name: uit.label, website_url: uit.url },
+          { onConflict: 'listing_id', ignoreDuplicates: true });
+        if (c.error) samenvatting.errors.push('contact ' + item.id + ': ' + c.error.message);
       }
     }
   }

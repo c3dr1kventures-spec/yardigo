@@ -48,6 +48,12 @@ create policy "Admins beheren organisator-contact"
 
 revoke all on public.listing_contacts from anon;
 
+-- Curated listings hoeven geen bron-URL meer te hebben: een verzamelsite
+-- tonen we nooit, en zonder originele website is de contactweg
+-- (listing_contacts, alleen voor ingelogden) voldoende. De contact-eis wordt
+-- afgedwongen in autoCheck (_shared/publish.ts) en in de admin.
+alter table public.listings drop constraint if exists listings_curated_must_have_source;
+
 -- Status 'tip': particuliere verkoop, niet automatisch live, via Telegram voorleggen.
 alter table public.pending_events drop constraint if exists pending_events_status_check;
 alter table public.pending_events add constraint pending_events_status_check

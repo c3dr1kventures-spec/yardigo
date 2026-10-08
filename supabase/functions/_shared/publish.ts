@@ -11,6 +11,7 @@
 //   4. geen particuliere verkoop (die gaan als 'tip' naar Telegram)
 //   5. er is een contactweg: website/FB-pagina van de organisator of telefoon
 //   6. titel aanwezig
+//   7. type herkend (niet 'overig')
 // Dubbele events zijn vóór het aanmaken van de pending-rij al uitgefilterd.
 //
 // Bronvermelding: de verzamelsite (lead) komt NOOIT in de listing. Alleen de
@@ -50,6 +51,7 @@ export function autoCheck(p: PendingLike, pastBijYardigo: boolean): AutoCheck {
   if (!p.date_start || p.date_start < today)            redenen.push('datum ontbreekt of voorbij');
   if (p.latitude == null || p.longitude == null)        redenen.push('geen coördinaten');
   if (!pastBijYardigo)                                  redenen.push('past niet bij YardiGo');
+  if (!p.event_subtype || p.event_subtype === 'overig') redenen.push('type onduidelijk');
   if (p.is_private_seller === true)                     redenen.push('particuliere verkoop');
   if (p.is_private_seller == null)                      redenen.push('onbekend of particulier');
   if (!p.organizer_url && !p.contact_phone && !p.contact_email) redenen.push('geen contactweg');

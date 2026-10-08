@@ -182,6 +182,12 @@ function parseDetail(html: string, leadUrl: string, id: string, subtypeHint: str
       if (d && !d.endsWith(LEAD_DOMAIN)) { organizerUrl = m[1]; break; }
     }
   }
+  // Organisatoren vullen soms hun e-mail in als website ("https://info@x.nl").
+  let urlEmail: string | null = null;
+  if (organizerUrl) {
+    const em = organizerUrl.replace(/^https?:\/\//i, '').match(/^([^/@\s]+@[^/\s]+\.[a-z]{2,})\/?$/i);
+    if (em) { urlEmail = em[1]; organizerUrl = null; }
+  }
   const telTekst = text.match(/Tel\.?\s*nr\.?\s*([+\d][\d\s\-]{7,})/i);
 
   return {
@@ -203,9 +209,16 @@ function parseDetail(html: string, leadUrl: string, id: string, subtypeHint: str
     organizerName: org.name ? decodeEntities(String(org.name)).trim().slice(0, 120) : null,
     organizerUrl: organizerUrl || (org.url && !domainOf(org.url).endsWith(LEAD_DOMAIN) ? org.url : null),
     phone: normPhone(org.telephone) || normPhone(telTekst?.[1]),
-    email: org.email ? String(org.email).trim() : null,
+    email: org.email ? String(org.email).trim() : urlEmail,
     rawDescription: decodeEntities(String(ev.description || '')).slice(0, 900),
   };
+}
+
+// Particulier: alleen de straatnaam tonen, nooit het huisnummer.
+function straatZonderNummer(street: string | null): string | null {
+  if (!street) return null;
+  const s = street.replace(/\s+\d+\s*[a-zA-Z]?(\s*-\s*\d+)?$/, '').trim();
+  return /[a-zA-Z]{3,}/.test(s) ? s : null;
 }
 
 // ── Geocode-terugval (alleen als JSON-LD geen geo heeft) ──────────
@@ -222,7 +235,21 @@ async function pdok(q: string): Promise<{ lat: number; lng: number } | null> {
 // ── Claude: herschrijven + classificeren (één call per batch) ─────
 interface AiItem { ref: string; titel?: string; beschrijving?: string; event_subtype?: string; is_particulier?: boolean; past_bij_yardigo?: boolean; }
 
-async function classify(key: string, items: Detail[]): Promise<Map<string, AiItem>> {
+// In batches van AI_BATCH parallel: één grote batch liep tegen max_tokens aan.
+const AI_BATCH = 8;
+async function classify(key: string, items: Detail[], diag: string[]): Promise<Map<string, AiItem>> {
+  const out = new Map<string, AiItem>();
+  const batches: Detail[][] = [];
+  for (let i = 0; i < items.length; i += AI_BATCH) batches.push(items.slice(i, i + AI_BATCH));
+  const res = await Promise.allSettled(batches.map(b => classifyBatch(key, b, diag)));
+  for (const r of res) {
+    if (r.status === 'fulfilled') r.value.forEach((v, k) => out.set(k, v));
+    else diag.push('ai: ' + (r.reason as Error)?.message);
+  }
+  return out;
+}
+
+async function classifyBatch(key: string, items: Detail[], diag: string[]): Promise<Map<string, AiItem>> {
   const out = new Map<string, AiItem>();
   if (!items.length) return out;
   const system = [
@@ -230,9 +257,9 @@ async function classify(key: string, items: Detail[]): Promise<Map<string, AiIte
     'Antwoord UITSLUITEND met één JSON-object: {"items":[...]}, geen tekst erbuiten.',
     'Per item: {"ref": string, "titel": string, "beschrijving": string, "event_subtype": string, "is_particulier": bool, "past_bij_yardigo": bool}',
     '- titel: korte, nette titel (max 70 tekens), zonder datum en zonder hoofdletters-geschreeuw.',
-    '- beschrijving: EIGEN formulering in het Nederlands, 1-2 zinnen, max 220 tekens. Nooit zinnen letterlijk overnemen. Geen telefoonnummers, e-mail of URLs.',
+    '- beschrijving: EIGEN formulering in het Nederlands, 1-2 zinnen, max 220 tekens. Nooit zinnen letterlijk overnemen. Geen telefoonnummers, e-mail of URLs, en geen datum of tijden (die staan al apart).',
     '- event_subtype: één van rommelmarkt, vlooienmarkt, opritverkoop, rommelroute, buurtverkoop, kofferbak, antiekmarkt, boekenmarkt, braderie, kerstmarkt, overig.',
-    '- is_particulier: true als het een verkoop door een privépersoon bij huis is (garage sale, opruiming, verhuisverkoop, tuinverkoop). false bij een vereniging, kerk, school, bedrijf, gemeente of beroepsorganisator — ook als er een persoonsnaam als contact staat.',
+    '- is_particulier: true als het een verkoop door een privépersoon bij huis is (garage sale, opruiming, verhuisverkoop, tuinverkoop). false bij een vereniging, kerk, school, bedrijf, gemeente of beroepsorganisator — ook als er een persoonsnaam als contact staat. Ook false bij een buurt-, wijk- of dorpsbrede garage sale of rommelroute met meerdere deelnemende adressen (dat is een publiek evenement, ook als een bewoner het organiseert).',
     '- past_bij_yardigo: true bij verkoop van tweedehands spullen door particulieren of op een markt (rommelmarkt, vlooienmarkt, brocante, kofferbak, kleding-/speelgoedbeurs, boekenmarkt, garage sale). false bij winkels, webshops, verzamel-/platenbeurzen voor handelaren, kunstmarkten met nieuw werk, braderieën zonder tweedehands, veilingen.',
   ].join('\n');
   const user = JSON.stringify(items.map(d => ({
@@ -247,13 +274,17 @@ async function classify(key: string, items: Detail[]): Promise<Map<string, AiIte
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', signal: ctrl.signal,
         headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, max_tokens: 4000, system, messages: [{ role: 'user', content: user }] }),
+        body: JSON.stringify({ model, max_tokens: 6000, system, messages: [{ role: 'user', content: user }] }),
       });
-      if (r.status === 404 || r.status === 400) continue;   // model niet beschikbaar → volgende
-      if (!r.ok) throw new Error('anthropic ' + r.status);
+      if (r.status === 404 || r.status === 400) {           // model niet beschikbaar → volgende
+        diag.push('ai ' + model + ' ' + r.status + ': ' + (await r.text()).slice(0, 200));
+        continue;
+      }
+      if (!r.ok) throw new Error('anthropic ' + r.status + ': ' + (await r.text()).slice(0, 200));
       const j = await r.json();
       const txt = (j?.content || []).filter((b: any) => b?.type === 'text').map((b: any) => b.text).join('\n');
       const parsed = safeParseJson(txt);
+      if (!parsed?.items) diag.push('ai ' + model + ' onleesbaar (' + j?.stop_reason + '): ' + txt.slice(0, 200));
       for (const it of (parsed?.items || [])) if (it?.ref) out.set(String(it.ref), it);
       return out;
     } finally { clearTimeout(t); }
@@ -371,7 +402,7 @@ serve(async (req: Request) => {
 
   // C. Claude in één batch
   let ai = new Map<string, AiItem>();
-  try { ai = await classify(anthropicKey, details); }
+  try { ai = await classify(anthropicKey, details, s.errors); }
   catch (e) { s.errors.push('ai: ' + (e as Error).message); }
 
   // D. Dedupe → pending → auto-check → publiceren
@@ -405,7 +436,7 @@ serve(async (req: Request) => {
       time_start: d.timeStart, time_end: d.timeEnd,
       city: d.city,
       // Particulier: geen huisadres opslaan als publiek adres; alleen straat zonder nummer.
-      address: isPart ? (d.street ? d.street.replace(/\s+\d+\s*[a-zA-Z]?(\s*-\s*\d+)?$/, '') : null) : adres,
+      address: isPart ? straatZonderNummer(d.street) : adres,
       latitude: d.lat, longitude: d.lng,
       source_url: d.organizerUrl || d.leadUrl,
       source_domain: d.organizerUrl ? domainOf(d.organizerUrl) : LEAD_DOMAIN,
@@ -423,7 +454,13 @@ serve(async (req: Request) => {
     };
     const check = autoCheck({ id: 0, ...row }, a.past_bij_yardigo === true);
     row.auto_check = check;
-    if (dryRun) { s.ingevoegd++; check.ok ? s.gepubliceerd++ : (isPart ? s.tips++ : s.wachtrij++); continue; }
+    if (dryRun) {
+      s.ingevoegd++; check.ok ? s.gepubliceerd++ : (isPart ? s.tips++ : s.wachtrij++);
+      (s.preview ||= []).push({ ref: d.ref, titel, desc: row.description, subtype, datum: d.dateStart, tijd: [d.timeStart, d.timeEnd],
+        plaats: d.city, adres: row.address, org: d.organizerName, web: d.organizerUrl, tel: !!d.phone, part: a.is_particulier,
+        past: a.past_bij_yardigo, uitkomst: check.ok ? 'live' : isPart ? 'tip' : 'wachtrij', redenen: check.redenen });
+      continue;
+    }
 
     const ins = await sb.from('pending_events').insert(row).select('*').single();
     if (ins.error) { s.errors.push('insert ' + d.ref + ': ' + ins.error.message); continue; }
@@ -436,6 +473,17 @@ serve(async (req: Request) => {
     else {
       s.wachtrij++;
       for (const r of check.redenen) s.redenen[r] = (s.redenen[r] || 0) + 1;
+    }
+  }
+
+  // E. Herkansing: goedgekeurd door de auto-check maar publiceren mislukte eerder.
+  if (!dryRun && publish) {
+    const retry = await sb.from('pending_events').select('*')
+      .like('external_ref', 'meukisleuk:%').eq('status', 'nieuw')
+      .eq('auto_check->>ok', 'true').gte('date_start', today).limit(10);
+    for (const p of retry.data || []) {
+      try { await publishPending(sb, p, null, null); s.gepubliceerd++; }
+      catch (e) { s.errors.push('herkansing ' + p.external_ref + ': ' + (e as Error).message); }
     }
   }
 
