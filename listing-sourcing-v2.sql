@@ -67,3 +67,6 @@ alter table public.pending_events add constraint pending_events_status_check
 -- Affiche die de admin zelf aanleverde (Telegram/mini-app) wordt bij
 -- publiceren de foto van de listing. Opslag: bucket 'listings', map telegram/.
 alter table public.pending_events add column if not exists poster_url text;
+
+-- Korte deellinks: listings.short_code + trigger trg_listings_short_code
+-- (migratie 'listings_short_code'); route /s/:code in vercel.json → api/s/[code].js.

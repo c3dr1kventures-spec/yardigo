@@ -276,7 +276,7 @@ async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: str
   if (g.ontbreekt.length || g.groep === 'twijfel') return null;
   try {
     const listingId = await publishPending(sb, row, await curatorId(sb), null);
-    return { url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) };
+    return await deel(sb, listingId);
   } catch (e) { console.warn('direct plaatsen', (e as Error).message); return null; }
 }
 
@@ -315,7 +315,7 @@ async function bestaandItem(sb: any, ref: any, contact: { url: string | null; te
         { listing_id: listingId, website_url: contact.url, phone: contact.tel, email: contact.mail },
         { onConflict: 'listing_id', ignoreDuplicates: true });
     }
-    return { kind: 'live', title: ref.title, listing_id: listingId, url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) };
+    return { kind: 'live', title: ref.title, listing_id: listingId, ...(await deel(sb, listingId)) };
   }
   const id = ref.pending_id as number;
   if (ref.status === 'afgewezen') return { kind: 'afgewezen', title: ref.title, pending_id: id };
@@ -398,8 +398,17 @@ function watOntbreekt(p: any, zonderContact = false): string[] {
 }
 
 // ── Knoppen ────────────────────────────────────────────────────────
-function fbReactie(listingId: string): string {
-  return `Staat ook op de YardiGo-kaart 📍 ${SITE}/v/${listingId}`;
+// Korte deellink (yardigo.nl/s/<code>); valt terug op /v/<id>.
+async function korteLink(sb: any, listingId: string): Promise<string> {
+  const { data } = await sb.from('listings').select('short_code').eq('id', listingId).maybeSingle();
+  return data?.short_code ? `yardigo.nl/s/${data.short_code}` : `${SITE}/v/${listingId}`;
+}
+function fbTekst(link: string): string {
+  return `Staat nu ook op YardiGo 📍 ${link}`;
+}
+async function deel(sb: any, listingId: string): Promise<{ url: string; fb: string }> {
+  const kort = await korteLink(sb, listingId);
+  return { url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort) };
 }
 
 function dmTekst(p: any): string {
@@ -449,7 +458,7 @@ async function knop(sb: any, chat: string, cq: any) {
       const reviewer = await curatorId(sb);
       const listingId = await publishPending(sb, p, reviewer, null);
       await tg('editMessageText', { chat_id: chat, message_id: msg.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
-        text: `✅ <b>${esc(p.title)}</b> staat live\n${SITE}/v/${listingId}\n\nReactie voor Facebook:\n<code>${esc(fbReactie(listingId))}</code>` });
+        text: await (async () => { const d = await deel(sb, listingId); return `✅ <b>${esc(p.title)}</b> staat live\n${d.url}\n\nReactie voor Facebook:\n<code>${esc(d.fb)}</code>`; })() });
       return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Gepubliceerd' });
     } catch (e) {
       return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Mislukt: ' + (e as Error).message.slice(0, 150), show_alert: true });
@@ -597,7 +606,7 @@ async function api(sb: any, req: Request): Promise<Response> {
         if (b.zonder_contact === true && !heeftContact(p)) {
           await sb.from('pending_events').update({ review_notes: 'geplaatst zonder contact (admin)' }).eq('id', p.id);
         }
-        return apiJson({ listing_id: listingId, url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) });
+        return apiJson({ listing_id: listingId, ...(await deel(sb, listingId)) });
       } catch (e) { return apiJson({ error: (e as Error).message }, 500); }
     }
 
@@ -643,9 +652,12 @@ async function api(sb: any, req: Request): Promise<Response> {
     }
 
     case 'recent': {
-      const r = await sb.from('listings').select('id,title,city,date_start,event_subtype,created_at')
+      const r = await sb.from('listings').select('id,title,city,date_start,event_subtype,created_at,short_code')
         .eq('placed_by', 'yardigo').order('created_at', { ascending: false }).limit(30);
-      return apiJson({ items: (r.data || []).map((l: any) => ({ ...l, url: `${SITE}/v/${l.id}`, fb: fbReactie(l.id) })) });
+      return apiJson({ items: (r.data || []).map((l: any) => {
+        const kort = l.short_code ? `yardigo.nl/s/${l.short_code}` : `${SITE}/v/${l.id}`;
+        return { ...l, url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort) };
+      }) });
     }
   }
   return apiJson({ error: 'onbekende op' }, 400);
