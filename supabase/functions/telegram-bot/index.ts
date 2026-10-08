@@ -115,15 +115,18 @@ function kaartTekst(p: any): string {
 
 function kaartKnoppen(p: any) {
   const bewerk = { text: '✏️ Bewerken', web_app: { url: `${MINIAPP}?id=${p.id}` } };
+  const zonder = heeftContact(p) ? [] : [[{ text: '📍 Toch plaatsen zonder contact', callback_data: `nc:${p.id}` }]];
   if (p.status === 'tip') {
     return { inline_keyboard: [
       [{ text: '💬 Toestemming vragen', callback_data: `dm:${p.id}` }],
       [{ text: '✅ Publiceren (contact achter login)', callback_data: `ok:${p.id}` }],
+      ...zonder,
       [bewerk, { text: '❌ Overslaan', callback_data: `no:${p.id}` }],
     ] };
   }
   return { inline_keyboard: [
     [{ text: '✅ Publiceren', callback_data: `ok:${p.id}` }, { text: '❌ Afwijzen', callback_data: `no:${p.id}` }],
+    ...zonder,
     [bewerk],
   ] };
 }
@@ -299,10 +302,10 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   return { ok: true, row: ins.data };
 }
 
-function watOntbreekt(p: any): string[] {
+function watOntbreekt(p: any, zonderContact = false): string[] {
   const o: string[] = [];
   if (!p.title || !String(p.title).trim()) o.push('titel');
-  if (!heeftContact(p)) o.push('contactweg (link, 06 of e-mail)');
+  if (!zonderContact && !heeftContact(p)) o.push('contactweg (link, 06 of e-mail)');
   if (p.latitude == null || p.longitude == null) o.push('locatie op de kaart');
   if (!p.date_start || p.date_start < new Date().toISOString().slice(0, 10)) o.push('datum in de toekomst');
   return o;
@@ -350,8 +353,8 @@ async function knop(sb: any, chat: string, cq: any) {
     return send(chat, `💬 Kopieer en stuur:\n\n<code>${esc(dmTekst(p))}</code>${waar}\n\nKrijg je een ja? Druk dan op ✅ bij #p${p.id}.`, { reply_to_message_id: msg.message_id });
   }
 
-  if (actie === 'ok') {
-    const ontbreekt = watOntbreekt(p);
+  if (actie === 'ok' || actie === 'nc') {
+    const ontbreekt = watOntbreekt(p, actie === 'nc');
     if (ontbreekt.length) {
       await tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Ontbreekt: ' + ontbreekt.join(', '), show_alert: true });
       return;
@@ -499,10 +502,14 @@ async function api(sb: any, req: Request): Promise<Response> {
       const p = r.data;
       if (!p) return apiJson({ error: 'Niet gevonden' }, 404);
       if (p.status === 'goedgekeurd' || p.status === 'afgewezen') return apiJson({ error: 'Al ' + p.status }, 409);
-      const o = watOntbreekt(p);
+      // zonder_contact: admin kiest bewust om zonder contactweg te plaatsen.
+      const o = watOntbreekt(p, b.zonder_contact === true);
       if (o.length) return apiJson({ error: 'Ontbreekt: ' + o.join(', ') }, 400);
       try {
         const listingId = await publishPending(sb, p, await curatorId(sb), null);
+        if (b.zonder_contact === true && !heeftContact(p)) {
+          await sb.from('pending_events').update({ review_notes: 'geplaatst zonder contact (admin)' }).eq('id', p.id);
+        }
         return apiJson({ listing_id: listingId, url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) });
       } catch (e) { return apiJson({ error: (e as Error).message }, 500); }
     }

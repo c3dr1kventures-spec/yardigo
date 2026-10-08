@@ -408,7 +408,8 @@
       return '<div class="step warn"><b>Jij beslist</b>' + esc(wat(p).t) + '. Past het wel? ' +
         (o.length ? 'Vul dan nog in: ' + esc(mist) + '.' : 'Tik dan onderaan op <i>Plaatsen op de kaart</i>.') + ' Anders: <i>Niet plaatsen</i>.</div>';
     }
-    if (o.length) return '<div class="step bad"><b>Nog nodig: ' + esc(mist) + '</b>Vul het hieronder in (rood omlijnd). Daarna kun je plaatsen.</div>';
+    if (o.length) return '<div class="step bad"><b>Nog nodig: ' + esc(mist) + '</b>Vul het hieronder in (rood omlijnd). Daarna kun je plaatsen.' +
+      (o.length === 1 && o[0].indexOf('contact') === 0 ? ' Geen contact te vinden? Je kunt hem ook zonder plaatsen.' : '') + '</div>';
     return '<div class="step ok"><b>Klaar om te plaatsen</b>Controleer de gegevens en tik onderaan op <i>Plaatsen op de kaart</i>.</div>';
   }
 
@@ -450,6 +451,8 @@
       '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
       (p.lead_source_url ? '<div class="lead">Gevonden via <a href="#" data-open="' + esc(p.lead_source_url) + '">' + esc(domein(p.lead_source_url)) + '</a> (wordt niet als bron getoond)</div>' : '') + '</div>' +
       stapHtml(p) +
+      '<div id="nc-box" class="hidden"><button class="btn" id="nocontact">📍 Toch plaatsen zonder contact</button>' +
+      '<div class="lead" style="padding:6px 2px 0">Bijvoorbeeld bij een rommelroute door een paar straten. Bezoekers zien dan geen contactknop.</div></div>' +
       (mistContact ? contact + waar : waar + contact) +
       wanneer + meer +
       '<button class="btn ghost-red" id="reject">Niet plaatsen</button>';
@@ -504,6 +507,8 @@
   function updateMainButton() {
     if (!state.current) return;
     var o = lokaalMist(formPatch());
+    var nc = $('nc-box');
+    if (nc) nc.classList.toggle('hidden', !(o.length === 1 && o[0] === 'contact'));
     var mb = tg.MainButton;
     if (!o.length) mb.setParams({ text: 'Plaatsen op de kaart', color: '#3A6B4A', text_color: '#ffffff', is_active: true, is_visible: true });
     else if (state.dirty) mb.setParams({ text: 'Opslaan', color: '#4b5563', text_color: '#ffffff', is_active: true, is_visible: true });
@@ -524,6 +529,22 @@
         renderPublished(item, r); loadStats();
       });
     }).catch(function (e) { tg.MainButton.hideProgress(); haptic('error'); toast(e.message); });
+  }
+
+  function publishZonderContact() {
+    var cur = state.current;
+    tg.showConfirm('"' + cur.title + '" plaatsen zonder contactweg?', function (ok) {
+      if (!ok) return;
+      var btn = $('nocontact'); btn.disabled = true; btn.textContent = 'Bezig…';
+      var p = state.dirty ? api('save', { id: cur.id, patch: formPatch() }).then(function (r) { state.dirty = false; return r.item; }) : Promise.resolve(cur);
+      p.then(function (item) {
+        return api('publish', { id: item.id, zonder_contact: true }).then(function (r) {
+          haptic('success'); tg.MainButton.hide();
+          state.items = state.items.filter(function (x) { return x.id !== item.id; });
+          renderPublished(item, r); loadStats();
+        });
+      }).catch(function (e) { haptic('error'); toast(e.message); btn.disabled = false; btn.textContent = '📍 Toch plaatsen zonder contact'; });
+    });
   }
 
   function renderPublished(item, r) {
@@ -632,6 +653,7 @@
     if (t.dataset.job !== undefined) { jobTap(state.jobs[+t.dataset.job]); return; }
     if (t.classList.contains('card') && t.dataset.id) { tick(); openDetail(+t.dataset.id); return; }
     if (t.id === 'next') { nextItem(); return; }
+    if (t.id === 'nocontact') { publishZonderContact(); return; }
     if (t.id === 'add-text-go') {
       var txt = $('add-text').value.trim();
       if (txt.length < 10) { toast('Plak wat meer tekst'); return; }
