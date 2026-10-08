@@ -121,6 +121,10 @@
   .lead { font-size: 13px; color: var(--hint); }
   .lead a { color: var(--link); }
 
+  .poster { display: flex; gap: 12px; align-items: center; padding: 10px 14px; }
+  .poster img { width: 72px; height: 96px; object-fit: cover; border-radius: 8px; background: var(--bg2); flex: none; }
+  .poster.off img { opacity: .35; filter: grayscale(1); }
+
   /* Toevoegen */
   .pick { display: grid; place-items: center; gap: 6px; border-radius: var(--radius); padding: 26px 16px; text-align: center; background: var(--bg); border: 2px dashed var(--sep); }
   .pick .big { font-size: 34px; }
@@ -201,6 +205,10 @@
         <label class="switch"><span>🏠 Tips<small>Particuliere verkopen, eerst toestemming vragen</small></span><input type="checkbox" data-stat="tips"></label>
         <label class="switch"><span>📋 Wachtrij<small>Alles wat nog beoordeeld moet worden</small></span><input type="checkbox" data-stat="wachtrij"></label>
       </div>
+      <div class="group">
+        <h3>Toevoegen</h3>
+        <label class="switch"><span>⚡ Direct plaatsen<small>Wat jij deelt of uploadt gaat meteen op de kaart als alles compleet is, ook particuliere verkopen. Twijfelgevallen niet.</small></span><input type="checkbox" id="autopublish"></label>
+      </div>
       <div class="group" style="padding:4px 14px 6px">
         <h3 style="padding-left:0">Zo werkt het</h3>
         <ol class="help" style="padding-left:18px;margin:6px 0 10px">
@@ -210,6 +218,8 @@
           <li><b>Mist iets</b>: vul de contactweg of locatie aan, dan kan hij op de kaart.</li>
           <li><b>Twijfel</b>: de AI weet niet zeker of het bij YardiGo past. Jij beslist.</li>
           <li>Na plaatsen krijg je een reactie om onder de Facebook-post te zetten.</li>
+          <li>Een geüploade affiche wordt de foto van de advertentie. Je kunt dat per advertentie uitzetten.</li>
+          <li>Een Facebook-post delen naar de bot werkt bij openbare posts. Bij besloten groepen: stuur een screenshot.</li>
         </ol>
       </div>
     </div>
@@ -446,6 +456,11 @@
       '<label class="switch"><span>🏠 Particuliere verkoop<small>Bij iemand thuis; eerst toestemming vragen</small></span><input type="checkbox" name="is_private_seller"' + (p.is_private_seller ? ' checked' : '') + '></label>' +
       '</div></details>';
 
+    var poster = p.poster_url ? '<div class="group"><h3>Foto op YardiGo</h3><label class="poster" id="poster-row">' +
+      '<img src="' + esc(p.poster_url) + '" alt="Affiche">' +
+      '<span style="flex:1">Affiche als foto bij de advertentie<small style="display:block;color:var(--hint);font-size:12px">Uitzetten als de organisator dat liever niet heeft</small></span>' +
+      '<span class="switch" style="padding:0;border:0"><input type="checkbox" id="poster-on" checked></span></label></div>' : '';
+
     d.innerHTML =
       '<div class="head"><div class="field" style="padding:0;border:0"><input name="title" value="' + esc(p.title) + '" aria-label="Titel" style="font-size:20px;font-weight:700;border:0;background:none;width:100%;outline:none;padding:0"></div>' +
       '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
@@ -454,7 +469,7 @@
       '<div id="nc-box" class="hidden"><button class="btn" id="nocontact">📍 Toch plaatsen zonder contact</button>' +
       '<div class="lead" style="padding:6px 2px 0">Bijvoorbeeld bij een rommelroute door een paar straten. Bezoekers zien dan geen contactknop.</div></div>' +
       (mistContact ? contact + waar : waar + contact) +
-      wanneer + meer +
+      wanneer + poster + meer +
       '<button class="btn ghost-red" id="reject">Niet plaatsen</button>';
 
     initMap(p);
@@ -492,6 +507,8 @@
     var patch = {};
     $('detail').querySelectorAll('[name]').forEach(function (el) { patch[el.name] = el.type === 'checkbox' ? el.checked : el.value; });
     if (state.marker) { var ll = state.marker.getLatLng(); patch.latitude = ll.lat; patch.longitude = ll.lng; }
+    var po = $('poster-on');
+    if (po && !po.checked) patch.poster_url = '';
     return patch;
   }
 
@@ -597,7 +614,8 @@
     var p = j.file ? resizeImage(j.file).then(function (img) { j.preview = img.preview; renderJobs(); return { data: img.data, media_type: img.media_type }; }) : Promise.resolve(null);
     p.then(function (image) { return api('create', { text: j.text || '', image: image }); })
       .then(function (r) {
-        if (r.item) { j.st = 'nieuw'; j.title = r.item.title; j.id = r.item.id; j.msg = 'Toegevoegd · tik om te bekijken'; state.items.push(r.item); haptic('success'); }
+        if (r.item && r.published) { j.st = 'live'; j.title = r.item.title; j.dup = { fb: r.published.fb, url: r.published.url }; j.msg = 'Direct op de kaart gezet · tik voor FB-reactie'; j.nieuwLive = true; haptic('success'); }
+        else if (r.item) { j.st = 'nieuw'; j.title = r.item.title; j.id = r.item.id; j.msg = 'Toegevoegd · tik om te bekijken'; state.items.push(r.item); haptic('success'); }
         else if (r.dup) {
           j.title = r.dup.title; j.dup = r.dup;
           if (r.dup.kind === 'live') { j.st = 'live'; j.msg = 'Staat al op de kaart · tik voor FB-reactie'; }
@@ -612,7 +630,7 @@
   function jobTap(j) {
     if ((j.st === 'nieuw' || j.st === 'open') && j.id) openDetail(j.id);
     else if (j.st === 'live' && j.dup) {
-      tg.showPopup({ title: 'Staat al op de kaart', message: j.dup.fb, buttons: [{ id: 'copy', type: 'default', text: 'Kopieer FB-reactie' }, { id: 'open', type: 'default', text: 'Bekijk' }, { type: 'close' }] },
+      tg.showPopup({ title: j.nieuwLive ? 'Op de kaart gezet' : 'Staat al op de kaart', message: j.dup.fb, buttons: [{ id: 'copy', type: 'default', text: 'Kopieer FB-reactie' }, { id: 'open', type: 'default', text: 'Bekijk' }, { type: 'close' }] },
         function (b) { if (b === 'copy') copy(j.dup.fb); if (b === 'open') openLink(j.dup.url); });
     } else if (j.st === 'afgewezen' && j.id) {
       tg.showConfirm('Deze had je eerder afgewezen. Toch opnieuw bekijken?', function (ok) {
@@ -684,12 +702,20 @@
     }
   });
 
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'poster-on') $('poster-row').classList.toggle('off', !e.target.checked);
+  });
   $('add-text').addEventListener('input', function () { $('add-text-go').classList.toggle('hidden', this.value.trim().length < 10); });
   $('files').addEventListener('change', function () {
     var files = Array.prototype.slice.call(this.files || []);
     files.forEach(function (file) { addJob({ st: 'wacht', file: file }); });
     this.value = '';
     if (files.length) { haptic('success'); verwerkWachtrij(); }
+  });
+  $('autopublish').addEventListener('change', function () {
+    var el = this;
+    api('settings', { autopublish: el.checked }).then(function (r) { el.checked = r.autopublish; tick(); toast(r.autopublish ? 'Direct plaatsen staat aan' : 'Direct plaatsen staat uit'); })
+      .catch(function (e) { el.checked = !el.checked; toast(e.message); });
   });
   document.querySelectorAll('[data-stat]').forEach(function (el) {
     el.addEventListener('change', function () { state.show[el.dataset.stat] = el.checked; saveSettings(); renderStats(); tick(); });
@@ -707,6 +733,7 @@
   loadSettings().then(function () {
     document.querySelectorAll('[data-stat]').forEach(function (el) { el.checked = !!state.show[el.dataset.stat]; });
     renderStats(); loadStats();
+    api('settings').then(function (r) { $('autopublish').checked = r.autopublish; }).catch(function () {});
     var startId = new URLSearchParams(location.search).get('id');
     if (startId) openDetail(+startId); else go('todo');
   });

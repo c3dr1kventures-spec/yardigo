@@ -35,6 +35,7 @@ export interface PendingLike {
   contact_email: string | null;
   contact_phone: string | null;
   is_private_seller: boolean | null;
+  poster_url?: string | null;
   raw_ai_response?: any;
 }
 
@@ -93,7 +94,7 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
     source_url:          p.organizer_url || null,
     source_label:        p.organizer_name || null,
     address_reveal_mode: 'instant',
-    images:              [],
+    images:              p.poster_url ? [p.poster_url] : [],
     user_id:             curator,
     curator_user_id:     reviewer || curator,
   };

@@ -63,3 +63,7 @@ alter table public.pending_events add constraint pending_events_status_check
 -- wélk item het dubbele is (jsonb: kind pending|listing, pending_id, status,
 -- listing_id, title). Toegepast als migratie 'discovery_find_similar_ref';
 -- definitie: zie supabase migrations (okt 2026).
+
+-- Affiche die de admin zelf aanleverde (Telegram/mini-app) wordt bij
+-- publiceren de foto van de listing. Opslag: bucket 'listings', map telegram/.
+alter table public.pending_events add column if not exists poster_url text;

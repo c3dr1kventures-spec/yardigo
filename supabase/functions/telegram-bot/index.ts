@@ -79,7 +79,7 @@ async function setCfg(sb: any, key: string, value: string) {
 }
 
 // ── Kaartje ────────────────────────────────────────────────────────
-const PENDING_COLS = 'id,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id';
+const PENDING_COLS = 'id,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url';
 
 function datumNl(d: string | null): string {
   if (!d) return '?';
@@ -100,6 +100,7 @@ function kaartTekst(p: any): string {
     `🏷 ${esc(p.event_subtype || '?')} · ${p.is_private_seller === true ? 'particulier' : p.is_private_seller === false ? 'organisator' : 'onbekend'}`,
   ];
   if (p.description) regels.push(`<i>${esc(p.description)}</i>`);
+  if (p.poster_url) regels.push(`🖼 <a href="${esc(p.poster_url)}">affiche</a> wordt de foto`);
   const contact: string[] = [];
   if (p.organizer_name) contact.push('👤 ' + esc(p.organizer_name));
   if (p.organizer_url) contact.push(`🌐 <a href="${esc(p.organizer_url)}">${esc(domainOf(p.organizer_url) || 'website')}</a>`);
@@ -197,6 +198,64 @@ async function geocode(adres: string | null, plaats: string | null): Promise<{ l
   return null;
 }
 
+// Facebook-link → openbare preview (zoals Telegram/WhatsApp die ook tonen).
+// Werkt voor openbare posts en pagina's; besloten groepen geven niets terug.
+function decodeHtml(s: string): string {
+  return s.replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
+    .replace(/&quot;/g, '"').replace(/&#039;|&apos;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+function metaTag(html: string, prop: string): string | null {
+  const a = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]*content=["']([^"']*)["']`, 'i'));
+  const b = a || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${prop}["']`, 'i'));
+  return b ? decodeHtml(b[1]).trim() : null;
+}
+function isFacebook(u: string): boolean {
+  return /(^|\.)(facebook\.com|fb\.com|fb\.me|fb\.watch|m\.facebook\.com)$/i.test(domainOf(u));
+}
+async function fbPreview(url: string): Promise<{ tekst: string; image: string | null } | null> {
+  try {
+    const r = await fetch(url, { redirect: 'follow', headers: {
+      'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+      'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.5',
+    } });
+    const html = (await r.text()).slice(0, 600_000);
+    const titel = metaTag(html, 'og:title');
+    const besch = metaTag(html, 'og:description') || metaTag(html, 'description');
+    const image = metaTag(html, 'og:image');
+    console.log('fbPreview', r.status, domainOf(r.url), { titel: titel?.length ?? 0, besch: besch?.length ?? 0, image: !!image });
+    const tekst = [titel, besch].filter(Boolean).join('\n');
+    if (tekst.length < 15 && !image) return null;
+    return { tekst, image };
+  } catch (e) { console.warn('fbPreview', (e as Error).message); return null; }
+}
+
+async function urlAlsBase64(url: string): Promise<{ data: string; media_type: string } | null> {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const mt = (r.headers.get('content-type') || 'image/jpeg').split(';')[0].trim();
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(mt)) return null;
+    const buf = new Uint8Array(await r.arrayBuffer());
+    if (buf.length > 4_800_000) return null;
+    let bin = '';
+    for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    return { data: btoa(bin), media_type: mt };
+  } catch { return null; }
+}
+
+// Affiche bewaren in de publieke bucket; wordt bij publiceren de listing-foto.
+async function bewaarPoster(sb: any, image: { data: string; media_type: string }): Promise<string | null> {
+  try {
+    const bin = Uint8Array.from(atob(image.data), c => c.charCodeAt(0));
+    const ext = image.media_type.split('/')[1].replace('jpeg', 'jpg');
+    const path = `telegram/${new Date().toISOString().slice(0, 10)}/${randomHex(8)}.${ext}`;
+    const up = await sb.storage.from('listings').upload(path, bin, { contentType: image.media_type, upsert: false });
+    if (up.error) { console.warn('poster upload', up.error.message); return null; }
+    return sb.storage.from('listings').getPublicUrl(path).data.publicUrl;
+  } catch (e) { console.warn('poster', (e as Error).message); return null; }
+}
+
 function contactUitTekst(t: string) {
   const urls = [...t.matchAll(/https?:\/\/[^\s<>"]+/gi)].map(m => m[0].replace(/[).,]+$/, ''));
   const mail = t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)?.[0] ?? null;
@@ -209,12 +268,28 @@ function contactUitTekst(t: string) {
 interface Dup { kind: 'live' | 'open' | 'afgewezen'; title: string; pending_id?: number; listing_id?: string; url?: string; fb?: string }
 type Maak = { ok: true; row: any } | { ok: false; msg: string; dup?: Dup };
 
+// Instelling 'direct plaatsen': zelf aangeleverde items gaan meteen live als
+// alles compleet is en de AI niet twijfelt.
+async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: string } | null> {
+  if ((await cfg(sb, 'telegram_autopublish')) !== 'true') return null;
+  const g = metGroep(row);
+  if (g.ontbreekt.length || g.groep === 'twijfel') return null;
+  try {
+    const listingId = await publishPending(sb, row, await curatorId(sb), null);
+    return { url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) };
+  } catch (e) { console.warn('direct plaatsen', (e as Error).message); return null; }
+}
+
 async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null) {
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
   if (fotoId && !image) return send(chat, '⚠️ Kon de afbeelding niet ophalen. Stuur hem als <b>foto</b> (niet als bestand).');
   const r = await maakItem(sb, tekst, image);
-  if (r.ok) return stuurKaart(sb, chat, r.row);
+  if (r.ok) {
+    const live = await directPlaatsen(sb, r.row);
+    if (live) return send(chat, `✅ <b>${esc(r.row.title)}</b> staat op de kaart\n${live.url}\n\nReactie voor Facebook:\n<code>${esc(live.fb)}</code>`);
+    return stuurKaart(sb, chat, r.row);
+  }
   const d = r.dup;
   if (d?.kind === 'open' && d.pending_id) {
     const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', d.pending_id).maybeSingle();
@@ -255,6 +330,15 @@ async function bestaandItem(sb: any, ref: any, contact: { url: string | null; te
 
 // Affiche/tekst → parse-event → geocode → dedupe → pending_events.
 async function maakItem(sb: any, tekst: string, image: { data: string; media_type: string } | null): Promise<Maak> {
+  // Alleen een (Facebook-)link gedeeld? Haal de openbare preview op: tekst + afbeelding.
+  const link = contactUitTekst(tekst).url;
+  let parseTekst = tekst;
+  if (!image && link && isFacebook(link)) {
+    const pv = await fbPreview(link);
+    if (!pv) return { ok: false, msg: '🔒 Ik kan deze Facebook-post niet openen (vaak een besloten groep). Maak een screenshot van de post en stuur die, met de link erbij.' };
+    parseTekst = pv.tekst + '\n\n' + tekst;
+    if (pv.image) image = await urlAlsBase64(pv.image);
+  }
   const parseRes = await fetch(Deno.env.get('SUPABASE_URL') + '/functions/v1/parse-event', {
     method: 'POST',
     headers: {
@@ -262,7 +346,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
       'Authorization': 'Bearer ' + (Deno.env.get('SUPABASE_ANON_KEY') ?? ''),
       'x-cron-secret': (await cfg(sb, 'cron_secret')) ?? '',
     },
-    body: JSON.stringify({ mode: 'admin', text: tekst || undefined, image: image || undefined }),
+    body: JSON.stringify({ mode: 'admin', keep_address: true, text: parseTekst || undefined, image: image || undefined }),
   });
   const pj = await parseRes.json().catch(() => ({}));
   console.log('parse-event', parseRes.status, JSON.stringify(pj).slice(0, 300));
@@ -281,6 +365,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
       return { ok: false, msg: 'Staat er al: ' + dup.title, dup };
     }
   }
+  const posterUrl = image ? await bewaarPoster(sb, image) : null;
   const subtype = SUBTYPES.has(e.event_type || '') ? e.event_type : 'rommelmarkt';
   const isPart = subtype === 'opritverkoop';
   const row: any = {
@@ -294,6 +379,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
     organizer_name: e.bron_naam, organizer_url: orgUrl,
     contact_phone: ct.tel, contact_email: ct.mail,
     is_private_seller: isPart, status: isPart ? 'tip' : 'nieuw',
+    poster_url: posterUrl,
     raw_ai_response: { parse_event: e },
   };
   row.auto_check = autoCheck({ id: 0, ...row }, true);
@@ -479,6 +565,7 @@ async function api(sb: any, req: Request): Promise<Response> {
         const v = b.patch[k];
         patch[k] = typeof v === 'string' ? (v.trim() || null) : v;
       }
+      if ('poster_url' in (b.patch || {}) && !b.patch.poster_url) patch.poster_url = null;
       if (typeof patch.is_private_seller === 'boolean') patch.status = patch.is_private_seller ? 'tip' : 'nieuw';
       if (b.geocode && (patch.address !== undefined || patch.city !== undefined)) {
         const cur = (await sb.from('pending_events').select('address,city').eq('id', b.id).maybeSingle()).data || {};
@@ -532,8 +619,13 @@ async function api(sb: any, req: Request): Promise<Response> {
       const r = await maakItem(sb, String(b.text || ''), image);
       if (!r.ok && r.dup) return apiJson({ dup: r.dup });
       if (!r.ok) return apiJson({ error: r.msg.replace(/<[^>]+>/g, '') }, 400);
-      return apiJson({ item: metGroep(r.row) });
+      const live = await directPlaatsen(sb, r.row);
+      return apiJson({ item: metGroep(r.row), published: live });
     }
+
+    case 'settings':
+      if (typeof b.autopublish === 'boolean') await setCfg(sb, 'telegram_autopublish', String(b.autopublish));
+      return apiJson({ autopublish: (await cfg(sb, 'telegram_autopublish')) === 'true' });
 
     case 'reopen': {
       const r = await sb.from('pending_events').select('is_private_seller,status').eq('id', b.id).maybeSingle();

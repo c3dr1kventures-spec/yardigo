@@ -247,7 +247,7 @@ serve(async (req: Request) => {
     const today = new Date().toISOString().slice(0, 10);
     const systemPrompt = mode === 'organizer'
       ? buildOrganizerPrompt(today, hintCountry, listingType, categories, subtypes)
-      : buildSystemPrompt(today, hintCountry);
+      : buildSystemPrompt(today, hintCountry, internal && (payload as any).keep_address === true);
 
     const contentBlocks: unknown[] = [];
     if (image) {
@@ -342,7 +342,7 @@ serve(async (req: Request) => {
   }
 });
 
-function buildSystemPrompt(today: string, hintCountry: string): string {
+function buildSystemPrompt(today: string, hintCountry: string, keepAddress = false): string {
   const countryLine = hintCountry
     ? `Context: de bron gaat waarschijnlijk over een evenement in ${hintCountry === 'BE' ? 'België' : 'Nederland'}.`
     : 'Context: de bron gaat over een lokale verkoop in Nederland of België.';
@@ -370,7 +370,9 @@ function buildSystemPrompt(today: string, hintCountry: string): string {
     '}',
     '',
     'Regels:',
-    '- adres = straat + huisnummer ALLEEN bij een duidelijk publieke locatie (sporthal, plein, markthal, gemeentekantoor, kerk, schoolplein). Bij een privéadres van een particulier: adres = null (privacy).',
+    keepAddress
+      ? '- adres = straat + huisnummer zoals vermeld, ook bij een particuliere verkoop (de verkoper heeft het zelf openbaar gedeeld). Bij een route of meerdere straten: de straatnamen.'
+      : '- adres = straat + huisnummer ALLEEN bij een duidelijk publieke locatie (sporthal, plein, markthal, gemeentekantoor, kerk, schoolplein). Bij een privéadres van een particulier: adres = null (privacy).',
     '- beschrijving = EIGEN korte formulering (max 240 tekens), feitelijk. NIET de brontekst letterlijk overnemen.',
     '- event_type: "opritverkoop" bij één huis / eigen oprit, "rommelroute" bij meerdere adressen in een buurt, "rommelmarkt" bij georganiseerde markt met kramen, "buurtverkoop" bij aangekondigde buurt-actie, anders "overig".',
     '- Ontbrekend veld = null. Verzin niets.',
