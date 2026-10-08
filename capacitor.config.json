@@ -5,10 +5,10 @@
   "ios": {
     "contentInset": "always",
     "scrollEnabled": true,
-    "backgroundColor": "#FFFFFF"
+    "backgroundColor": "#3A6B4A"
   },
   "android": {
-    "backgroundColor": "#FFFFFF",
+    "backgroundColor": "#3A6B4A",
     "allowMixedContent": false,
     "captureInput": true,
     "webContentsDebuggingEnabled": false
@@ -17,7 +17,7 @@
     "SplashScreen": {
       "launchShowDuration": 1500,
       "launchAutoHide": true,
-      "backgroundColor": "#FFFFFF",
+      "backgroundColor": "#3A6B4A",
       "showSpinner": false,
       "splashFullScreen": false,
       "splashImmersive": false

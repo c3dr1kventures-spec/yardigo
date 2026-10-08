@@ -129,7 +129,12 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{overscroll-behavior:none;}
-body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:hidden;overscroll-behavior:none;}
+/* overflow-x:hidden op een sticky-ancestor breekt position:sticky in Safari/
+   WKWebView (bekende WebKit-bug) — daardoor scrollde de header mee i.p.v.
+   te blijven plakken. overflow-x:clip geeft dezelfde bescherming tegen
+   horizontaal uitsteken zonder sticky te breken (ondersteund vanaf iOS 15,
+   wat toch al de minimale deployment target is). */
+body{font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;position:relative;overflow-x:clip;overscroll-behavior:none;}
 .yg-icon{width:1.18em;height:1.18em;display:inline-flex;align-items:center;justify-content:center;vertical-align:-.2em;line-height:1;flex-shrink:0;color:var(--terra);}
 .yg-icon svg{width:100%;height:100%;display:block;overflow:visible;}
 .yg-icon .yg-i-terra{fill:var(--terra);}
@@ -206,6 +211,12 @@ body.dark .badge-item.earned{background:var(--bg2);border-color:#8A6010;}
 body.dark .notif-card{background:var(--bg2);}
 body.dark .notif-card-body{border-top-color:var(--border);}
 body.dark .notif-setting-row{border-bottom-color:var(--border);}
+/* Basisstijl ontbrak volledig (alleen dark-mode override bestond) — in
+   lichte modus zag een aangetikte pill er identiek uit aan een niet-
+   geselecteerde, dus leek "selecteren" niet te werken terwijl de state
+   wel degelijk klopte. */
+.notif-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:var(--muted);background:white;cursor:pointer;white-space:nowrap;}
+.notif-pill.active{background:var(--forest);color:white;border-color:var(--forest);}
 body.dark .notif-pill{background:var(--bg);border-color:var(--border);color:var(--muted);}
 body.dark .notif-pill.active{background:var(--forest);color:white;border-color:var(--forest);}
 body.dark .settings-row{border-bottom-color:var(--border);}
@@ -394,7 +405,9 @@ body.lang-en .lang-ball{left:21px;}
 
 /* Nieuwe taalkiezer: vlag-icoon met dropdown (NL/EN/DE/FR) */
 .lang-picker{position:relative;flex-shrink:0;}
-.lang-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;line-height:1;transition:background .15s,border-color .15s;}
+/* Was een cirkel, terwijl de bel/instellingen-knoppen ernaast afgeronde
+   vierkanten zijn — één vormtaal voor alle kleine header-iconen. */
+.lang-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:16px;line-height:1;transition:background .15s,border-color .15s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5);}
 .lang-btn:focus-visible{outline:2px solid var(--terra);outline-offset:2px;}
 .lang-flag{display:inline-block;line-height:1;}
@@ -482,6 +495,15 @@ body.dark .yg-footer{border-top-color:var(--border);}
 
 /* ── FILTER ROW ── */
 .filter-bar{background:var(--forest);padding:0 14px 10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+body:not(.is-desktop) .filter-bar{
+  flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
+  -ms-overflow-style:none;scrollbar-width:none;
+  /* Fade-rand i.p.v. een harde afkap, zodat het als "swipe voor meer" oogt */
+  mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+}
+body:not(.is-desktop) .filter-bar::-webkit-scrollbar{display:none;}
+body:not(.is-desktop) .filter-bar>*{flex-shrink:0;}
 .fdd-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:white;cursor:pointer;white-space:nowrap;}
 .fdd-btn.picked{background:white;color:var(--bark);border-color:white;}
 .fdd-menu{display:none;position:fixed;background:white;border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(44,36,22,.15);z-index:9999;min-width:160px;overflow:hidden;}
@@ -491,6 +513,15 @@ body.dark .yg-footer{border-top-color:var(--border);}
 /* Categorie-picker hergebruikt in de filter-bar (Kaart-tab) — moet er als
    de andere fdd-btn's uitzien i.p.v. zijn eigen (lichte) list-header-stijl. */
 .filter-bar .cat-picker-btn{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;max-width:none;}
+/* Type-pills (Alle/Opritverkoop/Rommelroute/Evenement) hergebruiken .type-pill,
+   dat oorspronkelijk voor een witte achtergrond was gestyled — "Alle" kwam
+   daardoor als bijna-zwarte pil naast de doorzichtige Afstand/Datum-pillen
+   te staan. Zelfde ghost-stijl als de rest van de filterbalk. */
+.filter-bar .type-pill{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;}
+.filter-bar .type-pill.active{background:#fff;color:var(--bark);border-color:#fff;}
+.filter-bar .type-pill.p.active{background:var(--amber);color:var(--bark);border-color:var(--amber);}
+.filter-bar .type-pill.b.active{background:var(--terra);color:#fff;border-color:var(--terra);}
+.filter-bar .type-pill.e.active{background:#fff;color:var(--forest);border-color:#fff;}
 
 /* Compacte variant: filter-bar verplaatst naar boven de resultatenlijst
    (mobiel/tablet, alleen op het Lijst-tabblad — zie ygRelocateFilterBar()).
@@ -517,7 +548,11 @@ body.dark .filter-bar--inline .cat-picker-btn{background:var(--bg);color:var(--t
 .type-pill.p.active{background:var(--amber);color:var(--bark);border-color:var(--amber);}
 .type-pill.b.active{background:var(--terra);color:white;border-color:var(--terra);}
 .type-pill.e.active{background:var(--forest);color:white;border-color:var(--forest);}
-.tab-row{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);}
+/* Op mobiel dubbel met de onderste bnav (Kaart/Lijst/Route/Mijn staan al
+   onderin) — enige unieke functie was toegang tot Instellingen, die nu
+   als tandwiel-icoon in de Mijn-tab zit. Op desktop bestond deze rij al
+   niet (daar is er .desktop-nav in de header). */
+.tab-row{display:none;background:var(--bg2);border-bottom:1px solid var(--border);}
 .tab{flex:1;text-align:center;padding:10px 4px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;}
 .tab.active{color:var(--terra);border-bottom-color:var(--terra);background:white;}
 
@@ -537,7 +572,9 @@ body.on-home .search-row{display:none;}
 body.on-home .home-tab-row{
   display:flex;gap:2px;background:#fff;border-bottom:1.5px solid var(--border);
   padding:0 6px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
-  position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(44,36,22,.04);
+  position:sticky;top:60px;z-index:5;box-shadow:0 2px 8px rgba(44,36,22,.04);
+  mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  -webkit-mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
 }
 .home-tab-row::-webkit-scrollbar{display:none;}
 .home-tab{
@@ -552,11 +589,14 @@ body.dark .home-tab-row{background:var(--bg2);border-bottom-color:var(--border);
 
 /* ── HOME view ── */
 .home-wrap{padding:0 0 84px;background:var(--bg);min-height:calc(100svh - 60px);}
-.home-hero{background:linear-gradient(135deg,#3A6B4A 0%,#2A5038 100%);color:#fff;padding:28px 20px 32px;border-radius:0 0 24px 24px;box-shadow:0 4px 18px rgba(44,36,22,.10);}
-.home-hero h1{margin:0 0 4px;font-size:24px;font-weight:800;letter-spacing:-.3px;}
-.home-hero p{margin:0;font-size:13px;opacity:.92;line-height:1.5;}
-.home-hero .home-hero-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
-.home-hero .home-pin{width:36px;height:44px;flex-shrink:0;}
+/* Was fors hoger dan de groene kop op de andere pagina's (header+zoekbalk+
+   filters daar vs header+deze hero hier) — ingekort zodat de totale groene
+   oppervlakte bovenin ongeveer gelijk is aan de andere views. */
+.home-hero{background:linear-gradient(135deg,#3A6B4A 0%,#2A5038 100%);color:#fff;padding:14px 20px 16px;border-radius:0 0 24px 24px;box-shadow:0 4px 18px rgba(44,36,22,.10);}
+.home-hero h1{margin:0 0 2px;font-size:19px;font-weight:800;letter-spacing:-.3px;}
+.home-hero p{margin:0;font-size:12px;opacity:.92;line-height:1.4;}
+.home-hero .home-hero-row{display:flex;align-items:center;gap:10px;margin-bottom:0;}
+.home-hero .home-pin{width:28px;height:34px;flex-shrink:0;}
 .home-section{padding:20px 16px 4px;}
 .home-section-title{font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin:0 0 10px;padding:0 4px;}
 .home-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s,box-shadow .15s;}
@@ -824,6 +864,77 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
 .home-content-grid{display:block;}
 .home-content-main{display:block;}
 
+/* ── Slowchat (voorheen "Berichtenbord") — chatbox-stijl, minimalistisch.
+   Stond eerder per ongeluk alleen binnen de desktop-mediaquery, waardoor
+   de mobiele instantie zonder enige stijl rendere (kale browser-defaults,
+   incl. een blauwe systeemknop). Nu globaal zodat mobiel + desktop
+   identiek en on-brand ogen. ── */
+.gb-card-wrap{position:relative;}
+.gb-chat-header{display:flex;align-items:center;justify-content:space-between;}
+.gb-chat-live{font-size:9.5px;font-weight:700;color:var(--forest);display:flex;align-items:center;gap:4px;}
+.gb-chat-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--forest);display:inline-block;animation:gbPulse 1.6s ease-in-out infinite;}
+@keyframes gbPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.gb-chatlog{
+  display:flex;flex-direction:column;gap:10px;
+  max-height:210px;overflow-y:auto;transition:max-height .25s ease;
+  padding:10px 3px 2px;margin-bottom:6px;
+  background:linear-gradient(180deg,var(--bg2),rgba(0,0,0,0) 28px);
+  border-radius:10px;
+}
+.gb-chatlog.gb-expanded{max-height:640px;}
+.gb-bubble-row{display:flex;align-items:flex-start;gap:7px;}
+.gb-avatar{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;margin-top:1px;
+  background:linear-gradient(135deg,var(--terra),#C5612A);color:#fff;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+.gb-bubble{
+  background:#fff;border-radius:3px 14px 14px 14px;padding:7px 11px;
+  box-shadow:0 1px 3px rgba(44,36,22,.08);max-width:calc(100% - 33px);
+}
+.gb-bubble-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:1px;flex-wrap:wrap;}
+.gb-bubble-name{font-size:11px;font-weight:700;color:var(--terra);}
+.gb-bubble-time{font-size:9px;color:var(--muted);}
+.gb-bubble-text{font-size:12px;color:#4A3E32;line-height:1.45;white-space:pre-wrap;word-break:break-word;}
+.gb-loading,.gb-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 0;}
+.gb-expand-btn{
+  display:block;width:100%;margin-bottom:8px;background:transparent;border:none;
+  font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;color:var(--terra);cursor:pointer;
+}
+
+.gb-composer{border-top:1px solid var(--border);padding-top:10px;}
+.gb-name-input{
+  width:100%;box-sizing:border-box;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;
+  padding:8px 13px;outline:none;margin-bottom:8px;
+}
+.gb-name-input:focus{border-color:var(--terra);background:#fff;}
+.gb-composer-row{display:flex;align-items:flex-end;gap:6px;}
+.gb-composer-input{
+  flex:1;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;
+  padding:8px 13px;outline:none;resize:none;max-height:70px;
+}
+.gb-composer-input:focus{border-color:var(--terra);background:#fff;}
+.gb-send-btn{
+  flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--terra);
+  color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:transform .12s;
+}
+.gb-send-btn:hover{transform:scale(1.07);}
+.gb-send-btn:disabled{opacity:.5;cursor:default;transform:none;}
+.gb-composer-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;min-height:13px;}
+.gb-counter{font-size:10px;color:var(--muted);}
+.gb-status{font-size:10.5px;}
+.gb-status.ok{color:var(--forest);}
+.gb-status.err{color:#C5612A;}
+body.dark .gb-chatlog{background:linear-gradient(180deg,var(--bg2),rgba(0,0,0,0) 28px);}
+body.dark .gb-bubble{background:var(--bg2);}
+body.dark .gb-bubble-text{color:var(--text);}
+body.dark .gb-name-input,body.dark .gb-composer-input{background:var(--bg);}
+body.dark .gb-name-input:focus,body.dark .gb-composer-input:focus{background:var(--bg2);}
+
 @media (min-width: 1024px) {
   /* ── ROOT: override mobile-eerste max-width:480px op body ── */
   body.is-desktop{max-width:none;}
@@ -945,6 +1056,10 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   }
   body.is-desktop #view-home .home-content-main{min-width:0;}
   body.is-desktop #view-home .home-content-aside{display:flex;flex-direction:column;gap:14px;position:sticky;top:84px;}
+  /* Berichtenbord-tab/sectie zijn een mobiele-only duplicaat van wat op
+     desktop al in de sidebar staat (.home-content-aside is daar zichtbaar). */
+  body.is-desktop .home-tab-mobile-only,
+  body.is-desktop .home-section-mobile-only{display:none !important;}
   body.is-desktop #view-home .home-section{padding:18px 4px 6px;}
   body.is-desktop #view-home .home-section-title{font-size:12px;}
   body.is-desktop #view-home #home-news-list,
@@ -970,68 +1085,6 @@ body.dark .adm-post-row,body.dark .adm-field input,body.dark .adm-field textarea
   body.dark.is-desktop .home-sidebar-card{background:var(--bg2);}
   body.dark.is-desktop .hsc-title,
   body.dark.is-desktop .hsc-body{color:var(--text);}
-
-  /* ── Berichtenbord (gastenboek) sidebar-card, chatbox-stijl ── */
-  .gb-card-wrap{position:relative;}
-  .gb-chat-header{display:flex;align-items:center;justify-content:space-between;}
-  .gb-chat-live{font-size:9.5px;font-weight:700;color:var(--forest);display:flex;align-items:center;gap:4px;}
-  .gb-chat-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--forest);display:inline-block;animation:gbPulse 1.6s ease-in-out infinite;}
-  @keyframes gbPulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-
-  .gb-chatlog{
-    display:flex;flex-direction:column;gap:10px;
-    max-height:210px;overflow-y:auto;transition:max-height .25s ease;
-    padding:10px 3px 2px;margin-bottom:6px;
-    background:linear-gradient(180deg,var(--bg2),rgba(0,0,0,0) 28px);
-    border-radius:10px;
-  }
-  .gb-chatlog.gb-expanded{max-height:640px;}
-  .gb-bubble-row{display:flex;align-items:flex-start;gap:7px;}
-  .gb-avatar{
-    flex-shrink:0;width:26px;height:26px;border-radius:50%;margin-top:1px;
-    background:linear-gradient(135deg,var(--terra),#C5612A);color:#fff;
-    font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;
-  }
-  .gb-bubble{
-    background:#fff;border-radius:3px 14px 14px 14px;padding:7px 11px;
-    box-shadow:0 1px 3px rgba(44,36,22,.08);max-width:calc(100% - 33px);
-  }
-  .gb-bubble-meta{display:flex;align-items:baseline;gap:6px;margin-bottom:1px;flex-wrap:wrap;}
-  .gb-bubble-name{font-size:11px;font-weight:700;color:var(--terra);}
-  .gb-bubble-time{font-size:9px;color:var(--muted);}
-  .gb-bubble-text{font-size:12px;color:#4A3E32;line-height:1.45;white-space:pre-wrap;word-break:break-word;}
-  .gb-loading,.gb-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 0;}
-  .gb-expand-btn{
-    display:block;width:100%;margin-bottom:8px;background:transparent;border:none;
-    font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;color:var(--terra);cursor:pointer;
-  }
-
-  .gb-composer{border-top:1px solid var(--border);padding-top:9px;}
-  .gb-name-input{
-    width:100%;font-family:'Poppins',sans-serif;font-size:11px;color:var(--text);
-    background:transparent;border:none;border-bottom:1px solid var(--border);
-    padding:2px 2px 6px;outline:none;margin-bottom:7px;
-  }
-  .gb-name-input:focus{border-color:var(--terra);}
-  .gb-composer-row{display:flex;align-items:flex-end;gap:6px;}
-  .gb-composer-input{
-    flex:1;font-family:'Poppins',sans-serif;font-size:12px;color:var(--text);
-    background:var(--bg2);border:1.5px solid var(--border);border-radius:16px;
-    padding:8px 13px;outline:none;resize:none;max-height:70px;
-  }
-  .gb-composer-input:focus{border-color:var(--terra);}
-  .gb-send-btn{
-    flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--terra);
-    color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;display:flex;
-    align-items:center;justify-content:center;transition:transform .12s;
-  }
-  .gb-send-btn:hover{transform:scale(1.07);}
-  .gb-send-btn:disabled{opacity:.5;cursor:default;transform:none;}
-  .gb-composer-foot{display:flex;align-items:center;justify-content:space-between;margin-top:6px;min-height:13px;}
-  .gb-counter{font-size:10px;color:var(--muted);}
-  .gb-status{font-size:10.5px;}
-  .gb-status.ok{color:var(--forest);}
-  .gb-status.err{color:#C5612A;}
 
   body.dark.is-desktop .gb-bubble{background:var(--bg2);}
   body.dark.is-desktop .gb-composer-input{background:var(--bg);}
@@ -1333,7 +1386,12 @@ body.dark .review-card{background:var(--bg2);}
 .pending-checkin-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
 
 /* ── BOTTOM NAV ── */
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:white;border-top:1px solid var(--border);display:flex;z-index:500;padding-bottom:env(safe-area-inset-bottom,0);}
+/* translateZ(0) + will-change zetten de bnav op zijn eigen compositing-
+   layer, zodat een reflow van de content erboven (bij view-wissel) 'm niet
+   even laat "springen" terwijl WKWebView safe-area-inset-bottom herberekent.
+   min-height houdt de zichtbare balk stabiel ook als die berekening even
+   kortstondig 0 teruggeeft. */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateZ(0);will-change:transform;width:100%;max-width:480px;min-height:58px;background:white;border-top:1px solid var(--border);display:flex;z-index:500;padding-bottom:env(safe-area-inset-bottom,0);}
 .bni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;font-size:9px;font-weight:600;color:var(--muted);cursor:pointer;gap:3px;}
 .bni.active{color:var(--terra);}
 .bni svg{width:22px;height:22px;}
@@ -1385,8 +1443,17 @@ body.dark #maintenance-banner .mb-title{color:#F2A830;}
 .toggle-wrap:not(.off) .toggle-ball{left:21px;}
 /* settings sections */
 .settings-section{margin-bottom:6px;}
-.settings-section-header{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:16px 4px 6px;}
+.settings-section-header{
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);
+  padding:16px 4px 6px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+  -webkit-tap-highlight-color:transparent;
+}
+.settings-section-header::after{
+  content:'▾';font-size:11px;transition:transform .2s ease;color:var(--muted);
+}
+.settings-section.collapsed .settings-section-header::after{transform:rotate(-90deg);}
 .settings-card{background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:4px;}
+.settings-section.collapsed .settings-card{display:none;}
 body.dark .settings-card{background:var(--bg2);border-color:var(--border);}
 .srow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:default;}
 .srow:last-child{border-bottom:none;}
@@ -1986,6 +2053,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button class="btn-inbox" onclick="openInbox()" aria-label="Berichten" id="inboxBellBtn" title="Berichten">
       🔔<span class="inbox-badge" id="inbox-badge" style="display:none">0</span>
     </button>
+    <!-- Directe toegang tot Instellingen — sinds de bovenste tab-row (met
+         het oude ⚙️-tabblad) verwijderd is op mobiel, was er geen duidelijke
+         ingang meer buiten de "Bewerken"-knop op het Mijn-profiel. -->
+    <button class="btn-inbox" onclick="openSettings()" aria-label="Instellingen" title="Instellingen">⚙️</button>
 
     <button class="btn-login" onclick="openLogin()" id="loginBtn" aria-label="Inloggen"><span class="btn-login-icon" aria-hidden="true">👤</span><span class="btn-login-text" data-i18n="header.login">Inloggen</span></button>
     <button class="btn-publish" onclick="openAdd()" aria-label="Plaatsen"><span class="btn-publish-icon" aria-hidden="true">+</span><span class="btn-publish-text" data-i18n="header.publish">Plaatsen</span></button>
@@ -2030,16 +2101,15 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div class="fdd-opt" data-datekey="next" onclick="pickD('next','filter.date.next_week')" data-i18n="filter.date.next_week">Volgende week</div>
     </div>
   </div>
-  <div style="position:relative">
-    <button class="fdd-btn" id="btn-filter" onclick="openDD(event,'filter')"><span data-i18n="filter.label">⚙️ Filter</span></button>
-    <div class="fdd-menu" id="dd-filter" style="min-width:200px">
-      <div style="padding:12px 16px 8px;font-size:11px;font-weight:700;color:var(--muted)" data-i18n="filter.type">TYPE</div>
-      <div class="fdd-opt" data-type="particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
-      <div class="fdd-opt" data-type="buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
-      <div class="fdd-opt" data-type="evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
-      <div class="fdd-opt" data-type="all" style="color:var(--terra)" onclick="filterType('all')" data-i18n="filter.clear">✕ Wis filter</div>
-    </div>
-  </div>
+  <!-- Type-knoppen: rechtstreeks in de rij i.p.v. een aparte "Filter"-dropdown
+       met dezelfde 3 opties + een aparte type-row eronder — dat was twee
+       manieren om hetzelfde te doen. filterType() blijft ongewijzigd: hij
+       synct alle [data-type]-elementen en #leg-* op basis van id, ongeacht
+       waar ze in de DOM staan. -->
+  <div class="type-pill active" id="leg-all" onclick="filterType('all')" data-i18n="filter.all">Alle</div>
+  <div class="type-pill p" id="leg-particulier" data-type="particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
+  <div class="type-pill b" id="leg-buurt" data-type="buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
+  <div class="type-pill e" id="leg-evenement" data-type="evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
   <!-- Categorie multi-picker, ook op de Kaart-tab (voorheen alleen bij Lijst) -->
   <div class="cat-picker" style="position:relative">
     <button class="cat-picker-btn" onclick="toggleCatPicker(event)" type="button">
@@ -2064,14 +2134,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   <button class="fdd-btn filter-reset-btn" onclick="resetAllFilters()" style="display:none;border-style:dashed" data-i18n="filter.reset_all">✕ Alles wissen</button>
 </div>
 
-<!-- Type pills + tabs -->
-<div class="type-row">
-  <span style="font-size:10px;font-weight:700;color:var(--muted);margin-right:2px" data-i18n="types.heading">TYPES</span>
-  <div class="type-pill active" id="leg-all" onclick="filterType('all')" data-i18n="filter.all">Alle</div>
-  <div class="type-pill p" id="leg-particulier" onclick="filterType('particulier')">🏠 <span data-i18n="type.particulier">Opritverkoop</span></div>
-  <div class="type-pill b" id="leg-buurt" onclick="filterType('buurt')">🏘️ <span data-i18n="type.buurt">Rommelroute</span></div>
-  <div class="type-pill e" id="leg-evenement" onclick="filterType('evenement')">🎪 <span data-i18n="type.evenement">Evenement</span></div>
-</div>
 <div class="tab-row">
   <div class="tab active" onclick="sv('kaart',this)">🗺️ <span data-i18n="nav.map">Kaart</span></div>
   <div class="tab" onclick="sv('lijst',this)">📋 <span data-i18n="nav.list">Lijst</span></div>
@@ -2350,7 +2412,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
     <!-- ── ACCOUNT ── -->
     <div class="settings-section">
-      <div class="settings-section-header" data-i18n="settings.header_account">👤 Account</div>
+      <div class="settings-section-header" onclick="toggleSettingsSection(this)" data-i18n="settings.header_account">👤 Account</div>
       <div class="settings-card">
         <div class="srow">
           <div class="srow-icon" style="background:#FFF0E8;">✏️</div>
@@ -2408,8 +2470,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
 
     <!-- ── WEERGAVE ── -->
-    <div class="settings-section">
-      <div class="settings-section-header" data-i18n="settings.header_app">🎨 Weergave</div>
+    <div class="settings-section collapsed">
+      <div class="settings-section-header" onclick="toggleSettingsSection(this)" data-i18n="settings.header_app">🎨 Weergave</div>
       <div class="settings-card">
         <div class="srow">
           <div class="srow-icon" style="background:#E8F4ED;">🌐</div>
@@ -2469,8 +2531,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
 
     <!-- ── MELDINGEN ── -->
-    <div class="settings-section">
-      <div class="settings-section-header" data-i18n="settings.header_notif">🔔 Meldingen</div>
+    <div class="settings-section collapsed">
+      <div class="settings-section-header" onclick="toggleSettingsSection(this)" data-i18n="settings.header_notif">🔔 Meldingen</div>
       <button onclick="openNotifWizard()" style="width:100%;padding:11px;border-radius:12px;border:1px dashed var(--forest);background:transparent;color:var(--forest);font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:8px">🧭 Meldingen instellen met de wizard</button>
       <div class="settings-card" style="margin-bottom:4px;">
         <div class="srow">
@@ -2719,8 +2781,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
 
     <!-- ── PRIVACY ── -->
-    <div class="settings-section">
-      <div class="settings-section-header" data-i18n="settings.header_privacy">🔒 Privacy</div>
+    <div class="settings-section collapsed">
+      <div class="settings-section-header" onclick="toggleSettingsSection(this)" data-i18n="settings.header_privacy">🔒 Privacy</div>
       <div class="settings-card">
         <div class="srow" style="flex-wrap:wrap;gap:8px;">
           <div class="srow-icon" style="background:#E8F4ED;">🏠</div>
@@ -2751,8 +2813,8 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     </div>
 
     <!-- ── OVER & APP ── -->
-    <div class="settings-section">
-      <div class="settings-section-header" data-i18n="settings.header_about">ℹ️ Over &amp; App</div>
+    <div class="settings-section collapsed">
+      <div class="settings-section-header" onclick="toggleSettingsSection(this)" data-i18n="settings.header_about">ℹ️ Over &amp; App</div>
       <div class="settings-card">
         <div class="srow tappable" onclick="openFeedback()">
           <div class="srow-icon" style="background:#FFF0E8;">💌</div>
@@ -2774,7 +2836,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div class="srow-body"><div class="srow-title" data-i18n="settings.terms">Gebruiksvoorwaarden</div></div>
           <div class="srow-right"><span class="srow-chevron">›</span></div>
         </div>
-        <div class="srow tappable" onclick="window.open('https://apps.apple.com/us/app/yardigo/id6761503009','_blank')">
+        <div class="srow tappable" id="srow-ios-download" onclick="window.open('https://apps.apple.com/us/app/yardigo/id6761503009','_blank')">
           <div class="srow-icon" style="background:#000;color:white;">🍎</div>
           <div class="srow-body"><div class="srow-title" data-i18n="settings.ios.title">Download de iPhone-app</div><div class="srow-sub" data-i18n="settings.ios.sub">YardiGo voor iOS in de App Store</div></div>
           <div class="srow-right"><span class="srow-chevron">›</span></div>
@@ -2782,14 +2844,14 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <div class="srow">
           <div class="srow-icon" style="background:#F5F0EB;">ℹ️</div>
           <div class="srow-body"><div class="srow-title" data-i18n="settings.version">Versie</div></div>
-          <div class="srow-right"><span class="srow-value">1.1.0</span></div>
+          <div class="srow-right"><span class="srow-value" id="settings-version-value">1.1.1</span></div>
         </div>
       </div>
     </div>
 
     <!-- ── GEVARENZONE ── -->
-    <div class="settings-section members-only">
-      <div class="settings-section-header" style="color:#C0392B" data-i18n="settings.header_danger">⚠️ Gevarenzone</div>
+    <div class="settings-section members-only collapsed">
+      <div class="settings-section-header" style="color:#C0392B" onclick="toggleSettingsSection(this)" data-i18n="settings.header_danger">⚠️ Gevarenzone</div>
       <div class="settings-card">
         <div class="srow tappable" onclick="openDeleteConfirm()">
           <div class="srow-icon" style="background:#FDE8E8;">🗑️</div>
@@ -2801,7 +2863,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
     <!-- Footer -->
     <footer class="yg-footer">
-      <a class="yg-footer-appstore" href="https://apps.apple.com/us/app/yardigo/id6761503009" target="_blank" rel="noopener" aria-label="Download YardiGo in de App Store">
+      <a class="yg-footer-appstore" id="footer-appstore-link" href="https://apps.apple.com/us/app/yardigo/id6761503009" target="_blank" rel="noopener" aria-label="Download YardiGo in de App Store">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.564 12.742c.016-1.93 1.58-2.85 1.65-2.895-.9-1.315-2.3-1.495-2.797-1.518-1.19-.12-2.326.7-2.932.7-.618 0-1.548-.682-2.546-.664-1.31.02-2.515.762-3.19 1.935-1.363 2.36-.348 5.847.974 7.76.645.94 1.41 1.99 2.41 1.95.97-.04 1.34-.625 2.517-.625 1.17 0 1.51.625 2.55.604 1.055-.018 1.72-.95 2.36-1.895.745-1.086 1.05-2.14 1.068-2.197-.024-.01-2.046-.786-2.063-3.155zM15.63 6.75c.534-.653.894-1.553.795-2.456-.77.033-1.71.517-2.263 1.16-.497.573-.93 1.494-.815 2.38.86.068 1.745-.436 2.282-1.084z"/></svg>
         <span data-i18n="footer.appstore">Download in de App Store</span>
       </a>
@@ -2848,6 +2910,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <button class="home-tab"        data-tab="news" onclick="homeSwitchTab('news',this)" data-i18n="home.tab.news">📰 Nieuws</button>
       <button class="home-tab"        data-tab="blog" onclick="homeSwitchTab('blog',this)" data-i18n="home.tab.blog">📝 Blog</button>
       <button class="home-tab"        data-tab="info" onclick="homeSwitchTab('info',this)" data-i18n="home.tab.info">ℹ️ Info</button>
+      <button class="home-tab home-tab-mobile-only" data-tab="berichten" onclick="homeSwitchTab('berichten',this)">💬 Slowchat</button>
     </div>
 
     <!-- Admin-only panel knop — alleen zichtbaar als isAdmin true is -->
@@ -2879,6 +2942,34 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div id="home-info-list"><div class="home-loading">Laden…</div></div>
     </div>
 
+    <!-- Berichtenbord — enkel voor mobiel; op desktop staat dit al in de
+         sidebar (.home-content-aside is daar zichtbaar, hier niet).
+         Gedeelde JS/backend met de desktop-instantie via de .gb-widget-klasse
+         (zie gbSubmit/_gbRenderList: die werken op alle .gb-widget's tegelijk). -->
+    <div class="home-section home-section-mobile-only" data-section="berichten" style="display:none">
+      <div class="home-section-title" style="margin-bottom:0">💬 Slowchat</div>
+      <div class="hsc-body" style="margin:4px 0 10px">Plaats hier je bericht voor andere bezoekers 👋</div>
+      <div class="gb-widget" style="background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)">
+        <div class="gb-chatlog"><div class="gb-loading">Berichten laden…</div></div>
+        <button type="button" class="gb-expand-btn" onclick="gbToggleExpand(this)" style="display:none">Toon alles ▾</button>
+        <form class="gb-composer" onsubmit="gbSubmit(event)">
+          <input type="text" class="gb-name-input" placeholder="Je naam" maxlength="40" required>
+          <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
+            <label for="gb-website-m">Website</label>
+            <input type="text" id="gb-website-m" class="gb-website-input" tabindex="-1" autocomplete="off">
+          </div>
+          <div class="gb-composer-row">
+            <textarea class="gb-composer-input" placeholder="Typ een berichtje…" maxlength="280" rows="1" required oninput="gbUpdateCounter(this)"></textarea>
+            <button type="submit" class="gb-send-btn" title="Plaatsen" aria-label="Plaatsen">➤</button>
+          </div>
+          <div class="gb-composer-foot">
+            <span class="gb-counter">280 over</span>
+            <span class="gb-status"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+
     </div><!-- /home-content-main -->
 
     <!-- Sidebar (alleen op desktop ≥1024px) — Tips en Uitgelicht.
@@ -2892,30 +2983,30 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Berichtenbord: ouderwets gastenboek als chatbox, geen account
            nodig om te posten. Zelfde backend (guestbook_messages +
            post-guestbook-message) als voorheen op home.html. -->
-      <div class="home-sidebar-card gb-card-wrap">
+      <div class="home-sidebar-card gb-card-wrap gb-widget">
         <div class="gb-chat-header">
-          <div class="hsc-title" style="margin-bottom:0">💬 Berichtenbord</div>
+          <div class="hsc-title" style="margin-bottom:0">💬 Slowchat</div>
           <span class="gb-chat-live">live</span>
         </div>
-        <div class="hsc-body" style="margin-bottom:10px">Iets te melden, een vraag of gewoon een praatje? Cedrik luistert mee 🦆</div>
+        <div class="hsc-body" style="margin-bottom:10px">Plaats hier je bericht voor andere bezoekers 👋</div>
 
-        <div class="gb-chatlog" id="gb-list"><div class="gb-loading">Berichten laden…</div></div>
-        <button class="gb-expand-btn" id="gb-expand-btn" onclick="gbToggleExpand()" style="display:none">Toon alles ▾</button>
+        <div class="gb-chatlog"><div class="gb-loading">Berichten laden…</div></div>
+        <button type="button" class="gb-expand-btn" onclick="gbToggleExpand(this)" style="display:none">Toon alles ▾</button>
 
-        <form id="gb-form" class="gb-composer" onsubmit="gbSubmit(event)">
-          <input type="text" id="gb-name" class="gb-name-input" placeholder="Je naam" maxlength="40" required>
+        <form class="gb-composer" onsubmit="gbSubmit(event)">
+          <input type="text" class="gb-name-input" placeholder="Je naam" maxlength="40" required>
           <!-- Honeypot: onzichtbaar voor mensen, vangt de meeste bots -->
           <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden">
             <label for="gb-website">Website</label>
-            <input type="text" id="gb-website" tabindex="-1" autocomplete="off">
+            <input type="text" id="gb-website" class="gb-website-input" tabindex="-1" autocomplete="off">
           </div>
           <div class="gb-composer-row">
-            <textarea id="gb-message" class="gb-composer-input" placeholder="Typ een berichtje…" maxlength="280" rows="1" required oninput="gbUpdateCounter()"></textarea>
-            <button type="submit" class="gb-send-btn" id="gb-submit-btn" title="Plaatsen" aria-label="Plaatsen">➤</button>
+            <textarea class="gb-composer-input" placeholder="Typ een berichtje…" maxlength="280" rows="1" required oninput="gbUpdateCounter(this)"></textarea>
+            <button type="submit" class="gb-send-btn" title="Plaatsen" aria-label="Plaatsen">➤</button>
           </div>
           <div class="gb-composer-foot">
-            <span class="gb-counter" id="gb-counter">280 over</span>
-            <span class="gb-status" id="gb-status"></span>
+            <span class="gb-counter">280 over</span>
+            <span class="gb-status"></span>
           </div>
         </form>
       </div>
@@ -3070,7 +3161,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <span data-i18n="nav.list">Lijst</span>
   </div>
   <div class="bni" id="bni-route" onclick="sv('route',document.querySelectorAll('.tab')[2]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4M8 12h8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 9l3 3-3 3M9 12h6"/></svg>
     <span data-i18n="nav.route">Route</span>
   </div>
   <div class="bni" id="bni-mijn" onclick="sv('mijn',document.querySelectorAll('.tab')[3]);this.parentElement.querySelectorAll('.bni').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
@@ -3426,7 +3517,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Stap 2: welke meldingen -->
       <div class="wiz-step" id="wiz-step-2" style="display:none">
         <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Waarover wil je een melding?</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Kies er zoveel als je wilt — je kunt dit later per type verfijnen.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Kies er zoveel als je wilt. Je kunt dit later per type verfijnen.</div>
         <div id="wiz-types" style="display:flex;flex-direction:column;gap:8px">
           <div class="srow" style="cursor:pointer" onclick="wizToggleType(0)">
             <div class="srow-icon" style="background:#FFF8E8">🏠</div>
@@ -3458,9 +3549,9 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Stap 3: afstand -->
       <div class="wiz-step" id="wiz-step-3" style="display:none">
         <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Hoe ver bij je in de buurt?</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Voor "nieuwe verkopen in de buurt" — geldt niet voor de andere types.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Geldt alleen voor "nieuwe verkopen in de buurt", niet voor de andere types.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="notif-pill wiz-radius-pill active" data-v="1" onclick="wizSetRadius(1)">1 km</button>
+          <button class="notif-pill wiz-radius-pill" data-v="1" onclick="wizSetRadius(1)">1 km</button>
           <button class="notif-pill wiz-radius-pill active" data-v="2" onclick="wizSetRadius(2)">2 km</button>
           <button class="notif-pill wiz-radius-pill" data-v="5" onclick="wizSetRadius(5)">5 km</button>
           <button class="notif-pill wiz-radius-pill" data-v="10" onclick="wizSetRadius(10)">10 km</button>
@@ -3485,7 +3576,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <div class="wiz-step" id="wiz-step-5" style="display:none">
         <div style="font-size:40px;text-align:center;margin:6px 0 10px">🎉</div>
         <div style="font-size:16px;font-weight:800;color:var(--text);text-align:center;margin-bottom:6px">Je voorkeuren zijn opgeslagen</div>
-        <div style="font-size:12.5px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px">Je kunt dit altijd fijnafstemmen — per type een eigen afstand, timing en stille uren instellen.</div>
+        <div style="font-size:12.5px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px">Je kunt dit altijd fijnafstemmen: per type een eigen afstand, timing en stille uren instellen.</div>
         <button onclick="closeNotifWizard()" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Sluiten</button>
       </div>
 
@@ -3498,7 +3589,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="sheet-handle"></div>
     <div style="padding:14px 18px 24px">
       <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px">🎨 Promotie-pakket</div>
-      <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">Deel je verkoop met buurtgenoten — poster, QR-code en kant-en-klare tekst voor WhatsApp en Facebook.</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">Deel je verkoop met buurtgenoten: poster, QR-code en kant-en-klare tekst voor WhatsApp en Facebook.</div>
 
       <!-- Poster preview (afdrukbaar) -->
       <div id="promo-poster" class="promo-poster">
@@ -3660,7 +3751,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <div id="ai-fill-pick">
             <button type="button" onclick="ygAiChoosePoster()" style="width:100%;padding:11px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer" data-i18n="publish.ai.btn">📷 Affiche kiezen</button>
             <input type="file" id="ai-fill-file" accept="image/*" style="display:none" onchange="ygAiPickPoster(this)">
-            <div style="font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.5" data-i18n="publish.ai.privacy">De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard — tenzij je hem hieronder zelf als foto meestuurt.</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:7px;line-height:1.5" data-i18n="publish.ai.privacy">De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard, tenzij je hem hieronder zelf als foto meestuurt.</div>
           </div>
           <div id="ai-fill-result" style="display:none">
             <div style="display:flex;gap:10px;align-items:flex-start">
@@ -4738,7 +4829,7 @@ var I18N = {
     'share.publish_banner_sub': "Deel 'm met je netwerk voor meer bezoekers ↓",
     'share.publish_dismiss': "Sluiten en niet meer tonen na publiceren",
     'share.more': "Meer",
-    'toast.ig_copied': "📷 Link gekopieerd — plak in je Instagram-post of -story",
+    'toast.ig_copied': "📷 Link gekopieerd. Plak in je Instagram-post of -story",
     'toast.share_dismissed': "OK, we tonen dit voortaan niet meer",
     'toast.sale_not_found': "Verkoop niet gevonden",
     'detail.curated_title': "Door YardiGo verzameld",
@@ -4781,7 +4872,7 @@ var I18N = {
     'publish.buurt.email_help': "E-mailadres wordt niet opgeslagen, alleen gebruikt om de e-mailknop voor jou vast in te vullen.",
     'publish.buurt.addr_placeholder': "Straatnaam + huisnummer",
     'publish.buurt.addr_placeholder_full': "Adres bijv. Kerklaan 12, 9741 AB Groningen",
-    'publish.addr.no_suggest': "Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer — we vinden de coördinaten dan automatisch.",
+    'publish.addr.no_suggest': "Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer. We vinden de coördinaten dan automatisch.",
     'publish.buurt.pc_placeholder_prefix': "Postcode bijv. {ex}",
     'sharebuurt.title': "📨 Stuur deze links naar je buren",
     'sharebuurt.intro': "Jouw eigen adres staat al online. Voor de andere adressen vraagt YardiGo eerst om toestemming van de bewoner, dat is verplicht volgens de AVG. Voor elke buur staat een kant-en-klare tekst met persoonlijke aanhef klaar. Klik op \"Kopieer tekst + link\" of direct op WhatsApp, sms of e-mail. Pas na bevestiging verschijnt hun adres op de kaart.",
@@ -4894,8 +4985,8 @@ var I18N = {
     'edit.location_hint': "Pas adres aan en klik 🔍 om coördinaten te updaten, of vul lat/lng handmatig in.",
     'toast.edit_addr_empty': "Vul eerst een adres of plaats in",
     'toast.edit_addr_not_found': "Geen locatie gevonden",
-    'toast.edit_addr_found': "📍 Locatie gevonden — controleer en klik Opslaan",
-    'toast.edit_addr_failed': "Geocode mislukt — probeer opnieuw",
+    'toast.edit_addr_found': "📍 Locatie gevonden. Controleer en klik Opslaan",
+    'toast.edit_addr_failed': "Geocode mislukt, probeer opnieuw",
     'toast.lat_invalid': "Latitude moet tussen -90 en 90 liggen",
     'toast.lng_invalid': "Longitude moet tussen -180 en 180 liggen",
     'bulk.consent_card2_title': "Ik heb al toestemming van alle buren",
@@ -5064,7 +5155,7 @@ var I18N = {
     'publish.ai.title': '✨ Heb je een affiche of flyer?',
     'publish.ai.sub': 'Upload \'m, dan vult AI de velden hieronder alvast in. Je kunt daarna alles nog aanpassen.',
     'publish.ai.btn': '📷 Affiche kiezen',
-    'publish.ai.privacy': 'De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard — tenzij je hem hieronder zelf als foto meestuurt.',
+    'publish.ai.privacy': 'De afbeelding wordt éénmalig door AI gelezen om de velden in te vullen en daarna niet bewaard, tenzij je hem hieronder zelf als foto meestuurt.',
     'publish.ai.as_photo': 'Deze afbeelding ook als foto bij mijn advertentie tonen',
     'publish.ai.remove': 'Afbeelding verwijderen',
     'publish.ai.reading': 'AI leest je affiche…',
@@ -5079,7 +5170,7 @@ var I18N = {
     'publish.ai.err_image_hint': 'Probeer een JPG of PNG.',
     'publish.ai.err_generic': '❌ Invullen mislukt',
     'publish.ai.contact_warn': '⚠️ Er staan contactgegevens op deze afbeelding. Foto\'s bij een advertentie zijn openbaar zichtbaar.',
-    'publish.ai.type_hint': 'Deze affiche lijkt eerder {suggestie} te beschrijven dan wat je op de vorige stap koos. Klopt dat? Ga dan terug en pas het type aan — let op: je verliest dan de gekozen categorieën.',
+    'publish.ai.type_hint': 'Deze affiche lijkt eerder {suggestie} te beschrijven dan wat je op de vorige stap koos. Klopt dat? Ga dan terug en pas het type aan. Let op: je verliest dan de gekozen categorieën.',
     'publish.ai.type_particulier': 'een opritverkoop',
     'publish.ai.type_buurt': 'een rommelroute of buurtverkoop',
     'publish.ai.type_evenement': 'een evenement',
@@ -5422,7 +5513,7 @@ var I18N = {
     'share.publish_banner_sub': "Share it with your network to reach more visitors ↓",
     'share.publish_dismiss': "Close and don't show again after publishing",
     'share.more': "More",
-    'toast.ig_copied': "📷 Link copied — paste it in your Instagram post or story",
+    'toast.ig_copied': "📷 Link copied. Paste it in your Instagram post or story",
     'toast.share_dismissed': "OK, we won't show this anymore",
     'toast.sale_not_found': "Sale not found",
     'detail.curated_title': "Collected by YardiGo",
@@ -5465,7 +5556,7 @@ var I18N = {
     'publish.buurt.email_help': "Email is not stored, only used to prefill the email button for you.",
     'publish.buurt.addr_placeholder': "Street + house number",
     'publish.buurt.addr_placeholder_full': "Address e.g. 12 Church Lane, 1234 AB Town",
-    'publish.addr.no_suggest': "No suggestion? Type your address as completely as possible and publish — we'll find the coordinates automatically.",
+    'publish.addr.no_suggest': "No suggestion? Type your address as completely as possible and publish. We'll find the coordinates automatically.",
     'publish.buurt.pc_placeholder_prefix': "Postcode e.g. {ex}",
     'sharebuurt.title': "📨 Send these links to your neighbors",
     'sharebuurt.intro': "Your own address is already online. For the other addresses, YardiGo first asks the resident for permission, as required under GDPR. A ready-made message with a personal greeting is prepared for each neighbor. Click \"Copy text + link\" or send directly via WhatsApp, SMS or email. Their address only appears on the map after confirmation.",
@@ -5578,8 +5669,8 @@ var I18N = {
     'edit.location_hint': "Edit the address and click 🔍 to update coordinates, or enter lat/lng manually.",
     'toast.edit_addr_empty': "Enter an address or city first",
     'toast.edit_addr_not_found': "Location not found",
-    'toast.edit_addr_found': "📍 Location found — review and click Save",
-    'toast.edit_addr_failed': "Geocoding failed — try again",
+    'toast.edit_addr_found': "📍 Location found. Review and click Save",
+    'toast.edit_addr_failed': "Geocoding failed, try again",
     'toast.lat_invalid': "Latitude must be between -90 and 90",
     'toast.lng_invalid': "Longitude must be between -180 and 180",
     'bulk.consent_card2_title': "I already have consent from all neighbors",
@@ -5748,7 +5839,7 @@ var I18N = {
     'publish.ai.title': '✨ Got a poster or flyer?',
     'publish.ai.sub': 'Upload it and AI will fill in the fields below for you. You can still change everything afterwards.',
     'publish.ai.btn': '📷 Choose poster',
-    'publish.ai.privacy': 'The image is read once by AI to fill in the fields and is not stored afterwards — unless you choose to include it as a photo below.',
+    'publish.ai.privacy': 'The image is read once by AI to fill in the fields and is not stored afterwards, unless you choose to include it as a photo below.',
     'publish.ai.as_photo': 'Also show this image as a photo on my listing',
     'publish.ai.remove': 'Remove image',
     'publish.ai.reading': 'AI is reading your poster…',
@@ -5763,7 +5854,7 @@ var I18N = {
     'publish.ai.err_image_hint': 'Try a JPG or PNG.',
     'publish.ai.err_generic': '❌ Couldn\'t fill in the form',
     'publish.ai.contact_warn': '⚠️ This image contains contact details. Photos on a listing are publicly visible.',
-    'publish.ai.type_hint': 'This poster looks more like {suggestie} than what you picked in the previous step. If that\'s right, go back and change the type — note that you\'ll lose the selected categories.',
+    'publish.ai.type_hint': 'This poster looks more like {suggestie} than what you picked in the previous step. If that\'s right, go back and change the type. Note that you\'ll lose the selected categories.',
     'publish.ai.type_particulier': 'a driveway sale',
     'publish.ai.type_buurt': 'a neighbourhood sale',
     'publish.ai.type_evenement': 'an event',
@@ -6106,7 +6197,7 @@ var I18N = {
     'share.publish_banner_sub': "Partagez-la avec votre réseau pour plus de visiteurs ↓",
     'share.publish_dismiss': "Fermer et ne plus afficher après publication",
     'share.more': "Plus",
-    'toast.ig_copied': "📷 Lien copié — collez-le dans votre publication ou story Instagram",
+    'toast.ig_copied': "📷 Lien copié. Collez-le dans votre publication ou story Instagram",
     'toast.share_dismissed': "OK, nous ne l'afficherons plus",
     'toast.sale_not_found': "Vente introuvable",
     'detail.curated_title': "Rassemblé par YardiGo",
@@ -6149,7 +6240,7 @@ var I18N = {
     'publish.buurt.email_help': "L'e-mail n'est pas enregistré, il sert uniquement à pré-remplir le bouton e-mail.",
     'publish.buurt.addr_placeholder': "Rue + numéro",
     'publish.buurt.addr_placeholder_full': "Adresse p.ex. 12 rue de l'Église, 75001 Paris",
-    'publish.addr.no_suggest': "Pas de suggestion ? Tape ton adresse aussi complètement que possible et publie — nous trouverons les coordonnées automatiquement.",
+    'publish.addr.no_suggest': "Pas de suggestion ? Tape ton adresse aussi complètement que possible et publie. Nous trouverons les coordonnées automatiquement.",
     'publish.buurt.pc_placeholder_prefix': "Code postal, ex. {ex}",
     'sharebuurt.title': "📨 Envoie ces liens à tes voisins",
     'sharebuurt.intro': "Ton adresse est déjà en ligne. Pour les autres adresses, YardiGo demande d'abord l'autorisation des résidents, c'est obligatoire selon le RGPD. Pour chaque voisin, un message tout prêt avec une formule personnalisée est préparé. Clique sur \"Copier le texte + lien\" ou envoie directement via WhatsApp, SMS ou e-mail. Leur adresse n'apparaît sur la carte qu'après confirmation.",
@@ -6262,8 +6353,8 @@ var I18N = {
     'edit.location_hint': "Modifiez l'adresse et cliquez sur 🔍 pour mettre à jour les coordonnées, ou saisissez lat/lng manuellement.",
     'toast.edit_addr_empty': "Saisissez d'abord une adresse ou une ville",
     'toast.edit_addr_not_found': "Lieu introuvable",
-    'toast.edit_addr_found': "📍 Lieu trouvé — vérifiez et cliquez sur Enregistrer",
-    'toast.edit_addr_failed': "Géocodage échoué — réessayez",
+    'toast.edit_addr_found': "📍 Lieu trouvé. Vérifiez et cliquez sur Enregistrer",
+    'toast.edit_addr_failed': "Géocodage échoué, réessayez",
     'toast.lat_invalid': "La latitude doit être entre -90 et 90",
     'toast.lng_invalid': "La longitude doit être entre -180 et 180",
     'bulk.consent_card2_title': "J'ai déjà le consentement de tous les voisins",
@@ -6432,7 +6523,7 @@ var I18N = {
     'publish.ai.title': '✨ Vous avez une affiche ou un flyer ?',
     'publish.ai.sub': 'Téléchargez-la et l\'IA remplira les champs ci-dessous. Vous pourrez tout modifier ensuite.',
     'publish.ai.btn': '📷 Choisir une affiche',
-    'publish.ai.privacy': 'L\'image est lue une seule fois par l\'IA pour remplir les champs, puis n\'est pas conservée — sauf si vous choisissez de l\'ajouter comme photo ci-dessous.',
+    'publish.ai.privacy': 'L\'image est lue une seule fois par l\'IA pour remplir les champs, puis n\'est pas conservée, sauf si vous choisissez de l\'ajouter comme photo ci-dessous.',
     'publish.ai.as_photo': 'Afficher aussi cette image comme photo de mon annonce',
     'publish.ai.remove': 'Supprimer l\'image',
     'publish.ai.reading': 'L\'IA lit votre affiche…',
@@ -6447,7 +6538,7 @@ var I18N = {
     'publish.ai.err_image_hint': 'Essayez un JPG ou un PNG.',
     'publish.ai.err_generic': '❌ Échec du remplissage',
     'publish.ai.contact_warn': '⚠️ Cette image contient des coordonnées. Les photos d\'une annonce sont visibles publiquement.',
-    'publish.ai.type_hint': 'Cette affiche ressemble davantage à {suggestie} qu\'au type choisi à l\'étape précédente. Si c\'est le cas, revenez en arrière et modifiez le type — attention, vous perdrez les catégories sélectionnées.',
+    'publish.ai.type_hint': 'Cette affiche ressemble davantage à {suggestie} qu\'au type choisi à l\'étape précédente. Si c\'est le cas, revenez en arrière et modifiez le type. Attention, vous perdrez les catégories sélectionnées.',
     'publish.ai.type_particulier': 'une vente devant chez soi',
     'publish.ai.type_buurt': 'une vente de quartier',
     'publish.ai.type_evenement': 'un événement',
@@ -6788,7 +6879,7 @@ var I18N = {
     'share.publish_banner_sub': "Teile ihn mit deinem Netzwerk für mehr Besucher ↓",
     'share.publish_dismiss': "Schließen und nach dem Veröffentlichen nicht mehr anzeigen",
     'share.more': "Mehr",
-    'toast.ig_copied': "📷 Link kopiert — füge ihn in deinen Instagram-Beitrag oder deine Story ein",
+    'toast.ig_copied': "📷 Link kopiert. Füge ihn in deinen Instagram-Beitrag oder deine Story ein",
     'toast.share_dismissed': "OK, das zeigen wir nicht mehr",
     'toast.sale_not_found': "Verkauf nicht gefunden",
     'detail.curated_title': "Von YardiGo gesammelt",
@@ -6831,7 +6922,7 @@ var I18N = {
     'publish.buurt.email_help': "E-Mail wird nicht gespeichert, sondern nur zum Vorausfüllen der E-Mail-Schaltfläche verwendet.",
     'publish.buurt.addr_placeholder': "Straße + Hausnummer",
     'publish.buurt.addr_placeholder_full': "Adresse z. B. Kirchstraße 12, 10115 Berlin",
-    'publish.addr.no_suggest': "Keine Vorschläge? Gib deine Adresse so vollständig wie möglich ein und veröffentliche — wir finden die Koordinaten automatisch.",
+    'publish.addr.no_suggest': "Keine Vorschläge? Gib deine Adresse so vollständig wie möglich ein und veröffentliche. Wir finden die Koordinaten automatisch.",
     'publish.buurt.pc_placeholder_prefix': "PLZ z. B. {ex}",
     'sharebuurt.title': "📨 Sende diese Links an deine Nachbarn",
     'sharebuurt.intro': "Deine eigene Adresse ist bereits online. Für die anderen Adressen fragt YardiGo zuerst die Bewohner um Erlaubnis, wie es die DSGVO vorschreibt. Für jeden Nachbarn liegt eine vorbereitete Nachricht mit persönlicher Anrede bereit. Klicke auf \"Text + Link kopieren\" oder sende direkt via WhatsApp, SMS oder E-Mail. Ihre Adresse erscheint erst nach Bestätigung auf der Karte.",
@@ -6944,8 +7035,8 @@ var I18N = {
     'edit.location_hint': "Adresse anpassen und 🔍 klicken um Koordinaten zu aktualisieren, oder Lat/Lng manuell eingeben.",
     'toast.edit_addr_empty': "Gib zuerst eine Adresse oder Stadt ein",
     'toast.edit_addr_not_found': "Standort nicht gefunden",
-    'toast.edit_addr_found': "📍 Standort gefunden — prüfe und klicke Speichern",
-    'toast.edit_addr_failed': "Geokodierung fehlgeschlagen — versuche es erneut",
+    'toast.edit_addr_found': "📍 Standort gefunden. Prüfe und klicke Speichern",
+    'toast.edit_addr_failed': "Geokodierung fehlgeschlagen, versuche es erneut",
     'toast.lat_invalid': "Latitude muss zwischen -90 und 90 liegen",
     'toast.lng_invalid': "Longitude muss zwischen -180 und 180 liegen",
     'bulk.consent_card2_title': "Ich habe bereits die Zustimmung aller Nachbarn",
@@ -7108,7 +7199,7 @@ var I18N = {
     'publish.ai.title': '✨ Hast du ein Plakat oder einen Flyer?',
     'publish.ai.sub': 'Lade es hoch, dann füllt die KI die Felder unten schon mal aus. Danach kannst du alles noch ändern.',
     'publish.ai.btn': '📷 Plakat auswählen',
-    'publish.ai.privacy': 'Das Bild wird einmalig von der KI gelesen, um die Felder auszufüllen, und danach nicht gespeichert — außer du fügst es unten selbst als Foto hinzu.',
+    'publish.ai.privacy': 'Das Bild wird einmalig von der KI gelesen, um die Felder auszufüllen, und danach nicht gespeichert, außer du fügst es unten selbst als Foto hinzu.',
     'publish.ai.as_photo': 'Dieses Bild auch als Foto bei meiner Anzeige zeigen',
     'publish.ai.remove': 'Bild entfernen',
     'publish.ai.reading': 'Die KI liest dein Plakat…',
@@ -7123,7 +7214,7 @@ var I18N = {
     'publish.ai.err_image_hint': 'Versuche ein JPG oder PNG.',
     'publish.ai.err_generic': '❌ Ausfüllen fehlgeschlagen',
     'publish.ai.contact_warn': '⚠️ Auf diesem Bild stehen Kontaktdaten. Fotos bei einer Anzeige sind öffentlich sichtbar.',
-    'publish.ai.type_hint': 'Dieses Plakat sieht eher nach {suggestie} aus als nach dem im vorigen Schritt gewählten Typ. Falls das stimmt, geh zurück und ändere den Typ — Achtung: Die gewählten Kategorien gehen dabei verloren.',
+    'publish.ai.type_hint': 'Dieses Plakat sieht eher nach {suggestie} aus als nach dem im vorigen Schritt gewählten Typ. Falls das stimmt, geh zurück und ändere den Typ. Achtung: Die gewählten Kategorien gehen dabei verloren.',
     'publish.ai.type_particulier': 'einem Hofverkauf',
     'publish.ai.type_buurt': 'einem Nachbarschaftsverkauf',
     'publish.ai.type_evenement': 'einer Veranstaltung',
@@ -9970,6 +10061,10 @@ function sv(name, tabEl) {
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   var vEl = document.getElementById('view-' + name);
   if (vEl) vEl.classList.add('active');
+  // Scrollpositie van de vorige (mogelijk langere) view meenemen naar een
+  // kortere view laat WKWebView de bnav even laten "springen" terwijl hij
+  // terugklapt naar een geldige scrollpositie — reset 'm daarom altijd.
+  window.scrollTo(0, 0);
   // Kaartweergave: vergrendel body-scroll zodat iOS geen touch-events kaapt
   document.body.classList.toggle('on-kaart', name === 'kaart');
   // Home: verberg de sale-chrome (filter, type-pills, tab-row)
@@ -10040,10 +10135,13 @@ function _emptyOpenNotif() {
   if (isGuest) { guestGate('meldingen'); return; }
   openSettings();
   setTimeout(function() {
-    var sec = document.getElementById('notif-section') ||
-              document.querySelector('[data-i18n="settings.header_notifications"]') ||
-              document.querySelector('.settings-section .settings-section-header');
-    if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+    var sec = document.querySelector('[data-i18n="settings.header_notif"]');
+    if (!sec) return;
+    // Secties staan standaard ingeklapt (behalve Account) — anders scrollt
+    // dit naar een lege sectiekop zonder zichtbare inhoud.
+    var wrap = sec.closest('.settings-section');
+    if (wrap) wrap.classList.remove('collapsed');
+    if (sec.scrollIntoView) sec.scrollIntoView({ behavior:'smooth', block:'start' });
   }, 150);
 }
 
@@ -10740,7 +10838,7 @@ function shareInstagram() {
   if (!s) return;
   var link = 'https://yardigo.nl/v/' + s.id;
   function _afterCopy(){
-    toast(i18n('toast.ig_copied', '📷 Link gekopieerd — plak in je Instagram-post of -story'));
+    toast(i18n('toast.ig_copied', '📷 Link gekopieerd. Plak in je Instagram-post of -story'));
     var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent || '');
     setTimeout(function(){
       try { window.location.href = isMobile ? 'instagram://' : 'https://www.instagram.com/'; } catch(e) {}
@@ -10836,7 +10934,7 @@ function _showGuestPublishSignup() {
         '<div style="font-size:18px;font-weight:800;color:#2C2416;margin-bottom:6px">Bijna klaar!</div>' +
         '<div style="font-size:13px;color:#4A3E32;margin-bottom:18px;line-height:1.55">' +
           'Maak een gratis account aan om je verkoop live te zetten. ' +
-          '<strong>Alle ingevulde informatie blijft bewaard</strong> — je hoeft niets opnieuw te typen.' +
+          '<strong>Alle ingevulde informatie blijft bewaard</strong>. Je hoeft niets opnieuw te typen.' +
         '</div>' +
         '<div style="background:#FFF8E8;border:1.5px solid #F4D7B0;border-radius:12px;padding:10px 14px;font-size:12px;color:#7A5A2E;margin-bottom:18px;text-align:left;line-height:1.5">' +
           '✓ E-mail-bevestiging vereist (voorkomt spam)<br>' +
@@ -10845,7 +10943,7 @@ function _showGuestPublishSignup() {
         '</div>' +
         '<button onclick="_guestPublishGoSignup()" style="width:100%;background:#E07B39;color:#fff;border:none;border-radius:12px;padding:14px;font-family:Poppins,sans-serif;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px">Maak gratis account →</button>' +
         '<button onclick="_guestPublishGoLogin()" style="width:100%;background:#fff;color:#E07B39;border:2px solid #E07B39;border-radius:12px;padding:13px;font-family:Poppins,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px">Al een account? Inloggen</button>' +
-        '<button onclick="_guestPublishClose()" style="background:transparent;color:#9A8E82;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:8px">Later — bewaar mijn invoer</button>' +
+        '<button onclick="_guestPublishClose()" style="background:transparent;color:#9A8E82;border:none;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:8px">Later (bewaar mijn invoer)</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(ov);
@@ -10866,10 +10964,10 @@ function _guestPublishGoSignup() {
       startOnboarding(false);
       // Spring naar het account-step direct
       try { obGoTo(3); } catch(e) {}
-      toast('Maak je account aan — je verkoop blijft bewaard');
+      toast('Maak je account aan, je verkoop blijft bewaard');
     }, 150);
   } else {
-    toast('Account aanmaken niet beschikbaar — probeer opnieuw');
+    toast('Account aanmaken niet beschikbaar, probeer opnieuw');
   }
 }
 
@@ -10878,7 +10976,7 @@ function _guestPublishGoLogin() {
   if (typeof openLogin === 'function') {
     setTimeout(function() {
       openLogin();
-      toast('Log in — je verkoop staat klaar');
+      toast('Log in, je verkoop staat klaar');
     }, 150);
   }
 }
@@ -10917,7 +11015,7 @@ function openPromoPack() {
     '📅 ' + _dateStr + (_timeStr ? ' · 🕐 ' + _timeStr : '') + '\n' +
     '📍 ' + _loc + '\n\n' +
     'Meer info, foto\'s en route via YardiGo:\n' + _url;
-  var _fbText = '🎉 ' + s.title + ' — ' + _dateStr + '\n\n' +
+  var _fbText = '🎉 ' + s.title + ' · ' + _dateStr + '\n\n' +
     'Wij doen mee! ' + (_timeStr ? 'Tussen ' + _timeStr + ' ' : '') +
     'kun je langskomen op ' + _loc + '.\n\n' +
     'Bekijk alle foto\'s, plan je route en zie wie er nog meer komt op YardiGo:\n' + _url + '\n\n' +
@@ -10953,7 +11051,7 @@ function promoPrintPoster() {
   var poster = document.getElementById('promo-poster');
   if (!poster) return;
   // Open een nieuwe window met enkel de poster + minimale styling
-  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Poster — ' +
+  var html = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Poster · ' +
     document.getElementById('pp-title').textContent + '</title>' +
     '<style>' +
     '@page{margin:0;size:A4;}body{margin:0;padding:0;background:#fff;font-family:Poppins,Arial,sans-serif;}' +
@@ -10966,7 +11064,7 @@ function promoPrintPoster() {
   var styles = '<style>' + _getPromoPosterCSS() + '</style>';
   html = html.replace('</head>', styles + '</head>');
   var w = window.open('', '_blank', 'width=900,height=1200');
-  if (!w) { toast('Pop-up geblokkeerd — sta pop-ups toe en probeer opnieuw'); return; }
+  if (!w) { toast('Pop-up geblokkeerd, sta pop-ups toe en probeer opnieuw'); return; }
   w.document.write(html);
   w.document.close();
   // Wacht tot het canvas-data is geladen
@@ -11003,7 +11101,7 @@ function _getPromoPosterCSS() {
 function promoDownloadPNG() {
   // Voor v1: bied print-naar-PDF aan via de printer-dialog (kan ook PNG opslaan
   // op moderne OS'en). Echte PNG-export vereist html2canvas, kunnen we later.
-  toast('Gebruik "Afdrukken / opslaan als PDF" voor nu — full PNG export volgt.');
+  toast('Gebruik "Afdrukken / opslaan als PDF" voor nu. Volledige PNG-export volgt nog.');
 }
 
 function promoCopy(elId) {
@@ -11015,7 +11113,7 @@ function promoCopy(elId) {
     navigator.clipboard.writeText(el.value).then(function() {
       toast('✓ Gekopieerd');
     }).catch(function() {
-      try { document.execCommand('copy'); toast('✓ Gekopieerd'); } catch(e) { toast('Kon niet kopiëren — selecteer zelf'); }
+      try { document.execCommand('copy'); toast('✓ Gekopieerd'); } catch(e) { toast('Kon niet kopiëren, selecteer zelf'); }
     });
   } else {
     try { document.execCommand('copy'); toast('✓ Gekopieerd'); } catch(e) { toast('Kon niet kopiëren'); }
@@ -11036,7 +11134,7 @@ function promoShareFB() {
   setTimeout(function() {
     var url = 'https://yardigo.nl/v/' + s.id;
     window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
-    toast('Tekst gekopieerd — plak hem in je Facebook-post');
+    toast('Tekst gekopieerd, plak hem in je Facebook-post');
   }, 250);
 }
 
@@ -11640,6 +11738,7 @@ async function ygAiPickPoster(input) {
 
   if (pick) pick.style.display = 'none';
   result.style.display = 'block';
+  if (typeof showL === 'function') showL();
   statusEl.style.color = 'var(--muted)';
   statusEl.textContent = i18n('publish.ai.preparing', 'Afbeelding voorbereiden…');
   if (detailEl) detailEl.textContent = '';
@@ -11662,6 +11761,7 @@ async function ygAiPickPoster(input) {
     statusEl.style.color = '#C0392B';
     statusEl.textContent = i18n('publish.ai.err_image', '❌ Kon deze afbeelding niet lezen');
     if (detailEl) detailEl.textContent = i18n('publish.ai.err_image_hint', 'Probeer een JPG of PNG.');
+    if (typeof hideL === 'function') hideL();
     return;
   }
 
@@ -11741,6 +11841,7 @@ async function ygAiParse(aiImage) {
       if (detailEl) {
         detailEl.textContent = i18n('publish.ai.no_event_hint', 'Vul de velden zelf in. Je kunt de afbeelding wel als foto meesturen.');
       }
+      if (typeof hideL === 'function') hideL();
       return;
     }
     ygAiApply(data.data);
@@ -11750,6 +11851,7 @@ async function ygAiParse(aiImage) {
       statusEl.textContent = i18n('publish.ai.err_generic', '❌ Invullen mislukt');
     }
     if (detailEl) detailEl.textContent = (e && e.message) ? e.message : String(e);
+    if (typeof hideL === 'function') hideL();
   }
 }
 
@@ -11897,6 +11999,7 @@ function ygAiApply(d) {
       detailEl.textContent = i18n('publish.ai.nothing', 'Er viel niets bruikbaars uit te lezen. Vul de velden zelf in.') + extra;
     }
   }
+  if (typeof hideL === 'function') hideL();
 }
 
 // Poster als foto aan/uit. Standaard uit: openbare foto's vink je bewust aan.
@@ -12965,7 +13068,7 @@ function addrAutocomplete(val, ddId, isBuurtRow, buurtIdx) {
     // Gebruiker weet hierdoor dat hij gewoon door kan typen.
     var renderNoResults = function() {
       return '<div class="addr-sug-empty">'
-        + '💡 ' + escapeHtml(i18n('publish.addr.no_suggest', 'Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer — we vinden de coördinaten dan automatisch.'))
+        + '💡 ' + escapeHtml(i18n('publish.addr.no_suggest', 'Geen suggestie? Typ je adres zelf zo volledig mogelijk en publiceer. We vinden de coördinaten dan automatisch.'))
         + '</div>';
     };
 
@@ -14562,6 +14665,10 @@ function _setPillGroupMulti(g, values) {
 async function saveNotifSettings() {
   if (isGuest) { guestGate('meldingen'); return; }
   if (!sbClient || !currentUser || !currentUser.id) return;
+  // Race met de (niet-awaited) ensureProfile() bij login/signup: als het
+  // profiel er nog niet is faalt de insert hieronder op de FK-constraint
+  // (user_id -> profiles.id) — zelfde klasse bug als listings_user_id_fkey.
+  await ensureProfile(currentUser.id, currentUser.name, currentUser.email);
   var payload = {
     user_id: currentUser.id,
     master_enabled: notifMasterOn,
@@ -14575,7 +14682,8 @@ async function saveNotifSettings() {
     favorites_route_reminder: !!(document.getElementById('fav-route') || {}).checked,
     quiet_hours_start_min: (function() {
       var v = parseInt((document.getElementById('quiet-start') || {}).value || '0', 10);
-      return v > 0 ? v : null;
+      if (v <= 0) return null;
+      return v > 1439 ? 1439 : v;   // DB staat 0-1439 toe, slider loopt tot 1440 (24:00)
     })(),
     morning_route_enabled: notifTypeOn[2],
     morning_route_time_min: parseInt((document.getElementById('route-time') || {}).value || '480', 10),
@@ -14758,6 +14866,13 @@ async function loadAvatarFromProfile() {
       if (img)   { img.src = res.data.avatar_url; img.style.display = 'block'; }
     }
   } catch(e) {}
+}
+
+// In-/uitklappen van settings-secties (Account, Weergave, Meldingen, ...)
+// voor meer overzicht — alleen Account staat standaard open.
+function toggleSettingsSection(headerEl) {
+  var section = headerEl.closest('.settings-section');
+  if (section) section.classList.toggle('collapsed');
 }
 
 // Vul settings-tab met huidige gebruikersdata
@@ -15369,6 +15484,18 @@ function _goHome() {
   else if (mq.addListener) mq.addListener(_apply);
 })();
 
+// "Download de iPhone-app" (settings-rij + footer-link) is bedoeld voor
+// web-bezoekers — binnen de native app zelf is dat dubbel-op en zinloos
+// (je gebruikt de app al). Stond op 2 plekken tegelijk zichtbaar: de
+// Over&App-sectie én de footer direct eronder.
+(function _ygHideAppStorePromoInNative() {
+  if (typeof window.Capacitor === 'undefined') return;
+  var row = document.getElementById('srow-ios-download');
+  if (row) row.style.display = 'none';
+  var footerLink = document.getElementById('footer-appstore-link');
+  if (footerLink) footerLink.style.display = 'none';
+})();
+
 // Kopieer #cardList HTML naar de kaart-sidebar zodat op desktop
 // dezelfde lijst zichtbaar is naast de kaart.
 function _syncKaartSideList() {
@@ -15455,15 +15582,19 @@ var _homeTab = 'all';   // 'all' | 'news' | 'blog' | 'info'
 // zit server-side in de edge function, niet hier.
 // ══════════════════════════════════════════════════
 var _gbMessages = [];
-function gbUpdateCounter() {
-  var el = document.getElementById('gb-message');
-  var counter = document.getElementById('gb-counter');
-  if (el && counter) counter.textContent = (280 - el.value.length) + ' over';
+// Berichtenbord bestaat nu op 2 plekken tegelijk (desktop-sidebar +
+// mobiele Home-tab) die dezelfde data tonen — .gb-widget is de gedeelde
+// container-klasse, alle lookups scopen daarbinnen i.p.v. op een vast id,
+// zodat beide instanties onafhankelijk van elkaar blijven werken.
+function gbUpdateCounter(el) {
+  var wrap = el.closest('.gb-widget');
+  var counter = wrap && wrap.querySelector('.gb-counter');
+  if (counter) counter.textContent = (280 - el.value.length) + ' over';
 }
-function gbToggleExpand() {
-  var list = document.getElementById('gb-list');
-  var btn = document.getElementById('gb-expand-btn');
-  if (!list || !btn) return;
+function gbToggleExpand(btn) {
+  var wrap = btn.closest('.gb-widget');
+  var list = wrap && wrap.querySelector('.gb-chatlog');
+  if (!list) return;
   var expanded = list.classList.toggle('gb-expanded');
   btn.textContent = expanded ? 'Minder tonen ▴' : 'Toon alles ▾';
 }
@@ -15478,25 +15609,27 @@ function _gbRelativeTime(iso) {
   return new Date(iso).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
 }
 function _gbRenderList() {
-  var list = document.getElementById('gb-list');
-  var expandBtn = document.getElementById('gb-expand-btn');
-  if (!list) return;
+  var html = '';
   if (!_gbMessages.length) {
-    list.innerHTML = '<div class="gb-empty">Nog geen berichten — plaats de eerste! 🦆</div>';
-    if (expandBtn) expandBtn.style.display = 'none';
-    return;
+    html = '<div class="gb-empty">Nog geen berichten. Plaats de eerste! 🦆</div>';
+  } else {
+    html = _gbMessages.map(function(m) {
+      var initial = (m.name || '?').trim().charAt(0).toUpperCase();
+      return '<div class="gb-bubble-row">'
+        + '<div class="gb-avatar">' + escapeHtml(initial) + '</div>'
+        + '<div class="gb-bubble">'
+          + '<div class="gb-bubble-meta"><span class="gb-bubble-name">' + escapeHtml(m.name) + '</span><span class="gb-bubble-time">' + _gbRelativeTime(m.created_at) + '</span></div>'
+          + '<div class="gb-bubble-text">' + escapeHtml(m.message) + '</div>'
+        + '</div>'
+      + '</div>';
+    }).join('');
   }
-  list.innerHTML = _gbMessages.map(function(m) {
-    var initial = (m.name || '?').trim().charAt(0).toUpperCase();
-    return '<div class="gb-bubble-row">'
-      + '<div class="gb-avatar">' + escapeHtml(initial) + '</div>'
-      + '<div class="gb-bubble">'
-        + '<div class="gb-bubble-meta"><span class="gb-bubble-name">' + escapeHtml(m.name) + '</span><span class="gb-bubble-time">' + _gbRelativeTime(m.created_at) + '</span></div>'
-        + '<div class="gb-bubble-text">' + escapeHtml(m.message) + '</div>'
-      + '</div>'
-    + '</div>';
-  }).join('');
-  if (expandBtn) expandBtn.style.display = _gbMessages.length > 3 ? 'block' : 'none';
+  document.querySelectorAll('.gb-widget').forEach(function(wrap) {
+    var list = wrap.querySelector('.gb-chatlog');
+    var expandBtn = wrap.querySelector('.gb-expand-btn');
+    if (list) list.innerHTML = html;
+    if (expandBtn) expandBtn.style.display = _gbMessages.length > 3 ? 'block' : 'none';
+  });
 }
 function loadGuestbookSidebar() {
   if (!sbClient) return;
@@ -15512,11 +15645,12 @@ function loadGuestbookSidebar() {
 }
 function gbSubmit(e) {
   e.preventDefault();
-  var nameEl = document.getElementById('gb-name');
-  var msgEl = document.getElementById('gb-message');
-  var websiteEl = document.getElementById('gb-website');
-  var statusEl = document.getElementById('gb-status');
-  var btn = document.getElementById('gb-submit-btn');
+  var form = e.target;
+  var nameEl = form.querySelector('.gb-name-input');
+  var msgEl = form.querySelector('.gb-composer-input');
+  var websiteEl = form.querySelector('.gb-website-input');
+  var statusEl = form.querySelector('.gb-status');
+  var btn = form.querySelector('.gb-send-btn');
   var name = nameEl.value.trim();
   var message = msgEl.value.trim();
   var website = websiteEl ? websiteEl.value : '';
@@ -15536,8 +15670,8 @@ function gbSubmit(e) {
     if (!r.ok) throw new Error(r.json.error || 'Plaatsen mislukt');
     statusEl.textContent = '✓ Geplaatst!';
     statusEl.className = 'gb-status ok';
-    document.getElementById('gb-form').reset();
-    gbUpdateCounter();
+    form.reset();
+    gbUpdateCounter(msgEl);
     loadGuestbookSidebar();
   }).catch(function(err) {
     statusEl.textContent = err.message || 'Er ging iets mis, probeer opnieuw.';
@@ -15588,11 +15722,18 @@ function homeSwitchTab(tab, el) {
   _homeTab = tab;
   document.querySelectorAll('#home-tab-row .home-tab').forEach(function(b){ b.classList.remove('active'); });
   if (el) el.classList.add('active');
+  // Berichtenbord is geen post-categorie zoals news/blog/info (geen data uit
+  // _homeCache) — eigen sectie, alleen zichtbaar op zijn eigen tab, nooit
+  // meegenomen in 'Alles'.
+  var gbSec = document.querySelector('.home-section[data-section="berichten"]');
+  if (gbSec) gbSec.style.display = (tab === 'berichten') ? 'block' : 'none';
   // Update sectie-zichtbaarheid en titels
   ['news','blog','info'].forEach(function(typeKey) {
     var sec = document.querySelector('.home-section[data-section="' + typeKey + '"]');
     if (!sec) return;
-    if (tab === 'all') {
+    if (tab === 'berichten') {
+      sec.style.display = 'none';
+    } else if (tab === 'all') {
       sec.style.display = 'block';
       var t = sec.querySelector('.home-section-title');
       if (t) t.style.display = 'block';
@@ -15605,7 +15746,7 @@ function homeSwitchTab(tab, el) {
     }
   });
   // Hercalculeer cards (in 'all' max 5 per categorie, in specifieke tab max 20)
-  if (_homeCache.data) _renderHomePosts(_homeCache.data);
+  if (tab !== 'berichten' && _homeCache.data) _renderHomePosts(_homeCache.data);
 }
 
 function _renderHomePosts(posts) {
@@ -16735,7 +16876,7 @@ async function editGeocode() {
     var lat = parseFloat(rows[0].lat), lng = parseFloat(rows[0].lon);
     document.getElementById('edit-lat').value = lat.toFixed(7);
     document.getElementById('edit-lng').value = lng.toFixed(7);
-    toast(i18n('toast.edit_addr_found', '📍 Locatie gevonden — controleer en klik Opslaan'));
+    toast(i18n('toast.edit_addr_found', '📍 Locatie gevonden. Controleer en klik Opslaan'));
   } catch (e) {
     console.error('editGeocode:', e);
     toast(i18n('toast.edit_addr_failed', 'Geocode mislukt'));

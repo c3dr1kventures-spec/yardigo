@@ -28,7 +28,7 @@ platform :ios do
   lane :beta do
     asc_api_key
     build_app(
-      workspace: "App.xcworkspace",
+      project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
       output_directory: "./build"
@@ -42,7 +42,7 @@ platform :ios do
   lane :release do
     asc_api_key
     build_app(
-      workspace: "App.xcworkspace",
+      project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
       output_directory: "./build"
@@ -53,7 +53,8 @@ platform :ios do
       skip_app_version_update: true,
       submit_for_review: false,   # bewust uit — indienen voor review doe je zelf, na een laatste check
       automatic_release: false,
-      force: true
+      force: true,
+      run_precheck_before_submit: false   # precheck ondersteunt geen API-key auth voor IAP-checks
     )
   end
 end

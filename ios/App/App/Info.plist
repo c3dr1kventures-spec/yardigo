@@ -55,5 +55,7 @@
 	<string>YardiGo gebruikt de camera om foto's toe te voegen aan je verkoop.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>YardiGo gebruikt je fotobibliotheek om foto's toe te voegen aan je verkoop.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
