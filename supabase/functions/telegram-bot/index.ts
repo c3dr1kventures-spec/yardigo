@@ -28,6 +28,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
 
 const SITE = 'https://www.yardigo.nl';
+const MINIAPP = SITE + '/tg';
 const DIGEST_BATCH = 8;
 const SUBTYPES = new Set(['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig']);
 
@@ -62,6 +63,10 @@ async function tg(method: string, body: Record<string, unknown>): Promise<any> {
 
 function send(chat: number | string, html: string, extra: Record<string, unknown> = {}) {
   return tg('sendMessage', { chat_id: chat, text: html, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
+}
+
+function menuKnop(chat: string) {
+  return tg('setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'YardiGo', web_app: { url: MINIAPP } } });
 }
 
 // ── Config ─────────────────────────────────────────────────────────
@@ -109,17 +114,18 @@ function kaartTekst(p: any): string {
 }
 
 function kaartKnoppen(p: any) {
+  const bewerk = { text: '✏️ Bewerken', web_app: { url: `${MINIAPP}?id=${p.id}` } };
   if (p.status === 'tip') {
     return { inline_keyboard: [
       [{ text: '💬 Toestemming vragen', callback_data: `dm:${p.id}` }],
       [{ text: '✅ Publiceren (contact achter login)', callback_data: `ok:${p.id}` }],
-      [{ text: '❌ Overslaan', callback_data: `no:${p.id}` }],
+      [bewerk, { text: '❌ Overslaan', callback_data: `no:${p.id}` }],
     ] };
   }
-  return { inline_keyboard: [[
-    { text: '✅ Publiceren', callback_data: `ok:${p.id}` },
-    { text: '❌ Afwijzen', callback_data: `no:${p.id}` },
-  ]] };
+  return { inline_keyboard: [
+    [{ text: '✅ Publiceren', callback_data: `ok:${p.id}` }, { text: '❌ Afwijzen', callback_data: `no:${p.id}` }],
+    [bewerk],
+  ] };
 }
 
 async function stuurKaart(sb: any, chat: string, p: any) {
@@ -193,9 +199,18 @@ function contactUitTekst(t: string) {
   return { url: urls[0] ?? null, mail, tel };
 }
 
+type Maak = { ok: true; row: any } | { ok: false; msg: string };
+
 async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null) {
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
+  const r = await maakItem(sb, tekst, image);
+  if (!r.ok) return send(chat, r.msg);
+  await stuurKaart(sb, chat, r.row);
+}
+
+// Affiche/tekst → parse-event → geocode → dedupe → pending_events.
+async function maakItem(sb: any, tekst: string, image: { data: string; media_type: string } | null): Promise<Maak> {
   const parseRes = await fetch(Deno.env.get('SUPABASE_URL') + '/functions/v1/parse-event', {
     method: 'POST',
     headers: {
@@ -206,9 +221,9 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
     body: JSON.stringify({ mode: 'admin', text: tekst || undefined, image: image || undefined }),
   });
   const pj = await parseRes.json().catch(() => ({}));
-  if (pj?.ok === false) return send(chat, '🤷 Geen evenement gevonden in dit bericht.');
+  if (pj?.ok === false) return { ok: false, msg: '🤷 Geen evenement gevonden in dit bericht.' };
   const e = pj?.data;
-  if (!e?.titel || !e?.datum) return send(chat, '⚠️ Kon dit niet lezen' + (pj?.error ? ': ' + esc(String(pj.error).slice(0, 200)) : ' (titel of datum ontbreekt).'));
+  if (!e?.titel || !e?.datum) return { ok: false, msg: '⚠️ Kon dit niet lezen' + (pj?.error ? ': ' + esc(String(pj.error).slice(0, 200)) : ' (titel of datum ontbreekt).') };
 
   const ct = contactUitTekst(tekst);
   const orgUrl = ct.url || e.bron_url || null;
@@ -216,7 +231,7 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
   const h = await sb.rpc('discovery_content_hash', { p_title: e.titel, p_date: e.datum, p_city: e.plaats });
   if (geo && h.data) {
     const dup = await sb.rpc('discovery_find_similar', { p_hash: h.data, p_lat: geo.lat, p_lng: geo.lng, p_date: e.datum, p_radius_m: 500 });
-    if (dup.data) return send(chat, `♻️ Staat er al (${esc(String(dup.data))}): <b>${esc(e.titel)}</b>`);
+    if (dup.data) return { ok: false, msg: `♻️ Staat er al (${esc(String(dup.data))}): <b>${esc(e.titel)}</b>` };
   }
   const subtype = SUBTYPES.has(e.event_type || '') ? e.event_type : 'rommelmarkt';
   const isPart = subtype === 'opritverkoop';
@@ -235,8 +250,17 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
   };
   row.auto_check = autoCheck({ id: 0, ...row }, true);
   const ins = await sb.from('pending_events').insert(row).select(PENDING_COLS).single();
-  if (ins.error) return send(chat, '⚠️ Opslaan mislukt: ' + esc(ins.error.message));
-  await stuurKaart(sb, chat, ins.data);
+  if (ins.error) return { ok: false, msg: '⚠️ Opslaan mislukt: ' + esc(ins.error.message) };
+  return { ok: true, row: ins.data };
+}
+
+function watOntbreekt(p: any): string[] {
+  const o: string[] = [];
+  if (!p.title || !String(p.title).trim()) o.push('titel');
+  if (!heeftContact(p)) o.push('contactweg (link, 06 of e-mail)');
+  if (p.latitude == null || p.longitude == null) o.push('locatie op de kaart');
+  if (!p.date_start || p.date_start < new Date().toISOString().slice(0, 10)) o.push('datum in de toekomst');
+  return o;
 }
 
 // ── Knoppen ────────────────────────────────────────────────────────
@@ -276,10 +300,7 @@ async function knop(sb: any, chat: string, cq: any) {
   }
 
   if (actie === 'ok') {
-    const ontbreekt: string[] = [];
-    if (!heeftContact(p)) ontbreekt.push('contactweg (antwoord met link/06/e-mail)');
-    if (p.latitude == null || p.longitude == null) ontbreekt.push('coördinaten (antwoord met adres + plaats)');
-    if (!p.date_start || p.date_start < new Date().toISOString().slice(0, 10)) ontbreekt.push('datum in de toekomst');
+    const ontbreekt = watOntbreekt(p);
     if (ontbreekt.length) {
       await tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Ontbreekt: ' + ontbreekt.join(', '), show_alert: true });
       return;
@@ -321,12 +342,146 @@ async function aanvulling(sb: any, chat: string, tekst: string, kaart: any) {
   return true;
 }
 
+// ── Mini-app API ───────────────────────────────────────────────────
+// Auth: Telegram initData (HMAC met de bot-token), user.id = gekoppelde admin.
+const CORS = {
+  'Access-Control-Allow-Origin': SITE,
+  'Access-Control-Allow-Headers': 'content-type, x-tg-init-data',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+function apiJson(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...CORS } });
+}
+
+async function hmac(key: Uint8Array, data: string): Promise<Uint8Array> {
+  const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(data)));
+}
+
+async function initDataUser(initData: string): Promise<number | null> {
+  if (!initData) return null;
+  const params = new URLSearchParams(initData);
+  const hash = params.get('hash');
+  if (!hash) return null;
+  params.delete('hash');
+  const dcs = [...params.entries()].map(([k, v]) => `${k}=${v}`).sort().join('\n');
+  const secret = await hmac(new TextEncoder().encode('WebAppData'), TOKEN);
+  const sig = [...await hmac(secret, dcs)].map(b => b.toString(16).padStart(2, '0')).join('');
+  if (sig !== hash) return null;
+  const authDate = parseInt(params.get('auth_date') || '0', 10);
+  if (!authDate || Date.now() / 1000 - authDate > 86400) return null;
+  try { return JSON.parse(params.get('user') || '{}').id ?? null; } catch { return null; }
+}
+
+const BEWERKBAAR = ['title','description','event_subtype','date_start','date_end','time_start','time_end','city','address',
+  'latitude','longitude','organizer_name','organizer_url','contact_phone','contact_email','is_private_seller'];
+
+async function api(sb: any, req: Request): Promise<Response> {
+  const admin = await cfg(sb, 'telegram_admin_chat');
+  const uid = await initDataUser(req.headers.get('x-tg-init-data') || '');
+  if (!admin || !uid || String(uid) !== admin) return apiJson({ error: 'Geen toegang' }, 403);
+
+  const b = await req.json().catch(() => ({}));
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const cols = PENDING_COLS + ',created_at,discovered_via_query';
+
+  switch (b.op) {
+    case 'stats':
+      return apiJson(await tellers(sb));
+
+    case 'list': {
+      const status = b.status === 'tip' ? ['tip'] : b.status === 'nieuw' ? ['nieuw'] : ['tip', 'nieuw'];
+      let q = sb.from('pending_events').select(cols, { count: 'exact' })
+        .in('status', status).gte('date_start', vandaag)
+        .order('date_start', { ascending: true }).order('id', { ascending: true })
+        .range(b.offset || 0, (b.offset || 0) + 49);
+      if (b.reason) q = q.contains('auto_check', { redenen: [b.reason] });
+      if (b.q) q = q.or(`title.ilike.%${String(b.q).replace(/[%,()]/g, '')}%,city.ilike.%${String(b.q).replace(/[%,()]/g, '')}%`);
+      const r = await q;
+      if (r.error) return apiJson({ error: r.error.message }, 500);
+      return apiJson({ items: (r.data || []).map((p: any) => ({ ...p, ontbreekt: watOntbreekt(p) })), total: r.count ?? 0 });
+    }
+
+    case 'get': {
+      const r = await sb.from('pending_events').select(cols).eq('id', b.id).maybeSingle();
+      if (!r.data) return apiJson({ error: 'Niet gevonden' }, 404);
+      return apiJson({ item: { ...r.data, ontbreekt: watOntbreekt(r.data) } });
+    }
+
+    case 'save': {
+      const patch: Record<string, unknown> = {};
+      for (const k of BEWERKBAAR) if (k in (b.patch || {})) {
+        const v = b.patch[k];
+        patch[k] = typeof v === 'string' ? (v.trim() || null) : v;
+      }
+      if (b.geocode && (patch.address !== undefined || patch.city !== undefined)) {
+        const cur = (await sb.from('pending_events').select('address,city').eq('id', b.id).maybeSingle()).data || {};
+        const g = await geocode((patch.address ?? cur.address) as string | null, (patch.city ?? cur.city) as string | null);
+        if (g) { patch.latitude = g.lat; patch.longitude = g.lng; }
+      }
+      const r = await sb.from('pending_events').update(patch).eq('id', b.id).select(cols).single();
+      if (r.error) return apiJson({ error: r.error.message }, 400);
+      // Redenen opnieuw bepalen; het oordeel 'past niet bij YardiGo' blijft staan.
+      const past = !(r.data.auto_check?.redenen || []).includes('past niet bij YardiGo');
+      const check = autoCheck(r.data, past);
+      await sb.from('pending_events').update({ auto_check: check }).eq('id', b.id);
+      return apiJson({ item: { ...r.data, auto_check: check, ontbreekt: watOntbreekt(r.data) } });
+    }
+
+    case 'geocode':
+      return apiJson({ geo: await geocode(b.address || null, b.city || null) });
+
+    case 'publish': {
+      const r = await sb.from('pending_events').select(PENDING_COLS).eq('id', b.id).maybeSingle();
+      const p = r.data;
+      if (!p) return apiJson({ error: 'Niet gevonden' }, 404);
+      if (p.status === 'goedgekeurd' || p.status === 'afgewezen') return apiJson({ error: 'Al ' + p.status }, 409);
+      const o = watOntbreekt(p);
+      if (o.length) return apiJson({ error: 'Ontbreekt: ' + o.join(', ') }, 400);
+      try {
+        const listingId = await publishPending(sb, p, await curatorId(sb), null);
+        return apiJson({ listing_id: listingId, url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) });
+      } catch (e) { return apiJson({ error: (e as Error).message }, 500); }
+    }
+
+    case 'reject': {
+      const r = await sb.from('pending_events').update({ status: 'afgewezen', reviewed_at: new Date().toISOString(), review_notes: 'via mini-app' })
+        .eq('id', b.id).in('status', ['tip', 'nieuw']);
+      if (r.error) return apiJson({ error: r.error.message }, 400);
+      return apiJson({ ok: true });
+    }
+
+    case 'dm': {
+      const r = await sb.from('pending_events').select(PENDING_COLS).eq('id', b.id).maybeSingle();
+      if (!r.data) return apiJson({ error: 'Niet gevonden' }, 404);
+      return apiJson({ text: dmTekst(r.data), via: r.data.lead_source_url || r.data.organizer_url || null });
+    }
+
+    case 'create': {
+      const image = b.image?.data ? { data: String(b.image.data), media_type: String(b.image.media_type || 'image/jpeg') } : null;
+      const r = await maakItem(sb, String(b.text || ''), image);
+      if (!r.ok) return apiJson({ error: r.msg.replace(/<[^>]+>/g, '') }, 400);
+      return apiJson({ item: { ...r.row, ontbreekt: watOntbreekt(r.row) } });
+    }
+
+    case 'recent': {
+      const r = await sb.from('listings').select('id,title,city,date_start,event_subtype,created_at')
+        .eq('placed_by', 'yardigo').order('created_at', { ascending: false }).limit(30);
+      return apiJson({ items: (r.data || []).map((l: any) => ({ ...l, url: `${SITE}/v/${l.id}`, fb: fbReactie(l.id) })) });
+    }
+  }
+  return apiJson({ error: 'onbekende op' }, 400);
+}
+
 // ── Main ───────────────────────────────────────────────────────────
 serve(async (req: Request) => {
+  const url = new URL(req.url);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   if (!TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN ontbreekt' }, 500);
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-  const action = new URL(req.url).searchParams.get('action');
+  if (url.searchParams.has('api')) return api(sb, req);
+  const action = url.searchParams.get('action');
 
   // ── Beheer / cron ──
   if (action) {
@@ -345,6 +500,8 @@ serve(async (req: Request) => {
         { command: 'meer', description: 'Volgende kaartjes uit de wachtrij' },
         { command: 'help', description: 'Wat kan deze bot' },
       ] });
+      const admin = await cfg(sb, 'telegram_admin_chat');
+      if (admin) await menuKnop(admin);
       const me = await tg('getMe', {});
       return json({ ok: !!r?.ok, bot: me?.result?.username, pair_code: code, webhook: r?.description });
     }
@@ -389,6 +546,7 @@ serve(async (req: Request) => {
       const gegeven = tekst.split(/\s+/)[1] || '';
       if (code && gegeven && gegeven === code && m.chat.type === 'private') {
         await setCfg(sb, 'telegram_admin_chat', chat);
+        await menuKnop(chat);
         await setCfg(sb, 'telegram_pair_code', randomHex(8));   // code eenmalig
         await send(chat, '✅ Gekoppeld! Je krijgt hier dagelijks nieuwe tips en wachtrij-items.\n\nStuur me een affiche, screenshot of link van een rommelmarkt/garage sale en ik maak er een kaartje van. Typ /help voor meer.');
       } else if (chat !== admin) {

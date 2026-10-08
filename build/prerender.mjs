@@ -414,6 +414,7 @@ function buildRobotsTxt() {
 Allow: /
 Disallow: /admin.html
 Disallow: /bevestig.html
+Disallow: /tg
 
 Sitemap: ${BASE_URL}/sitemap.xml
 `;

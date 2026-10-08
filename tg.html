@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>YardiGo Beheer</title>
+<script src="https://telegram.org/js/telegram-web-app.js?59"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f5);
+    --text: var(--tg-theme-text-color, #16181b);
+    --hint: var(--tg-theme-hint-color, #8a8f98);
+    --link: var(--tg-theme-link-color, #2f6f4f);
+    --sep: color-mix(in srgb, var(--hint) 22%, transparent);
+    --green: #3A6B4A;
+    --green-soft: color-mix(in srgb, #3A6B4A 14%, transparent);
+    --red: #d64545;
+    --red-soft: color-mix(in srgb, #d64545 13%, transparent);
+    --amber: #c98a12;
+    --amber-soft: color-mix(in srgb, #c98a12 15%, transparent);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg2); color: var(--text);
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
+  body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  .hidden { display: none !important; }
+
+  /* Kop */
+  .top { position: sticky; top: 0; z-index: 20; background: var(--bg2); padding: 12px 16px 8px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .stat span { color: var(--hint); font-size: 12px; }
+  .stat.live b { color: var(--green); }
+  .tabs { display: flex; gap: 4px; margin-top: 10px; background: var(--bg); border-radius: 12px; padding: 4px; }
+  .tab { flex: 1; border: 0; background: none; padding: 8px 4px; border-radius: 9px; font-weight: 600; font-size: 14px; color: var(--hint); }
+  .tab.on { background: var(--green); color: #fff; }
+  .tab .n { font-weight: 500; opacity: .8; margin-left: 3px; font-size: 12px; }
+
+  /* Filters */
+  .tools { padding: 0 16px; }
+  .search { width: 100%; border: 0; background: var(--bg); border-radius: 12px; padding: 10px 12px; margin-top: 4px; outline: none; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; border: 0; background: var(--bg); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+  .chip.on { background: var(--text); color: var(--bg); }
+
+  /* Lijst */
+  .list { padding: 8px 16px; display: grid; gap: 8px; }
+  .card { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; border: 0; text-align: left; width: 100%; display: block; }
+  .card:active { transform: scale(.99); }
+  .card .t { font-weight: 600; margin-bottom: 2px; display: flex; gap: 6px; align-items: baseline; }
+  .card .t .ico { flex: none; }
+  .card .m { color: var(--hint); font-size: 13px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .tag { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--bg2); color: var(--hint); }
+  .tag.bad { background: var(--red-soft); color: var(--red); }
+  .tag.ok { background: var(--green-soft); color: var(--green); }
+  .tag.warn { background: var(--amber-soft); color: var(--amber); }
+  .empty { text-align: center; color: var(--hint); padding: 48px 16px; }
+  .empty .big { font-size: 40px; margin-bottom: 6px; }
+  .more { margin: 4px auto 12px; display: block; }
+
+  /* Detail */
+  .sheet { padding: 12px 16px; display: grid; gap: 12px; }
+  .group { background: var(--bg); border-radius: var(--radius); overflow: hidden; }
+  .group h3 { margin: 0; padding: 12px 14px 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--hint); font-weight: 600; }
+  .field { display: block; padding: 8px 14px; border-bottom: 1px solid var(--sep); }
+  .field:last-child { border-bottom: 0; }
+  .field label { display: block; font-size: 12px; color: var(--hint); margin-bottom: 2px; }
+  .field input, .field textarea, .field select { width: 100%; border: 0; background: none; padding: 2px 0; outline: none; }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; }
+  .row2 .field:first-child { border-right: 1px solid var(--sep); }
+  .row3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; }
+  .row3 .field:not(:last-child) { border-right: 1px solid var(--sep); }
+  .switch { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+  .switch input { width: 44px; height: 26px; appearance: none; background: var(--sep); border-radius: 999px; position: relative; transition: background .2s; }
+  .switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .switch input:checked { background: var(--green); }
+  .switch input:checked::after { transform: translateX(18px); }
+  #map { height: 220px; background: var(--bg2); }
+  .maphint { padding: 8px 14px 12px; font-size: 12.5px; color: var(--hint); display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .alert { border-radius: var(--radius); padding: 12px 14px; font-size: 14px; }
+  .alert.bad { background: var(--red-soft); color: var(--red); }
+  .alert.ok { background: var(--green-soft); color: var(--green); }
+  .alert.info { background: var(--bg); }
+  .btn { border: 0; border-radius: 12px; padding: 12px 14px; font-weight: 600; background: var(--bg); color: var(--text); width: 100%; }
+  .btn.sm { width: auto; padding: 7px 12px; font-size: 13px; border-radius: 10px; background: var(--bg2); }
+  .btn.green { background: var(--green); color: #fff; }
+  .btn.red { color: var(--red); }
+  .btn:disabled { opacity: .5; }
+  .btns { display: grid; gap: 8px; }
+  .btns.two { grid-template-columns: 1fr 1fr; }
+  .copy { background: var(--bg2); border-radius: 10px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; word-break: break-word; margin: 8px 0; }
+  .lead { font-size: 13px; color: var(--hint); padding: 0 2px; }
+  .lead a { color: var(--link); }
+
+  /* Toevoegen */
+  .drop { display: grid; place-items: center; gap: 4px; border: 2px dashed var(--sep); border-radius: var(--radius); padding: 22px; text-align: center; color: var(--hint); background: var(--bg); }
+  .drop img { max-width: 100%; max-height: 260px; border-radius: 10px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); opacity: 0;
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: all .25s; z-index: 50; pointer-events: none; max-width: 90vw; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .spin { width: 22px; height: 22px; border: 3px solid var(--sep); border-top-color: var(--green); border-radius: 50%; animation: s 0.8s linear infinite; margin: 40px auto; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .denied { padding: 60px 24px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="denied" class="denied hidden">
+  <div style="font-size:44px">🔒</div>
+  <h2>Alleen voor de YardiGo-admin</h2>
+  <p style="color:var(--hint)">Open deze pagina via de YardiGo-bot in Telegram.</p>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top" id="top">
+    <div class="stats">
+      <div class="stat live"><b id="s-live">–</b><span>live op de kaart</span></div>
+      <div class="stat"><b id="s-tips">–</b><span>tips</span></div>
+      <div class="stat"><b id="s-wr">–</b><span>wachtrij</span></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="tip">Tips</button>
+      <button class="tab" data-tab="nieuw">Wachtrij</button>
+      <button class="tab" data-tab="live">Live</button>
+      <button class="tab" data-tab="add">＋ Nieuw</button>
+    </div>
+  </div>
+
+  <!-- Lijstweergave -->
+  <section id="v-list">
+    <div class="tools">
+      <input class="search" id="q" type="search" placeholder="Zoek op titel of plaats" autocomplete="off">
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <!-- Detail -->
+  <section id="v-detail" class="hidden"><div class="sheet" id="detail"></div></section>
+
+  <!-- Live -->
+  <section id="v-live" class="hidden"><div class="list" id="live"></div></section>
+
+  <!-- Nieuw -->
+  <section id="v-add" class="hidden">
+    <div class="sheet">
+      <div class="alert info">Kies een affiche of screenshot van een Facebook-post, en/of plak de tekst. Zet de link van de post erbij: dat wordt de contactweg.</div>
+      <label class="drop" id="drop">
+        <input type="file" accept="image/*" id="file" hidden>
+        <span id="drop-txt">📸 <b>Kies een afbeelding</b><br><small>affiche, flyer of screenshot</small></span>
+        <img id="preview" class="hidden" alt="">
+      </label>
+      <div class="group">
+        <div class="field"><label>Tekst en/of link</label><textarea id="add-text" rows="5" placeholder="Plak hier de tekst of de link van de post…"></textarea></div>
+      </div>
+      <button class="btn green" id="add-go">Uitlezen met AI</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var API = 'https://fwehqudhwzcnkcuypuqw.supabase.co/functions/v1/telegram-bot?api=1';
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var SUBTYPES = ['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig'];
+  var REDENEN = [
+    { k: '', l: 'Alles' },
+    { k: 'geen contactweg', l: 'Geen contact' },
+    { k: 'geen coördinaten', l: 'Geen locatie' },
+    { k: 'type onduidelijk', l: 'Type onduidelijk' },
+    { k: 'past niet bij YardiGo', l: 'Past niet' },
+    { k: 'onbekend of particulier', l: 'Particulier?' }
+  ];
+  var state = { tab: 'tip', reason: '', q: '', items: [], total: 0, current: null, map: null, marker: null, image: null };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function haptic(t) { try { tg.HapticFeedback.notificationOccurred(t); } catch (e) {} }
+  function tick() { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} }
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 2200); }
+  function dag(d) {
+    if (!d) return '?';
+    return new Date(d + 'T12:00:00').toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function tijd(p) { return p.time_start ? ' · ' + String(p.time_start).slice(0, 5) + (p.time_end ? '–' + String(p.time_end).slice(0, 5) : '') : ''; }
+  function domein(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } }
+
+  function api(op, body) {
+    return fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-tg-init-data': (tg && tg.initData) || '' },
+      body: JSON.stringify(Object.assign({ op: op }, body || {}))
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (r.status === 403) { showDenied(); throw new Error('Geen toegang'); }
+        if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+        return j;
+      });
+    });
+  }
+
+  function copy(text) {
+    var done = function () { haptic('success'); toast('Gekopieerd'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove();
+  }
+  function openLink(u) { if (tg && tg.openLink) tg.openLink(u); else window.open(u, '_blank'); }
+
+  function showDenied() { $('app').classList.add('hidden'); $('denied').classList.remove('hidden'); }
+
+  // ── Stats ─────────────────────────────────────────────
+  function loadStats() {
+    return api('stats').then(function (s) {
+      $('s-live').textContent = s.live; $('s-tips').textContent = s.tips; $('s-wr').textContent = s.wachtrij;
+    }).catch(function () {});
+  }
+
+  // ── Views ─────────────────────────────────────────────
+  function show(view) {
+    ['v-list', 'v-detail', 'v-live', 'v-add'].forEach(function (v) { $(v).classList.toggle('hidden', v !== view); });
+    $('top').classList.toggle('hidden', view === 'v-detail');
+    window.scrollTo(0, 0);
+    if (view === 'v-detail') { tg.BackButton.show(); } else { tg.BackButton.hide(); tg.MainButton.hide(); }
+  }
+
+  function setTab(tab) {
+    state.tab = tab;
+    document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); });
+    if (tab === 'live') { show('v-live'); loadLive(); }
+    else if (tab === 'add') { show('v-add'); }
+    else { show('v-list'); renderChips(); loadList(false); }
+  }
+
+  function renderChips() {
+    var c = $('chips');
+    c.classList.toggle('hidden', state.tab !== 'nieuw');
+    c.innerHTML = REDENEN.map(function (r) {
+      return '<button class="chip' + (state.reason === r.k ? ' on' : '') + '" data-r="' + esc(r.k) + '">' + esc(r.l) + '</button>';
+    }).join('');
+  }
+
+  function loadList(append) {
+    var list = $('list');
+    if (!append) { list.innerHTML = '<div class="spin"></div>'; state.items = []; }
+    return api('list', { status: state.tab, reason: state.tab === 'nieuw' ? state.reason : '', q: state.q, offset: append ? state.items.length : 0 })
+      .then(function (r) {
+        state.items = state.items.concat(r.items); state.total = r.total;
+        renderList();
+      }).catch(function (e) { list.innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
+  }
+
+  function cardHtml(p) {
+    var tags = [];
+    tags.push('<span class="tag">' + esc(p.event_subtype || '?') + '</span>');
+    (p.ontbreekt || []).forEach(function (o) { tags.push('<span class="tag bad">' + esc(o.split(' (')[0]) + '</span>'); });
+    (p.auto_check && p.auto_check.redenen || []).forEach(function (r) {
+      if (r === 'past niet bij YardiGo' || r === 'type onduidelijk' || r === 'onbekend of particulier') tags.push('<span class="tag warn">' + esc(r) + '</span>');
+    });
+    if (!(p.ontbreekt || []).length) tags.push('<span class="tag ok">klaar om te publiceren</span>');
+    return '<button class="card" data-id="' + p.id + '">' +
+      '<div class="t"><span class="ico">' + (p.is_private_seller ? '🏠' : '🎪') + '</span><span>' + esc(p.title) + '</span></div>' +
+      '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
+      '<div class="tags">' + tags.join('') + '</div></button>';
+  }
+
+  function renderList() {
+    var list = $('list');
+    if (!state.items.length) {
+      list.innerHTML = '<div class="empty"><div class="big">🎉</div>' + (state.tab === 'tip' ? 'Geen openstaande tips.' : 'Niets in deze lijst.') + '</div>';
+      return;
+    }
+    list.innerHTML = state.items.map(cardHtml).join('') +
+      (state.items.length < state.total ? '<button class="btn sm more" id="more">Meer laden (' + (state.total - state.items.length) + ')</button>' : '');
+  }
+
+  // ── Detail ────────────────────────────────────────────
+  function openDetail(id) {
+    show('v-detail');
+    $('detail').innerHTML = '<div class="spin"></div>';
+    api('get', { id: id }).then(function (r) { renderDetail(r.item); })
+      .catch(function (e) { $('detail').innerHTML = '<div class="alert bad">' + esc(e.message) + '</div>'; });
+  }
+
+  function f(name, label, val, type, extra) {
+    return '<div class="field"><label for="f-' + name + '">' + label + '</label><input id="f-' + name + '" name="' + name + '" type="' + (type || 'text') + '" value="' + esc(val == null ? '' : val) + '"' + (extra || '') + '></div>';
+  }
+
+  function renderDetail(p) {
+    state.current = p;
+    var d = $('detail');
+    if (p.status === 'goedgekeurd' || p.status === 'afgewezen') {
+      d.innerHTML = '<div class="alert info">Dit item is al ' + esc(p.status) + '.</div>';
+      return;
+    }
+    var ontbreekt = p.ontbreekt || [];
+    var opties = SUBTYPES.map(function (s) { return '<option' + (s === p.event_subtype ? ' selected' : '') + '>' + s + '</option>'; }).join('');
+    d.innerHTML =
+      (ontbreekt.length ? '<div class="alert bad"><b>Nog nodig om te publiceren:</b><br>' + ontbreekt.map(esc).join('<br>') + '</div>'
+                        : '<div class="alert ok">✓ Alles compleet — klaar om te publiceren</div>') +
+      (p.lead_source_url ? '<div class="lead">Gevonden via <a href="#" data-open="' + esc(p.lead_source_url) + '">' + esc(domein(p.lead_source_url)) + '</a> · wordt nooit als bron getoond</div>' : '') +
+
+      '<div class="group"><h3>Evenement</h3>' +
+        f('title', 'Titel', p.title) +
+        '<div class="field"><label for="f-description">Beschrijving (eigen woorden)</label><textarea id="f-description" name="description" rows="3">' + esc(p.description || '') + '</textarea></div>' +
+        '<div class="field"><label for="f-event_subtype">Type</label><select id="f-event_subtype" name="event_subtype">' + opties + '</select></div>' +
+        '<div class="row3">' + f('date_start', 'Datum', p.date_start, 'date') + f('time_start', 'Van', p.time_start ? String(p.time_start).slice(0, 5) : '', 'time') + f('time_end', 'Tot', p.time_end ? String(p.time_end).slice(0, 5) : '', 'time') + '</div>' +
+        '<label class="switch"><span>🏠 Particuliere verkoop</span><input type="checkbox" name="is_private_seller"' + (p.is_private_seller ? ' checked' : '') + '></label>' +
+      '</div>' +
+
+      '<div class="group"><h3>Locatie</h3>' +
+        '<div class="row2">' + f('address', 'Adres / locatie', p.address) + f('city', 'Plaats', p.city) + '</div>' +
+        '<div id="map"></div>' +
+        '<div class="maphint"><span id="maphint">' + (p.latitude != null ? 'Sleep de speld om de plek te verfijnen' : 'Nog geen locatie') + '</span>' +
+        '<button class="btn sm" id="geo">📍 Zoek adres</button></div>' +
+      '</div>' +
+
+      '<div class="group"><h3>Contact organisator · alleen voor ingelogde bezoekers</h3>' +
+        f('organizer_name', 'Naam', p.organizer_name) +
+        f('organizer_url', 'Website of Facebook-pagina/-post', p.organizer_url, 'url', ' inputmode="url" placeholder="https://"') +
+        '<div class="row2">' + f('contact_phone', 'Telefoon', p.contact_phone, 'tel') + f('contact_email', 'E-mail', p.contact_email, 'email') + '</div>' +
+      '</div>' +
+
+      '<div class="btns two">' +
+        (p.status === 'tip' ? '<button class="btn" id="dm">💬 Toestemming vragen</button>' : '<span></span>') +
+        '<button class="btn red" id="reject">' + (p.status === 'tip' ? 'Overslaan' : 'Afwijzen') + '</button>' +
+      '</div>' +
+      '<div id="dmbox"></div>';
+
+    initMap(p);
+    updateMainButton();
+    d.querySelectorAll('input, textarea, select').forEach(function (el) {
+      el.addEventListener('input', function () { state.dirty = true; updateMainButton(); });
+      el.addEventListener('change', function () { state.dirty = true; updateMainButton(); });
+    });
+    state.dirty = false;
+  }
+
+  function initMap(p) {
+    if (!window.L) { $('map').innerHTML = '<div class="empty">Kaart niet geladen</div>'; return; }
+    var has = p.latitude != null && p.longitude != null;
+    var center = has ? [p.latitude, p.longitude] : [52.1, 5.3];
+    if (state.map) { state.map.remove(); state.map = null; }
+    state.map = L.map('map', { zoomControl: false, attributionControl: false }).setView(center, has ? 15 : 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(state.map);
+    state.marker = null;
+    if (has) placeMarker(center);
+    state.map.on('click', function (e) { placeMarker([e.latlng.lat, e.latlng.lng]); state.dirty = true; updateMainButton(); tick(); });
+  }
+
+  function placeMarker(ll) {
+    if (state.marker) state.marker.setLatLng(ll);
+    else {
+      state.marker = L.marker(ll, { draggable: true }).addTo(state.map);
+      state.marker.on('dragend', function () { state.dirty = true; updateMainButton(); tick(); });
+    }
+    state.current.latitude = ll[0]; state.current.longitude = ll[1];
+    $('maphint').textContent = 'Sleep de speld of tik op de kaart om te verfijnen';
+  }
+
+  function formPatch() {
+    var patch = {};
+    $('detail').querySelectorAll('[name]').forEach(function (el) {
+      patch[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    if (state.marker) { var ll = state.marker.getLatLng(); patch.latitude = ll.lat; patch.longitude = ll.lng; }
+    return patch;
+  }
+
+  function lokaalOntbreekt(patch) {
+    var o = [];
+    if (!patch.title || !patch.title.trim()) o.push('titel');
+    if (!patch.organizer_url && !patch.contact_phone && !patch.contact_email) o.push('contact');
+    if (patch.latitude == null) o.push('locatie');
+    if (!patch.date_start || patch.date_start < new Date().toISOString().slice(0, 10)) o.push('datum');
+    return o;
+  }
+
+  function updateMainButton() {
+    if (!state.current) return;
+    var patch = formPatch();
+    var o = lokaalOntbreekt(patch);
+    var mb = tg.MainButton;
+    if (o.length) {
+      if (state.dirty) { mb.setParams({ text: 'Opslaan', color: '#5b6470', text_color: '#ffffff', is_active: true, is_visible: true }); }
+      else { mb.setParams({ text: 'Nog nodig: ' + o.join(', '), color: '#9aa0a8', text_color: '#ffffff', is_active: false, is_visible: true }); }
+    } else {
+      mb.setParams({ text: state.dirty ? 'Opslaan en publiceren' : 'Publiceren', color: '#3A6B4A', text_color: '#ffffff', is_active: true, is_visible: true });
+    }
+  }
+
+  function save() {
+    var patch = formPatch();
+    return api('save', { id: state.current.id, patch: patch }).then(function (r) { state.current = r.item; state.dirty = false; return r.item; });
+  }
+
+  function onMain() {
+    var patch = formPatch();
+    var klaar = !lokaalOntbreekt(patch).length;
+    tg.MainButton.showProgress(false);
+    var p = state.dirty ? save() : Promise.resolve(state.current);
+    p.then(function (item) {
+      if (!klaar) { tg.MainButton.hideProgress(); haptic('success'); toast('Opgeslagen'); renderDetail(item); return; }
+      return api('publish', { id: item.id }).then(function (r) {
+        tg.MainButton.hideProgress(); tg.MainButton.hide(); haptic('success');
+        renderPublished(item, r);
+        loadStats();
+      });
+    }).catch(function (e) { tg.MainButton.hideProgress(); haptic('error'); toast(e.message); });
+  }
+
+  function renderPublished(item, r) {
+    state.current = null;
+    $('detail').innerHTML =
+      '<div class="alert ok" style="text-align:center;padding:22px"><div style="font-size:40px">🎉</div><b>' + esc(item.title) + '</b><br>staat live op de kaart</div>' +
+      '<div class="group" style="padding:12px 14px"><b>Reactie voor onder de Facebook-post</b><div class="copy">' + esc(r.fb) + '</div>' +
+      '<div class="btns two"><button class="btn sm" data-copy="' + esc(r.fb) + '">Kopiëren</button><button class="btn sm" data-open="' + esc(r.url) + '">Bekijk op YardiGo</button></div></div>' +
+      '<button class="btn green" id="next">Volgende →</button>';
+  }
+
+  function nextItem() {
+    var id = state.lastId;
+    var idx = state.items.findIndex(function (x) { return x.id === id; });
+    state.items = state.items.filter(function (x) { return x.id !== id; });
+    state.total = Math.max(0, state.total - 1);
+    var nxt = state.items[idx] || state.items[idx - 1];
+    if (nxt) openDetail(nxt.id); else { setTab(state.tab === 'add' ? 'nieuw' : state.tab); }
+  }
+
+  // ── Live ──────────────────────────────────────────────
+  function loadLive() {
+    var el = $('live');
+    el.innerHTML = '<div class="spin"></div>';
+    api('recent').then(function (r) {
+      if (!r.items.length) { el.innerHTML = '<div class="empty">Nog niets gepubliceerd.</div>'; return; }
+      el.innerHTML = '<div class="lead" style="padding:0 2px 4px">Laatst door YardiGo geplaatst</div>' + r.items.map(function (l) {
+        return '<div class="card"><div class="t">' + esc(l.title) + '</div><div class="m">' + esc(dag(l.date_start)) + ' · ' + esc(l.city || '') + '</div>' +
+          '<div class="tags" style="gap:6px"><button class="btn sm" data-copy="' + esc(l.fb) + '">📋 FB-reactie</button><button class="btn sm" data-open="' + esc(l.url) + '">Bekijk</button></div></div>';
+      }).join('');
+    }).catch(function (e) { el.innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
+  }
+
+  // ── Nieuw ─────────────────────────────────────────────
+  function resizeImage(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () {
+        var max = 1600, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var url = c.toDataURL('image/jpeg', 0.85);
+        resolve({ preview: url, data: url.split(',')[1], media_type: 'image/jpeg' });
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function addGo() {
+    var text = $('add-text').value.trim();
+    if (!state.image && text.length < 10) { toast('Kies een afbeelding of plak tekst'); return; }
+    var btn = $('add-go'); btn.disabled = true; btn.textContent = 'Bezig met uitlezen…';
+    api('create', { text: text, image: state.image ? { data: state.image.data, media_type: state.image.media_type } : null })
+      .then(function (r) {
+        haptic('success');
+        state.image = null; $('add-text').value = ''; $('preview').classList.add('hidden'); $('drop-txt').classList.remove('hidden');
+        state.items = [r.item].concat(state.items);
+        openDetail(r.item.id);
+        loadStats();
+      })
+      .catch(function (e) { haptic('error'); toast(e.message); })
+      .then(function () { btn.disabled = false; btn.textContent = 'Uitlezen met AI'; });
+  }
+
+  // ── Events ────────────────────────────────────────────
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button, a');
+    if (!t) return;
+    if (t.dataset.tab) { tick(); setTab(t.dataset.tab); return; }
+    if (t.dataset.r !== undefined) { tick(); state.reason = t.dataset.r; renderChips(); loadList(false); return; }
+    if (t.dataset.copy) { copy(t.dataset.copy); return; }
+    if (t.dataset.open) { e.preventDefault(); openLink(t.dataset.open); return; }
+    if (t.classList.contains('card') && t.dataset.id) { tick(); state.lastId = +t.dataset.id; openDetail(+t.dataset.id); return; }
+    if (t.id === 'more') { loadList(true); return; }
+    if (t.id === 'next') { nextItem(); return; }
+    if (t.id === 'add-go') { addGo(); return; }
+    if (t.id === 'geo') {
+      var a = $('f-address').value, c = $('f-city').value;
+      t.disabled = true;
+      api('geocode', { address: a, city: c }).then(function (r) {
+        if (!r.geo) { toast('Adres niet gevonden'); haptic('error'); return; }
+        placeMarker([r.geo.lat, r.geo.lng]); state.map.setView([r.geo.lat, r.geo.lng], 16);
+        state.dirty = true; updateMainButton(); haptic('success');
+      }).catch(function (er) { toast(er.message); }).then(function () { t.disabled = false; });
+      return;
+    }
+    if (t.id === 'reject') {
+      var p = state.current;
+      tg.showConfirm((p.status === 'tip' ? 'Overslaan: ' : 'Afwijzen: ') + p.title + '?', function (ok) {
+        if (!ok) return;
+        api('reject', { id: p.id }).then(function () { haptic('warning'); toast('Weg'); state.lastId = p.id; loadStats(); nextItem(); })
+          .catch(function (er) { toast(er.message); });
+      });
+      return;
+    }
+    if (t.id === 'dm') {
+      api('dm', { id: state.current.id }).then(function (r) {
+        $('dmbox').innerHTML = '<div class="group" style="padding:12px 14px"><b>Bericht voor de verkoper</b><div class="copy">' + esc(r.text) + '</div>' +
+          '<div class="btns two"><button class="btn sm" data-copy="' + esc(r.text) + '">Kopiëren</button>' +
+          (r.via ? '<button class="btn sm" data-open="' + esc(r.via) + '">Open ' + esc(domein(r.via)) + '</button>' : '<span></span>') + '</div>' +
+          '<p class="lead">Ja gekregen? Vul het contact in en druk op Publiceren.</p></div>';
+        $('dmbox').scrollIntoView({ behavior: 'smooth' });
+      }).catch(function (er) { toast(er.message); });
+    }
+  });
+
+  var qTimer;
+  $('q').addEventListener('input', function () {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(function () { state.q = $('q').value.trim(); loadList(false); }, 300);
+  });
+  $('file').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    resizeImage(file).then(function (r) {
+      state.image = r; $('preview').src = r.preview; $('preview').classList.remove('hidden'); $('drop-txt').classList.add('hidden');
+    }).catch(function () { toast('Kon afbeelding niet lezen'); });
+  });
+
+  // ── Start ─────────────────────────────────────────────
+  if (!tg || !tg.initData) { showDenied(); return; }
+  tg.ready(); tg.expand();
+  try { tg.setHeaderColor('secondary_bg_color'); tg.setBackgroundColor('secondary_bg_color'); } catch (e) {}
+  tg.BackButton.onClick(function () { state.current = null; setTab(state.tab === 'add' ? 'nieuw' : state.tab); loadStats(); });
+  tg.MainButton.onClick(onMain);
+  $('app').classList.remove('hidden');
+
+  var startId = new URLSearchParams(location.search).get('id');
+  loadStats().then(function () {
+    if (startId) { state.lastId = +startId; openDetail(+startId); }
+    else setTab('tip');
+  });
+})();
+</script>
+</body>
+</html>
