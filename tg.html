@@ -19,97 +19,130 @@
     --green: #3A6B4A;
     --green-soft: color-mix(in srgb, #3A6B4A 14%, transparent);
     --red: #d64545;
-    --red-soft: color-mix(in srgb, #d64545 13%, transparent);
-    --amber: #c98a12;
+    --red-soft: color-mix(in srgb, #d64545 12%, transparent);
+    --amber: #b7790b;
     --amber-soft: color-mix(in srgb, #c98a12 15%, transparent);
+    --blue: #2f6fb3;
+    --blue-soft: color-mix(in srgb, #2f6fb3 13%, transparent);
     --radius: 14px;
+    --nav-h: 62px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg2); color: var(--text);
     font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
-  body { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); }
+  body.detail { padding-bottom: 24px; }
   button, input, textarea, select { font: inherit; color: inherit; }
   .hidden { display: none !important; }
+  h2 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 
-  /* Kop */
-  .top { position: sticky; top: 0; z-index: 20; background: var(--bg2); padding: 12px 16px 8px; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stat { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
+  /* Tellers */
+  .stats { display: flex; gap: 8px; padding: 12px 16px 4px; }
+  .stat { flex: 1; background: var(--bg); border-radius: var(--radius); padding: 10px 12px; border: 0; text-align: left; }
   .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
   .stat span { color: var(--hint); font-size: 12px; }
   .stat.live b { color: var(--green); }
-  .tabs { display: flex; gap: 4px; margin-top: 10px; background: var(--bg); border-radius: 12px; padding: 4px; }
-  .tab { flex: 1; border: 0; background: none; padding: 8px 4px; border-radius: 9px; font-weight: 600; font-size: 14px; color: var(--hint); }
-  .tab.on { background: var(--green); color: #fff; }
-  .tab .n { font-weight: 500; opacity: .8; margin-left: 3px; font-size: 12px; }
 
-  /* Filters */
-  .tools { padding: 0 16px; }
-  .search { width: 100%; border: 0; background: var(--bg); border-radius: 12px; padding: 10px 12px; margin-top: 4px; outline: none; }
-  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; border: 0; background: var(--bg); color: var(--text); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
-  .chip.on { background: var(--text); color: var(--bg); }
+  /* Onderbalk */
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; background: var(--bg);
+    border-top: 1px solid var(--sep); padding-bottom: env(safe-area-inset-bottom); }
+  .nav button { flex: 1; border: 0; background: none; height: var(--nav-h); display: grid; place-items: center; align-content: center; gap: 2px;
+    color: var(--hint); font-size: 11px; font-weight: 600; }
+  .nav button i { font-style: normal; font-size: 21px; line-height: 1; filter: grayscale(1); opacity: .7; }
+  .nav button.on { color: var(--green); }
+  .nav button.on i { filter: none; opacity: 1; }
+  .nav .badge { position: absolute; margin: -22px 0 0 26px; background: var(--red); color: #fff; border-radius: 999px; font-size: 10px; padding: 1px 5px; }
 
-  /* Lijst */
+  /* Te doen */
+  .pad { padding: 8px 16px; }
+  .groups { display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 0; scrollbar-width: none; }
+  .groups::-webkit-scrollbar { display: none; }
+  .grp { flex: none; border: 0; background: var(--bg); padding: 8px 12px; border-radius: 12px; font-weight: 600; font-size: 14px; }
+  .grp .n { color: var(--hint); font-weight: 500; margin-left: 4px; }
+  .grp.on { background: var(--text); color: var(--bg); }
+  .grp.on .n { color: inherit; opacity: .7; }
+  .explain { margin: 10px 16px 2px; font-size: 13.5px; color: var(--hint); }
   .list { padding: 8px 16px; display: grid; gap: 8px; }
-  .card { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; border: 0; text-align: left; width: 100%; display: block; }
-  .card:active { transform: scale(.99); }
-  .card .t { font-weight: 600; margin-bottom: 2px; display: flex; gap: 6px; align-items: baseline; }
-  .card .t .ico { flex: none; }
+  .card { background: var(--bg); border-radius: var(--radius); padding: 12px 14px; display: flex; gap: 10px; align-items: center; border: 0; width: 100%; text-align: left; }
+  .card .body { flex: 1; min-width: 0; }
+  .card .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card .m { color: var(--hint); font-size: 13px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-  .tag { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--bg2); color: var(--hint); }
-  .tag.bad { background: var(--red-soft); color: var(--red); }
-  .tag.ok { background: var(--green-soft); color: var(--green); }
-  .tag.warn { background: var(--amber-soft); color: var(--amber); }
-  .empty { text-align: center; color: var(--hint); padding: 48px 16px; }
+  .card .todo { font-size: 12.5px; margin-top: 3px; }
+  .todo.bad { color: var(--red); } .todo.ok { color: var(--green); } .todo.warn { color: var(--amber); } .todo.blue { color: var(--blue); }
+  .card .go { flex: none; color: var(--hint); font-size: 20px; }
+  .quick { flex: none; border: 0; background: var(--green); color: #fff; font-weight: 600; font-size: 13px; padding: 8px 12px; border-radius: 10px; }
+  .empty { text-align: center; color: var(--hint); padding: 40px 16px; }
   .empty .big { font-size: 40px; margin-bottom: 6px; }
-  .more { margin: 4px auto 12px; display: block; }
 
   /* Detail */
   .sheet { padding: 12px 16px; display: grid; gap: 12px; }
+  .head h2 { margin-bottom: 2px; }
+  .head .m { color: var(--hint); }
+  .step { border-radius: var(--radius); padding: 12px 14px; font-size: 14.5px; }
+  .step b { display: block; margin-bottom: 2px; }
+  .step.ok { background: var(--green-soft); } .step.ok b { color: var(--green); }
+  .step.bad { background: var(--red-soft); } .step.bad b { color: var(--red); }
+  .step.warn { background: var(--amber-soft); } .step.warn b { color: var(--amber); }
+  .step.blue { background: var(--blue-soft); } .step.blue b { color: var(--blue); }
   .group { background: var(--bg); border-radius: var(--radius); overflow: hidden; }
-  .group h3 { margin: 0; padding: 12px 14px 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--hint); font-weight: 600; }
+  .group h3 { margin: 0; padding: 12px 14px 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--hint); font-weight: 600; display: flex; justify-content: space-between; }
+  .group h3 .need { color: var(--red); text-transform: none; letter-spacing: 0; }
+  .group.need { box-shadow: inset 0 0 0 2px var(--red-soft); }
   .field { display: block; padding: 8px 14px; border-bottom: 1px solid var(--sep); }
   .field:last-child { border-bottom: 0; }
   .field label { display: block; font-size: 12px; color: var(--hint); margin-bottom: 2px; }
   .field input, .field textarea, .field select { width: 100%; border: 0; background: none; padding: 2px 0; outline: none; }
-  .field textarea { resize: vertical; min-height: 60px; }
+  .field textarea { resize: vertical; min-height: 56px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; }
-  .row2 .field:first-child { border-right: 1px solid var(--sep); }
-  .row3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; }
-  .row3 .field:not(:last-child) { border-right: 1px solid var(--sep); }
-  .switch { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
-  .switch input { width: 44px; height: 26px; appearance: none; background: var(--sep); border-radius: 999px; position: relative; transition: background .2s; }
-  .switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .row2 > .field:first-child { border-right: 1px solid var(--sep); }
+  .row3 { display: grid; grid-template-columns: 1.5fr 1fr 1fr; }
+  .row3 > .field:not(:last-child) { border-right: 1px solid var(--sep); }
+  .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--sep); }
+  .switch:last-child { border-bottom: 0; }
+  .switch small { display: block; color: var(--hint); font-size: 12px; }
+  .switch input { flex: none; width: 46px; height: 28px; appearance: none; background: var(--sep); border-radius: 999px; position: relative; transition: background .2s; margin: 0; }
+  .switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
   .switch input:checked { background: var(--green); }
   .switch input:checked::after { transform: translateX(18px); }
-  #map { height: 220px; background: var(--bg2); }
+  #map { height: 210px; background: var(--bg2); }
   .maphint { padding: 8px 14px 12px; font-size: 12.5px; color: var(--hint); display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-  .alert { border-radius: var(--radius); padding: 12px 14px; font-size: 14px; }
-  .alert.bad { background: var(--red-soft); color: var(--red); }
-  .alert.ok { background: var(--green-soft); color: var(--green); }
-  .alert.info { background: var(--bg); }
+  details.group summary { list-style: none; padding: 12px 14px; font-weight: 600; display: flex; justify-content: space-between; }
+  details.group summary::-webkit-details-marker { display: none; }
+  details.group summary::after { content: "›"; color: var(--hint); transform: rotate(90deg); transition: transform .2s; }
+  details.group[open] summary::after { transform: rotate(270deg); }
+  details.group summary + * { border-top: 1px solid var(--sep); }
   .btn { border: 0; border-radius: 12px; padding: 12px 14px; font-weight: 600; background: var(--bg); color: var(--text); width: 100%; }
-  .btn.sm { width: auto; padding: 7px 12px; font-size: 13px; border-radius: 10px; background: var(--bg2); }
+  .btn.sm { width: auto; padding: 8px 12px; font-size: 13.5px; border-radius: 10px; background: var(--bg2); }
   .btn.green { background: var(--green); color: #fff; }
-  .btn.red { color: var(--red); }
+  .btn.ghost-red { background: none; color: var(--red); }
   .btn:disabled { opacity: .5; }
-  .btns { display: grid; gap: 8px; }
-  .btns.two { grid-template-columns: 1fr 1fr; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .copy { background: var(--bg2); border-radius: 10px; padding: 10px 12px; font-size: 14px; white-space: pre-wrap; word-break: break-word; margin: 8px 0; }
-  .lead { font-size: 13px; color: var(--hint); padding: 0 2px; }
+  .lead { font-size: 13px; color: var(--hint); }
   .lead a { color: var(--link); }
 
   /* Toevoegen */
-  .drop { display: grid; place-items: center; gap: 4px; border: 2px dashed var(--sep); border-radius: var(--radius); padding: 22px; text-align: center; color: var(--hint); background: var(--bg); }
-  .drop img { max-width: 100%; max-height: 260px; border-radius: 10px; }
+  .pick { display: grid; place-items: center; gap: 6px; border-radius: var(--radius); padding: 26px 16px; text-align: center; background: var(--bg); border: 2px dashed var(--sep); }
+  .pick .big { font-size: 34px; }
+  .pick b { font-size: 16px; }
+  .pick small { color: var(--hint); }
+  .job { background: var(--bg); border-radius: var(--radius); padding: 10px; display: flex; gap: 10px; align-items: center; border: 0; width: 100%; text-align: left; }
+  .job img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; flex: none; background: var(--bg2); }
+  .job .txt { flex: 1; min-width: 0; font-size: 14px; }
+  .job .txt b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .job .txt span { color: var(--hint); font-size: 12.5px; }
+  .job .ico { font-size: 20px; flex: none; }
+  .mini-spin { width: 18px; height: 18px; border: 2.5px solid var(--sep); border-top-color: var(--green); border-radius: 50%; animation: s .8s linear infinite; }
 
-  .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); opacity: 0;
-    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: all .25s; z-index: 50; pointer-events: none; max-width: 90vw; }
+  /* Instellingen */
+  .help { font-size: 14px; }
+  .help li { margin-bottom: 6px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(10px); opacity: 0;
+    background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: all .25s; z-index: 50; pointer-events: none; max-width: 90vw; text-align: center; }
+  body.detail .toast { bottom: 24px; }
   .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .spin { width: 22px; height: 22px; border: 3px solid var(--sep); border-top-color: var(--green); border-radius: 50%; animation: s 0.8s linear infinite; margin: 40px auto; }
+  .spin { width: 24px; height: 24px; border: 3px solid var(--sep); border-top-color: var(--green); border-radius: 50%; animation: s .8s linear infinite; margin: 40px auto; }
   @keyframes s { to { transform: rotate(360deg); } }
   .denied { padding: 60px 24px; text-align: center; }
 </style>
@@ -123,51 +156,72 @@
 </div>
 
 <div id="app" class="hidden">
-  <div class="top" id="top">
-    <div class="stats">
-      <div class="stat live"><b id="s-live">–</b><span>live op de kaart</span></div>
-      <div class="stat"><b id="s-tips">–</b><span>tips</span></div>
-      <div class="stat"><b id="s-wr">–</b><span>wachtrij</span></div>
-    </div>
-    <div class="tabs" role="tablist">
-      <button class="tab on" data-tab="tip">Tips</button>
-      <button class="tab" data-tab="nieuw">Wachtrij</button>
-      <button class="tab" data-tab="live">Live</button>
-      <button class="tab" data-tab="add">＋ Nieuw</button>
-    </div>
-  </div>
+  <div class="stats" id="stats"></div>
 
-  <!-- Lijstweergave -->
-  <section id="v-list">
-    <div class="tools">
-      <input class="search" id="q" type="search" placeholder="Zoek op titel of plaats" autocomplete="off">
-      <div class="chips" id="chips"></div>
-    </div>
-    <div class="list" id="list"></div>
+  <!-- Te doen -->
+  <section id="v-todo">
+    <div class="groups" id="groups"></div>
+    <div class="explain" id="explain"></div>
+    <div class="list" id="list"><div class="spin"></div></div>
   </section>
 
   <!-- Detail -->
   <section id="v-detail" class="hidden"><div class="sheet" id="detail"></div></section>
 
-  <!-- Live -->
-  <section id="v-live" class="hidden"><div class="list" id="live"></div></section>
-
-  <!-- Nieuw -->
+  <!-- Toevoegen -->
   <section id="v-add" class="hidden">
     <div class="sheet">
-      <div class="alert info">Kies een affiche of screenshot van een Facebook-post, en/of plak de tekst. Zet de link van de post erbij: dat wordt de contactweg.</div>
-      <label class="drop" id="drop">
-        <input type="file" accept="image/*" id="file" hidden>
-        <span id="drop-txt">📸 <b>Kies een afbeelding</b><br><small>affiche, flyer of screenshot</small></span>
-        <img id="preview" class="hidden" alt="">
+      <label class="pick">
+        <input type="file" accept="image/*" multiple id="files" hidden>
+        <span class="big">📸</span>
+        <b>Kies affiches of screenshots</b>
+        <small>Je kunt er meerdere tegelijk kiezen</small>
       </label>
       <div class="group">
-        <div class="field"><label>Tekst en/of link</label><textarea id="add-text" rows="5" placeholder="Plak hier de tekst of de link van de post…"></textarea></div>
+        <div class="field"><label for="add-text">Of plak tekst of een link</label><textarea id="add-text" rows="3" placeholder="Bijvoorbeeld de tekst van een Facebook-post"></textarea></div>
       </div>
-      <button class="btn green" id="add-go">Uitlezen met AI</button>
+      <button class="btn green hidden" id="add-text-go">Tekst uitlezen</button>
+      <div class="lead">De AI leest titel, datum, tijd en plaats uit. Staat het al op de kaart of in je lijst, dan zie je dat meteen.</div>
+      <div class="list" style="padding:0" id="jobs"></div>
+    </div>
+  </section>
+
+  <!-- Live -->
+  <section id="v-live" class="hidden">
+    <div class="explain">Laatst door YardiGo op de kaart gezet. Kopieer de reactie voor onder de Facebook-post.</div>
+    <div class="list" id="live"></div>
+  </section>
+
+  <!-- Instellingen -->
+  <section id="v-settings" class="hidden">
+    <div class="sheet">
+      <div class="group">
+        <h3>Tellers bovenaan</h3>
+        <label class="switch"><span>🗺 Live op de kaart<small>Komende advertenties op de kaart</small></span><input type="checkbox" data-stat="live"></label>
+        <label class="switch"><span>🏠 Tips<small>Particuliere verkopen, eerst toestemming vragen</small></span><input type="checkbox" data-stat="tips"></label>
+        <label class="switch"><span>📋 Wachtrij<small>Alles wat nog beoordeeld moet worden</small></span><input type="checkbox" data-stat="wachtrij"></label>
+      </div>
+      <div class="group" style="padding:4px 14px 6px">
+        <h3 style="padding-left:0">Zo werkt het</h3>
+        <ol class="help" style="padding-left:18px;margin:6px 0 10px">
+          <li><b>Te doen</b> toont alles wat nog niet op de kaart staat, in vier groepen.</li>
+          <li><b>Klaar</b>: alles is compleet. Tik op <i>Plaatsen</i>.</li>
+          <li><b>Particulier</b>: verkoop bij iemand thuis. Vraag eerst toestemming met de kant-en-klare tekst.</li>
+          <li><b>Mist iets</b>: vul de contactweg of locatie aan, dan kan hij op de kaart.</li>
+          <li><b>Twijfel</b>: de AI weet niet zeker of het bij YardiGo past. Jij beslist.</li>
+          <li>Na plaatsen krijg je een reactie om onder de Facebook-post te zetten.</li>
+        </ol>
+      </div>
     </div>
   </section>
 </div>
+
+<nav class="nav hidden" id="nav">
+  <button data-nav="todo" class="on"><i>📋</i>Te doen<span class="badge hidden" id="badge"></span></button>
+  <button data-nav="add"><i>➕</i>Toevoegen</button>
+  <button data-nav="live"><i>🗺</i>Live</button>
+  <button data-nav="settings"><i>⚙️</i>Instellingen</button>
+</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -177,27 +231,29 @@
   var API = 'https://fwehqudhwzcnkcuypuqw.supabase.co/functions/v1/telegram-bot?api=1';
   var tg = window.Telegram && window.Telegram.WebApp;
   var SUBTYPES = ['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig'];
-  var REDENEN = [
-    { k: '', l: 'Alles' },
-    { k: 'geen contactweg', l: 'Geen contact' },
-    { k: 'geen coördinaten', l: 'Geen locatie' },
-    { k: 'type onduidelijk', l: 'Type onduidelijk' },
-    { k: 'past niet bij YardiGo', l: 'Past niet' },
-    { k: 'onbekend of particulier', l: 'Particulier?' }
+  var GROEPEN = [
+    { k: 'klaar',       l: '✅ Klaar',      uitleg: 'Alles is compleet. Controleer kort en plaats ze op de kaart.' },
+    { k: 'particulier', l: '🏠 Particulier', uitleg: 'Verkoop bij iemand thuis. Vraag eerst toestemming voordat je plaatst.' },
+    { k: 'mist',        l: '✏️ Mist iets',   uitleg: 'Er ontbreekt nog een contactweg of locatie. Vul het aan, dan kan hij op de kaart.' },
+    { k: 'twijfel',     l: '🤔 Twijfel',     uitleg: 'De AI weet niet zeker of dit bij YardiGo past. Jij beslist: plaatsen of niet.' }
   ];
-  var state = { tab: 'tip', reason: '', q: '', items: [], total: 0, current: null, map: null, marker: null, image: null };
+  var STATS = [
+    { k: 'live', l: 'live op de kaart', cls: 'live' },
+    { k: 'tips', l: 'tips' },
+    { k: 'wachtrij', l: 'wachtrij' }
+  ];
+  var state = { view: 'todo', groep: null, items: [], current: null, map: null, marker: null, dirty: false, stats: null,
+    show: { live: true, tips: true, wachtrij: true }, jobs: [] };
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function haptic(t) { try { tg.HapticFeedback.notificationOccurred(t); } catch (e) {} }
   function tick() { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} }
-  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 2200); }
-  function dag(d) {
-    if (!d) return '?';
-    return new Date(d + 'T12:00:00').toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
-  }
+  function toast(msg) { var t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(function () { t.classList.remove('on'); }, 2400); }
+  function dag(d) { return d ? new Date(d + 'T12:00:00').toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' }) : '?'; }
   function tijd(p) { return p.time_start ? ' · ' + String(p.time_start).slice(0, 5) + (p.time_end ? '–' + String(p.time_end).slice(0, 5) : '') : ''; }
   function domein(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } }
+  function vandaag() { return new Date().toISOString().slice(0, 10); }
 
   function api(op, body) {
     return fetch(API, {
@@ -205,153 +261,206 @@
       headers: { 'Content-Type': 'application/json', 'x-tg-init-data': (tg && tg.initData) || '' },
       body: JSON.stringify(Object.assign({ op: op }, body || {}))
     }).then(function (r) {
-      return r.json().then(function (j) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.status === 403) { showDenied(); throw new Error('Geen toegang'); }
-        if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+        if (!r.ok || j.error) throw new Error(j.error || ('Fout ' + r.status));
         return j;
       });
     });
   }
 
   function copy(text) {
-    var done = function () { haptic('success'); toast('Gekopieerd'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
-    } else { fallbackCopy(text); done(); }
+    var ok = function () { haptic('success'); toast('Gekopieerd'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { fallbackCopy(text); ok(); });
+    else { fallbackCopy(text); ok(); }
   }
   function fallbackCopy(text) {
     var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove();
   }
   function openLink(u) { if (tg && tg.openLink) tg.openLink(u); else window.open(u, '_blank'); }
+  function showDenied() { $('app').classList.add('hidden'); $('nav').classList.add('hidden'); $('denied').classList.remove('hidden'); }
 
-  function showDenied() { $('app').classList.add('hidden'); $('denied').classList.remove('hidden'); }
-
-  // ── Stats ─────────────────────────────────────────────
-  function loadStats() {
-    return api('stats').then(function (s) {
-      $('s-live').textContent = s.live; $('s-tips').textContent = s.tips; $('s-wr').textContent = s.wachtrij;
-    }).catch(function () {});
+  // ── Instellingen (Telegram CloudStorage, met localStorage als reserve) ──
+  function loadSettings() {
+    return new Promise(function (resolve) {
+      var apply = function (raw) { try { if (raw) Object.assign(state.show, JSON.parse(raw)); } catch (e) {} resolve(); };
+      try {
+        if (tg.CloudStorage && tg.isVersionAtLeast && tg.isVersionAtLeast('6.9')) {
+          tg.CloudStorage.getItem('stats', function (err, v) { apply(err ? safeLocal() : v); });
+          return;
+        }
+      } catch (e) {}
+      apply(safeLocal());
+    });
+  }
+  function safeLocal() { try { return localStorage.getItem('yg-tg-stats'); } catch (e) { return null; } }
+  function saveSettings() {
+    var v = JSON.stringify(state.show);
+    try { localStorage.setItem('yg-tg-stats', v); } catch (e) {}
+    try { if (tg.CloudStorage && tg.isVersionAtLeast('6.9')) tg.CloudStorage.setItem('stats', v); } catch (e) {}
   }
 
-  // ── Views ─────────────────────────────────────────────
-  function show(view) {
-    ['v-list', 'v-detail', 'v-live', 'v-add'].forEach(function (v) { $(v).classList.toggle('hidden', v !== view); });
-    $('top').classList.toggle('hidden', view === 'v-detail');
-    window.scrollTo(0, 0);
-    if (view === 'v-detail') { tg.BackButton.show(); } else { tg.BackButton.hide(); tg.MainButton.hide(); }
-  }
-
-  function setTab(tab) {
-    state.tab = tab;
-    document.querySelectorAll('.tab').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === tab); });
-    if (tab === 'live') { show('v-live'); loadLive(); }
-    else if (tab === 'add') { show('v-add'); }
-    else { show('v-list'); renderChips(); loadList(false); }
-  }
-
-  function renderChips() {
-    var c = $('chips');
-    c.classList.toggle('hidden', state.tab !== 'nieuw');
-    c.innerHTML = REDENEN.map(function (r) {
-      return '<button class="chip' + (state.reason === r.k ? ' on' : '') + '" data-r="' + esc(r.k) + '">' + esc(r.l) + '</button>';
+  // ── Tellers ──────────────────────────────────────────
+  function renderStats() {
+    var s = state.stats, el = $('stats');
+    var zicht = STATS.filter(function (x) { return state.show[x.k]; });
+    el.classList.toggle('hidden', !zicht.length || state.view === 'detail');
+    el.innerHTML = zicht.map(function (x) {
+      return '<button class="stat ' + (x.cls || '') + '" data-stat-go="' + x.k + '"><b>' + (s ? s[x.k] : '–') + '</b><span>' + x.l + '</span></button>';
     }).join('');
+    var open = s ? s.tips + s.wachtrij : 0;
+    $('badge').textContent = open; $('badge').classList.toggle('hidden', !open);
+  }
+  function loadStats() { return api('stats').then(function (s) { state.stats = s; renderStats(); }).catch(function () {}); }
+
+  // ── Navigatie ────────────────────────────────────────
+  function go(view) {
+    state.view = view;
+    ['todo', 'detail', 'add', 'live', 'settings'].forEach(function (v) { $('v-' + v).classList.toggle('hidden', v !== view); });
+    document.querySelectorAll('.nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.nav === view); });
+    var detail = view === 'detail';
+    document.body.classList.toggle('detail', detail);
+    $('nav').classList.toggle('hidden', detail);
+    renderStats();
+    window.scrollTo(0, 0);
+    if (detail) tg.BackButton.show(); else { tg.BackButton.hide(); tg.MainButton.hide(); }
+    if (view === 'todo') loadTodo();
+    if (view === 'live') loadLive();
   }
 
-  function loadList(append) {
-    var list = $('list');
-    if (!append) { list.innerHTML = '<div class="spin"></div>'; state.items = []; }
-    return api('list', { status: state.tab, reason: state.tab === 'nieuw' ? state.reason : '', q: state.q, offset: append ? state.items.length : 0 })
-      .then(function (r) {
-        state.items = state.items.concat(r.items); state.total = r.total;
-        renderList();
-      }).catch(function (e) { list.innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
+  // ── Te doen ──────────────────────────────────────────
+  function loadTodo() {
+    if (!state.items.length) $('list').innerHTML = '<div class="spin"></div>';
+    return api('todo').then(function (r) { state.items = r.items; renderTodo(); })
+      .catch(function (e) { $('list').innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
   }
+
+  function telGroep(k) { return state.items.filter(function (p) { return p.groep === k; }).length; }
+
+  function renderTodo() {
+    if (!state.groep || !telGroep(state.groep)) {
+      var eerste = GROEPEN.filter(function (g) { return telGroep(g.k); })[0];
+      state.groep = eerste ? eerste.k : 'klaar';
+    }
+    $('groups').innerHTML = GROEPEN.map(function (g) {
+      return '<button class="grp' + (g.k === state.groep ? ' on' : '') + '" data-groep="' + g.k + '">' + g.l + '<span class="n">' + telGroep(g.k) + '</span></button>';
+    }).join('');
+    var g = GROEPEN.filter(function (x) { return x.k === state.groep; })[0];
+    $('explain').textContent = g.uitleg;
+    var items = state.items.filter(function (p) { return p.groep === state.groep; });
+    if (!state.items.length) { $('list').innerHTML = '<div class="empty"><div class="big">🎉</div>Alles is bijgewerkt. Niets te doen!</div>'; return; }
+    if (!items.length) { $('list').innerHTML = '<div class="empty">Niets in deze groep.</div>'; return; }
+    $('list').innerHTML = items.map(cardHtml).join('');
+  }
+
+  function wat(p) {
+    if (p.groep === 'klaar') return { cls: 'ok', t: 'Klaar om te plaatsen' };
+    if (p.groep === 'particulier') return { cls: 'blue', t: p.ontbreekt.length ? 'Vraag toestemming · mist ' + kort(p.ontbreekt) : 'Vraag toestemming, dan plaatsen' };
+    if (p.groep === 'mist') return { cls: 'bad', t: 'Mist: ' + kort(p.ontbreekt) };
+    var r = (p.auto_check && p.auto_check.redenen) || [];
+    return { cls: 'warn', t: r.indexOf('past niet bij YardiGo') > -1 ? 'Past mogelijk niet bij YardiGo' : r.indexOf('type onduidelijk') > -1 ? 'Soort verkoop onduidelijk' : 'Particulier of organisator?' };
+  }
+  function kort(lijst) { return lijst.map(function (o) { return o.split(' (')[0].replace('locatie op de kaart', 'locatie').replace('contactweg', 'contact').replace('datum in de toekomst', 'datum'); }).join(', '); }
 
   function cardHtml(p) {
-    var tags = [];
-    tags.push('<span class="tag">' + esc(p.event_subtype || '?') + '</span>');
-    (p.ontbreekt || []).forEach(function (o) { tags.push('<span class="tag bad">' + esc(o.split(' (')[0]) + '</span>'); });
-    (p.auto_check && p.auto_check.redenen || []).forEach(function (r) {
-      if (r === 'past niet bij YardiGo' || r === 'type onduidelijk' || r === 'onbekend of particulier') tags.push('<span class="tag warn">' + esc(r) + '</span>');
-    });
-    if (!(p.ontbreekt || []).length) tags.push('<span class="tag ok">klaar om te publiceren</span>');
-    return '<button class="card" data-id="' + p.id + '">' +
-      '<div class="t"><span class="ico">' + (p.is_private_seller ? '🏠' : '🎪') + '</span><span>' + esc(p.title) + '</span></div>' +
+    var w = wat(p);
+    return '<div class="card" data-id="' + p.id + '" role="button">' +
+      '<div class="body"><div class="t">' + esc(p.title) + '</div>' +
       '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
-      '<div class="tags">' + tags.join('') + '</div></button>';
+      '<div class="todo ' + w.cls + '">' + esc(w.t) + '</div></div>' +
+      (p.groep === 'klaar' ? '<button class="quick" data-quick="' + p.id + '">Plaatsen</button>' : '<span class="go">›</span>') +
+      '</div>';
   }
 
-  function renderList() {
-    var list = $('list');
-    if (!state.items.length) {
-      list.innerHTML = '<div class="empty"><div class="big">🎉</div>' + (state.tab === 'tip' ? 'Geen openstaande tips.' : 'Niets in deze lijst.') + '</div>';
-      return;
-    }
-    list.innerHTML = state.items.map(cardHtml).join('') +
-      (state.items.length < state.total ? '<button class="btn sm more" id="more">Meer laden (' + (state.total - state.items.length) + ')</button>' : '');
+  function quickPublish(id, btn) {
+    btn.disabled = true; btn.textContent = '…';
+    api('publish', { id: id }).then(function (r) {
+      haptic('success'); toast('Staat op de kaart ✓');
+      state.items = state.items.filter(function (x) { return x.id !== id; });
+      renderTodo(); loadStats();
+    }).catch(function (e) { haptic('error'); toast(e.message); btn.disabled = false; btn.textContent = 'Plaatsen'; });
   }
 
-  // ── Detail ────────────────────────────────────────────
+  // ── Detail ───────────────────────────────────────────
   function openDetail(id) {
-    show('v-detail');
+    state.lastId = id;
+    go('detail');
     $('detail').innerHTML = '<div class="spin"></div>';
     api('get', { id: id }).then(function (r) { renderDetail(r.item); })
-      .catch(function (e) { $('detail').innerHTML = '<div class="alert bad">' + esc(e.message) + '</div>'; });
+      .catch(function (e) { $('detail').innerHTML = '<div class="step bad">' + esc(e.message) + '</div>'; });
   }
 
   function f(name, label, val, type, extra) {
     return '<div class="field"><label for="f-' + name + '">' + label + '</label><input id="f-' + name + '" name="' + name + '" type="' + (type || 'text') + '" value="' + esc(val == null ? '' : val) + '"' + (extra || '') + '></div>';
   }
 
+  function stapHtml(p) {
+    var o = p.ontbreekt || [];
+    var mist = kort(o);
+    if (p.groep === 'particulier') {
+      return '<div class="step blue"><b>Stap 1: vraag toestemming</b>Dit is een verkoop bij iemand thuis. Stuur eerst een berichtje.' +
+        '<div class="btns" style="margin-top:8px"><button class="btn sm" id="dm">💬 Toon bericht</button></div><div id="dmbox"></div></div>' +
+        '<div class="step ' + (o.length ? 'bad' : 'ok') + '"><b>Stap 2: ja gekregen?</b>' +
+        (o.length ? 'Vul nog in: ' + esc(mist) + '. Daarna kun je plaatsen.' : 'Tik onderaan op <i>Plaatsen op de kaart</i>. Het contact is alleen zichtbaar voor ingelogde bezoekers.') + '</div>';
+    }
+    if (p.groep === 'twijfel') {
+      return '<div class="step warn"><b>Jij beslist</b>' + esc(wat(p).t) + '. Past het wel? ' +
+        (o.length ? 'Vul dan nog in: ' + esc(mist) + '.' : 'Tik dan onderaan op <i>Plaatsen op de kaart</i>.') + ' Anders: <i>Niet plaatsen</i>.</div>';
+    }
+    if (o.length) return '<div class="step bad"><b>Nog nodig: ' + esc(mist) + '</b>Vul het hieronder in (rood omlijnd). Daarna kun je plaatsen.</div>';
+    return '<div class="step ok"><b>Klaar om te plaatsen</b>Controleer de gegevens en tik onderaan op <i>Plaatsen op de kaart</i>.</div>';
+  }
+
   function renderDetail(p) {
     state.current = p;
     var d = $('detail');
     if (p.status === 'goedgekeurd' || p.status === 'afgewezen') {
-      d.innerHTML = '<div class="alert info">Dit item is al ' + esc(p.status) + '.</div>';
+      d.innerHTML = '<div class="step warn"><b>Al afgehandeld</b>Dit item is al ' + esc(p.status) + '.</div>';
+      tg.MainButton.hide();
       return;
     }
-    var ontbreekt = p.ontbreekt || [];
+    var o = p.ontbreekt || [];
+    var mistContact = o.some(function (x) { return x.indexOf('contact') === 0; });
+    var mistLocatie = o.some(function (x) { return x.indexOf('locatie') === 0; });
     var opties = SUBTYPES.map(function (s) { return '<option' + (s === p.event_subtype ? ' selected' : '') + '>' + s + '</option>'; }).join('');
+
+    var contact = '<div class="group' + (mistContact ? ' need' : '') + '"><h3>Contact' + (mistContact ? '<span class="need">nodig</span>' : '') + '</h3>' +
+      f('organizer_url', 'Website, Facebook-pagina of -post', p.organizer_url, 'url', ' inputmode="url" placeholder="https://"') +
+      '<div class="row2">' + f('contact_phone', 'Telefoon', p.contact_phone, 'tel') + f('contact_email', 'E-mail', p.contact_email, 'email') + '</div>' +
+      '<div class="lead" style="padding:0 14px 10px">Alleen zichtbaar voor ingelogde bezoekers.</div></div>';
+    var waar = '<div class="group' + (mistLocatie ? ' need' : '') + '"><h3>Waar' + (mistLocatie ? '<span class="need">nodig</span>' : '') + '</h3>' +
+      '<div class="row2">' + f('address', 'Adres of plek', p.address) + f('city', 'Plaats', p.city) + '</div>' +
+      '<div id="map"></div>' +
+      '<div class="maphint"><span id="maphint">' + (p.latitude != null ? 'Klopt de speld? Sleep hem of tik op de kaart.' : 'Tik op de kaart of zoek het adres.') + '</span>' +
+      '<button class="btn sm" id="geo">📍 Zoek</button></div></div>';
+    var wanneer = '<div class="group"><h3>Wanneer</h3><div class="row3">' +
+      f('date_start', 'Datum', p.date_start, 'date') +
+      f('time_start', 'Van', p.time_start ? String(p.time_start).slice(0, 5) : '', 'time') +
+      f('time_end', 'Tot', p.time_end ? String(p.time_end).slice(0, 5) : '', 'time') + '</div></div>';
+    var meer = '<details class="group"><summary>Meer details</summary><div>' +
+      '<div class="field"><label for="f-description">Beschrijving</label><textarea id="f-description" name="description" rows="3">' + esc(p.description || '') + '</textarea></div>' +
+      '<div class="field"><label for="f-event_subtype">Soort</label><select id="f-event_subtype" name="event_subtype">' + opties + '</select></div>' +
+      f('organizer_name', 'Organisator', p.organizer_name) +
+      '<label class="switch"><span>🏠 Particuliere verkoop<small>Bij iemand thuis; eerst toestemming vragen</small></span><input type="checkbox" name="is_private_seller"' + (p.is_private_seller ? ' checked' : '') + '></label>' +
+      '</div></details>';
+
     d.innerHTML =
-      (ontbreekt.length ? '<div class="alert bad"><b>Nog nodig om te publiceren:</b><br>' + ontbreekt.map(esc).join('<br>') + '</div>'
-                        : '<div class="alert ok">✓ Alles compleet — klaar om te publiceren</div>') +
-      (p.lead_source_url ? '<div class="lead">Gevonden via <a href="#" data-open="' + esc(p.lead_source_url) + '">' + esc(domein(p.lead_source_url)) + '</a> · wordt nooit als bron getoond</div>' : '') +
-
-      '<div class="group"><h3>Evenement</h3>' +
-        f('title', 'Titel', p.title) +
-        '<div class="field"><label for="f-description">Beschrijving (eigen woorden)</label><textarea id="f-description" name="description" rows="3">' + esc(p.description || '') + '</textarea></div>' +
-        '<div class="field"><label for="f-event_subtype">Type</label><select id="f-event_subtype" name="event_subtype">' + opties + '</select></div>' +
-        '<div class="row3">' + f('date_start', 'Datum', p.date_start, 'date') + f('time_start', 'Van', p.time_start ? String(p.time_start).slice(0, 5) : '', 'time') + f('time_end', 'Tot', p.time_end ? String(p.time_end).slice(0, 5) : '', 'time') + '</div>' +
-        '<label class="switch"><span>🏠 Particuliere verkoop</span><input type="checkbox" name="is_private_seller"' + (p.is_private_seller ? ' checked' : '') + '></label>' +
-      '</div>' +
-
-      '<div class="group"><h3>Locatie</h3>' +
-        '<div class="row2">' + f('address', 'Adres / locatie', p.address) + f('city', 'Plaats', p.city) + '</div>' +
-        '<div id="map"></div>' +
-        '<div class="maphint"><span id="maphint">' + (p.latitude != null ? 'Sleep de speld om de plek te verfijnen' : 'Nog geen locatie') + '</span>' +
-        '<button class="btn sm" id="geo">📍 Zoek adres</button></div>' +
-      '</div>' +
-
-      '<div class="group"><h3>Contact organisator · alleen voor ingelogde bezoekers</h3>' +
-        f('organizer_name', 'Naam', p.organizer_name) +
-        f('organizer_url', 'Website of Facebook-pagina/-post', p.organizer_url, 'url', ' inputmode="url" placeholder="https://"') +
-        '<div class="row2">' + f('contact_phone', 'Telefoon', p.contact_phone, 'tel') + f('contact_email', 'E-mail', p.contact_email, 'email') + '</div>' +
-      '</div>' +
-
-      '<div class="btns two">' +
-        (p.status === 'tip' ? '<button class="btn" id="dm">💬 Toestemming vragen</button>' : '<span></span>') +
-        '<button class="btn red" id="reject">' + (p.status === 'tip' ? 'Overslaan' : 'Afwijzen') + '</button>' +
-      '</div>' +
-      '<div id="dmbox"></div>';
+      '<div class="head"><div class="field" style="padding:0;border:0"><input name="title" value="' + esc(p.title) + '" aria-label="Titel" style="font-size:20px;font-weight:700;border:0;background:none;width:100%;outline:none;padding:0"></div>' +
+      '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
+      (p.lead_source_url ? '<div class="lead">Gevonden via <a href="#" data-open="' + esc(p.lead_source_url) + '">' + esc(domein(p.lead_source_url)) + '</a> (wordt niet als bron getoond)</div>' : '') + '</div>' +
+      stapHtml(p) +
+      (mistContact ? contact + waar : waar + contact) +
+      wanneer + meer +
+      '<button class="btn ghost-red" id="reject">Niet plaatsen</button>';
 
     initMap(p);
+    state.dirty = false;
     updateMainButton();
     d.querySelectorAll('input, textarea, select').forEach(function (el) {
-      el.addEventListener('input', function () { state.dirty = true; updateMainButton(); });
-      el.addEventListener('change', function () { state.dirty = true; updateMainButton(); });
+      var h = function () { state.dirty = true; updateMainButton(); };
+      el.addEventListener('input', h); el.addEventListener('change', h);
     });
-    state.dirty = false;
   }
 
   function initMap(p) {
@@ -362,67 +471,57 @@
     state.map = L.map('map', { zoomControl: false, attributionControl: false }).setView(center, has ? 15 : 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(state.map);
     state.marker = null;
-    if (has) placeMarker(center);
-    state.map.on('click', function (e) { placeMarker([e.latlng.lat, e.latlng.lng]); state.dirty = true; updateMainButton(); tick(); });
+    if (has) placeMarker(center, true);
+    state.map.on('click', function (e) { placeMarker([e.latlng.lat, e.latlng.lng]); tick(); });
   }
 
-  function placeMarker(ll) {
+  function placeMarker(ll, initial) {
     if (state.marker) state.marker.setLatLng(ll);
     else {
       state.marker = L.marker(ll, { draggable: true }).addTo(state.map);
       state.marker.on('dragend', function () { state.dirty = true; updateMainButton(); tick(); });
     }
-    state.current.latitude = ll[0]; state.current.longitude = ll[1];
-    $('maphint').textContent = 'Sleep de speld of tik op de kaart om te verfijnen';
+    $('maphint').textContent = 'Klopt de speld? Sleep hem of tik op de kaart.';
+    if (!initial) { state.dirty = true; updateMainButton(); }
   }
 
   function formPatch() {
     var patch = {};
-    $('detail').querySelectorAll('[name]').forEach(function (el) {
-      patch[el.name] = el.type === 'checkbox' ? el.checked : el.value;
-    });
+    $('detail').querySelectorAll('[name]').forEach(function (el) { patch[el.name] = el.type === 'checkbox' ? el.checked : el.value; });
     if (state.marker) { var ll = state.marker.getLatLng(); patch.latitude = ll.lat; patch.longitude = ll.lng; }
     return patch;
   }
 
-  function lokaalOntbreekt(patch) {
+  function lokaalMist(patch) {
     var o = [];
     if (!patch.title || !patch.title.trim()) o.push('titel');
     if (!patch.organizer_url && !patch.contact_phone && !patch.contact_email) o.push('contact');
     if (patch.latitude == null) o.push('locatie');
-    if (!patch.date_start || patch.date_start < new Date().toISOString().slice(0, 10)) o.push('datum');
+    if (!patch.date_start || patch.date_start < vandaag()) o.push('datum');
     return o;
   }
 
   function updateMainButton() {
     if (!state.current) return;
-    var patch = formPatch();
-    var o = lokaalOntbreekt(patch);
+    var o = lokaalMist(formPatch());
     var mb = tg.MainButton;
-    if (o.length) {
-      if (state.dirty) { mb.setParams({ text: 'Opslaan', color: '#5b6470', text_color: '#ffffff', is_active: true, is_visible: true }); }
-      else { mb.setParams({ text: 'Nog nodig: ' + o.join(', '), color: '#9aa0a8', text_color: '#ffffff', is_active: false, is_visible: true }); }
-    } else {
-      mb.setParams({ text: state.dirty ? 'Opslaan en publiceren' : 'Publiceren', color: '#3A6B4A', text_color: '#ffffff', is_active: true, is_visible: true });
-    }
-  }
-
-  function save() {
-    var patch = formPatch();
-    return api('save', { id: state.current.id, patch: patch }).then(function (r) { state.current = r.item; state.dirty = false; return r.item; });
+    if (!o.length) mb.setParams({ text: 'Plaatsen op de kaart', color: '#3A6B4A', text_color: '#ffffff', is_active: true, is_visible: true });
+    else if (state.dirty) mb.setParams({ text: 'Opslaan', color: '#4b5563', text_color: '#ffffff', is_active: true, is_visible: true });
+    else mb.setParams({ text: 'Vul eerst in: ' + o.join(', '), color: '#9aa0a8', text_color: '#ffffff', is_active: false, is_visible: true });
   }
 
   function onMain() {
-    var patch = formPatch();
-    var klaar = !lokaalOntbreekt(patch).length;
+    if (!state.current) return;
+    var klaar = !lokaalMist(formPatch()).length;
     tg.MainButton.showProgress(false);
-    var p = state.dirty ? save() : Promise.resolve(state.current);
+    var p = state.dirty ? api('save', { id: state.current.id, patch: formPatch() }).then(function (r) { state.dirty = false; state.current = r.item; return r.item; })
+                        : Promise.resolve(state.current);
     p.then(function (item) {
       if (!klaar) { tg.MainButton.hideProgress(); haptic('success'); toast('Opgeslagen'); renderDetail(item); return; }
       return api('publish', { id: item.id }).then(function (r) {
         tg.MainButton.hideProgress(); tg.MainButton.hide(); haptic('success');
-        renderPublished(item, r);
-        loadStats();
+        state.items = state.items.filter(function (x) { return x.id !== item.id; });
+        renderPublished(item, r); loadStats();
       });
     }).catch(function (e) { tg.MainButton.hideProgress(); haptic('error'); toast(e.message); });
   }
@@ -430,133 +529,164 @@
   function renderPublished(item, r) {
     state.current = null;
     $('detail').innerHTML =
-      '<div class="alert ok" style="text-align:center;padding:22px"><div style="font-size:40px">🎉</div><b>' + esc(item.title) + '</b><br>staat live op de kaart</div>' +
+      '<div class="step ok" style="text-align:center;padding:22px"><div style="font-size:40px">🎉</div><b>' + esc(item.title) + '</b>staat op de kaart</div>' +
       '<div class="group" style="padding:12px 14px"><b>Reactie voor onder de Facebook-post</b><div class="copy">' + esc(r.fb) + '</div>' +
-      '<div class="btns two"><button class="btn sm" data-copy="' + esc(r.fb) + '">Kopiëren</button><button class="btn sm" data-open="' + esc(r.url) + '">Bekijk op YardiGo</button></div></div>' +
+      '<div class="btns"><button class="btn sm" data-copy="' + esc(r.fb) + '">📋 Kopiëren</button><button class="btn sm" data-open="' + esc(r.url) + '">Bekijk op YardiGo</button></div></div>' +
       '<button class="btn green" id="next">Volgende →</button>';
   }
 
   function nextItem() {
-    var id = state.lastId;
-    var idx = state.items.findIndex(function (x) { return x.id === id; });
-    state.items = state.items.filter(function (x) { return x.id !== id; });
-    state.total = Math.max(0, state.total - 1);
-    var nxt = state.items[idx] || state.items[idx - 1];
-    if (nxt) openDetail(nxt.id); else { setTab(state.tab === 'add' ? 'nieuw' : state.tab); }
+    var lijst = state.items.filter(function (p) { return p.groep === state.groep && p.id !== state.lastId; });
+    state.items = state.items.filter(function (p) { return p.id !== state.lastId; });
+    if (lijst.length) openDetail(lijst[0].id); else go('todo');
   }
 
-  // ── Live ──────────────────────────────────────────────
-  function loadLive() {
-    var el = $('live');
-    el.innerHTML = '<div class="spin"></div>';
-    api('recent').then(function (r) {
-      if (!r.items.length) { el.innerHTML = '<div class="empty">Nog niets gepubliceerd.</div>'; return; }
-      el.innerHTML = '<div class="lead" style="padding:0 2px 4px">Laatst door YardiGo geplaatst</div>' + r.items.map(function (l) {
-        return '<div class="card"><div class="t">' + esc(l.title) + '</div><div class="m">' + esc(dag(l.date_start)) + ' · ' + esc(l.city || '') + '</div>' +
-          '<div class="tags" style="gap:6px"><button class="btn sm" data-copy="' + esc(l.fb) + '">📋 FB-reactie</button><button class="btn sm" data-open="' + esc(l.url) + '">Bekijk</button></div></div>';
-      }).join('');
-    }).catch(function (e) { el.innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
-  }
-
-  // ── Nieuw ─────────────────────────────────────────────
+  // ── Toevoegen (meerdere affiches) ────────────────────
   function resizeImage(file) {
     return new Promise(function (resolve, reject) {
       var img = new Image();
       img.onload = function () {
-        var max = 1600, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
-        var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        var max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         var url = c.toDataURL('image/jpeg', 0.85);
         resolve({ preview: url, data: url.split(',')[1], media_type: 'image/jpeg' });
       };
-      img.onerror = reject;
+      img.onerror = function () { reject(new Error('Kan deze afbeelding niet openen')); };
       img.src = URL.createObjectURL(file);
     });
   }
 
-  function addGo() {
-    var text = $('add-text').value.trim();
-    if (!state.image && text.length < 10) { toast('Kies een afbeelding of plak tekst'); return; }
-    var btn = $('add-go'); btn.disabled = true; btn.textContent = 'Bezig met uitlezen…';
-    api('create', { text: text, image: state.image ? { data: state.image.data, media_type: state.image.media_type } : null })
-      .then(function (r) {
-        haptic('success');
-        state.image = null; $('add-text').value = ''; $('preview').classList.add('hidden'); $('drop-txt').classList.remove('hidden');
-        state.items = [r.item].concat(state.items);
-        openDetail(r.item.id);
-        loadStats();
-      })
-      .catch(function (e) { haptic('error'); toast(e.message); })
-      .then(function () { btn.disabled = false; btn.textContent = 'Uitlezen met AI'; });
+  function addJob(job) { state.jobs.unshift(job); renderJobs(); }
+  function renderJobs() {
+    $('jobs').innerHTML = state.jobs.map(function (j, i) {
+      var ico = j.st === 'bezig' ? '<span class="mini-spin"></span>' : j.st === 'wacht' ? '⏳' : j.st === 'nieuw' ? '✅' : j.st === 'live' ? '🗺' : j.st === 'open' ? '📋' : j.st === 'afgewezen' ? '🚫' : '⚠️';
+      return '<button class="job" data-job="' + i + '">' + (j.preview ? '<img src="' + j.preview + '" alt="">' : '<span class="ico">📝</span>') +
+        '<span class="txt"><b>' + esc(j.title || (j.st === 'bezig' ? 'Bezig met uitlezen…' : j.st === 'wacht' ? 'Wacht…' : 'Tekst')) + '</b><span>' + esc(j.msg || '') + '</span></span>' +
+        '<span class="ico">' + ico + '</span></button>';
+    }).join('');
   }
 
-  // ── Events ────────────────────────────────────────────
+  var bezig = false;
+  function verwerkWachtrij() {
+    if (bezig) return;
+    var j = state.jobs.slice().reverse().filter(function (x) { return x.st === 'wacht'; })[0];
+    if (!j) { loadStats(); return; }
+    bezig = true; j.st = 'bezig'; renderJobs();
+    var p = j.file ? resizeImage(j.file).then(function (img) { j.preview = img.preview; renderJobs(); return { data: img.data, media_type: img.media_type }; }) : Promise.resolve(null);
+    p.then(function (image) { return api('create', { text: j.text || '', image: image }); })
+      .then(function (r) {
+        if (r.item) { j.st = 'nieuw'; j.title = r.item.title; j.id = r.item.id; j.msg = 'Toegevoegd · tik om te bekijken'; state.items.push(r.item); haptic('success'); }
+        else if (r.dup) {
+          j.title = r.dup.title; j.dup = r.dup;
+          if (r.dup.kind === 'live') { j.st = 'live'; j.msg = 'Staat al op de kaart · tik voor FB-reactie'; }
+          else if (r.dup.kind === 'open') { j.st = 'open'; j.id = r.dup.pending_id; j.msg = 'Stond al in je lijst · tik om te openen'; }
+          else { j.st = 'afgewezen'; j.id = r.dup.pending_id; j.msg = 'Eerder afgewezen · tik om opnieuw te bekijken'; }
+        }
+      })
+      .catch(function (e) { j.st = 'fout'; j.msg = e.message; haptic('error'); })
+      .then(function () { j.file = null; bezig = false; renderJobs(); verwerkWachtrij(); });
+  }
+
+  function jobTap(j) {
+    if ((j.st === 'nieuw' || j.st === 'open') && j.id) openDetail(j.id);
+    else if (j.st === 'live' && j.dup) {
+      tg.showPopup({ title: 'Staat al op de kaart', message: j.dup.fb, buttons: [{ id: 'copy', type: 'default', text: 'Kopieer FB-reactie' }, { id: 'open', type: 'default', text: 'Bekijk' }, { type: 'close' }] },
+        function (b) { if (b === 'copy') copy(j.dup.fb); if (b === 'open') openLink(j.dup.url); });
+    } else if (j.st === 'afgewezen' && j.id) {
+      tg.showConfirm('Deze had je eerder afgewezen. Toch opnieuw bekijken?', function (ok) {
+        if (!ok) return;
+        api('reopen', { id: j.id }).then(function () { j.st = 'open'; j.msg = 'Terug in je lijst · tik om te openen'; renderJobs(); openDetail(j.id); }).catch(function (e) { toast(e.message); });
+      });
+    }
+  }
+
+  // ── Live ─────────────────────────────────────────────
+  function loadLive() {
+    var el = $('live');
+    el.innerHTML = '<div class="spin"></div>';
+    api('recent').then(function (r) {
+      if (!r.items.length) { el.innerHTML = '<div class="empty">Nog niets geplaatst.</div>'; return; }
+      el.innerHTML = r.items.map(function (l) {
+        return '<div class="card"><div class="body"><div class="t">' + esc(l.title) + '</div><div class="m">' + esc(dag(l.date_start)) + ' · ' + esc(l.city || '') + '</div></div>' +
+          '<div class="btns" style="flex:none;flex-direction:column;gap:6px"><button class="btn sm" data-copy="' + esc(l.fb) + '">📋 FB</button><button class="btn sm" data-open="' + esc(l.url) + '">Bekijk</button></div></div>';
+      }).join('');
+    }).catch(function (e) { el.innerHTML = '<div class="empty">⚠️ ' + esc(e.message) + '</div>'; });
+  }
+
+  // ── Events ───────────────────────────────────────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('button, a');
+    var t = e.target.closest('button, a, .card, [data-stat-go]');
     if (!t) return;
-    if (t.dataset.tab) { tick(); setTab(t.dataset.tab); return; }
-    if (t.dataset.r !== undefined) { tick(); state.reason = t.dataset.r; renderChips(); loadList(false); return; }
+    if (t.dataset.nav) { tick(); go(t.dataset.nav); return; }
+    if (t.dataset.statGo) {
+      tick();
+      if (t.dataset.statGo === 'live') go('live');
+      else { state.groep = t.dataset.statGo === 'tips' ? 'particulier' : null; go('todo'); }
+      return;
+    }
+    if (t.dataset.groep) { tick(); state.groep = t.dataset.groep; renderTodo(); return; }
+    if (t.dataset.quick) { e.stopPropagation(); quickPublish(+t.dataset.quick, t); return; }
     if (t.dataset.copy) { copy(t.dataset.copy); return; }
     if (t.dataset.open) { e.preventDefault(); openLink(t.dataset.open); return; }
-    if (t.classList.contains('card') && t.dataset.id) { tick(); state.lastId = +t.dataset.id; openDetail(+t.dataset.id); return; }
-    if (t.id === 'more') { loadList(true); return; }
+    if (t.dataset.job !== undefined) { jobTap(state.jobs[+t.dataset.job]); return; }
+    if (t.classList.contains('card') && t.dataset.id) { tick(); openDetail(+t.dataset.id); return; }
     if (t.id === 'next') { nextItem(); return; }
-    if (t.id === 'add-go') { addGo(); return; }
+    if (t.id === 'add-text-go') {
+      var txt = $('add-text').value.trim();
+      if (txt.length < 10) { toast('Plak wat meer tekst'); return; }
+      addJob({ st: 'wacht', text: txt }); $('add-text').value = ''; t.classList.add('hidden'); verwerkWachtrij(); return;
+    }
     if (t.id === 'geo') {
-      var a = $('f-address').value, c = $('f-city').value;
       t.disabled = true;
-      api('geocode', { address: a, city: c }).then(function (r) {
-        if (!r.geo) { toast('Adres niet gevonden'); haptic('error'); return; }
-        placeMarker([r.geo.lat, r.geo.lng]); state.map.setView([r.geo.lat, r.geo.lng], 16);
-        state.dirty = true; updateMainButton(); haptic('success');
+      api('geocode', { address: $('f-address').value, city: $('f-city').value }).then(function (r) {
+        if (!r.geo) { toast('Adres niet gevonden — tik zelf op de kaart'); haptic('error'); return; }
+        placeMarker([r.geo.lat, r.geo.lng]); state.map.setView([r.geo.lat, r.geo.lng], 16); haptic('success');
       }).catch(function (er) { toast(er.message); }).then(function () { t.disabled = false; });
       return;
     }
     if (t.id === 'reject') {
       var p = state.current;
-      tg.showConfirm((p.status === 'tip' ? 'Overslaan: ' : 'Afwijzen: ') + p.title + '?', function (ok) {
+      tg.showConfirm('"' + p.title + '" niet plaatsen?', function (ok) {
         if (!ok) return;
-        api('reject', { id: p.id }).then(function () { haptic('warning'); toast('Weg'); state.lastId = p.id; loadStats(); nextItem(); })
-          .catch(function (er) { toast(er.message); });
+        api('reject', { id: p.id }).then(function () { haptic('warning'); toast('Niet geplaatst'); loadStats(); nextItem(); }).catch(function (er) { toast(er.message); });
       });
       return;
     }
     if (t.id === 'dm') {
       api('dm', { id: state.current.id }).then(function (r) {
-        $('dmbox').innerHTML = '<div class="group" style="padding:12px 14px"><b>Bericht voor de verkoper</b><div class="copy">' + esc(r.text) + '</div>' +
-          '<div class="btns two"><button class="btn sm" data-copy="' + esc(r.text) + '">Kopiëren</button>' +
-          (r.via ? '<button class="btn sm" data-open="' + esc(r.via) + '">Open ' + esc(domein(r.via)) + '</button>' : '<span></span>') + '</div>' +
-          '<p class="lead">Ja gekregen? Vul het contact in en druk op Publiceren.</p></div>';
-        $('dmbox').scrollIntoView({ behavior: 'smooth' });
+        $('dmbox').innerHTML = '<div class="copy">' + esc(r.text) + '</div><div class="btns"><button class="btn sm" data-copy="' + esc(r.text) + '">📋 Kopiëren</button>' +
+          (r.via ? '<button class="btn sm" data-open="' + esc(r.via) + '">Open ' + esc(domein(r.via)) + '</button>' : '') + '</div>';
+        t.classList.add('hidden');
       }).catch(function (er) { toast(er.message); });
     }
   });
 
-  var qTimer;
-  $('q').addEventListener('input', function () {
-    clearTimeout(qTimer);
-    qTimer = setTimeout(function () { state.q = $('q').value.trim(); loadList(false); }, 300);
+  $('add-text').addEventListener('input', function () { $('add-text-go').classList.toggle('hidden', this.value.trim().length < 10); });
+  $('files').addEventListener('change', function () {
+    var files = Array.prototype.slice.call(this.files || []);
+    files.forEach(function (file) { addJob({ st: 'wacht', file: file }); });
+    this.value = '';
+    if (files.length) { haptic('success'); verwerkWachtrij(); }
   });
-  $('file').addEventListener('change', function () {
-    var file = this.files && this.files[0];
-    if (!file) return;
-    resizeImage(file).then(function (r) {
-      state.image = r; $('preview').src = r.preview; $('preview').classList.remove('hidden'); $('drop-txt').classList.add('hidden');
-    }).catch(function () { toast('Kon afbeelding niet lezen'); });
+  document.querySelectorAll('[data-stat]').forEach(function (el) {
+    el.addEventListener('change', function () { state.show[el.dataset.stat] = el.checked; saveSettings(); renderStats(); tick(); });
   });
 
-  // ── Start ─────────────────────────────────────────────
+  // ── Start ────────────────────────────────────────────
   if (!tg || !tg.initData) { showDenied(); return; }
   tg.ready(); tg.expand();
   try { tg.setHeaderColor('secondary_bg_color'); tg.setBackgroundColor('secondary_bg_color'); } catch (e) {}
-  tg.BackButton.onClick(function () { state.current = null; setTab(state.tab === 'add' ? 'nieuw' : state.tab); loadStats(); });
+  tg.BackButton.onClick(function () { state.current = null; go('todo'); });
   tg.MainButton.onClick(onMain);
   $('app').classList.remove('hidden');
+  $('nav').classList.remove('hidden');
 
-  var startId = new URLSearchParams(location.search).get('id');
-  loadStats().then(function () {
-    if (startId) { state.lastId = +startId; openDetail(+startId); }
-    else setTab('tip');
+  loadSettings().then(function () {
+    document.querySelectorAll('[data-stat]').forEach(function (el) { el.checked = !!state.show[el.dataset.stat]; });
+    renderStats(); loadStats();
+    var startId = new URLSearchParams(location.search).get('id');
+    if (startId) openDetail(+startId); else go('todo');
   });
 })();
 </script>

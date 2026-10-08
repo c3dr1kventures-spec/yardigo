@@ -171,7 +171,9 @@ async function fotoAlsBase64(fileId: string): Promise<{ data: string; media_type
   let bin = '';
   for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
   const ext = path.split('.').pop()?.toLowerCase();
-  return { data: btoa(bin), media_type: ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg' };
+  const mt = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : null;
+  if (!mt) return null;
+  return { data: btoa(bin), media_type: mt };
 }
 
 async function geocode(adres: string | null, plaats: string | null): Promise<{ lat: number; lng: number } | null> {
@@ -199,14 +201,53 @@ function contactUitTekst(t: string) {
   return { url: urls[0] ?? null, mail, tel };
 }
 
-type Maak = { ok: true; row: any } | { ok: false; msg: string };
+// dup: het item dat er al is. kind 'live' = staat op de kaart, 'open' = in
+// de lijst (nieuw/tip), 'afgewezen' = eerder afgewezen.
+interface Dup { kind: 'live' | 'open' | 'afgewezen'; title: string; pending_id?: number; listing_id?: string; url?: string; fb?: string }
+type Maak = { ok: true; row: any } | { ok: false; msg: string; dup?: Dup };
 
 async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null) {
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
+  if (fotoId && !image) return send(chat, '⚠️ Kon de afbeelding niet ophalen. Stuur hem als <b>foto</b> (niet als bestand).');
   const r = await maakItem(sb, tekst, image);
-  if (!r.ok) return send(chat, r.msg);
-  await stuurKaart(sb, chat, r.row);
+  if (r.ok) return stuurKaart(sb, chat, r.row);
+  const d = r.dup;
+  if (d?.kind === 'open' && d.pending_id) {
+    const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', d.pending_id).maybeSingle();
+    await send(chat, '📋 Deze stond al in je lijst — hier is hij:');
+    if (p) return stuurKaart(sb, chat, p);
+  }
+  if (d?.kind === 'live') {
+    return send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart.\n${d.url}\n\nReactie voor Facebook:\n<code>${esc(d.fb)}</code>`);
+  }
+  if (d?.kind === 'afgewezen') {
+    return send(chat, `🚫 <b>${esc(d.title)}</b> had je eerder afgewezen.`, {
+      reply_markup: { inline_keyboard: [[{ text: '↩️ Toch opnieuw bekijken', callback_data: `re:${d.pending_id}` }]] } });
+  }
+  return send(chat, r.msg);
+}
+
+// Bestaand item gevonden: contact aanvullen waar het ontbreekt, en zeggen wát het is.
+async function bestaandItem(sb: any, ref: any, contact: { url: string | null; tel: string | null; mail: string | null }): Promise<Dup> {
+  const listingId: string | null = ref.listing_id ?? null;
+  if (listingId) {
+    if (contact.url || contact.tel || contact.mail) {
+      await sb.from('listing_contacts').upsert(
+        { listing_id: listingId, website_url: contact.url, phone: contact.tel, email: contact.mail },
+        { onConflict: 'listing_id', ignoreDuplicates: true });
+    }
+    return { kind: 'live', title: ref.title, listing_id: listingId, url: `${SITE}/v/${listingId}`, fb: fbReactie(listingId) };
+  }
+  const id = ref.pending_id as number;
+  if (ref.status === 'afgewezen') return { kind: 'afgewezen', title: ref.title, pending_id: id };
+  const { data: p } = await sb.from('pending_events').select('organizer_url,contact_phone,contact_email').eq('id', id).maybeSingle();
+  const patch: any = {};
+  if (contact.url && !p?.organizer_url) patch.organizer_url = contact.url;
+  if (contact.tel && !p?.contact_phone) patch.contact_phone = contact.tel;
+  if (contact.mail && !p?.contact_email) patch.contact_email = contact.mail;
+  if (Object.keys(patch).length) await sb.from('pending_events').update(patch).eq('id', id);
+  return { kind: 'open', title: ref.title, pending_id: id };
 }
 
 // Affiche/tekst → parse-event → geocode → dedupe → pending_events.
@@ -221,7 +262,8 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
     body: JSON.stringify({ mode: 'admin', text: tekst || undefined, image: image || undefined }),
   });
   const pj = await parseRes.json().catch(() => ({}));
-  if (pj?.ok === false) return { ok: false, msg: '🤷 Geen evenement gevonden in dit bericht.' };
+  console.log('parse-event', parseRes.status, JSON.stringify(pj).slice(0, 300));
+  if (pj?.ok === false) return { ok: false, msg: '🤷 Ik zie hierin geen rommelmarkt, garage sale of andere verkoop. Is de tekst op de afbeelding goed leesbaar?' };
   const e = pj?.data;
   if (!e?.titel || !e?.datum) return { ok: false, msg: '⚠️ Kon dit niet lezen' + (pj?.error ? ': ' + esc(String(pj.error).slice(0, 200)) : ' (titel of datum ontbreekt).') };
 
@@ -229,9 +271,12 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   const orgUrl = ct.url || e.bron_url || null;
   const geo = await geocode(e.adres, e.plaats);
   const h = await sb.rpc('discovery_content_hash', { p_title: e.titel, p_date: e.datum, p_city: e.plaats });
-  if (geo && h.data) {
-    const dup = await sb.rpc('discovery_find_similar', { p_hash: h.data, p_lat: geo.lat, p_lng: geo.lng, p_date: e.datum, p_radius_m: 500 });
-    if (dup.data) return { ok: false, msg: `♻️ Staat er al (${esc(String(dup.data))}): <b>${esc(e.titel)}</b>` };
+  if (h.data) {
+    const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: e.datum, p_radius_m: 500 });
+    if (ref.data) {
+      const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail });
+      return { ok: false, msg: 'Staat er al: ' + dup.title, dup };
+    }
   }
   const subtype = SUBTYPES.has(e.event_type || '') ? e.event_type : 'rommelmarkt';
   const isPart = subtype === 'opritverkoop';
@@ -282,6 +327,12 @@ async function knop(sb: any, chat: string, cq: any) {
   const msg = cq.message;
   const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', id).maybeSingle();
   if (!p) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Niet gevonden' });
+  if (actie === 're' && p.status === 'afgewezen') {
+    const { data: p2 } = await sb.from('pending_events').update({ status: p.is_private_seller ? 'tip' : 'nieuw', review_notes: null })
+      .eq('id', id).select(PENDING_COLS).single();
+    await tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Terug in je lijst' });
+    return stuurKaart(sb, chat, p2);
+  }
   if (p.status === 'goedgekeurd' || p.status === 'afgewezen') {
     return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Al ' + p.status });
   }
@@ -373,6 +424,17 @@ async function initDataUser(initData: string): Promise<number | null> {
   try { return JSON.parse(params.get('user') || '{}').id ?? null; } catch { return null; }
 }
 
+// Eén eenvoudige indeling voor de mini-app.
+const TWIJFEL = ['past niet bij YardiGo', 'type onduidelijk', 'onbekend of particulier'];
+function metGroep(p: any) {
+  const ontbreekt = watOntbreekt(p);
+  const redenen: string[] = p.auto_check?.redenen || [];
+  const groep = p.status === 'tip' || p.is_private_seller === true ? 'particulier'
+    : redenen.some(r => TWIJFEL.includes(r)) ? 'twijfel'
+    : ontbreekt.length ? 'mist' : 'klaar';
+  return { ...p, ontbreekt, groep };
+}
+
 const BEWERKBAAR = ['title','description','event_subtype','date_start','date_end','time_start','time_end','city','address',
   'latitude','longitude','organizer_name','organizer_url','contact_phone','contact_email','is_private_seller'];
 
@@ -405,7 +467,7 @@ async function api(sb: any, req: Request): Promise<Response> {
     case 'get': {
       const r = await sb.from('pending_events').select(cols).eq('id', b.id).maybeSingle();
       if (!r.data) return apiJson({ error: 'Niet gevonden' }, 404);
-      return apiJson({ item: { ...r.data, ontbreekt: watOntbreekt(r.data) } });
+      return apiJson({ item: metGroep(r.data) });
     }
 
     case 'save': {
@@ -414,18 +476,19 @@ async function api(sb: any, req: Request): Promise<Response> {
         const v = b.patch[k];
         patch[k] = typeof v === 'string' ? (v.trim() || null) : v;
       }
+      if (typeof patch.is_private_seller === 'boolean') patch.status = patch.is_private_seller ? 'tip' : 'nieuw';
       if (b.geocode && (patch.address !== undefined || patch.city !== undefined)) {
         const cur = (await sb.from('pending_events').select('address,city').eq('id', b.id).maybeSingle()).data || {};
         const g = await geocode((patch.address ?? cur.address) as string | null, (patch.city ?? cur.city) as string | null);
         if (g) { patch.latitude = g.lat; patch.longitude = g.lng; }
       }
-      const r = await sb.from('pending_events').update(patch).eq('id', b.id).select(cols).single();
+      const r = await sb.from('pending_events').update(patch).eq('id', b.id).in('status', ['tip', 'nieuw']).select(cols).single();
       if (r.error) return apiJson({ error: r.error.message }, 400);
       // Redenen opnieuw bepalen; het oordeel 'past niet bij YardiGo' blijft staan.
       const past = !(r.data.auto_check?.redenen || []).includes('past niet bij YardiGo');
       const check = autoCheck(r.data, past);
       await sb.from('pending_events').update({ auto_check: check }).eq('id', b.id);
-      return apiJson({ item: { ...r.data, auto_check: check, ontbreekt: watOntbreekt(r.data) } });
+      return apiJson({ item: metGroep({ ...r.data, auto_check: check }) });
     }
 
     case 'geocode':
@@ -460,8 +523,24 @@ async function api(sb: any, req: Request): Promise<Response> {
     case 'create': {
       const image = b.image?.data ? { data: String(b.image.data), media_type: String(b.image.media_type || 'image/jpeg') } : null;
       const r = await maakItem(sb, String(b.text || ''), image);
+      if (!r.ok && r.dup) return apiJson({ dup: r.dup });
       if (!r.ok) return apiJson({ error: r.msg.replace(/<[^>]+>/g, '') }, 400);
-      return apiJson({ item: { ...r.row, ontbreekt: watOntbreekt(r.row) } });
+      return apiJson({ item: metGroep(r.row) });
+    }
+
+    case 'reopen': {
+      const r = await sb.from('pending_events').select('is_private_seller,status').eq('id', b.id).maybeSingle();
+      if (r.data?.status !== 'afgewezen') return apiJson({ error: 'Niet afgewezen' }, 400);
+      await sb.from('pending_events').update({ status: r.data.is_private_seller ? 'tip' : 'nieuw', review_notes: null }).eq('id', b.id);
+      return apiJson({ ok: true });
+    }
+
+    case 'todo': {
+      const r = await sb.from('pending_events').select(cols)
+        .in('status', ['tip', 'nieuw']).gte('date_start', vandaag)
+        .order('date_start', { ascending: true }).order('id', { ascending: true }).limit(400);
+      if (r.error) return apiJson({ error: r.error.message }, 500);
+      return apiJson({ items: (r.data || []).map(metGroep) });
     }
 
     case 'recent': {
@@ -537,6 +616,8 @@ serve(async (req: Request) => {
 
     const m = upd.message;
     if (!m) return json({ ok: true });
+    console.log('update', JSON.stringify({ text: !!m.text, caption: !!m.caption, photo: m.photo?.length ?? 0,
+      doc: m.document ? { mime: m.document.mime_type, size: m.document.file_size } : null, group: m.media_group_id ?? null }));
     const chat = String(m.chat.id);
     const tekst: string = m.text || m.caption || '';
 
@@ -576,6 +657,10 @@ serve(async (req: Request) => {
       ].join('\n'));
     } else if (m.reply_to_message?.from?.is_bot && await aanvulling(sb, chat, tekst, m.reply_to_message)) {
       // afgehandeld
+    } else if (m.document && /heic|heif/i.test((m.document.mime_type || '') + (m.document.file_name || ''))) {
+      await send(chat, '📷 Dit is een iPhone-bestand (HEIC) dat ik niet kan lezen. Stuur hem als <b>foto</b> in plaats van als bestand, of maak er een screenshot van.');
+    } else if (m.document && /^image\//.test(m.document.mime_type || '') && (m.document.file_size || 0) > 4_500_000) {
+      await send(chat, '📷 Dit bestand is te groot. Stuur hem als <b>foto</b> (dan verkleint Telegram hem) of als screenshot.');
     } else if (m.photo?.length || (m.document && /^image\//.test(m.document.mime_type || ''))) {
       const fileId = m.photo?.length ? m.photo[m.photo.length - 1].file_id : m.document.file_id;
       await nieuwItem(sb, chat, tekst, fileId);
