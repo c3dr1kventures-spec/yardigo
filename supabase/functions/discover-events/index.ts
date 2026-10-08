@@ -45,9 +45,13 @@ const BRAVE_RESULTS        = 20;
 const PAGE_FETCH_TIMEOUT   = 12000;  // 12s per pagina
 const ANTHROPIC_TIMEOUT    = 30000;
 const DUPE_RADIUS_M        = 500;
-// Edge functions worden hard afgekapt. Stop zelf ruim daarvoor, zodat de run
-// zijn summary nog kan wegschrijven i.p.v. met finished_at=null te blijven staan.
-const RUN_BUDGET_MS        = 110000;
+// Edge functions worden na 150 s hard afgekapt (HTTP 546). Stop zelf ruim
+// daarvoor, zodat de run zijn summary nog kan wegschrijven i.p.v. met
+// finished_at=null te blijven staan. Een nieuwe pagina kost tot
+// PAGE_FETCH_TIMEOUT + ANTHROPIC_TIMEOUT + geocoding, dus vóór elke pagina
+// moet er minstens PAGE_RESERVE_MS over zijn.
+const RUN_BUDGET_MS        = 120000;
+const PAGE_RESERVE_MS      = 55000;
 
 // ── Interfaces ─────────────────────────────────────────────────────
 interface DiscoveryQuery { id: number; query_tekst: string; land: string; laatste_run: string | null; }
@@ -164,6 +168,7 @@ async function fetchWithTimeout(url: string, opts: RequestInit, timeoutMs: numbe
 // Cache per (query|land) zodat 20 events in dezelfde gemeente één lookup
 // kosten i.p.v. twintig. Blijft warm binnen dezelfde isolate.
 const geoCache = new Map<string, { lat: number; lng: number } | null>();
+let geocodeDeadline = Number.POSITIVE_INFINITY;
 
 function landNaarCc(land: string): string {
   switch ((land || '').toUpperCase()) {
@@ -406,7 +411,9 @@ async function importEvents(
     // vindt geregeld NL-pagina's, en dan zocht de geocoder vroeger in het
     // verkeerde land en gaf niets terug.
     const eventLand = ne.land || land;
-    const geo = await geocode(ne.adres, ne.plaats, eventLand);
+    // Na de deadline niet meer geocoderen (Nominatim kost >1 s per lookup);
+    // de backfill-modus vult ontbrekende coördinaten later aan.
+    const geo = Date.now() < geocodeDeadline ? await geocode(ne.adres, ne.plaats, eventLand) : null;
     const lat = geo?.lat ?? null;
     const lng = geo?.lng ?? null;
     if (geo) summary.geocode_gelukt++; else summary.geocode_mislukt++;
@@ -548,7 +555,9 @@ serve(async (req: Request) => {
   const runId = runInsert.data?.id;
 
   const deadline = Date.now() + RUN_BUDGET_MS;
-  const tijdOp = () => Date.now() > deadline;
+  // Geen nieuwe pagina meer beginnen als die niet meer binnen het budget past.
+  const tijdOp = () => Date.now() > deadline - PAGE_RESERVE_MS;
+  geocodeDeadline = deadline;
 
   const summary: any = {
     queries_run: 0, brave_results: 0, urls_new: 0, urls_skipped_blocklist: 0,

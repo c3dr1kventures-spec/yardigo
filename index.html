@@ -3350,7 +3350,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Curated banner (door YardiGo verzameld) — onder de kaart -->
       <div id="det-curated-banner" style="display:none;font-size:12px;color:#5A4A3A;margin-bottom:14px;border:1.5px dashed #DDD0BC;background:#FBF6EE;border-radius:10px;padding:12px 14px;line-height:1.55">
         <div style="font-weight:700;color:#7A5C1C;font-size:13px">🔍 <span data-i18n="detail.curated_title">Door YardiGo verzameld</span></div>
-        <div style="margin-top:4px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-desc" style="margin-top:4px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-desc-noref" style="margin-top:4px;display:none" data-i18n="detail.curated_desc_noref">Samengesteld op basis van openbare informatie over dit evenement.</div>
+        <!-- Contact organisator: gevuld vanuit listing_contacts (alleen leesbaar voor ingelogde gebruikers) -->
+        <div id="det-contact" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #DDD0BC"></div>
         <div id="det-curated-actions" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
           <button id="det-claim-btn" onclick="openClaimModal()" style="background:var(--terra);color:white;border:none;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_claim_btn">✨ Claim deze vermelding</button>
           <button onclick="openReport()" style="background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_report_btn">🚩 Meld een probleem</button>
@@ -4837,6 +4840,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Claim deze vermelding",
     'detail.curated_report_btn': "🚩 Meld een probleem",
     'detail.curated_claimed_note': "✓ Geclaimd door organisator",
+    'detail.curated_desc_noref': "Samengesteld op basis van openbare informatie over dit evenement.",
+    'detail.contact_title': "Contact organisator",
+    'detail.contact_login': "Log in om de organisator te contacteren.",
+    'detail.contact_login_btn': "Inloggen",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Bellen",
+    'detail.contact_mail': "Mailen",
+    'detail.contact_none': "Geen contactgegevens bekend.",
     'claim.title': "✨ Claim deze vermelding",
     'claim.intro': "Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.",
     'claim.field_name': "Jouw naam *",
@@ -5521,6 +5532,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Claim this listing",
     'detail.curated_report_btn': "🚩 Report an issue",
     'detail.curated_claimed_note': "✓ Claimed by organizer",
+    'detail.curated_desc_noref': "Compiled from public information about this event.",
+    'detail.contact_title': "Contact organizer",
+    'detail.contact_login': "Log in to contact the organizer.",
+    'detail.contact_login_btn': "Log in",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Call",
+    'detail.contact_mail': "Email",
+    'detail.contact_none': "No contact details known.",
     'claim.title': "✨ Claim this listing",
     'claim.intro': "Are you the organizer? Fill in your details. Our admin verifies claims within 2 business days. Once approved you can add photos and extra info.",
     'claim.field_name': "Your name *",
@@ -6205,6 +6224,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Revendiquer cette annonce",
     'detail.curated_report_btn': "🚩 Signaler un problème",
     'detail.curated_claimed_note': "✓ Revendiqué par l'organisateur",
+    'detail.curated_desc_noref': "Compilé à partir d'informations publiques sur cet événement.",
+    'detail.contact_title': "Contacter l'organisateur",
+    'detail.contact_login': "Connectez-vous pour contacter l'organisateur.",
+    'detail.contact_login_btn': "Se connecter",
+    'detail.contact_website': "Site web",
+    'detail.contact_call': "Appeler",
+    'detail.contact_mail': "E-mail",
+    'detail.contact_none': "Aucune coordonnée connue.",
     'claim.title': "✨ Revendiquer cette annonce",
     'claim.intro': "Êtes-vous l'organisateur ? Remplissez vos coordonnées. Notre admin vérifie les revendications dans les 2 jours ouvrables. Une fois approuvée, vous pourrez ajouter des photos et infos.",
     'claim.field_name': "Votre nom *",
@@ -6887,6 +6914,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Diesen Eintrag beanspruchen",
     'detail.curated_report_btn': "🚩 Problem melden",
     'detail.curated_claimed_note': "✓ Vom Organisator beansprucht",
+    'detail.curated_desc_noref': "Zusammengestellt aus öffentlichen Informationen zu dieser Veranstaltung.",
+    'detail.contact_title': "Veranstalter kontaktieren",
+    'detail.contact_login': "Melde dich an, um den Veranstalter zu kontaktieren.",
+    'detail.contact_login_btn': "Anmelden",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Anrufen",
+    'detail.contact_mail': "E-Mail",
+    'detail.contact_none': "Keine Kontaktdaten bekannt.",
     'claim.title': "✨ Diesen Eintrag beanspruchen",
     'claim.intro': "Bist du der Organisator? Trage deine Daten ein. Unser Admin prüft den Anspruch innerhalb von 2 Werktagen. Nach Genehmigung kannst du Fotos und weitere Infos hinzufügen.",
     'claim.field_name': "Dein Name *",
@@ -10167,6 +10202,34 @@ function _emptyTipSale() {
 // ══════════════════════════════════════════════════
 // DETAIL
 // ══════════════════════════════════════════════════
+// Contact van de organisator bij een door YardiGo verzameld event. De gegevens
+// staan in listing_contacts; RLS geeft alleen ingelogde gebruikers leestoegang,
+// dus gasten krijgen een inlog-uitnodiging i.p.v. de gegevens.
+async function renderCuratedContact(listingId) {
+  var el = document.getElementById('det-contact');
+  if (!el) return;
+  el.style.display = 'none'; el.innerHTML = '';
+  var titel = '<div style="font-weight:700;color:#7A5C1C;margin-bottom:6px">📇 ' + escapeHtml(i18n('detail.contact_title', 'Contact organisator')) + '</div>';
+  var knop = 'display:inline-block;background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:700;text-decoration:none;margin:0 6px 6px 0';
+  if (isGuest || !sbClient) {
+    el.innerHTML = titel + '<div style="margin-bottom:6px">' + escapeHtml(i18n('detail.contact_login', 'Log in om de organisator te contacteren.')) + '</div>'
+      + '<a href="#" onclick="openLogin();return false" style="' + knop + '">🔑 ' + escapeHtml(i18n('detail.contact_login_btn', 'Inloggen')) + '</a>';
+    el.style.display = '';
+    return;
+  }
+  var res = await sbClient.from('listing_contacts').select('organizer_name,website_url,email,phone').eq('listing_id', listingId).maybeSingle();
+  if (String(detailSaleId) !== String(listingId)) return; // gebruiker zit inmiddels op een ander event
+  var c = res.data;
+  if (!c || (!c.website_url && !c.email && !c.phone)) return;
+  var veiligeUrl = c.website_url && /^https?:\/\//i.test(c.website_url) ? c.website_url : null;
+  var html = titel + (c.organizer_name ? '<div style="margin-bottom:6px">' + escapeHtml(c.organizer_name) + '</div>' : '');
+  if (veiligeUrl) html += '<a href="' + escapeHtml(veiligeUrl) + '" target="_blank" rel="noopener" style="' + knop + '">🌐 ' + escapeHtml(i18n('detail.contact_website', 'Website')) + '</a>';
+  if (c.phone)    html += '<a href="tel:' + escapeHtml(c.phone.replace(/[^\d+]/g, '')) + '" style="' + knop + '">📞 ' + escapeHtml(i18n('detail.contact_call', 'Bellen')) + ' · ' + escapeHtml(c.phone) + '</a>';
+  if (c.email)    html += '<a href="mailto:' + escapeHtml(c.email) + '" style="' + knop + '">✉️ ' + escapeHtml(i18n('detail.contact_mail', 'Mailen')) + '</a>';
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
 function openDetail(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
@@ -10189,10 +10252,14 @@ function openDetail(id) {
     if (s.placed_by === 'yardigo') {
       banner.style.display = '';
       var link = document.getElementById('det-curated-source-link');
-      if (link) {
-        link.href = s.source_url || '#';
-        link.textContent = (s.source_label || s.source_url || '—') + ' ↗';
+      var heeftBron = !!s.source_url;
+      document.getElementById('det-curated-desc').style.display = heeftBron ? '' : 'none';
+      document.getElementById('det-curated-desc-noref').style.display = heeftBron ? 'none' : '';
+      if (link && heeftBron) {
+        link.href = s.source_url;
+        link.textContent = (s.source_label || s.source_url) + ' ↗';
       }
+      renderCuratedContact(s.id);
       var claimBtn   = document.getElementById('det-claim-btn');
       var claimedTag = document.getElementById('det-curated-claimed');
       if (s.claimed_by_user_id) {

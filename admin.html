@@ -3718,7 +3718,9 @@ async function loadPendingEvents() {
   var cnt = document.getElementById('pending-events-count');
   if (!el) return;
   el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
-  var res = await sb.from('pending_events').select('*').eq('status','nieuw').order('date_start').limit(200);
+  // Alleen toekomstige events: verlopen items vervuilden de bovenkant van de lijst.
+  var vandaag = new Date().toISOString().slice(0, 10);
+  var res = await sb.from('pending_events').select('*').eq('status','nieuw').gte('date_start', vandaag).order('date_start').limit(200);
   if (res.error) { el.innerHTML = '<div class="log-empty">Fout: ' + esc(res.error.message) + '</div>'; return; }
   var rows = res.data || [];
   if (cnt) cnt.textContent = rows.length;
@@ -3741,11 +3743,28 @@ async function loadPendingEvents() {
       + '<div style="font-size:11.5px;color:var(--muted);line-height:1.55;background:var(--bg2);border-radius:6px;padding:8px 10px">'
         + (p.description ? esc(p.description) : '<em>Geen beschrijving</em>')
         + '<div style="margin-top:6px;font-size:10.5px">🔗 <a href="' + esc(p.source_url) + '" target="_blank" rel="noopener" style="color:var(--terra)">' + esc(p.source_domain) + '</a>'
+        + (p.lead_source_domain && p.lead_source_domain !== p.source_domain ? ' · lead: ' + esc(p.lead_source_domain) : '')
         + (p.address ? ' · adres: ' + esc(p.address) : '')
         + '</div>'
+        + '<div style="margin-top:4px;font-size:10.5px">👤 ' + esc(p.organizer_name || '—')
+        + (p.organizer_url ? ' · 🌐 <a href="' + esc(p.organizer_url) + '" target="_blank" rel="noopener" style="color:var(--terra)">' + esc(p.organizer_url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)) + '</a>' : '')
+        + (p.contact_phone ? ' · 📞 ' + esc(p.contact_phone) : '')
+        + (p.contact_email ? ' · ✉️ ' + esc(p.contact_email) : '')
+        + (!p.organizer_url && !p.contact_phone && !p.contact_email ? ' · <span style="color:#d04545">⚠️ geen contactweg</span>' : '')
+        + '</div>'
+        + (p.auto_check && p.auto_check.redenen && p.auto_check.redenen.length ? '<div style="margin-top:4px;font-size:10.5px;color:#7A5C1C">🤖 Niet automatisch live: ' + esc(p.auto_check.redenen.join(', ')) + '</div>' : '')
       + '</div>'
     + '</div>';
   }).join('');
+}
+
+// Kwam dit event binnen via een verzamelsite (lead) zonder dat de originele
+// bron is gevonden? Dan mag die site niet als bron op de listing.
+var VERZAMELSITES = ['meukisleuk.nl', 'brocantes.be', 'quefaire.be', 'rommelmarkten.be', 'out.be', 'vide-greniers.org', 'brocabrac.fr'];
+function isLeadBron(p) {
+  if (p.source_status === 'aggregator' || p.source_status === 'onopgelost') return true;
+  if (VERZAMELSITES.indexOf((p.source_domain || '').replace(/^www\./, '')) !== -1) return true;
+  return !!(p.lead_source_domain && p.lead_source_domain === p.source_domain);
 }
 
 async function pendingEventApprove(id) {
@@ -3769,8 +3788,9 @@ async function pendingEventApprove(id) {
     time_end:            p.time_end,
     latitude:            p.latitude,
     longitude:           p.longitude,
-    source_url:          p.source_url,
-    source_label:        p.source_label || p.source_domain,
+    // Nooit een verzamelsite als bron tonen: alleen de organisator zelf.
+    source_url:          p.organizer_url || (isLeadBron(p) ? null : p.source_url),
+    source_label:        p.organizer_name || (isLeadBron(p) ? null : (p.source_label || p.source_domain)),
     address_reveal_mode: 'instant',
     images:              [],
     user_id:             u ? u.id : null,
@@ -3778,6 +3798,13 @@ async function pendingEventApprove(id) {
   };
   var ins = await sb.from('listings').insert(payload).select('id').single();
   if (ins.error) { toast('❌ ' + ins.error.message); return; }
+  if (p.organizer_url || p.contact_phone || p.contact_email || p.organizer_name) {
+    var c = await sb.from('listing_contacts').upsert({
+      listing_id: ins.data.id, organizer_name: p.organizer_name, website_url: p.organizer_url,
+      email: p.contact_email, phone: p.contact_phone,
+    }, { onConflict: 'listing_id' });
+    if (c.error) toast('⚠️ Contact niet opgeslagen: ' + c.error.message);
+  }
   await sb.from('pending_events').update({
     status: 'goedgekeurd',
     reviewer_user_id: u ? u.id : null,
