@@ -58,3 +58,8 @@ alter table public.listings drop constraint if exists listings_curated_must_have
 alter table public.pending_events drop constraint if exists pending_events_status_check;
 alter table public.pending_events add constraint pending_events_status_check
   check (status = any (array['nieuw','goedgekeurd','afgewezen','tip']));
+
+-- discovery_find_similar_ref: zoals discovery_find_similar, maar geeft terug
+-- wélk item het dubbele is (jsonb: kind pending|listing, pending_id, status,
+-- listing_id, title). Toegepast als migratie 'discovery_find_similar_ref';
+-- definitie: zie supabase migrations (okt 2026).
