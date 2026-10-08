@@ -56,7 +56,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -135,20 +135,32 @@ serve(async (req: Request) => {
       return json({ error: 'Server misconfigured: ANTHROPIC_API_KEY missing' }, 500);
     }
 
-    // ── Auth: geldige bearer JWT (welke rol nodig is, hangt van de modus af) ──
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const match = authHeader.match(/^Bearer\s+(.+)$/i);
-    if (!match) {
-      return json({ error: 'Missing Authorization Bearer token' }, 401);
-    }
-    const jwt = match[1];
-
     const adminClient = createClient(supabaseUrl, serviceKey);
-    const userRes = await adminClient.auth.getUser(jwt);
-    if (userRes.error || !userRes.data?.user) {
-      return json({ error: 'Invalid token' }, 401);
+
+    // ── Auth, intern: andere functies (telegram-bot) met x-cron-secret.
+    // Alleen geldig voor mode 'admin'; telt als admin, geen quotum.
+    let internal = false;
+    const cronHdr = req.headers.get('x-cron-secret') ?? '';
+    if (cronHdr) {
+      const { data } = await adminClient.from('app_config').select('value').eq('key', 'cron_secret').maybeSingle();
+      internal = !!data?.value && cronHdr === data.value;
+      if (!internal) return json({ error: 'Invalid cron secret' }, 401);
     }
-    const callerId = userRes.data.user.id;
+
+    // ── Auth: geldige bearer JWT (welke rol nodig is, hangt van de modus af) ──
+    let callerId = '';
+    if (!internal) {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const match = authHeader.match(/^Bearer\s+(.+)$/i);
+      if (!match) {
+        return json({ error: 'Missing Authorization Bearer token' }, 401);
+      }
+      const userRes = await adminClient.auth.getUser(match[1]);
+      if (userRes.error || !userRes.data?.user) {
+        return json({ error: 'Invalid token' }, 401);
+      }
+      callerId = userRes.data.user.id;
+    }
 
     // ── Body parsen ──
     // Moet vóór de rolcheck, want de modus bepaalt wélke check geldt.
@@ -176,7 +188,9 @@ serve(async (req: Request) => {
     // 'admin' blijft achter de adminrol. 'organizer' staat open voor elke
     // ingelogde gebruiker (de JWT hierboven is al geverifieerd), maar met een
     // gebruikslimiet in plaats van een rol.
-    if (mode === 'admin') {
+    if (internal) {
+      if (mode !== 'admin') return json({ error: "intern alleen mode 'admin'" }, 403);
+    } else if (mode === 'admin') {
       const profRes = await adminClient
         .from('profiles')
         .select('is_admin, admin_badges')
