@@ -65,6 +65,11 @@ function send(chat: number | string, html: string, extra: Record<string, unknown
   return tg('sendMessage', { chat_id: chat, text: html, parse_mode: 'HTML', disable_web_page_preview: true, ...extra });
 }
 
+// Losse FB-reactie als eigen bericht: lang indrukken → Kopiëren pakt dan precies deze tekst.
+function fbBericht(chat: number | string, fb: string) {
+  return tg('sendMessage', { chat_id: chat, text: fb, disable_web_page_preview: true });
+}
+
 function menuKnop(chat: string) {
   return tg('setChatMenuButton', { chat_id: chat, menu_button: { type: 'web_app', text: 'YardiGo', web_app: { url: MINIAPP } } });
 }
@@ -287,7 +292,7 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
   const r = await maakItem(sb, tekst, image);
   if (r.ok) {
     const live = await directPlaatsen(sb, r.row);
-    if (live) return send(chat, `✅ <b>${esc(r.row.title)}</b> staat op de kaart\n${live.url}\n\nReactie voor Facebook:\n<code>${esc(live.fb)}</code>`);
+    if (live) { await send(chat, `✅ <b>${esc(r.row.title)}</b> staat op de kaart\n${live.url}`); return fbBericht(chat, live.fb); }
     return stuurKaart(sb, chat, r.row);
   }
   const d = r.dup;
@@ -297,7 +302,8 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
     if (p) return stuurKaart(sb, chat, p);
   }
   if (d?.kind === 'live') {
-    return send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart.\n${d.url}\n\nReactie voor Facebook:\n<code>${esc(d.fb)}</code>`);
+    await send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart.\n${d.url}`);
+    return fbBericht(chat, d.fb);
   }
   if (d?.kind === 'afgewezen') {
     return send(chat, `🚫 <b>${esc(d.title)}</b> had je eerder afgewezen.`, {
@@ -457,8 +463,10 @@ async function knop(sb: any, chat: string, cq: any) {
     try {
       const reviewer = await curatorId(sb);
       const listingId = await publishPending(sb, p, reviewer, null);
+      const d = await deel(sb, listingId);
       await tg('editMessageText', { chat_id: chat, message_id: msg.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
-        text: await (async () => { const d = await deel(sb, listingId); return `✅ <b>${esc(p.title)}</b> staat live\n${d.url}\n\nReactie voor Facebook:\n<code>${esc(d.fb)}</code>`; })() });
+        text: `✅ <b>${esc(p.title)}</b> staat live\n${d.url}` });
+      await fbBericht(chat, d.fb);
       return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Gepubliceerd' });
     } catch (e) {
       return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Mislukt: ' + (e as Error).message.slice(0, 150), show_alert: true });
