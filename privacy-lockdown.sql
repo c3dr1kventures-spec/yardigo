@@ -69,6 +69,7 @@ returns table (
   location_approx boolean, short_code text
 )
 language plpgsql security definer set search_path = public as $$
+#variable_conflict use_column
 declare
   uid uuid := auth.uid();
   calls int := 0;
@@ -77,7 +78,7 @@ begin
   if uid is not null then
     insert into address_access_log as a (user_id, hour, calls)
     values (uid, date_trunc('hour', now()), 1)
-    on conflict (user_id, hour) do update set calls = a.calls + 1
+    on conflict on constraint address_access_log_pkey do update set calls = a.calls + 1
     returning a.calls into calls;
     throttled := calls > 300 and not coalesce(is_yg_admin(uid), false);
   end if;

@@ -75,11 +75,15 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
   const curator = await curatorId(sb);
   if (!curator) throw new Error('geen admin-profiel gevonden als curator');
 
+  // Particuliere verkoop (thuisadres): categorie garagesale, zodat de kaart
+  // de pin verschuift en het adres pas 24 uur vooraf toont (listing_is_private).
+  const prive = p.is_private_seller === true
+    || ['opritverkoop', 'garagesale', 'garageverkoop', 'tuinverkoop'].includes((p.event_subtype || '').toLowerCase());
   const payload = {
     placed_by:           'yardigo',
     status:              'active',
     confirmation_status: 'confirmed',
-    category:            'rommelmarkt',
+    category:            prive ? 'garagesale' : 'rommelmarkt',
     event_subtype:       p.event_subtype || 'rommelmarkt',
     title:               p.title,
     description:         p.description,
@@ -93,7 +97,7 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
     longitude:           p.longitude,
     source_url:          p.organizer_url || null,
     source_label:        p.organizer_name || null,
-    address_reveal_mode: 'instant',
+    address_reveal_mode: prive ? 'day_before' : 'instant',
     images:              p.poster_url ? [p.poster_url] : [],
     user_id:             curator,
     curator_user_id:     reviewer || curator,
