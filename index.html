@@ -1231,6 +1231,10 @@ body.dark .cat-chip.active{background:var(--forest);color:white;}
 .card-thumb.particulier{background:var(--amber-light);}
 .card-thumb.buurt{background:#FDF0E7;}
 .card-thumb.evenement{background:#EAF2EC;}
+.card-thumb.kt{flex-direction:column;gap:5px;}
+.card-thumb.kt .kt-ico{display:flex;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));}
+.card-thumb.kt .kt-km{font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px;text-shadow:0 1px 1px rgba(0,0,0,.2);white-space:nowrap;}
+body.is-desktop #cardList.grid-1col .card-thumb.kt .kt-ico svg,body.is-desktop #cardList.grid-2col .card-thumb.kt .kt-ico svg{width:46px;height:46px;}
 .c-dist{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;background:rgba(44,36,22,.7);color:white;border-radius:4px;padding:2px 5px;white-space:nowrap;}
 .card-body{flex:1;padding:10px 12px 10px 10px;min-width:0;cursor:pointer;}
 .card-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:3px;}
@@ -4502,6 +4506,11 @@ function mapSupabaseToSale(item) {
   };
   var emojiMap = { particulier: '🏠', buurt: '🏘️', evenement: '🎪' };
   var mappedType = typeMap[item.category] || typeMap[item.type] || 'particulier';
+  // Door YardiGo verzamelde items staan allemaal onder categorie rommelmarkt;
+  // het subtype zegt dan welke soort het echt is (rommelroute, opritverkoop).
+  var _subLc = String(item.event_subtype || '').toLowerCase();
+  if (_subLc === 'rommelroute' || (_subLc === 'buurtverkoop' && item.placed_by === 'yardigo')) mappedType = 'buurt';
+  else if (['opritverkoop', 'garagesale', 'garageverkoop', 'tuinverkoop'].indexOf(_subLc) >= 0) mappedType = 'particulier';
   var lat = item.latitude || (item.location ? extractCoords(item.location).lat : 52.3);
   var lng = item.longitude || (item.location ? extractCoords(item.location).lng : 5.3);
   var _addrHidden = (item.address === null || typeof item.address === 'undefined' || item.address === '');
@@ -4557,7 +4566,10 @@ function mapSupabaseToSale(item) {
     source_label: item.source_label || null,
     claim_token: item.claim_token || null,
     claimed_by_user_id: item.claimed_by_user_id || null,
-    claimed_at: item.claimed_at || null
+    claimed_at: item.claimed_at || null,
+    // Particuliere verkoop zonder zichtbaar adres: pin is server-side verschoven
+    location_approx: !!item.location_approx,
+    short_code: item.short_code || null
   };
 }
 
@@ -7981,9 +7993,101 @@ const EVENT_SUBTYPE_ICONS = {
 
 function getSaleIcon(sale) {
   if (sale && sale.type === 'evenement' && sale.event_subtype) {
-    return EVENT_SUBTYPE_ICONS[sale.event_subtype] || TYPES.evenement.icon;
+    var _sk = saleSubKey(sale);
+    return (YG_SUBTYPES[_sk] && YG_SUBTYPES[_sk].emoji) || EVENT_SUBTYPE_ICONS[sale.event_subtype] || TYPES.evenement.icon;
   }
   return TYPES[sale.type] ? TYPES[sale.type].icon : '📍';
+}
+
+// ── Soort + subcategorie ──────────────────────────────────────────
+// Drie soorten met elk een eigen kleur (kaart-pins, lijstkaartjes):
+//   markt (groen)  = rommelmarkten en overige markten (met subcategorie)
+//   route (oranje) = rommelroutes / buurtverkopen
+//   oprit (amber)  = opritverkoop van een particulier
+// Subcategorieën krijgen een eigen simpel lijn-icoon (wit op de kleur).
+var YG_KIND_COLORS = {
+  markt: { base: '#3A6B4A', light: '#4F8A61' },
+  route: { base: '#E07B39', light: '#EC9A5E' },
+  oprit: { base: '#F2A830', light: '#F6BF5A' }
+};
+var YG_SUBTYPES = {
+  rommelmarkt:  { label: 'Rommelmarkt',  icon: 'stall',  emoji: '🧺' },
+  vlooienmarkt: { label: 'Vlooienmarkt', icon: 'stall',  emoji: '🎪' },
+  snuffelmarkt: { label: 'Snuffelmarkt', icon: 'stall',  emoji: '🧺' },
+  jaarmarkt:    { label: 'Jaarmarkt',    icon: 'stall',  emoji: '🎪' },
+  kofferbak:    { label: 'Kofferbakverkoop', icon: 'car', emoji: '🚗' },
+  boekenmarkt:  { label: 'Boekenmarkt',  icon: 'book',   emoji: '📚' },
+  antiekmarkt:  { label: 'Antiekmarkt',  icon: 'vase',   emoji: '🏺' },
+  kerstmarkt:   { label: 'Kerstmarkt',   icon: 'tree',   emoji: '🎄' },
+  braderie:     { label: 'Braderie',     icon: 'flags',  emoji: '🏪' },
+  kinderbeurs:  { label: 'Kinderbeurs',  icon: 'bear',   emoji: '🧸' },
+  kledingmarkt: { label: 'Kledingmarkt', icon: 'hanger', emoji: '👗' }
+};
+function saleKind(s) {
+  return s && s.type === 'buurt' ? 'route' : (s && s.type === 'particulier' ? 'oprit' : 'markt');
+}
+function saleSubKey(s) {
+  var v = String((s && s.event_subtype) || '').toLowerCase().trim();
+  if (!v) return '';
+  if (v.indexOf('kofferbak') >= 0) return 'kofferbak';
+  if (v.indexOf('kerst') >= 0) return 'kerstmarkt';
+  if (v.indexOf('boek') >= 0) return 'boekenmarkt';
+  if (v.indexOf('antiek') >= 0 || v.indexOf('curiosa') >= 0) return 'antiekmarkt';
+  if (v.indexOf('braderie') >= 0) return 'braderie';
+  if (v.indexOf('kinder') >= 0 || v.indexOf('speelgoed') >= 0) return 'kinderbeurs';
+  if (v.indexOf('kleding') >= 0) return 'kledingmarkt';
+  if (v.indexOf('snuffel') >= 0) return 'snuffelmarkt';
+  if (v.indexOf('vlooien') >= 0) return 'vlooienmarkt';
+  if (v.indexOf('jaarmarkt') >= 0) return 'jaarmarkt';
+  if (v.indexOf('rommelmarkt') >= 0) return 'rommelmarkt';
+  return v;
+}
+// Leesbaar label voor chip/popup: bekende subcategorie netjes, anders het
+// eigen label van de organisator met hoofdletter.
+function saleSubLabel(s) {
+  var k = saleSubKey(s);
+  if (!k || k === 'overig') return '';
+  if (YG_SUBTYPES[k]) return YG_SUBTYPES[k].label;
+  var raw = String(s.event_subtype).trim();
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+function saleIconName(s) {
+  var kind = saleKind(s);
+  if (kind === 'oprit') return 'house';
+  if (kind === 'route') return 'route';
+  var k = saleSubKey(s);
+  return (YG_SUBTYPES[k] && YG_SUBTYPES[k].icon) || 'stall';
+}
+var YG_KIND_ICON_PATHS = {
+  stall:  '<path d="M3.5 9.5 5.5 4h13l2 5.5"/><path d="M3.5 9.5c0 1.5 1.1 2.6 2.5 2.6s2.5-1.1 2.5-2.6c0 1.5 1.1 2.6 2.5 2.6h2c1.4 0 2.5-1.1 2.5-2.6 0 1.5 1.1 2.6 2.5 2.6s2.5-1.1 2.5-2.6"/><path d="M5.5 12.1V20M18.5 12.1V20M4 20h16M9 20v-4.5h6V20"/>',
+  route:  '<circle cx="5.5" cy="5.5" r="2.3"/><circle cx="18.5" cy="18.5" r="2.3"/><path d="M8 5.5h7.5a3.25 3.25 0 0 1 0 6.5h-7a3.25 3.25 0 0 0 0 6.5H16"/>',
+  house:  '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.6V20h13V9.6"/><path d="M8.5 20v-6.5h7V20M8.5 16.2h7"/>',
+  book:   '<path d="M3.5 5.5c2.8-1.4 5.8-1.2 8.5.8 2.7-2 5.7-2.2 8.5-.8v13c-2.8-1.4-5.8-1.2-8.5.8-2.7-2-5.7-2.2-8.5-.8z"/><path d="M12 6.3v13"/>',
+  tree:   '<path d="M12 3l4.5 5.5h-2.7l3.7 4.7h-2.7L19 18H5l4.2-4.8H6.5l3.7-4.7H7.5z"/><path d="M12 18v3"/>',
+  car:    '<path d="M3 16.5V13l1.8-4.5h9.4l3.8 4H21v4"/><path d="M3 16.5h1.8M9.2 16.5h5.6M19.2 16.5H21"/><circle cx="7" cy="16.8" r="2"/><circle cx="17" cy="16.8" r="2"/><path d="M14.2 8.5v4"/>',
+  vase:   '<path d="M9 3.5h6M10 3.5v2.8C7.6 7.6 6.5 9.8 6.5 12.6c0 4.2 2.4 7.9 5.5 7.9s5.5-3.7 5.5-7.9c0-2.8-1.1-5-3.5-6.3V3.5"/><path d="M8.2 12h7.6"/>',
+  flags:  '<path d="M2.5 5.5c6 3.6 13 3.6 19 0"/><path d="M5 6.9l1.4 5.3 2.1-4.4M10.6 8.2l1.4 5.3 1.4-5.3M15.5 7.8l2.1 4.4L19 6.9"/><path d="M4 20h16M7 20v-3M17 20v-3"/>',
+  bear:   '<circle cx="12" cy="13.5" r="6.2"/><circle cx="6.6" cy="6.8" r="2.2"/><circle cx="17.4" cy="6.8" r="2.2"/><path d="M10.2 12.4h.01M13.8 12.4h.01M10.5 15.8c.9.7 2.1.7 3 0"/>',
+  hanger: '<path d="M12 8.5V7.6c1.2-.3 2-1.3 2-2.5a2 2 0 0 0-4 0"/><path d="M12 8.5 3.2 15.6c-.6.5-.3 1.4.5 1.4h16.6c.8 0 1.1-.9.5-1.4z"/>'
+};
+function ygKindIconSvg(name, color, size) {
+  return '<svg viewBox="0 0 24 24" width="' + (size || 24) + '" height="' + (size || 24) + '" fill="none" stroke="' + (color || '#fff')
+    + '" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + (YG_KIND_ICON_PATHS[name] || YG_KIND_ICON_PATHS.stall) + '</svg>';
+}
+// Echte afstand vanaf de gebruiker (km, 1 decimaal) of null als de locatie
+// onbekend is — liever niets tonen dan een verzonnen getal.
+function saleDistanceKm(s) {
+  if (!userLocation || typeof s.lat !== 'number' || typeof s.lng !== 'number') return null;
+  var R = 6371, toR = Math.PI / 180;
+  var dLat = (s.lat - userLocation.lat) * toR, dLng = (s.lng - userLocation.lng) * toR;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(userLocation.lat * toR) * Math.cos(s.lat * toR) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function fmtKm(km) {
+  if (km == null) return '';
+  return (km < 10 ? km.toFixed(1) : String(Math.round(km))).replace('.', ',') + ' km';
 }
 
 let sales = [
@@ -8884,16 +8988,18 @@ function initMap() {
   }
 }
 
+// Pin per soort: kleur = soort (markt groen, rommelroute oranje, oprit amber),
+// wit icoon = subcategorie (boekenmarkt, kerstmarkt, kofferbak …).
 function makeMarkerIcon(sale) {
-  var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
-  var c = colors[sale.type];
+  var c = YG_KIND_COLORS[saleKind(sale)].base;
   // Curated (door YardiGo verzameld) pins krijgen een subtiele stippellijn-rand
   // in plaats van een solid rand — herkenbaar bij close-up, niet storend bij overzicht
   var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
   var strokeAttrs = isCurated ? 'stroke="white" stroke-width="2" stroke-dasharray="2.5 1.5"' : 'stroke="white" stroke-width="2"';
-  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
+  var icon = YG_KIND_ICON_PATHS[saleIconName(sale)] || YG_KIND_ICON_PATHS.stall;
+  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.25))">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
-    + '<circle cx="18" cy="16" r="8" fill="white"/>'
+    + '<g transform="translate(9.6 7.6) scale(0.7)" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + icon + '</g>'
     + '</svg>';
   return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
@@ -8905,7 +9011,7 @@ function createListingPopup(sale) {
   // i18n zodat NL/EN/FR/DE consistent zijn met de filters.
   var _headIcon = getSaleIcon(sale);
   var _typeLabel = i18n('type.' + sale.type, t.label);
-  var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : _typeLabel;
+  var _headLabel = (sale.type === 'evenement' && saleSubLabel(sale)) ? saleSubLabel(sale) : _typeLabel;
   var fav = favorites.has(sale.id);
   // Beperk categorie-tags in popup tot 3 + "+N meer" — voorkomt dat veel
   // categorieën de popup-hoogte uit balans halen.
@@ -8923,6 +9029,9 @@ function createListingPopup(sale) {
     addrHtml = '📍 ' + _popCity + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_popCd ? 'over ' + escapeHtml(_popCd) : '24u vooraf') + '</span>';
   } else {
     addrHtml = '📍 ' + escapeHtml(sale.address || '');
+  }
+  if (sale.location_approx) {
+    addrHtml += '<div style="font-size:11px;color:#7A6E62;margin-top:3px">Locatie bij benadering — de cirkel geeft het gebied aan</div>';
   }
   var photoHtml = '';
   // Zachte placeholder voor oprit/buurt zonder foto's
@@ -9071,17 +9180,8 @@ function createDefaultPin(sale) {
 }
 
 function createSmallPin(sale) {
-  // Zelfde grootte als normale markers (36×46) voor consistentie
-  var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
-  var c = colors[sale.type] || '#E07B39';
-  var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
-  var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
-  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="1.5" stroke-dasharray="1.8 1.2"' : 'stroke="white" stroke-width="1.5"';
-  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="' + p + '" fill="' + c + '" ' + strokeAttrs + '/>'
-    + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
-    + '</svg>';
-  return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  // Zelfde pin als losse listings, zodat kleur en icoon overal kloppen.
+  return makeMarkerIcon(sale);
 }
 
 var clusterGroups = [];
@@ -9232,6 +9332,15 @@ function renderMarkers() {
 
   // Losse listings als gewone markers
   losseListings.forEach(function(sale) {
+    // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
+    // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
+    if (sale.location_approx) {
+      var ring = L.circle([sale.lat, sale.lng], {
+        radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
+        fillOpacity: 0.1, interactive: false
+      }).addTo(map);
+      markers.push(ring);
+    }
     var m = L.marker([sale.lat, sale.lng], {
       icon: createDefaultPin(sale)
     });
@@ -9310,6 +9419,21 @@ function getDateRange(key) {
 }
 var listSortMode = 'date-asc';
 var userLocation = null;
+// Als de bezoeker eerder al locatietoegang gaf, haal de positie stil op zodat
+// de lijst echte afstanden toont (zonder opnieuw om toestemming te vragen).
+setTimeout(function ygQuietLocate() {
+  try {
+    if (userLocation || !navigator.permissions || !navigator.geolocation) return;
+    navigator.permissions.query({ name: 'geolocation' }).then(function(st) {
+      if (st.state !== 'granted') return;
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        if (!userLocation) userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (typeof renderList === 'function') renderList();
+        if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
+      }, function() {}, { maximumAge: 600000, timeout: 8000 });
+    }).catch(function() {});
+  } catch (e) {}
+}, 1200);
 var _lastLocationPersistAt = 0;
 // Slaat de laatst bekende locatie server-side op (max 1x/uur) zodat de
 // "nieuwe verkopen in de buurt"-cron server-side kan matchen zonder dat de
@@ -9770,7 +9894,9 @@ function renderBvCard(bv) {
     ? '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')" style="padding:0;overflow:hidden">'
         + '<img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
       + '</div>'
-    : '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')">🏘️</div>';
+    : '<div class="card-thumb kt buurt" onclick="openDetail(' + orgIdAttr + ')" style="background:linear-gradient(155deg,' + YG_KIND_COLORS.route.light + ',' + YG_KIND_COLORS.route.base + ')">'
+      + '<span class="kt-ico">' + ygKindIconSvg('route', '#fff', 34) + '</span>'
+      + (organizer && fmtKm(saleDistanceKm(organizer)) ? '<span class="kt-km">' + fmtKm(saleDistanceKm(organizer)) + '</span>' : '') + '</div>';
   // Adrespil — gebruik declared_count als schatting wanneer meer dan werkelijk aanwezig.
   var declaredCount = bv.info && bv.info.declared_count;
   var displayCount = (declaredCount && declaredCount > nTotal) ? declaredCount : nTotal;
@@ -9822,9 +9948,10 @@ function createListingCard(s, i) {
   // Bij evenementen tonen we het subtype (bijv. "Braderie") in het chip-label
   // en gebruiken we het subtype-icoon als thumb-emoji zodat de lijst aansluit op de kaart.
   var _typeLabelI = i18n('type.' + s.type, t.label);
-  var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : _typeLabelI;
+  var _chipLabel = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : _typeLabelI;
   var _thumbIcon = getSaleIcon(s);
-  var d2 = (Math.random() * 8 + 0.5).toFixed(1);
+  var _kind = saleKind(s), _kc = YG_KIND_COLORS[_kind];
+  var _km = fmtKm(saleDistanceKm(s));
   // Beperk categorieën in lijstkaart tot 3 + "+N meer" zodat de kaart-hoogte
   // niet uitloopt wanneer een advertentie veel categorieën heeft.
   var tags = renderTagChips(s.tags || [], s.type, { limit: 3 });
@@ -9844,8 +9971,10 @@ function createListingCard(s, i) {
   var idAttr = typeof s.id === 'string' ? "'" + escapeHtml(s.id) + "'" : s.id;
   return '<div class="card" style="animation:fadeUp .4s ' + ((i || 0) * 0.06) + 's both">'
     + (s.photos && s.photos.length
-      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
-      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(_thumbIcon) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
+      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden;background:' + _kc.base + '"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">' + (_km ? '<span class="c-dist">' + _km + '</span>' : '') + '</div>'
+      : '<div class="card-thumb kt ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="background:linear-gradient(155deg,' + _kc.light + ',' + _kc.base + ')">'
+        + '<span class="kt-ico">' + ygKindIconSvg(saleIconName(s), '#fff', 34) + '</span>'
+        + (_km ? '<span class="kt-km">' + _km + '</span>' : '') + '</div>')
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
     + '<div class="card-top"><div class="card-title">' + ((s.placed_by === 'yardigo' && !s.claimed_by_user_id) ? '<span title="Door YardiGo verzameld" style="font-size:11px;opacity:0.65;margin-right:4px">🔍</span>' : '') + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
@@ -10239,7 +10368,7 @@ function openDetail(id) {
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
   var badge = document.getElementById('det-type-badge');
   var _detIcon = getSaleIcon(s);
-  var _detLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : t.label;
+  var _detLabel = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : t.label;
   if (badge) { badge.textContent = _detIcon + ' ' + _detLabel; badge.style.background = colors[s.type]; badge.style.color = textColors[s.type]; }
   var sampleBadge = document.getElementById('det-sample-badge');
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
@@ -11060,7 +11189,7 @@ function openPromoPack() {
   closeShare();
   // Vul de poster-content
   var t = TYPES[s.type];
-  var _typeLbl = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : (t ? t.label : '');
+  var _typeLbl = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : (t ? t.label : '');
   var _icon = getSaleIcon(s);
   document.getElementById('pp-type-badge').textContent = _icon + ' ' + _typeLbl;
   document.getElementById('pp-title').textContent = s.title;
