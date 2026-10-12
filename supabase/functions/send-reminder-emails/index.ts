@@ -14,10 +14,11 @@
 //   REMINDER_FROM_EMAIL             (bv. noreply@yardigo.nl)
 //   REMINDER_FROM_NAME              (bv. YardiGo)
 //   REMINDER_BASE_URL               (bv. https://www.yardigo.nl)
-//   REMINDER_CRON_SECRET            (shared secret om misbruik te voorkomen)
+//   (auth: x-cron-secret = app_config.cron_secret, zie _shared/cron-auth.ts)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { isCronCall } from '../_shared/cron-auth.ts'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -48,9 +49,7 @@ serve(async (req: Request) => {
 
   try {
     // ── Shared secret om ongeauthenticeerde calls te blokkeren ──
-    const expectedSecret = Deno.env.get('REMINDER_CRON_SECRET') ?? ''
-    const providedSecret = req.headers.get('x-cron-secret') ?? ''
-    if (!expectedSecret || providedSecret !== expectedSecret) {
+    if (!(await isCronCall(req))) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }
@@ -253,7 +252,7 @@ Deploy & scheduling
          url := 'https://<PROJECT>.functions.supabase.co/send-reminder-emails?type=3d',
          headers := jsonb_build_object(
            'Content-Type', 'application/json',
-           'x-cron-secret', '<REMINDER_CRON_SECRET>'
+           'x-cron-secret', (select value from public.app_config where key = 'cron_secret')
          )
        );
        $$
@@ -268,7 +267,7 @@ Deploy & scheduling
          url := 'https://<PROJECT>.functions.supabase.co/send-reminder-emails?type=7d',
          headers := jsonb_build_object(
            'Content-Type', 'application/json',
-           'x-cron-secret', '<REMINDER_CRON_SECRET>'
+           'x-cron-secret', (select value from public.app_config where key = 'cron_secret')
          )
        );
        $$

@@ -15,13 +15,14 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 //   VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT   (web push)
 //   ONESIGNAL_APP_ID, ONESIGNAL_REST_API_KEY             (native push, optioneel totdat aangesloten)
-//   NOTIF_CRON_SECRET                                    (shared secret, zelfde patroon als send-reminder-emails)
+//   (auth: x-cron-secret = app_config.cron_secret, zie _shared/cron-auth.ts)
 //   NOTIF_BASE_URL                                        (bv. https://www.yardigo.nl)
 //   BREVO_API_KEY, REMINDER_FROM_EMAIL, REMINDER_FROM_NAME (interest_digest, hergebruikt reminder-secrets)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { sendWebPush, sendOneSignal, distanceKm, isWithinQuietHours } from '../_shared/push.ts'
+import { isCronCall } from '../_shared/cron-auth.ts'
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -65,9 +66,7 @@ interface Listing {
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
 
-  const expectedSecret = Deno.env.get('NOTIF_CRON_SECRET') ?? ''
-  const providedSecret = req.headers.get('x-cron-secret') ?? ''
-  if (!expectedSecret || providedSecret !== expectedSecret) {
+  if (!(await isCronCall(req))) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     })
@@ -491,64 +490,62 @@ async function runInterestDigest(supabase: ReturnType<typeof createClient>, base
   return { pending: pending.length, listings: byListing.size, emails_sent: emailsSent }
 }
 
-/*
-pg_cron schedule (Supabase SQL editor, na deploy van deze functie):
-
-  create extension if not exists pg_cron;
-  create extension if not exists pg_net;
-
-  -- Direct: elke 10 min, dekt nearby (timing=direct), category_alerts (freq=direct), favorites
-  select cron.schedule('notif-nearby', '*/10 * * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=nearby',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-  select cron.schedule('notif-category-direct', '*/10 * * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=category_direct',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-  select cron.schedule('notif-favorites', '*/10 * * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=favorites',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-
-  -- Ochtendroute: elke 15 min (venster vangt de per-gebruiker ingestelde tijd op)
-  select cron.schedule('notif-morning-route', '*/15 * * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=morning_route',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-
-  -- Dagelijkse digest: nearby (timing=dagelijks) + category_alerts (freq=dagelijks), 08:00 CEST ≈ 06:00 UTC
-  select cron.schedule('notif-digest-daily', '0 6 * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=digest_daily',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-
-  -- Wekelijkse digest: category_alerts (freq=wekelijks), maandag 08:00 CEST ≈ 06:00 UTC
-  select cron.schedule('notif-digest-weekly', '0 6 * * 1', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=digest_weekly',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-
-  -- Interesse-mail bundelen: elk uur, max 1 mail per listing per run.
-  -- Stuurt niets tussen 23:00-07:00 NL-tijd (check zit in de functie zelf,
-  -- DST-veilig via Europe/Amsterdam — het cron-schema hoeft geen rekening
-  -- te houden met zomer/wintertijd).
-  select cron.schedule('notif-interest-digest', '0 * * * *', $$
-    select net.http_post(
-      url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=interest_digest',
-      headers := jsonb_build_object('Content-Type','application/json','x-cron-secret','<NOTIF_CRON_SECRET>')
-    );
-  $$);
-*/
+// pg_cron schedule (Supabase SQL editor, na deploy van deze functie):
+//
+//   create extension if not exists pg_cron;
+//   create extension if not exists pg_net;
+//
+//   -- Direct: elke 10 min, dekt nearby (timing=direct), category_alerts (freq=direct), favorites
+//   select cron.schedule('notif-nearby', '*/10 * * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=nearby',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//   select cron.schedule('notif-category-direct', '*/10 * * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=category_direct',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//   select cron.schedule('notif-favorites', '*/10 * * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=favorites',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//
+//   -- Ochtendroute: elke 15 min (venster vangt de per-gebruiker ingestelde tijd op)
+//   select cron.schedule('notif-morning-route', '*/15 * * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=morning_route',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//
+//   -- Dagelijkse digest: nearby (timing=dagelijks) + category_alerts (freq=dagelijks), 08:00 CEST ≈ 06:00 UTC
+//   select cron.schedule('notif-digest-daily', '0 6 * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=digest_daily',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//
+//   -- Wekelijkse digest: category_alerts (freq=wekelijks), maandag 08:00 CEST ≈ 06:00 UTC
+//   select cron.schedule('notif-digest-weekly', '0 6 * * 1', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=digest_weekly',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
+//
+//   -- Interesse-mail bundelen: elk uur, max 1 mail per listing per run.
+//   -- Stuurt niets tussen 23:00-07:00 NL-tijd (check zit in de functie zelf,
+//   -- DST-veilig via Europe/Amsterdam — het cron-schema hoeft geen rekening
+//   -- te houden met zomer/wintertijd).
+//   select cron.schedule('notif-interest-digest', '0 * * * *', $$
+//     select net.http_post(
+//       url := 'https://<PROJECT>.functions.supabase.co/process-notifications?job=interest_digest',
+//       headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret'))
+//     );
+//   $$);
