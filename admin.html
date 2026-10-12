@@ -1945,7 +1945,7 @@ function listingsPerUser(listings){
 // DASHBOARD
 // ══════════════════════════════════════════════════
 async function loadDashboard(){
-  var{data:listings}=await sb.from('listings').select('*').order('created_at',{ascending:false});
+  var{data:listings}=await sb.rpc('admin_listings');
   listings=listings||[];
   var today=new Date().toISOString().split('T')[0];
   var active=listings.filter(function(l){return l.status==='active'&&l.date_start>=today;});
@@ -2116,7 +2116,7 @@ async function moderateListing(id,newStatus){
 // LISTINGS
 // ══════════════════════════════════════════════════
 async function loadListings(){
-  var{data,error}=await sb.from('listings').select('*').order('created_at',{ascending:false});
+  var{data,error}=await sb.rpc('admin_listings');
   allListings=data||[];
   document.getElementById('listings-count').textContent=allListings.length+' totaal';
   renderListingsTable(allListings);

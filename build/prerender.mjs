@@ -81,9 +81,13 @@ function cityFromAddress(addr, city) {
 }
 
 async function fetchListings() {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,category,event_subtype,date_start,date_end,time_start,time_end,address,city,latitude,longitude,address_reveal_mode,description,images,confirmation_status,user_id,status&order=date_start.desc&limit=2000`;
+  // Via RPC: adres/coördinaten van particuliere verkopen komen er server-side al
+  // verborgen/verschoven uit (zie privacy-lockdown.sql).
+  const url = `${SUPABASE_URL}/rest/v1/rpc/get_listings_seo`;
   const res = await fetch(url, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: '{}',
   });
   if (!res.ok) {
     console.error('Failed to fetch listings:', res.status, await res.text());
