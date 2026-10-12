@@ -52,6 +52,7 @@
 // (zie ai-parse-usage-setup.sql in de repo-root).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { MARKT_SUBTYPES, SUBCATEGORIE_UITLEG } from '../_shared/subtypes.ts';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const CORS_HEADERS = {
@@ -82,6 +83,7 @@ const COUNTRIES     = new Set(['NL', 'BE', 'FR', 'DE']);
 interface EventSchema {
   titel: string | null;
   event_type: 'opritverkoop' | 'rommelroute' | 'rommelmarkt' | 'buurtverkoop' | 'overig' | null;
+  subcategorie: string | null;
   datum: string | null;
   starttijd: string | null;
   eindtijd: string | null;
@@ -359,6 +361,7 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '{',
     '  "titel": string | null,',
     '  "event_type": "opritverkoop" | "rommelroute" | "rommelmarkt" | "buurtverkoop" | "overig" | null,',
+    '  "subcategorie": string | null,',
     '  "datum": "YYYY-MM-DD" | null,',
     '  "starttijd": "HH:MM" | null,',
     '  "eindtijd": "HH:MM" | null,',
@@ -374,7 +377,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
       ? '- adres = straat + huisnummer zoals vermeld, ook bij een particuliere verkoop (de verkoper heeft het zelf openbaar gedeeld). Bij een route of meerdere straten: de straatnamen.'
       : '- adres = straat + huisnummer ALLEEN bij een duidelijk publieke locatie (sporthal, plein, markthal, gemeentekantoor, kerk, schoolplein). Bij een privéadres van een particulier: adres = null (privacy).',
     '- beschrijving = EIGEN korte formulering (max 240 tekens), feitelijk. NIET de brontekst letterlijk overnemen.',
-    '- event_type: "opritverkoop" bij één huis / eigen oprit, "rommelroute" bij meerdere adressen in een buurt, "rommelmarkt" bij georganiseerde markt met kramen, "buurtverkoop" bij aangekondigde buurt-actie, anders "overig".',
+    '- event_type: "opritverkoop" bij één huis / eigen oprit, "rommelroute" bij meerdere adressen in een buurt, "rommelmarkt" bij georganiseerde markt met kramen, "buurtverkoop" bij aangekondigde buurt-actie, anders "overig". Elke georganiseerde markt (ook kerstmarkt, boekenmarkt, braderie, kofferbakverkoop, kleding-/kinderbeurs) = "rommelmarkt".',
+    '- ' + SUBCATEGORIE_UITLEG,
     '- Ontbrekend veld = null. Verzin niets.',
     '- bron_url alleen als er een URL zichtbaar is; anders null.',
     '',
@@ -578,6 +582,7 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
   return {
     titel:        clean(raw.titel),
     event_type:   (et && ALLOWED_TYPES.has(et)) ? (et as EventSchema['event_type']) : null,
+    subcategorie: (() => { const s = clean(raw.subcategorie as string)?.toLowerCase(); return s && MARKT_SUBTYPES.includes(s) ? s : null; })(),
     datum:        (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) ? dt : null,
     starttijd:    (st && /^\d{1,2}:\d{2}$/.test(st)) ? padTime(st) : null,
     eindtijd:     (en && /^\d{1,2}:\d{2}$/.test(en)) ? padTime(en) : null,

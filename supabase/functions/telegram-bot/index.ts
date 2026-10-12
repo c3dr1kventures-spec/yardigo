@@ -26,11 +26,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
+import { bepaalSubtype } from '../_shared/subtypes.ts';
 
 const SITE = 'https://www.yardigo.nl';
 const MINIAPP = SITE + '/tg';
 const DIGEST_BATCH = 8;
-const SUBTYPES = new Set(['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig']);
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -372,7 +372,8 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
     }
   }
   const posterUrl = image ? await bewaarPoster(sb, image) : null;
-  const subtype = SUBTYPES.has(e.event_type || '') ? e.event_type : 'rommelmarkt';
+  let subtype = bepaalSubtype(e.event_type, e.subcategorie, e.titel);
+  if (subtype === 'overig' && e.event_type !== 'overig') subtype = 'rommelmarkt';
   const isPart = subtype === 'opritverkoop';
   const row: any = {
     title: e.titel, description: e.beschrijving, event_subtype: subtype,

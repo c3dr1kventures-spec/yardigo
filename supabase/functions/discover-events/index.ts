@@ -29,6 +29,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { bepaalSubtype, SUBCATEGORIE_UITLEG } from '../_shared/subtypes.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -60,6 +61,7 @@ interface EventParsed {
   titel: string | null;
   land: string | null;
   event_type: string | null;
+  subcategorie?: string | null;
   datum: string | null;
   starttijd: string | null;
   eindtijd: string | null;
@@ -301,7 +303,8 @@ function buildSystemPrompt(today: string, country: string): string {
     'Elk event in "events" volgt DIT schema (kopie parse-event):',
     '{',
     '  "titel": string | null,',
-    '  "event_type": "opritverkoop"|"rommelroute"|"rommelmarkt"|"buurtverkoop"|"overig" | null,',
+    '  "event_type": "opritverkoop"|"rommelroute"|"rommelmarkt"|"buurtverkoop"|"overig" | null,   // elke georganiseerde markt = rommelmarkt',
+    '  "subcategorie": string | null,',
     '  "datum": "YYYY-MM-DD" | null,',
     '  "starttijd": "HH:MM" | null,',
     '  "eindtijd": "HH:MM" | null,',
@@ -319,6 +322,7 @@ function buildSystemPrompt(today: string, country: string): string {
     '- Verzamelsites/agenda-aggregators (bv. meukisleuk.nl, rommelmarkten.be, brocabrac.fr, vide-greniers.org): zet is_originele_bron=false, maar EXTRAHEER de events WEL. Ze gaan naar handmatige review, dus liever aanleveren dan weggooien.',
     '- Alleen bij marktplaats-achtige sites (marktplaats.nl, 2dehands.be, leboncoin.fr, ebay) geldt: is_originele_bron=false EN events=[].',
     '- "land" is het land waar het event PLAATSVINDT, af te leiden uit plaats/adres. Dat hoeft niet het land van deze website te zijn: een Belgische site kan best een Nederlandse verkoop vermelden. Bij twijfel: null.',
+    '- ' + SUBCATEGORIE_UITLEG,
     '- Verzin niets. Onduidelijk = null.',
   ].join('\n');
 }
@@ -376,7 +380,7 @@ function normalizeEvent(e: EventParsed): {
   };
   return {
     titel,
-    event_subtype: ALLOWED_EVENT_TYPES.has(et) ? et : null,
+    event_subtype: ALLOWED_EVENT_TYPES.has(et) ? bepaalSubtype(et, e.subcategorie, titel) : null,
     datum,
     starttijd:    pad(e.starttijd),
     eindtijd:     pad(e.eindtijd),

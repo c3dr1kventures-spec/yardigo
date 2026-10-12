@@ -1,3 +1,4 @@
+import { bepaalSubtype, isParticulierSubtype } from './subtypes.ts';
 // YardiGo – gedeelde publiceer-logica voor curated events
 //
 // Eén plek die bepaalt of een pending_event zonder menselijke blik live mag,
@@ -77,14 +78,17 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
 
   // Particuliere verkoop (thuisadres): categorie garagesale, zodat de kaart
   // de pin verschuift en het adres pas 24 uur vooraf toont (listing_is_private).
-  const prive = p.is_private_seller === true
-    || ['opritverkoop', 'garagesale', 'garageverkoop', 'tuinverkoop'].includes((p.event_subtype || '').toLowerCase());
+  let subtype = bepaalSubtype(p.event_subtype, null, p.title);
+  if (subtype === 'overig' && p.event_subtype !== 'overig') subtype = 'rommelmarkt';
+  const prive = p.is_private_seller === true || isParticulierSubtype(subtype);
+  // Particulier = altijd opritverkoop (amber pin), tenzij het een route is.
+  if (prive && subtype !== 'rommelroute' && subtype !== 'buurtverkoop') subtype = 'opritverkoop';
   const payload = {
     placed_by:           'yardigo',
     status:              'active',
     confirmation_status: 'confirmed',
     category:            prive ? 'garagesale' : 'rommelmarkt',
-    event_subtype:       p.event_subtype || 'rommelmarkt',
+    event_subtype:       subtype,
     title:               p.title,
     description:         p.description,
     city:                p.city,

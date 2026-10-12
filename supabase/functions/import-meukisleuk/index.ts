@@ -30,6 +30,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, publishPending } from '../_shared/publish.ts';
+import { bepaalSubtype, SUBTYPES } from '../_shared/subtypes.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -59,11 +60,10 @@ const CATEGORIEEN: { slug: string; subtype: string }[] = [
   { slug: 'kofferbakverkoop',           subtype: 'kofferbak'    },
   { slug: 'antiek-+en+curiosamarkt',    subtype: 'antiekmarkt'  },
   { slug: 'boekenmarkt',                subtype: 'boekenmarkt'  },
-  { slug: 'tweedehandskledingbeurs',    subtype: 'overig'       },
-  { slug: 'tweedehandsspeelgoedbeurs',  subtype: 'overig'       },
+  { slug: 'tweedehandskledingbeurs',    subtype: 'kledingmarkt' },
+  { slug: 'tweedehandsspeelgoedbeurs',  subtype: 'kinderbeurs'  },
   { slug: 'evenement',                  subtype: 'overig'       },
 ];
-const SUBTYPES = new Set(['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig']);
 
 // ── Helpers ────────────────────────────────────────────────────────
 function json(body: unknown, status: number): Response {
@@ -258,7 +258,7 @@ async function classifyBatch(key: string, items: Detail[], diag: string[]): Prom
     'Per item: {"ref": string, "titel": string, "beschrijving": string, "event_subtype": string, "is_particulier": bool, "past_bij_yardigo": bool}',
     '- titel: korte, nette titel (max 70 tekens), zonder datum en zonder hoofdletters-geschreeuw.',
     '- beschrijving: EIGEN formulering in het Nederlands, 1-2 zinnen, max 220 tekens. Nooit zinnen letterlijk overnemen. Geen telefoonnummers, e-mail of URLs, en geen datum of tijden (die staan al apart).',
-    '- event_subtype: één van rommelmarkt, vlooienmarkt, opritverkoop, rommelroute, buurtverkoop, kofferbak, antiekmarkt, boekenmarkt, braderie, kerstmarkt, overig.',
+    '- event_subtype: één van ' + [...SUBTYPES].join(', ') + '. opritverkoop = één huis; rommelroute/buurtverkoop = meerdere adressen in een buurt of dorp; anders de soort markt (snuffelmarkt/vlooienmarkt/jaarmarkt alleen als de bron dat woord gebruikt; kinderbeurs = kinderkleding-/speelgoedbeurs; kledingmarkt = kledingbeurs). Gemengde markt = de eerstgenoemde soort.',
     '- is_particulier: true als het een verkoop door een privépersoon bij huis is (garage sale, opruiming, verhuisverkoop, tuinverkoop). false bij een vereniging, kerk, school, bedrijf, gemeente of beroepsorganisator — ook als er een persoonsnaam als contact staat. Ook false bij een buurt-, wijk- of dorpsbrede garage sale of rommelroute met meerdere deelnemende adressen (dat is een publiek evenement, ook als een bewoner het organiseert).',
     '- past_bij_yardigo: true bij verkoop van tweedehands spullen door particulieren of op een markt (rommelmarkt, vlooienmarkt, brocante, kofferbak, kleding-/speelgoedbeurs, boekenmarkt, garage sale). false bij winkels, webshops, verzamel-/platenbeurzen voor handelaren, kunstmarkten met nieuw werk, braderieën zonder tweedehands, veilingen.',
   ].join('\n');
@@ -410,7 +410,7 @@ serve(async (req: Request) => {
     const a = ai.get(d.ref);
     if (!a) { s.errors.push('ai mist ' + d.ref); continue; }
     const titel = (a.titel || d.title).trim();
-    const subtype = SUBTYPES.has(a.event_subtype || '') ? a.event_subtype! : d.subtypeHint;
+    const subtype = bepaalSubtype(SUBTYPES.has(a.event_subtype || '') ? a.event_subtype : d.subtypeHint, null, titel);
     const adres = [d.venue, d.street].filter(Boolean).join(', ') || null;
 
     const h = await sb.rpc('discovery_content_hash', { p_title: titel, p_date: d.dateStart, p_city: d.city });
