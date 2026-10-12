@@ -9006,10 +9006,8 @@ function initMap() {
 // wit icoon = subcategorie (boekenmarkt, kerstmarkt, kofferbak …).
 function makeMarkerIcon(sale) {
   var c = YG_KIND_COLORS[saleKind(sale)].base;
-  // Curated (door YardiGo verzameld) pins krijgen een subtiele stippellijn-rand
-  // in plaats van een solid rand — herkenbaar bij close-up, niet storend bij overzicht
   var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
-  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="2" stroke-dasharray="2.5 1.5"' : 'stroke="white" stroke-width="2"';
+  var strokeAttrs = 'stroke="white" stroke-width="2"';
   var icon = YG_KIND_ICON_PATHS[saleIconName(sale)] || YG_KIND_ICON_PATHS.stall;
   var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.25))">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
