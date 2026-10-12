@@ -3279,6 +3279,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <p data-i18n="report.what_wrong">Wat klopt er niet aan deze advertentie?</p>
     <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px" id="report-options">
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Datum of tijd klopt niet" style="accent-color:var(--terra)"> <span data-i18n="report.r_date">Datum of tijd klopt niet</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Gaat niet (meer) door" style="accent-color:var(--terra)"> <span data-i18n="report.r_cancelled">Gaat niet (meer) door</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
         <input type="radio" name="report-reason" value="Spam of nep advertentie" style="accent-color:var(--terra)"> <span data-i18n="report.r_spam">Spam of nep advertentie</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
@@ -3402,7 +3408,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </button>
       <!-- Melden knop (alleen ingelogde leden) -->
       <div class="members-only" id="det-report-wrap" style="text-align:center;margin-top:12px">
-        <button onclick="openReport()" data-i18n="detail.report_btn" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px 8px">🚩 Advertentie melden</button>
+        <button onclick="openReport()" data-i18n="detail.report_btn" style="background:none;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:6px 14px">🚩 Klopt er iets niet? Meld het</button>
       </div>
     </div>
   </div>
@@ -5081,7 +5087,7 @@ var I18N = {
     'detail.share': '↑ Delen',
     'detail.cta_going': 'Ik ga erheen!',
     'detail.cta_not_going': 'Toch niet',
-    'detail.report_btn': '🚩 Advertentie melden',
+    'detail.report_btn': '🚩 Klopt er iets niet? Meld het',
     'detail.guest_title': 'Maak gratis account aan',
     'detail.guest_sub': 'Zie adressen · Navigeer · Sla op',
     // Profile
@@ -5377,6 +5383,8 @@ var I18N = {
     'report.r_photos': "Ongepaste of aanstootgevende foto's",
     'report.r_address': 'Onjuist adres of locatie',
     'report.r_other': 'Anders',
+    'report.r_date': 'Datum of tijd klopt niet',
+    'report.r_cancelled': 'Gaat niet (meer) door',
     'report.placeholder': 'Optioneel: toelichting…',
     // Route-tab
     'route.stops': 'Stops',
@@ -5773,7 +5781,7 @@ var I18N = {
     'detail.share': '↑ Share',
     'detail.cta_going': 'I\'ll be there!',
     'detail.cta_not_going': 'Change of plans',
-    'detail.report_btn': '🚩 Report listing',
+    'detail.report_btn': '🚩 Something wrong? Let us know',
     'detail.guest_title': 'Create a free account',
     'detail.guest_sub': 'See addresses · Navigate · Save',
     // Profile
@@ -6069,6 +6077,8 @@ var I18N = {
     'report.r_photos': 'Inappropriate or offensive photos',
     'report.r_address': 'Wrong address or location',
     'report.r_other': 'Other',
+    'report.r_date': 'Date or time is wrong',
+    'report.r_cancelled': 'Cancelled / not happening',
     'report.placeholder': 'Optional: explanation…',
     // Route tab
     'route.stops': 'Stops',
@@ -6465,7 +6475,7 @@ var I18N = {
     'detail.share': '↑ Partager',
     'detail.cta_going': 'J\'y serai !',
     'detail.cta_not_going': 'Finalement non',
-    'detail.report_btn': '🚩 Signaler l\'annonce',
+    'detail.report_btn': '🚩 Une erreur ? Signalez-la',
     'detail.guest_title': 'Créez un compte gratuit',
     'detail.guest_sub': 'Voir les adresses · Naviguer · Sauvegarder',
     // Profile
@@ -6761,6 +6771,8 @@ var I18N = {
     'report.r_photos': 'Photos inappropriées ou offensantes',
     'report.r_address': 'Adresse ou lieu incorrect',
     'report.r_other': 'Autre',
+    'report.r_date': 'Date ou heure incorrecte',
+    'report.r_cancelled': 'Annulé / n\'a pas lieu',
     'report.placeholder': 'Facultatif : précisions…',
     // Onglet Itinéraire
     'route.stops': 'Arrêts',
@@ -7151,7 +7163,7 @@ var I18N = {
     'detail.share': '↑ Teilen',
     'detail.cta_going': 'Ich bin dabei!',
     'detail.cta_not_going': 'Pläne geändert',
-    'detail.report_btn': '🚩 Anzeige melden',
+    'detail.report_btn': '🚩 Stimmt etwas nicht? Melden',
     'detail.guest_title': 'Erstelle ein kostenloses Konto',
     'detail.guest_sub': 'Adressen sehen · Navigieren · Speichern',
     'profile.guest': 'Gast',
@@ -7438,6 +7450,8 @@ var I18N = {
     'report.r_address': 'Falsche Adresse oder Standort',
     'report.r_misleading': 'Irreführende oder falsche Informationen',
     'report.r_other': 'Sonstiges',
+    'report.r_date': 'Datum oder Uhrzeit falsch',
+    'report.r_cancelled': 'Fällt aus / findet nicht statt',
     'report.r_photos': 'Unangemessene oder anstößige Fotos',
     'report.r_spam': 'Spam oder Fake-Anzeige',
     'report.what_wrong': 'Was stimmt mit dieser Anzeige nicht?',
@@ -16812,32 +16826,10 @@ function sendReport() {
   var btn = document.querySelector('#reportOv .btn-feedback-send');
   btn.textContent = '⏳ Versturen...';
   btn.disabled = true;
-  var saleInfo = '';
-  if (typeof detailSaleId !== 'undefined' && detailSaleId) {
-    var s = sales.find(function(x){ return String(x.id) === String(detailSaleId); });
-    if (s) saleInfo = '\n\nAdvertentie: ' + s.title + ' (ID: ' + detailSaleId + ')';
-  }
-  // Afzender-info
-  var senderName  = (currentUser && currentUser.name)  ? currentUser.name  : 'Onbekend';
-  var senderEmail = (currentUser && currentUser.email) ? currentUser.email : '';
-  var senderId    = (currentUser && currentUser.id)    ? currentUser.id    : '';
-  var senderBlock = '\n\n─────────────\nAfzender: ' + senderName +
-                    '\nE-mail: '  + (senderEmail || '(geen)') +
-                    '\nUser-id: ' + (senderId    || '(onbekend)') +
-                    '\nPagina: '  + (location.pathname || '/');
-  fetch('https://api.web3forms.com/submit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({
-      access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
-      subject: '[YardiGo Melding] ' + reason + ' - ' + senderName,
-      message: reason + (extra ? '\n\nToelichting: ' + extra : '') + saleInfo + senderBlock,
-      from_name: 'YardiGo Melding – ' + senderName,
-      email:   senderEmail || undefined,
-      replyto: senderEmail || undefined
-    })
-  })
-  .then(function(r){ return r.json(); })
+  if (!detailSaleId || !sbClient) { btn.textContent = '🚩 Verstuur melding'; btn.disabled = false; return; }
+  // Melding gaat naar YardiGo (database + Telegram van de beheerder), niet meer via e-mail.
+  Promise.resolve(sbClient.rpc('report_listing', { p_listing_id: String(detailSaleId), p_reason: reason, p_note: extra || null }))
+  .then(function(res){ return { success: !res.error, message: res.error && res.error.message }; })
   .then(function(data){
     btn.textContent = '🚩 Verstuur melding';
     btn.disabled = false;

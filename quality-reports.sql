@@ -1,0 +1,14 @@
+-- YardiGo – kwaliteitsbewaking (okt 2026)
+-- Toegepast als migraties 'listing_reports_quality' en 'report_listing_timeout'.
+--
+-- listing_reports  – meldingen van ingelogde bezoekers ("Klopt er iets niet?").
+--                    Alleen via RPC report_listing(listing, reden, toelichting):
+--                    max 10 per gebruiker per dag, 1 per advertentie. Elke melding
+--                    seint de beheerder via telegram-bot?action=report met knoppen
+--                    Offline halen / Klopt wel.
+-- quality_checks   – wekelijkse steekproef (telegram-bot?action=sample, ma 09:00):
+--                    5 automatisch geplaatste advertenties ✅/❌.
+-- Cron:
+--   yardigo-import-watchdog  '0 18 * * *'  – waarschuwt als er 24u niets binnenkwam
+--   yardigo-quality-sample   '0 7 * * 1'   – steekproef
+-- Offline halen zet listings.status = 'cancelled'.

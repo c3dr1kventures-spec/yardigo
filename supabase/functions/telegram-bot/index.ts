@@ -425,8 +425,109 @@ function dmTekst(p: any): string {
   ].join(' ');
 }
 
+// ── Kwaliteit: meldingen van bezoekers, steekproef, importbewaker ──
+async function listingKort(sb: any, id: string) {
+  const { data } = await sb.from('listings').select('id,title,city,date_start,time_start,status,short_code,placed_by').eq('id', id).maybeSingle();
+  return data;
+}
+function listingRegel(l: any): string {
+  const link = l.short_code ? `https://yardigo.nl/s/${l.short_code}` : `${SITE}/v/${l.id}`;
+  return `<b>${esc(l.title)}</b>\n📅 ${datumNl(l.date_start)}${l.time_start ? ' ' + String(l.time_start).slice(0, 5) : ''} · 📍 ${esc(l.city || '')}\n${link}`;
+}
+
+async function stuurMelding(sb: any, chat: string, reportId: number) {
+  const { data: r } = await sb.from('listing_reports').select('id,listing_id,reason,note,created_at').eq('id', reportId).maybeSingle();
+  if (!r) return false;
+  const l = await listingKort(sb, r.listing_id);
+  if (!l) return false;
+  const { count } = await sb.from('listing_reports').select('id', { count: 'exact', head: true }).eq('listing_id', l.id).eq('status', 'open');
+  await send(chat, `🚩 <b>Melding:</b> ${esc(r.reason)}${r.note ? `\n💬 “${esc(r.note)}”` : ''}${(count ?? 0) > 1 ? `\n(${count} open meldingen voor deze advertentie)` : ''}\n\n${listingRegel(l)}`, {
+    reply_markup: { inline_keyboard: [[
+      { text: '🚫 Offline halen', callback_data: `lo:${l.id}` },
+      { text: '👍 Klopt wel', callback_data: `lk:${l.id}` },
+    ]] } });
+  return true;
+}
+
+async function steekproef(sb: any, chat: string, aantal = 5): Promise<number> {
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const week = new Date(Date.now() - 7 * 86400000).toISOString();
+  const { data: gehad } = await sb.from('quality_checks').select('listing_id');
+  const skip = new Set((gehad || []).map((g: any) => g.listing_id));
+  const { data } = await sb.from('listings').select('id,title,city,date_start,time_start,status,short_code')
+    .eq('placed_by', 'yardigo').eq('status', 'active').gte('date_start', vandaag).gte('created_at', week).limit(200);
+  const pool = (data || []).filter((l: any) => !skip.has(l.id));
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const kies = pool.slice(0, aantal);
+  if (!kies.length) return 0;
+  await send(chat, `🔎 <b>Steekproef</b> — ${kies.length} automatisch geplaatste advertenties van deze week. Klopt alles (datum, tijd, plek, soort)?`);
+  for (const l of kies) {
+    await sb.from('quality_checks').upsert({ listing_id: l.id }, { onConflict: 'listing_id', ignoreDuplicates: true });
+    await send(chat, listingRegel(l), { reply_markup: { inline_keyboard: [[
+      { text: '✅ Klopt', callback_data: `qok:${l.id}` },
+      { text: '❌ Klopt niet', callback_data: `qno:${l.id}` },
+    ]] } });
+  }
+  return kies.length;
+}
+
+async function bewaker(sb: any, chat: string): Promise<{ ok: boolean; nieuw24: number; live48: number }> {
+  const d24 = new Date(Date.now() - 86400000).toISOString();
+  const d48 = new Date(Date.now() - 2 * 86400000).toISOString();
+  const nieuw24 = (await sb.from('pending_events').select('id', { count: 'exact', head: true })
+    .like('external_ref', 'meukisleuk:%').gte('created_at', d24)).count ?? 0;
+  const live48 = (await sb.from('listings').select('id', { count: 'exact', head: true })
+    .eq('placed_by', 'yardigo').gte('created_at', d48)).count ?? 0;
+  const ok = nieuw24 > 0 || live48 > 0;
+  if (!ok) {
+    await send(chat, `⚠️ <b>Import-bewaker</b>\nDe afgelopen 24 uur is er niets nieuws binnengekomen en in 48 uur niets automatisch geplaatst. Mogelijk is de bron veranderd of geblokkeerd — even laten nakijken.`);
+  }
+  return { ok, nieuw24, live48 };
+}
+
+async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, listingId: string) {
+  const msg = cq.message;
+  const l = await listingKort(sb, listingId);
+  if (!l) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Advertentie niet gevonden' });
+  const nu = new Date().toISOString();
+  const bewerk = (tekst: string, knoppen: any[] = []) => tg('editMessageText', {
+    chat_id: chat, message_id: msg.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
+    text: tekst, reply_markup: { inline_keyboard: knoppen } });
+
+  if (actie === 'lo') {
+    await sb.from('listings').update({ status: 'cancelled' }).eq('id', l.id);
+    await sb.from('listing_reports').update({ status: 'opgelost' }).eq('listing_id', l.id).eq('status', 'open');
+    await sb.from('quality_checks').update({ verdict: 'fout', decided_at: nu }).eq('listing_id', l.id);
+    await bewerk(`🚫 Offline gehaald\n\n${listingRegel(l)}`, [[{ text: '↩️ Toch terugzetten', callback_data: `lb:${l.id}` }]]);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Offline gehaald' });
+  }
+  if (actie === 'lb') {
+    await sb.from('listings').update({ status: 'active' }).eq('id', l.id);
+    await bewerk(`↩️ Weer live\n\n${listingRegel(l)}`);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Weer live' });
+  }
+  if (actie === 'lk') {
+    await sb.from('listing_reports').update({ status: 'genegeerd' }).eq('listing_id', l.id).eq('status', 'open');
+    await bewerk(`👍 Melding genegeerd — advertentie blijft staan\n\n${listingRegel(l)}`);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Genegeerd' });
+  }
+  if (actie === 'qok') {
+    await sb.from('quality_checks').update({ verdict: 'ok', decided_at: nu }).eq('listing_id', l.id);
+    await bewerk(`✅ Klopt\n\n${listingRegel(l)}`);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Genoteerd' });
+  }
+  if (actie === 'qno') {
+    await sb.from('quality_checks').update({ verdict: 'fout', decided_at: nu }).eq('listing_id', l.id);
+    await bewerk(`❌ Klopt niet — wat wil je doen?\n\n${listingRegel(l)}\n\nAanpassen kan in de admin (Curated-tab).`,
+      [[{ text: '🚫 Offline halen', callback_data: `lo:${l.id}` }]]);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Genoteerd' });
+  }
+  return tg('answerCallbackQuery', { callback_query_id: cq.id });
+}
+
 async function knop(sb: any, chat: string, cq: any) {
   const [actie, idStr] = String(cq.data || '').split(':');
+  if (['lo', 'lb', 'lk', 'qok', 'qno'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
   const id = parseInt(idStr, 10);
   const msg = cq.message;
   const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', id).maybeSingle();
@@ -713,6 +814,16 @@ serve(async (req: Request) => {
       const n = await digest(sb, chat, true);
       if (t.onverstuurd > n) await send(chat, `Nog ${t.onverstuurd - n} — stuur /meer voor de volgende.`);
       return json({ ok: true, verstuurd: n });
+    }
+    if (action === 'report' || action === 'watchdog' || action === 'sample') {
+      const chat = await cfg(sb, 'telegram_admin_chat');
+      if (!chat) return json({ ok: false, error: 'geen gekoppelde chat' });
+      if (action === 'report') {
+        const body = await req.json().catch(() => ({}));
+        return json({ ok: await stuurMelding(sb, chat, Number(body?.id)) });
+      }
+      if (action === 'watchdog') return json(await bewaker(sb, chat));
+      return json({ ok: true, verstuurd: await steekproef(sb, chat) });
     }
     return json({ error: 'onbekende action' }, 400);
   }
