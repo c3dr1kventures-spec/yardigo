@@ -37,8 +37,8 @@ const TITEL_REGELS: [RegExp, string][] = [
   [/kofferbak/i, 'kofferbak'],
   [/antiekmarkt|antiek- en curiosa|antiekbeurs/i, 'antiekmarkt'],
   [/jaarmarkt/i, 'jaarmarkt'],
-  [/kinder(kleding|speelgoed)?beurs|speelgoedbeurs|kinderrommelmarkt/i, 'kinderbeurs'],
-  [/kleding(beurs|markt)/i, 'kledingmarkt'],
+  [/kinder(kleding)?(beurs|markt)|speelgoed(beurs|markt)|kinderkleding.*speelgoed|speelgoed.*kinderkleding/i, 'kinderbeurs'],
+  [/(?<!kinder)kleding(beurs|markt)/i, 'kledingmarkt'],
 ];
 const ALGEMEEN = /rommel|vlooien|markt en |en markt/i;
 

@@ -377,6 +377,12 @@ serve(async (req: Request) => {
       else cursor = { cat: stap.cat, page: stap.page + 1 };
     }
   }
+  // Niet in de volgorde van de bronpagina verwerken: dan lopen onze
+  // plaatsingstijden niet één-op-één gelijk met hun lijst.
+  for (let i = kandidaten.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [kandidaten[i], kandidaten[j]] = [kandidaten[j], kandidaten[i]];
+  }
   s.nieuw = kandidaten.length;
   s.cursor_naar = { ...cursor };
   if (!dryRun) await sb.from('app_config').upsert({ key: 'meukisleuk_cursor', value: JSON.stringify(cursor) }, { onConflict: 'key' });

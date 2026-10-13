@@ -9738,9 +9738,18 @@ function renderList() {
     }
     return 0;
   }
+  // Gelijke waarde (bv. zelfde dag): eerst dichtbij, anders een vaste
+  // menging op id — zo volgt de lijst nooit de volgorde van een bron.
+  function tieVal(item) {
+    if (userLocation) return item.kind === 'bv' ? (item.bv._sortDistance || 0) : dist(userLocation, item.s);
+    var id = String(item.kind === 'bv' ? (item.bv && item.bv.id) : item.s.id), h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+    return h;
+  }
   items.sort(function(a, b) {
     var av = sortVal(a, listSortMode);
     var bv2 = sortVal(b, listSortMode);
+    if (av === bv2) return tieVal(a) - tieVal(b);
     if (listSortMode === 'date-asc' || listSortMode === 'nearby') {
       return av - bv2;
     }
