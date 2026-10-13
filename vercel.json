@@ -6,6 +6,8 @@
   "installCommand": "",
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/verkoop", "destination": "/index.html" },
+    { "source": "/aanmelden", "destination": "/index.html" },
     { "source": "/v/:id", "destination": "/api/share/:id" },
     { "source": "/s/:code", "destination": "/api/s/:code" },
     { "source": "/v/:id", "destination": "/index.html" }

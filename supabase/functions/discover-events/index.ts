@@ -30,6 +30,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { bepaalSubtype, SUBCATEGORIE_UITLEG } from '../_shared/subtypes.ts';
+import { autoCheck, publishPending } from '../_shared/publish.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -53,6 +54,13 @@ const DUPE_RADIUS_M        = 500;
 // moet er minstens PAGE_RESERVE_MS over zijn.
 const RUN_BUDGET_MS        = 120000;
 const PAGE_RESERVE_MS      = 55000;
+// Vaste bronnen mogen niet het hele budget opeten (gebeurde sinds eind aug:
+// de zoeklaag kwam nooit meer aan de beurt). Max 2 per run, roterend.
+const BRONNEN_PER_RUN      = 2;
+const BRONNEN_BUDGET_MS    = 45000;
+// Per zoekopdracht maximaal zoveel nieuwe URL's, zodat elke run meerdere
+// zoekopdrachten afwerkt in plaats van één.
+const URLS_PER_QUERY       = 3;
 
 // ── Interfaces ─────────────────────────────────────────────────────
 interface DiscoveryQuery { id: number; query_tekst: string; land: string; laatste_run: string | null; }
@@ -200,6 +208,29 @@ async function nominatimLookup(query: string, cc: string): Promise<{ lat: number
   return null;
 }
 
+// Photon (Komoot, OSM-data): geen key, ander IP-beleid dan Nominatim.
+// Met `plaats`: alleen een treffer accepteren in die plaats (Photon geeft
+// anders zomaar een gelijknamige straat elders in het land).
+async function photonLookup(query: string, cc: string, plaats?: string | null): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const r = await fetchWithTimeout('https://photon.komoot.io/api/?limit=5&q=' + encodeURIComponent(query),
+      { headers: { Accept: 'application/json', 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl)' } }, 8000);
+    if (!r.ok) return null;
+    const feats = (await r.json())?.features || [];
+    const norm = (v: unknown) => String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const p = norm(plaats);
+    const f = feats.find((x: any) => {
+      const pr = x?.properties || {};
+      if (cc && norm(pr.countrycode) !== cc) return false;
+      if (!p) return true;
+      return [pr.city, pr.name, pr.locality, pr.district, pr.county, pr.town, pr.village].some(v => norm(v) === p || norm(v).includes(p));
+    });
+    const c = f?.geometry?.coordinates;
+    if (Array.isArray(c) && c.length >= 2) return { lng: c[0], lat: c[1] };
+  } catch (_) { /* best-effort */ }
+  return null;
+}
+
 async function pdokLookup(query: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const r = await fetchWithTimeout(
@@ -246,7 +277,7 @@ async function zoekLosseTerm(term: string, country: string, cc: string): Promise
   let h: { lat: number; lng: number } | null = null;
   if (country === 'NL') h = await pdokLookup(term);
   if (!h && cc)         h = await nominatimLookup(term, cc);
-  if (!h)               h = await nominatimLookup(term, '');
+  if (!h)               h = await photonLookup(term, cc);
   return h;
 }
 
@@ -263,7 +294,8 @@ async function geocode(address: string | null, city: string | null, country: str
   if (country === 'NL') hit = await pdokLookup(volledig);
   if (!hit && country === 'FR') hit = await banLookup(volledig);
   if (!hit && cc)       hit = await nominatimLookup(volledig, cc);
-  if (!hit)             hit = await nominatimLookup(volledig, '');
+  if (!hit)             hit = await photonLookup(volledig, cc, address ? city : null);
+  if (!hit && !cc)      hit = await nominatimLookup(volledig, '');
 
   // Straat onvindbaar? Val terug op de plaatsnaam alleen.
   if (!hit && address && city) {
@@ -322,6 +354,7 @@ function buildSystemPrompt(today: string, country: string): string {
     '- Verzamelsites/agenda-aggregators (bv. meukisleuk.nl, rommelmarkten.be, brocabrac.fr, vide-greniers.org): zet is_originele_bron=false, maar EXTRAHEER de events WEL. Ze gaan naar handmatige review, dus liever aanleveren dan weggooien.',
     '- Alleen bij marktplaats-achtige sites (marktplaats.nl, 2dehands.be, leboncoin.fr, ebay) geldt: is_originele_bron=false EN events=[].',
     '- "land" is het land waar het event PLAATSVINDT, af te leiden uit plaats/adres. Dat hoeft niet het land van deze website te zijn: een Belgische site kan best een Nederlandse verkoop vermelden. Bij twijfel: null.',
+    '- event_type: "opritverkoop" ALLEEN bij één huis/één adres van een particulier. Een garage sale of tuinverkoop met meerdere adressen in een wijk, straat of dorp (ook "XXL garagesale", "dorpsgaragesale", "buurtgaragesale") = "rommelroute". Georganiseerde markt met kramen (ook braderie, kerstmarkt, beurs) = "rommelmarkt".',
     '- ' + SUBCATEGORIE_UITLEG,
     '- Verzin niets. Onduidelijk = null.',
   ].join('\n');
@@ -404,7 +437,7 @@ async function fetchPageText(url: string): Promise<string> {
 // Gedeeld door de zoeklaag en de vaste-bronnen-laag.
 async function importEvents(
   sb: any, events: EventParsed[], url: string, domain: string,
-  land: string, viaLabel: string, summary: any,
+  land: string, viaLabel: string, summary: any, origineel = false,
 ): Promise<void> {
   for (const raw of events) {
     summary.events_found++;
@@ -435,7 +468,12 @@ async function importEvents(
     if (sim.error) { summary.errors.push('dupe_rpc: ' + sim.error.message); continue; }
     if (sim.data) { summary.events_deduped++; continue; }
 
-    const insEv = await sb.from('pending_events').insert({
+    // Opritverkoop = één huis = particulier: nooit automatisch, als tip naar
+    // Telegram. Markten/routes van een ORIGINELE bron (gemeente, vereniging,
+    // organisator) mogen via dezelfde strenge autoCheck als de import live.
+    const st = ne.event_subtype;
+    const prive = st === 'opritverkoop';
+    const row: any = {
       title:                ne.titel,
       description:          ne.beschrijving,
       event_subtype:        ne.event_subtype,
@@ -452,9 +490,20 @@ async function importEvents(
       discovered_via_query: viaLabel,
       content_hash:         contentHash,
       raw_ai_response:      raw as any,
-    });
+      organizer_name:       origineel ? ((raw.bron_naam || '').slice(0, 200) || null) : null,
+      organizer_url:        origineel ? url : null,
+      is_private_seller:    st ? prive : null,
+      status:               prive ? 'tip' : 'nieuw',
+    };
+    const check = autoCheck({ id: 0, ...row }, origineel && !!st);
+    row.auto_check = check;
+    const insEv = await sb.from('pending_events').insert(row).select('*').single();
     if (insEv.error) { summary.errors.push('insert_pending: ' + insEv.error.message); continue; }
     summary.events_inserted++;
+    if (check.ok) {
+      try { await publishPending(sb, insEv.data, null, check); summary.gepubliceerd = (summary.gepubliceerd || 0) + 1; }
+      catch (e) { summary.errors.push('publish: ' + (e as Error).message); }
+    } else if (prive) summary.tips = (summary.tips || 0) + 1;
   }
 }
 
@@ -497,8 +546,18 @@ serve(async (req: Request) => {
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   // Body
-  let body: { dryRun?: boolean; max_urls?: number; backfill?: boolean; backfill_limit?: number } = {};
+  let body: { dryRun?: boolean; max_urls?: number; backfill?: boolean; backfill_limit?: number; fase?: 'bronnen' | 'zoek'; geotest?: string; land?: string } = {};
   try { body = await req.json(); } catch (_) {}
+  // Diagnose: welke geocoder vindt dit adres vanaf de edge?
+  if (body.geotest) {
+    const cc = landNaarCc(body.land || 'NL');
+    return json({
+      pdok: await pdokLookup(body.geotest), nominatim: await nominatimLookup(body.geotest, cc),
+      photon: await photonLookup(body.geotest, cc), keten: await geocode(null, body.geotest, body.land || 'NL'),
+    }, 200);
+  }
+  const doeBronnen = body.fase !== 'zoek';
+  const doeZoek    = body.fase !== 'bronnen';
   const dryRun  = body.dryRun === true;
   const maxUrls = Math.max(1, Math.min(100, body.max_urls ?? DEFAULT_MAX_URLS));
 
@@ -579,7 +638,8 @@ serve(async (req: Request) => {
       sb.from('discovery_queries').select('id, query_tekst, land, laatste_run').eq('actief', true)
         .order('laatste_run', { ascending: true, nullsFirst: true }),
       sb.from('discovery_blocklist').select('domein'),
-      sb.from('scrape_sources').select('id, domain, base_url, country, actief'),
+      sb.from('scrape_sources').select('id, domain, base_url, country, actief, last_scraped_at')
+        .order('last_scraped_at', { ascending: true, nullsFirst: true }),
     ]);
     if (qRes.error)   throw new Error('queries: '   + qRes.error.message);
     if (blRes.error)  throw new Error('blocklist: ' + blRes.error.message);
@@ -595,8 +655,10 @@ serve(async (req: Request) => {
     // Actieve scrape_sources zijn al door een admin goedgekeurd, dus hier
     // geldt de is_originele_bron-check niet. Dit is de laag die gemeente-
     // en verenigingsagenda's doorlopend bijhoudt in plaats van eenmalig.
-    for (const bron of (srcRes.data || []).filter((r: any) => r.actief === true)) {
-      if (tijdOp()) { summary.budget_op = true; break; }
+    const bronnenTot = Date.now() + BRONNEN_BUDGET_MS;
+    const teCrawlen = doeBronnen ? (srcRes.data || []).filter((r: any) => r.actief === true).slice(0, BRONNEN_PER_RUN) : [];
+    for (const bron of teCrawlen) {
+      if (tijdOp() || Date.now() > bronnenTot) { summary.budget_op = true; break; }
       const bronUrl = String(bron.base_url || ('https://' + bron.domain)).trim();
       const bronLand = bron.country || 'NL';
       summary.sources_gecrawld++;
@@ -610,19 +672,17 @@ serve(async (req: Request) => {
 
         if (!dryRun) {
           const voor = summary.events_inserted;
-          await importEvents(sb, bo.events, bronUrl, bron.domain, bronLand, 'bron:' + bron.domain, summary);
+          await importEvents(sb, bo.events, bronUrl, bron.domain, bronLand, 'bron:' + bron.domain, summary, bo.is_originele_bron === true);
           summary.sources_events += (summary.events_inserted - voor);
-          await sb.from('scrape_sources')
-            .update({ last_scraped_at: new Date().toISOString() })
-            .eq('id', bron.id);
         }
       } catch (e) {
         summary.errors.push('bron ' + bronUrl + ': ' + (e as Error).message);
       }
+      if (!dryRun) await sb.from('scrape_sources').update({ last_scraped_at: new Date().toISOString() }).eq('id', bron.id);
     }
 
     // ══ Fase 2: zoeklaag ═════════════════════════════════════════════
-    const queries = (qRes.data || []) as DiscoveryQuery[];
+    const queries = doeZoek ? (qRes.data || []) as DiscoveryQuery[] : [];
     let newUrlsProcessed = 0;
 
     outer:
@@ -631,9 +691,10 @@ serve(async (req: Request) => {
       if (tijdOp()) { summary.budget_op = true; break; }
       summary.queries_run++;
 
-      // 2 varianten: huidige + volgende maand
-      for (const offset of [0, 1]) {
+      // Huidige maand; vanaf de 15e ook de volgende maand.
+      for (const offset of (new Date().getDate() >= 15 ? [0, 1] : [0])) {
         if (newUrlsProcessed >= maxUrls) break outer;
+        let dezeQuery = 0;
         const expanded = expandQuery(q.query_tekst, q.land, offset);
         // Brave Search
         let braveJson: any = null;
@@ -653,6 +714,7 @@ serve(async (req: Request) => {
 
         for (const r of results) {
           if (newUrlsProcessed >= maxUrls) break outer;
+          if (dezeQuery >= URLS_PER_QUERY) break;
           if (tijdOp()) { summary.budget_op = true; break outer; }
           const url = (r.url || '').trim();
           if (!url) continue;
@@ -670,6 +732,7 @@ serve(async (req: Request) => {
 
           summary.urls_new++;
           newUrlsProcessed++;
+          dezeQuery++;
 
           // Fetch pagina (1 req/sec throttling)
           await sleep(FETCH_INTERVAL_MS);
@@ -744,7 +807,7 @@ serve(async (req: Request) => {
           }
 
           // Events verwerken (gedeelde helper, zelfde pad als de bronnen-laag)
-          await importEvents(sb, beoordeling.events, url, domain, q.land, expanded, summary);
+          await importEvents(sb, beoordeling.events, url, domain, q.land, expanded, summary, beoordeling.is_originele_bron === true);
         }
 
         // laatste_run bijwerken

@@ -486,6 +486,31 @@ async function bewaker(sb: any, chat: string): Promise<{ ok: boolean; nieuw24: n
   return { ok, nieuw24, live48 };
 }
 
+// Door discover-events gevonden doorlopende agenda's (gemeente, VVV,
+// vereniging) aan de admin voorleggen. Aangezet = elke nacht uitgelezen.
+async function bronVoorstellen(sb: any, chat: string): Promise<number> {
+  const r = await sb.from('scrape_sources').select('id,domain,base_url,country,voorstel_reden')
+    .eq('voorgesteld', true).eq('actief', false).is('telegram_sent_at', null).order('created_at').limit(5);
+  for (const b of r.data || []) {
+    await send(chat, `🔎 <b>Nieuwe bron gevonden</b> (${esc(b.country || '?')})
+${esc(b.base_url || b.domain)}
+<i>${esc((b.voorstel_reden || '').slice(0, 300))}</i>
+
+Aanzetten = elke nacht uitlezen; markten van de organisator zelf gaan dan automatisch live.`, {
+      reply_markup: { inline_keyboard: [[{ text: '✅ Bron aanzetten', callback_data: 'sa:' + b.id }, { text: '🚫 Niet gebruiken', callback_data: 'sx:' + b.id }]] } });
+    await sb.from('scrape_sources').update({ telegram_sent_at: new Date().toISOString() }).eq('id', b.id);
+  }
+  return (r.data || []).length;
+}
+
+async function bronKnop(sb: any, chat: string, cq: any, actie: string, id: number) {
+  const r = await sb.from('scrape_sources').update(actie === 'sa' ? { actief: true, voorgesteld: false } : { voorgesteld: false })
+    .eq('id', id).select('domain').maybeSingle();
+  await tg('answerCallbackQuery', { callback_query_id: cq.id, text: actie === 'sa' ? 'Bron staat aan' : 'Genegeerd' });
+  return tg('editMessageText', { chat_id: chat, message_id: cq.message.message_id, parse_mode: 'HTML',
+    text: (actie === 'sa' ? '✅ Bron aangezet: ' : '🚫 Bron genegeerd: ') + esc(r.data?.domain || String(id)) });
+}
+
 async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, listingId: string) {
   const msg = cq.message;
   const l = await listingKort(sb, listingId);
@@ -529,6 +554,7 @@ async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, list
 async function knop(sb: any, chat: string, cq: any) {
   const [actie, idStr] = String(cq.data || '').split(':');
   if (['lo', 'lb', 'lk', 'qok', 'qno'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
+  if (actie === 'sa' || actie === 'sx') return bronKnop(sb, chat, cq, actie, parseInt(idStr, 10));
   const id = parseInt(idStr, 10);
   const msg = cq.message;
   const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', id).maybeSingle();
@@ -823,7 +849,7 @@ serve(async (req: Request) => {
         const body = await req.json().catch(() => ({}));
         return json({ ok: await stuurMelding(sb, chat, Number(body?.id)) });
       }
-      if (action === 'watchdog') return json(await bewaker(sb, chat));
+      if (action === 'watchdog') return json({ ...(await bewaker(sb, chat)), bronnen: await bronVoorstellen(sb, chat) });
       return json({ ok: true, verstuurd: await steekproef(sb, chat) });
     }
     return json({ error: 'onbekende action' }, 400);
@@ -877,6 +903,22 @@ serve(async (req: Request) => {
     } else if (/^\/meer\b/.test(tekst)) {
       const n = await digest(sb, chat, true);
       if (!n) await send(chat, '🎉 Niets meer — alles is getoond.');
+    } else if (/^\/oproep\b/.test(tekst)) {
+      // Kant-en-klare posts voor Facebook-groepen; wisselende tekst zodat
+      // groepen niet steeds exact hetzelfde bericht zien.
+      const oprit = [
+        `Ga je binnenkort spullen verkopen op je oprit, in de tuin of vanuit de garage? 🏡\nZet het gratis op de kaart van YardiGo, dan zien mensen uit de buurt het meteen. Je adres wordt pas de dag ervoor getoond.\n👉 ${SITE}/verkoop`,
+        `Opruimen en verkopen vanaf je oprit? 🧺\nOp YardiGo zet je je garage sale in 2 minuten gratis op de kaart. Bezoekers zien je adres pas 24 uur van tevoren.\n👉 ${SITE}/verkoop`,
+        `Tip voor iedereen die een garage sale of tuinverkoop houdt: plaats 'm gratis op YardiGo, de kaart met alle rommelmarkten en opritverkopen in de buurt 📍\n👉 ${SITE}/verkoop`,
+      ];
+      const org = [
+        `Organiseer je een rommelmarkt, rommelroute, kofferbakverkoop of kinderbeurs? 🗺\nZet 'm gratis op YardiGo, de kaart waar mensen zoeken wat er dit weekend te doen is.\n👉 ${SITE}/aanmelden`,
+        `Rommelroute of garage sale met de hele straat of wijk? 🏘\nMeld 'm gratis aan op YardiGo, dan staat hij met alle deelnemers op de kaart.\n👉 ${SITE}/aanmelden`,
+      ];
+      const kies = (a: string[]) => a[Math.floor(Math.random() * a.length)];
+      await send(chat, '📣 Twee berichten om te kopiëren: één voor buurtgroepen (opritverkoop), één voor organisatoren. Stuur /oproep opnieuw voor een andere tekst.');
+      await fbBericht(chat, kies(oprit));
+      await fbBericht(chat, kies(org));
     } else if (/^\/help\b/.test(tekst)) {
       await send(chat, [
         '<b>YardiGo-bot</b>',
@@ -884,7 +926,8 @@ serve(async (req: Request) => {
         '🔗 Stuur tekst of een link → kaartje',
         '↩️ Antwoord op een kaartje met een link, 06 of e-mail → contact aangevuld; met een adres → locatie',
         '✅/❌ op een kaartje → publiceren of afwijzen. Na publiceren krijg je een kant-en-klare Facebook-reactie.',
-        '/stats · /meer',
+        '📣 /oproep → kant-en-klare Facebook-posts met yardigo.nl/verkoop',
+        '/stats · /meer · /oproep',
       ].join('\n'));
     } else if (m.reply_to_message?.from?.is_bot && await aanvulling(sb, chat, tekst, m.reply_to_message)) {
       // afgehandeld

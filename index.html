@@ -16763,6 +16763,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     setTimeout(function() { tryOpen(8); }, 800);
   })();
 
+  // ─── Deellink om direct te plaatsen ──────────────────────
+  // yardigo.nl/verkoop (opritverkoop) en /aanmelden (markt) openen het
+  // plaatsformulier; ook gasten mogen invullen, inloggen pas bij publiceren.
+  // ?plaatsen=particulier|buurt|evenement kiest meteen het type.
+  (function handlePlaatsenDeepLink() {
+    var params = new URLSearchParams(location.search);
+    var t = params.get('plaatsen');
+    if (t === null) t = ({ '/verkoop': 'particulier', '/aanmelden': 'evenement' })[(location.pathname || '').replace(/\/$/, '')] || null;
+    if (t === null) return;
+    try { history.replaceState({}, '', '/'); } catch(e) {}
+    setTimeout(async function() {
+      try {
+        await openAdd();
+        if (['particulier', 'buurt', 'evenement'].indexOf(t) >= 0 && typeof selType === 'function') selType(t);
+      } catch(e) { console.warn('plaatsen-deeplink:', e); }
+    }, 900);
+  })();
+
   // ─── Uitschrijf-handlers ─────────────────────────────────
   (async function handleUnsubscribeParams() {
     var params = new URLSearchParams(location.search);
