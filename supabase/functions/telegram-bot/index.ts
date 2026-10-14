@@ -270,7 +270,7 @@ function contactUitTekst(t: string) {
 
 // dup: het item dat er al is. kind 'live' = staat op de kaart, 'open' = in
 // de lijst (nieuw/tip), 'afgewezen' = eerder afgewezen.
-interface Dup { kind: 'live' | 'open' | 'afgewezen'; title: string; pending_id?: number; listing_id?: string; url?: string; fb?: string }
+interface Dup { kind: 'live' | 'open' | 'afgewezen'; title: string; pending_id?: number; listing_id?: string; url?: string; fb?: string; affiche?: 'toegevoegd' | 'heeft_al' }
 type Maak = { ok: true; row: any } | { ok: false; msg: string; dup?: Dup };
 
 // Instelling 'direct plaatsen': zelf aangeleverde items gaan meteen live als
@@ -285,7 +285,7 @@ async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: str
   } catch (e) { console.warn('direct plaatsen', (e as Error).message); return null; }
 }
 
-async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null) {
+async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null, msgId?: number) {
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
   if (fotoId && !image) return send(chat, '⚠️ Kon de afbeelding niet ophalen. Stuur hem als <b>foto</b> (niet als bestand).');
@@ -298,11 +298,18 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
   const d = r.dup;
   if (d?.kind === 'open' && d.pending_id) {
     const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', d.pending_id).maybeSingle();
-    await send(chat, '📋 Deze stond al in je lijst — hier is hij:');
+    await send(chat, '📋 Deze stond al in je lijst' + (d.affiche === 'toegevoegd' ? ', je affiche is erbij gezet' : '') + ' — hier is hij:');
     if (p) return stuurKaart(sb, chat, p);
   }
   if (d?.kind === 'live') {
-    await send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart.\n${d.url}`);
+    if (d.affiche === 'heeft_al' && d.listing_id) {
+      await send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart en heeft al een afbeelding.\n${d.url}`, {
+        reply_to_message_id: msgId,
+        reply_markup: { inline_keyboard: [[{ text: '🖼 Deze affiche als hoofdfoto', callback_data: `pv:${d.listing_id}` }]] } });
+    } else {
+      const extra = d.affiche === 'toegevoegd' ? '\n🖼 Je affiche staat er nu bij als foto.' : '';
+      await send(chat, `🗺 <b>${esc(d.title)}</b> staat al live op de kaart.${extra}\n${d.url}`);
+    }
     return fbBericht(chat, d.fb);
   }
   if (d?.kind === 'afgewezen') {
@@ -313,7 +320,11 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
 }
 
 // Bestaand item gevonden: contact aanvullen waar het ontbreekt, en zeggen wát het is.
-async function bestaandItem(sb: any, ref: any, contact: { url: string | null; tel: string | null; mail: string | null }): Promise<Dup> {
+// Met affiche erbij: zet hem bij het bestaande item als dat nog geen afbeelding
+// heeft. Alleen bij onze eigen (niet-geclaimde) advertenties, nooit bij die van
+// een gebruiker.
+async function bestaandItem(sb: any, ref: any, contact: { url: string | null; tel: string | null; mail: string | null },
+  image: { data: string; media_type: string } | null = null): Promise<Dup> {
   const listingId: string | null = ref.listing_id ?? null;
   if (listingId) {
     if (contact.url || contact.tel || contact.mail) {
@@ -321,17 +332,36 @@ async function bestaandItem(sb: any, ref: any, contact: { url: string | null; te
         { listing_id: listingId, website_url: contact.url, phone: contact.tel, email: contact.mail },
         { onConflict: 'listing_id', ignoreDuplicates: true });
     }
-    return { kind: 'live', title: ref.title, listing_id: listingId, ...(await deel(sb, listingId)) };
+    let affiche: Dup['affiche'];
+    if (image) {
+      const { data: l } = await sb.from('listings').select('images,placed_by,claimed_by_user_id').eq('id', listingId).maybeSingle();
+      if (l && l.placed_by === 'yardigo' && !l.claimed_by_user_id) {
+        if ((l.images || []).length) affiche = 'heeft_al';
+        else {
+          const url = await bewaarPoster(sb, image);
+          if (url) {
+            const up = await sb.from('listings').update({ images: [url] }).eq('id', listingId);
+            if (!up.error) affiche = 'toegevoegd';
+          }
+        }
+      }
+    }
+    return { kind: 'live', title: ref.title, listing_id: listingId, affiche, ...(await deel(sb, listingId)) };
   }
   const id = ref.pending_id as number;
   if (ref.status === 'afgewezen') return { kind: 'afgewezen', title: ref.title, pending_id: id };
-  const { data: p } = await sb.from('pending_events').select('organizer_url,contact_phone,contact_email').eq('id', id).maybeSingle();
+  const { data: p } = await sb.from('pending_events').select('organizer_url,contact_phone,contact_email,poster_url').eq('id', id).maybeSingle();
   const patch: any = {};
+  let affiche: Dup['affiche'];
+  if (image && p && !p.poster_url) {
+    const url = await bewaarPoster(sb, image);
+    if (url) { patch.poster_url = url; affiche = 'toegevoegd'; }
+  }
   if (contact.url && !p?.organizer_url) patch.organizer_url = contact.url;
   if (contact.tel && !p?.contact_phone) patch.contact_phone = contact.tel;
   if (contact.mail && !p?.contact_email) patch.contact_email = contact.mail;
   if (Object.keys(patch).length) await sb.from('pending_events').update(patch).eq('id', id);
-  return { kind: 'open', title: ref.title, pending_id: id };
+  return { kind: 'open', title: ref.title, pending_id: id, affiche };
 }
 
 // Affiche/tekst → parse-event → geocode → dedupe → pending_events.
@@ -367,7 +397,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   if (h.data) {
     const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: e.datum, p_radius_m: 500 });
     if (ref.data) {
-      const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail });
+      const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail }, image);
       return { ok: false, msg: 'Staat er al: ' + dup.title, dup };
     }
   }
@@ -551,10 +581,27 @@ async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, list
   return tg('answerCallbackQuery', { callback_query_id: cq.id });
 }
 
+// "Deze affiche als hoofdfoto": de foto zit in het bericht waar de knop op antwoordt.
+async function afficheKnop(sb: any, chat: string, cq: any, listingId: string) {
+  const bron = cq.message?.reply_to_message;
+  const fileId = bron?.photo?.length ? bron.photo[bron.photo.length - 1].file_id : bron?.document?.file_id;
+  const image = fileId ? await fotoAlsBase64(fileId) : null;
+  const { data: l } = await sb.from('listings').select('images,placed_by,claimed_by_user_id').eq('id', listingId).maybeSingle();
+  if (!image || !l || l.placed_by !== 'yardigo' || l.claimed_by_user_id) {
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Kan de affiche hier niet bij zetten', show_alert: true });
+  }
+  const url = await bewaarPoster(sb, image);
+  if (!url) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Uploaden mislukt', show_alert: true });
+  await sb.from('listings').update({ images: [url, ...(l.images || [])].slice(0, 6) }).eq('id', listingId);
+  await tg('editMessageReplyMarkup', { chat_id: chat, message_id: cq.message.message_id, reply_markup: { inline_keyboard: [] } });
+  return tg('answerCallbackQuery', { callback_query_id: cq.id, text: '🖼 Affiche is nu de hoofdfoto' });
+}
+
 async function knop(sb: any, chat: string, cq: any) {
   const [actie, idStr] = String(cq.data || '').split(':');
   if (['lo', 'lb', 'lk', 'qok', 'qno'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
   if (actie === 'sa' || actie === 'sx') return bronKnop(sb, chat, cq, actie, parseInt(idStr, 10));
+  if (actie === 'pv') return afficheKnop(sb, chat, cq, idStr);
   const id = parseInt(idStr, 10);
   const msg = cq.message;
   const { data: p } = await sb.from('pending_events').select(PENDING_COLS).eq('id', id).maybeSingle();
@@ -937,7 +984,7 @@ serve(async (req: Request) => {
       await send(chat, '📷 Dit bestand is te groot. Stuur hem als <b>foto</b> (dan verkleint Telegram hem) of als screenshot.');
     } else if (m.photo?.length || (m.document && /^image\//.test(m.document.mime_type || ''))) {
       const fileId = m.photo?.length ? m.photo[m.photo.length - 1].file_id : m.document.file_id;
-      await nieuwItem(sb, chat, tekst, fileId);
+      await nieuwItem(sb, chat, tekst, fileId, m.message_id);
     } else if (tekst.trim().length >= 10) {
       await nieuwItem(sb, chat, tekst, null);
     } else {
