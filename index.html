@@ -1430,6 +1430,13 @@ body.dark .review-card{background:var(--bg2);}
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+.leaflet-tooltip.yg-hover-tip{background:#FFFDF8;color:#2C2416;border:none;border-radius:10px;padding:7px 10px;box-shadow:0 4px 14px rgba(44,36,22,.18);font-family:Poppins,sans-serif;width:max-content;max-width:240px;white-space:normal;pointer-events:none}
+.leaflet-tooltip.yg-hover-tip:before{border-top-color:#FFFDF8}
+.yg-tip-title{font-weight:700;font-size:12.5px;line-height:1.3}
+.yg-tip-meta{font-size:11px;color:#7A6E62;margin-top:2px;line-height:1.35}
+body.dark .leaflet-tooltip.yg-hover-tip{background:#2A2622;color:#F2ECE2;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+body.dark .leaflet-tooltip.yg-hover-tip:before{border-top-color:#2A2622}
+body.dark .yg-tip-meta{color:#A99D8F}
 #maintenance-banner img{width:44px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(44,36,22,.15));}
 #maintenance-banner .mb-text{flex:1;font-size:12px;font-weight:600;color:#2C2416;line-height:1.4;}
 #maintenance-banner .mb-title{font-size:13px;font-weight:800;color:#C5611A;margin-bottom:1px;}
@@ -4491,7 +4498,7 @@ function _cacheEigenaar() {
 function leesListingsCache() {
   try {
     var c = JSON.parse(localStorage.getItem(YG_LISTINGS_CACHE) || 'null');
-    if (!c || !Array.isArray(c.d) || !c.d.length || c.v !== 1) return null;
+    if (!c || !Array.isArray(c.d) || !c.d.length || c.v !== 2) return null;
     if (c.u !== _cacheEigenaar() || Date.now() - c.t > 3 * 86400000) return null;
     var vandaag = new Date().toISOString().slice(0, 10);
     var d = c.d.filter(function(r) { return (r.date_end || r.date_start || '') >= vandaag; });
@@ -4499,7 +4506,7 @@ function leesListingsCache() {
   } catch(e) { return null; }
 }
 function schrijfListingsCache(data) {
-  try { localStorage.setItem(YG_LISTINGS_CACHE, JSON.stringify({ v: 1, t: Date.now(), u: _cacheEigenaar(), d: data })); }
+  try { localStorage.setItem(YG_LISTINGS_CACHE, JSON.stringify({ v: 2, t: Date.now(), u: _cacheEigenaar(), d: data })); }
   catch(e) { try { localStorage.removeItem(YG_LISTINGS_CACHE); } catch(_) {} }
 }
 
@@ -4509,10 +4516,10 @@ async function fetchListings() {
     return null; // fallback naar hardcoded data
   }
   try {
-    // Gebruik RPC zodat het adres server-side verborgen wordt voor gasten
-    const { data, error } = await sbClient
-      .rpc('get_listings_for_user')
-      .order('date_start', { ascending: true });
+    // Slanke kaartversie (zelfde privacyregels als get_listings_for_user):
+    // beschrijving, alle foto's en bronlink komen pas bij openen via
+    // get_listing_detail, zie laadVolledigeSale().
+    const { data, error } = await sbClient.rpc('get_listings_map');
 
     if (error) {
       console.error('Fout bij ophalen listings:', error);
@@ -4597,8 +4604,28 @@ function mapSupabaseToSale(item) {
     claimed_at: item.claimed_at || null,
     // Particuliere verkoop zonder zichtbaar adres: pin is server-side verschoven
     location_approx: !!item.location_approx,
-    short_code: item.short_code || null
+    short_code: item.short_code || null,
+    // Uit de slanke kaartversie: details nog niet geladen
+    _lean: typeof item.photo_count === 'number',
+    photo_count: typeof item.photo_count === 'number' ? item.photo_count : (item.images || []).length
   };
+}
+
+// Haalt beschrijving, alle foto's en bron op voor een sale uit de kaartversie.
+var _saleDetailBezig = {};
+function laadVolledigeSale(s) {
+  if (!s || !s._lean || !sbClient) return Promise.resolve(s);
+  if (_saleDetailBezig[s.id]) return _saleDetailBezig[s.id];
+  _saleDetailBezig[s.id] = sbClient.rpc('get_listing_detail', { p_id: s.id }).then(function(r) {
+    delete _saleDetailBezig[s.id];
+    if (r.error || !r.data) return s;
+    var vol = mapSupabaseToSale(r.data);
+    ['description', 'desc', 'photos', 'source_url', 'source_label', 'tags', 'address', 'address_hidden',
+     'address_visible_at', 'claimed_at', 'user_name', 'user_email'].forEach(function(k) { s[k] = vol[k]; });
+    s._lean = false;
+    return s;
+  }, function() { delete _saleDetailBezig[s.id]; return s; });
+  return _saleDetailBezig[s.id];
 }
 
 function extractCoords(location) {
@@ -9209,6 +9236,23 @@ function buildBuurtClusterPopup(bv, cluster) {
   return '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:280px">' + head + body + '</div>';
 }
 
+// Muis boven een pin: kort kaartje met naam, soort, dag, tijd en plaats.
+// Alleen op apparaten met een muis; op touch opent de tik gewoon de popup.
+var _ygHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+function hoverTipHtml(s) {
+  var t = String(s.title || '');
+  if (t.length > 60) t = t.slice(0, 57) + '…';
+  var soort = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : i18n('type.' + s.type, (TYPES[s.type] || {}).label || '');
+  var plaats = (s.address || '').split(',').slice(-1)[0].trim();
+  var regel = [soort, s.date ? fmtDate(s.date) : '', (s.from && s.till) ? s.from + '–' + s.till : '', plaats].filter(Boolean).join(' · ');
+  return '<div class="yg-tip-title">' + escapeHtml(t) + '</div><div class="yg-tip-meta">' + escapeHtml(regel) + '</div>';
+}
+function bindHoverTip(marker, sale) {
+  if (!_ygHover) return;
+  marker.bindTooltip(function() { return hoverTipHtml(sale); }, { direction: 'top', offset: [0, -44], className: 'yg-hover-tip', opacity: 1 });
+  marker.on('popupopen', function() { marker.closeTooltip(); });
+}
+
 function createDefaultPin(sale) {
   return makeMarkerIcon(sale);
 }
@@ -9330,6 +9374,7 @@ function renderMarkers() {
         icon: createSmallPin(listing)
       });
       marker.bindPopup(createListingPopup(listing), { maxWidth: 260 });
+      bindHoverTip(marker, listing);
       group.addLayer(marker);
       _markersById[listing.id] = { marker: marker, cluster: group };
     });
@@ -9379,6 +9424,7 @@ function renderMarkers() {
       icon: createDefaultPin(sale)
     });
     m.bindPopup(createListingPopup(sale), { maxWidth: 260 });
+    bindHoverTip(m, sale);
     m.addTo(map);
     markers.push(m);
     _markersById[sale.id] = { marker: m, cluster: null };
@@ -10405,6 +10451,12 @@ async function renderCuratedContact(listingId) {
 function openDetail(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
+  if (s._lean) {
+    // Toon direct wat we hebben; vul aan zodra de details binnen zijn.
+    laadVolledigeSale(s).then(function(v) {
+      if (v && !v._lean && String(detailSaleId) === String(v.id)) openDetail(v.id);
+    });
+  }
   detailSaleId = s.id; carouselIdx = 0;
   var t = TYPES[s.type], fav = favorites.has(id);
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
@@ -17088,6 +17140,14 @@ var _editingSaleId = null;
 var _deletingSaleId = null;
 
 function openEditSale(id) {
+  var _s0 = sales.find(function(x) { return String(x.id) === String(id); });
+  if (_s0 && _s0._lean) {
+    laadVolledigeSale(_s0).then(function(v) {
+      if (v && !v._lean) openEditSale(id);
+      else toast(i18n('toast.listing_not_found', 'Advertentie niet gevonden'));
+    });
+    return;
+  }
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) { toast(i18n('toast.listing_not_found', 'Advertentie niet gevonden')); return; }
   var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
