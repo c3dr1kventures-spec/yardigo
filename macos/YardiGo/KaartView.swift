@@ -29,7 +29,10 @@ struct ClusterKaart: NSViewRepresentable {
         let map = MKMapView()
         map.delegate = context.coordinator
         map.setRegion(Self.nederland, animated: false)
-        map.pointOfInterestFilter = .excludingAll
+        // Gedempte kaart (zoals CARTO op de website): pinnen springen er dag en nacht uit.
+        let config = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
+        config.pointOfInterestFilter = .excludingAll
+        map.preferredConfiguration = config
         map.showsZoomControls = true
         map.showsCompass = true
         map.showsScale = true
@@ -127,10 +130,10 @@ final class ListingAnnotation: NSObject, MKAnnotation {
 enum PinBeelden {
     private static var cache: [String: NSImage] = [:]
 
-    static func beeld(_ l: Listing, selected: Bool) -> NSImage {
-        let key = "\(l.kind.rawValue)-\(l.symbol)-\(selected)"
+    static func beeld(_ l: Listing, selected: Bool, dark: Bool) -> NSImage {
+        let key = "\(l.kind.rawValue)-\(l.symbol)-\(selected)-\(dark)"
         if let b = cache[key] { return b }
-        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol).scaleEffect(selected ? 1.3 : 1, anchor: .bottom).padding(selected ? 6 : 2))
+        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol, dark: dark).scaleEffect(selected ? 1.3 : 1, anchor: .bottom).padding(selected ? 6 : 2))
         r.scale = 2
         let b = r.nsImage ?? NSImage()
         cache[key] = b
@@ -159,9 +162,14 @@ final class PinAnnotationView: MKAnnotationView {
         toon(selected: selected)
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        toon(selected: isSelected)
+    }
+
     private func toon(selected: Bool) {
         guard let l = (annotation as? ListingAnnotation)?.listing else { return }
-        image = PinBeelden.beeld(l, selected: selected)
+        image = PinBeelden.beeld(l, selected: selected, dark: isDonker(self))
         centerOffset = CGPoint(x: 0, y: -(image?.size.height ?? 0) / 2)
         displayPriority = selected ? .required : .defaultHigh
         zPriority = selected ? .max : .defaultUnselected
@@ -169,14 +177,19 @@ final class PinAnnotationView: MKAnnotationView {
 }
 
 // Druppelpin zoals op de website: soortkleur, witte rand, icoon.
+func isDonker(_ v: NSView) -> Bool {
+    v.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+}
+
 struct Pin: View {
     let kind: Kind
     let symbol: String
+    var dark = false
 
     var body: some View {
         ZStack(alignment: .top) {
             PinShape()
-                .fill(kind.color)
+                .fill(kind.pinColor(dark: dark))
                 .overlay(PinShape().stroke(.white, lineWidth: 2))
                 .frame(width: 30, height: 38)
                 .shadow(color: .black.opacity(0.28), radius: 2, y: 1.5)
@@ -216,6 +229,11 @@ final class ClusterAnnotationView: MKAnnotationView {
     }
     required init?(coder: NSCoder) { fatalError() }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        prepareForDisplay()
+    }
+
     override func prepareForDisplay() {
         super.prepareForDisplay()
         guard let c = annotation as? MKClusterAnnotation else { return }
@@ -223,7 +241,7 @@ final class ClusterAnnotationView: MKAnnotationView {
         // Kleur van de soort die het meest voorkomt in het groepje.
         let telling = Dictionary(grouping: leden, by: \.kind).mapValues(\.count)
         let kind = telling.max { $0.value < $1.value }?.key ?? .markt
-        let r = ImageRenderer(content: Bolletje(aantal: leden.count, kleur: kind.color).padding(2))
+        let r = ImageRenderer(content: Bolletje(aantal: leden.count, kleur: kind.pinColor(dark: isDonker(self))).padding(2))
         r.scale = 2
         image = r.nsImage
         centerOffset = .zero

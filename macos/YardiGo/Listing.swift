@@ -127,12 +127,49 @@ enum Kind: String, CaseIterable, Identifiable {
         case .oprit: return "house.fill"
         }
     }
+    // Op de nachtkaart iets lichter, zodat pinnen niet wegvallen (YG_KIND_COLORS.light).
+    func pinColor(dark: Bool) -> Color {
+        guard dark else { return color }
+        switch self {
+        case .markt: return Color(red: 0x5E / 255, green: 0x9E / 255, blue: 0x70 / 255)
+        case .route: return Color(red: 0xEC / 255, green: 0x9A / 255, blue: 0x5E / 255)
+        case .oprit: return Color(red: 0xF6 / 255, green: 0xBF / 255, blue: 0x5A / 255)
+        }
+    }
+
     // Zelfde kleuren als YG_KIND_COLORS op de website.
     var color: Color {
         switch self {
         case .markt: return Color(red: 0x3A / 255, green: 0x6B / 255, blue: 0x4A / 255)
         case .route: return Color(red: 0xE0 / 255, green: 0x7B / 255, blue: 0x39 / 255)
         case .oprit: return Color(red: 0xF2 / 255, green: 0xA8 / 255, blue: 0x30 / 255)
+        }
+    }
+}
+
+// Dag/nacht-keuze van de gebruiker; "systeem" volgt de Mac.
+enum Weergave: String, CaseIterable, Identifiable {
+    case systeem, dag, nacht
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .systeem: return "Zoals de Mac"
+        case .dag: return "Dag"
+        case .nacht: return "Nacht"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .systeem: return "circle.lefthalf.filled"
+        case .dag: return "sun.max.fill"
+        case .nacht: return "moon.stars.fill"
+        }
+    }
+    var appearance: NSAppearance? {
+        switch self {
+        case .systeem: return nil
+        case .dag: return NSAppearance(named: .aqua)
+        case .nacht: return NSAppearance(named: .darkAqua)
         }
     }
 }

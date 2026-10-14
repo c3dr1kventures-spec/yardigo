@@ -24,6 +24,9 @@ struct ContentView: View {
         .searchable(text: $store.search, placement: .sidebar, prompt: "Zoek op plaats of titel")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                DagNachtKnop()
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button { Task { await store.load() } } label: {
                     Label("Vernieuwen", systemImage: "arrow.clockwise")
                 }

@@ -14,10 +14,12 @@
 		89F23EF85039094D343616D2 /* Listing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B866921B80E6B59EDEB0AC /* Listing.swift */; };
 		BAF8C7960FE16AECF6F3E20C /* KaartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12029457AC4DD0FA2548939 /* KaartView.swift */; };
 		CB72B016EB80A0948779B9DC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8A397C1B23F8A5A9F7739D1C /* Assets.xcassets */; };
+		CCB61FB47CE311783D47C55A /* DagNacht.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4659876B6C272D7E011AA964 /* DagNacht.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1B1F164424074FA254B6B640 /* YardiGo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YardiGo.entitlements; sourceTree = "<group>"; };
+		4659876B6C272D7E011AA964 /* DagNacht.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DagNacht.swift; sourceTree = "<group>"; };
 		51B866921B80E6B59EDEB0AC /* Listing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Listing.swift; sourceTree = "<group>"; };
 		6440DA614E80DCBF323FF780 /* ListingDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetail.swift; sourceTree = "<group>"; };
 		6CDC54AEB96A8097F46D8F60 /* YardiGoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YardiGoApp.swift; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 			children = (
 				8A397C1B23F8A5A9F7739D1C /* Assets.xcassets */,
 				BD4D431C8C7D33B7F37126ED /* ContentView.swift */,
+				4659876B6C272D7E011AA964 /* DagNacht.swift */,
 				D12029457AC4DD0FA2548939 /* KaartView.swift */,
 				51B866921B80E6B59EDEB0AC /* Listing.swift */,
 				6440DA614E80DCBF323FF780 /* ListingDetail.swift */,
@@ -131,6 +134,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7C002F04D1792F2C2A6AD44F /* ContentView.swift in Sources */,
+				CCB61FB47CE311783D47C55A /* DagNacht.swift in Sources */,
 				BAF8C7960FE16AECF6F3E20C /* KaartView.swift in Sources */,
 				89F23EF85039094D343616D2 /* Listing.swift in Sources */,
 				0B0C83E344AA8FA3D37C7649 /* ListingDetail.swift in Sources */,
