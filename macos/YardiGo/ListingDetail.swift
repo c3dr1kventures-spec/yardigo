@@ -5,6 +5,7 @@ struct ListingDetail: View {
     let listing: Listing
     @Environment(ListingStore.self) private var store
     @Environment(\.openURL) private var openURL
+    @State private var fotoIndex = 0
 
     var body: some View {
         ScrollView {
@@ -22,7 +23,7 @@ struct ListingDetail: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Label(DagLabel.tekst(listing.date), systemImage: "calendar")
                     if let t = listing.timeRange { Label(t, systemImage: "clock") }
-                    Label(plaats, systemImage: "mappin.and.ellipse")
+                    Label(plaats + (store.afstandTekst(listing).map { " · \($0)" } ?? ""), systemImage: "mappin.and.ellipse")
                     if let uitleg = adresUitleg {
                         Text(uitleg).font(.caption).foregroundStyle(.secondary).padding(.leading, 28)
                     }
@@ -50,19 +51,54 @@ struct ListingDetail: View {
         }
     }
 
+    // Foto's: bladeren met de pijltjes (of ← →) als er meer dan één is.
     private var kop: some View {
-        ZStack {
+        let fotos = (listing.images ?? []).compactMap(URL.init(string:))
+        let i = fotos.isEmpty ? 0 : min(fotoIndex, fotos.count - 1)
+        return ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous).fill(listing.kind.color.gradient)
             Image(systemName: listing.symbol)
                 .font(.system(size: 54, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.9))
-            if let s = listing.images?.first, let url = URL(string: s) {
-                AsyncImage(url: url) { img in img.resizable().scaledToFill() } placeholder: { Color.clear }
+            if !fotos.isEmpty {
+                AsyncImage(url: fotos[i]) { img in img.resizable().scaledToFill() } placeholder: { Color.clear }
+                    .id(fotos[i])
+                    .transition(.opacity)
+            }
+            if fotos.count > 1 {
+                HStack {
+                    fotoKnop("chevron.left") { fotoIndex = (i - 1 + fotos.count) % fotos.count }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                    Spacer()
+                    fotoKnop("chevron.right") { fotoIndex = (i + 1) % fotos.count }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                }
+                .padding(8)
+                Text("\(i + 1) / \(fotos.count)")
+                    .font(.system(size: 10, weight: .semibold))
+                    .monospacedDigit()
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(.black.opacity(0.45), in: Capsule())
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .padding(8)
             }
         }
-        .frame(height: 190)
+        .frame(height: 200)
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .animation(.easeInOut(duration: 0.2), value: fotoIndex)
+        .onChange(of: listing.id) { fotoIndex = 0 }
+    }
+
+    private func fotoKnop(_ symbool: String, _ actie: @escaping () -> Void) -> some View {
+        Button(action: actie) {
+            Image(systemName: symbool)
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 28, height: 28)
+                .background(.regularMaterial, in: Circle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var knoppen: some View {

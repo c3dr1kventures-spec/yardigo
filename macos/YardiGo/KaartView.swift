@@ -1,52 +1,187 @@
 import SwiftUI
 import MapKit
 
+enum KaartLaag: String, CaseIterable, Identifiable {
+    case rustig, standaard, satelliet, hybride
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .rustig: return "Rustig"
+        case .standaard: return "Kleur"
+        case .satelliet: return "Satelliet"
+        case .hybride: return "Satelliet + wegen"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .rustig: return "map"
+        case .standaard: return "map.fill"
+        case .satelliet: return "globe.europe.africa.fill"
+        case .hybride: return "square.3.layers.3d"
+        }
+    }
+    var configuratie: MKMapConfiguration {
+        switch self {
+        case .rustig:
+            let c = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
+            c.pointOfInterestFilter = .excludingAll
+            return c
+        case .standaard:
+            let c = MKStandardMapConfiguration(elevationStyle: .realistic, emphasisStyle: .default)
+            c.pointOfInterestFilter = .excludingAll
+            return c
+        case .satelliet: return MKImageryMapConfiguration(elevationStyle: .flat)
+        case .hybride:
+            let c = MKHybridMapConfiguration(elevationStyle: .flat)
+            c.pointOfInterestFilter = .excludingAll
+            return c
+        }
+    }
+}
+
 struct KaartView: View {
     @Environment(ListingStore.self) private var store
+    @AppStorage("kaartlaag") private var laag: KaartLaag = .rustig
 
     var body: some View {
-        ClusterKaart(listings: store.filtered, selection: Binding(get: { store.selection }, set: { store.selection = $0 }))
+        ClusterKaart(store: store, laag: laag)
             .ignoresSafeArea()
-            .overlay(alignment: .bottomLeading) {
-                Legenda().padding(12)
+            .overlay(alignment: .bottomLeading) { Legenda().padding(12).allowsHitTesting(false) }
+            .overlay(alignment: .top) {
+                if let melding = store.melding {
+                    Text(melding)
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(.top, 12)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .allowsHitTesting(false)
+                }
             }
+            .animation(.smooth, value: store.melding)
+    }
+}
+
+// Werkbalk: kaartlaag kiezen. (Knoppen bovenop de MKMapView geven klikken door
+// aan de pinnen eronder, daarom staan ze in de werkbalk.)
+struct LaagKnop: View {
+    @AppStorage("kaartlaag") private var laag: KaartLaag = .rustig
+    @State private var open = false
+
+    var body: some View {
+        Button { open.toggle() } label: {
+            Label("Kaartlaag", systemImage: "square.3.layers.3d.top.filled")
+        }
+        .help("Kaartlaag (⌘1–4)")
+        .popover(isPresented: $open, arrowEdge: .bottom) {
+            LagenKiezer(laag: $laag) { open = false }
+        }
+    }
+}
+
+// Werkbalk: bij mij in de buurt.
+struct LocatieKnop: View {
+    @Environment(ListingStore.self) private var store
+    @State private var locatie = Locatie()
+    @State private var bezig = false
+
+    var body: some View {
+        Button(action: zoek) {
+            Label("Bij mij in de buurt", systemImage: store.mijnLocatie != nil ? "location.fill" : "location")
+        }
+        .disabled(bezig)
+        .help("Bij mij in de buurt: kaart naar je locatie en sorteren op afstand")
+    }
+
+    private func zoek() {
+        bezig = true
+        locatie.vraag { loc in
+            bezig = false
+            guard let loc else {
+                store.toon("Locatie niet beschikbaar. Zet hem aan bij Systeeminstellingen › Privacy en beveiliging › Locatievoorzieningen.")
+                return
+            }
+            store.mijnLocatie = loc
+            store.sortering = .afstand
+            let p = MKMapPoint(loc.coordinate)
+            let breedte = 40_000 * MKMapPointsPerMeterAtLatitude(loc.coordinate.latitude)
+            store.vliegNaar = MKMapRect(x: p.x - breedte / 2, y: p.y - breedte / 2, width: breedte, height: breedte)
+        }
+    }
+}
+
+// Vier lagen als tegels, zoals in Apple Kaarten.
+struct LagenKiezer: View {
+    @Binding var laag: KaartLaag
+    let klaar: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Kaartlaag").font(.system(size: 12, weight: .semibold))
+            HStack(spacing: 10) {
+                ForEach(KaartLaag.allCases) { l in
+                    Button {
+                        withAnimation(.snappy) { laag = l }
+                        klaar()
+                    } label: {
+                        VStack(spacing: 6) {
+                            Image(systemName: l.symbol)
+                                .font(.system(size: 20))
+                                .frame(width: 64, height: 46)
+                                .background(l == laag ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.1),
+                                            in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .stroke(l == laag ? Color.accentColor : .clear, lineWidth: 2))
+                            Text(l.label)
+                                .font(.system(size: 10.5, weight: l == laag ? .semibold : .regular))
+                                .lineLimit(1)
+                        }
+                        .frame(width: 72)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(14)
     }
 }
 
 // MKMapView met native clustering: pinnen dicht bij elkaar worden één bolletje
 // met het aantal, en vallen vloeiend uit elkaar bij inzoomen.
 struct ClusterKaart: NSViewRepresentable {
-    let listings: [Listing]
-    @Binding var selection: Listing.ID?
+    let store: ListingStore
+    let laag: KaartLaag
 
     static let nederland = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 51.95, longitude: 5.25),
         span: MKCoordinateSpan(latitudeDelta: 3.6, longitudeDelta: 4.2))
 
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
+    func makeCoordinator() -> Coordinator { Coordinator(store: store) }
 
     func makeNSView(context: Context) -> MKMapView {
-        let map = MKMapView()
+        let map = MiddenKaart()
         map.delegate = context.coordinator
         map.setRegion(Self.nederland, animated: false)
-        // Gedempte kaart (zoals CARTO op de website): pinnen springen er dag en nacht uit.
-        let config = MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
-        config.pointOfInterestFilter = .excludingAll
-        map.preferredConfiguration = config
+        map.preferredConfiguration = laag.configuratie
         map.showsZoomControls = true
         map.showsCompass = true
-        map.showsScale = true
         map.register(PinAnnotationView.self, forAnnotationViewWithReuseIdentifier: PinAnnotationView.id)
         map.register(ClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: ClusterAnnotationView.id)
+        context.coordinator.laag = laag
         return map
     }
 
     func updateNSView(_ map: MKMapView, context: Context) {
-        context.coordinator.parent = self
         let c = context.coordinator
+        if c.laag != laag {
+            c.laag = laag
+            map.preferredConfiguration = laag.configuratie
+        }
+        map.showsUserLocation = store.mijnLocatie != nil
 
         // Alleen toevoegen/verwijderen wat veranderd is, zodat filteren niet flitst.
-        let nieuw = Dictionary(uniqueKeysWithValues: listings.filter { $0.coordinate != nil }.map { ($0.id, $0) })
+        let nieuw = Dictionary(uniqueKeysWithValues: store.filtered.map { ($0.id, $0) })
         let weg = c.annotations.filter { nieuw[$0.key] == nil }
         map.removeAnnotations(weg.map(\.value))
         weg.keys.forEach { c.annotations.removeValue(forKey: $0) }
@@ -54,28 +189,31 @@ struct ClusterKaart: NSViewRepresentable {
         erbij.forEach { c.annotations[$0.listing.id] = $0 }
         map.addAnnotations(erbij)
 
+        // Vliegopdracht (plaats gezocht, mijn locatie).
+        if let rect = store.vliegNaar {
+            DispatchQueue.main.async { store.vliegNaar = nil }
+            map.setVisibleMapRect(rect, edgePadding: NSEdgeInsets(top: 60, left: 60, bottom: 60, right: 60), animated: true)
+        }
+
         // Selectie uit de lijst → pin selecteren en ernaartoe vliegen.
-        if c.laatsteSelectie != selection {
-            c.laatsteSelectie = selection
+        if c.laatsteSelectie != store.selection {
+            c.laatsteSelectie = store.selection
             map.selectedAnnotations.forEach { map.deselectAnnotation($0, animated: false) }
-            if let id = selection, let a = c.annotations[id] {
-                let regio = MKCoordinateRegion(center: a.coordinate, latitudinalMeters: 22_000, longitudinalMeters: 22_000)
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.6
-                    ctx.allowsImplicitAnimation = true
-                    map.setRegion(regio, animated: true)
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { map.selectAnnotation(a, animated: true) }
+            if let id = store.selection, let a = c.annotations[id] {
+                let span = min(map.region.span.latitudeDelta, 0.25)
+                map.setRegion(MKCoordinateRegion(center: a.coordinate, span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)), animated: true)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { map.selectAnnotation(a, animated: true) }
             }
         }
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
-        var parent: ClusterKaart
+        let store: ListingStore
         var annotations: [UUID: ListingAnnotation] = [:]
         var laatsteSelectie: UUID?
+        var laag: KaartLaag = .rustig
 
-        init(_ parent: ClusterKaart) { self.parent = parent }
+        init(store: ListingStore) { self.store = store }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKClusterAnnotation {
@@ -83,6 +221,11 @@ struct ClusterKaart: NSViewRepresentable {
             }
             guard annotation is ListingAnnotation else { return nil }
             return mapView.dequeueReusableAnnotationView(withIdentifier: PinAnnotationView.id, for: annotation)
+        }
+
+        func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+            let rect = mapView.visibleMapRect
+            Task { @MainActor in self.store.zichtbaarGebied = rect }
         }
 
         func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
@@ -97,20 +240,29 @@ struct ClusterKaart: NSViewRepresentable {
             }
             guard let a = annotation as? ListingAnnotation else { return }
             laatsteSelectie = a.listing.id
-            if parent.selection != a.listing.id { parent.selection = a.listing.id }
+            Task { @MainActor in if self.store.selection != a.listing.id { self.store.selection = a.listing.id } }
         }
 
         func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
-            guard let annotation = view.annotation else { return }
-            guard let a = annotation as? ListingAnnotation, parent.selection == a.listing.id else { return }
+            guard let a = view.annotation as? ListingAnnotation else { return }
             DispatchQueue.main.async {
                 // Alleen leegmaken als er niet meteen een andere pin is gekozen.
-                if mapView.selectedAnnotations.isEmpty && self.parent.selection == a.listing.id {
+                if mapView.selectedAnnotations.isEmpty && self.store.selection == a.listing.id {
                     self.laatsteSelectie = nil
-                    self.parent.selection = nil
+                    self.store.selection = nil
                 }
             }
         }
+    }
+}
+
+// Houdt het midden van de kaart vast als het venster groter of kleiner wordt.
+final class MiddenKaart: MKMapView {
+    override func setFrameSize(_ newSize: NSSize) {
+        let midden = centerCoordinate
+        let hadMaat = frame.width > 10
+        super.setFrameSize(newSize)
+        if hadMaat { setCenter(midden, animated: false) }
     }
 }
 
@@ -124,16 +276,20 @@ final class ListingAnnotation: NSObject, MKAnnotation {
     }
 }
 
+func isDonker(_ v: NSView) -> Bool {
+    v.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+}
+
 // MARK: - Pin
 
 @MainActor
 enum PinBeelden {
     private static var cache: [String: NSImage] = [:]
 
-    static func beeld(_ l: Listing, selected: Bool, dark: Bool) -> NSImage {
-        let key = "\(l.kind.rawValue)-\(l.symbol)-\(selected)-\(dark)"
+    static func beeld(_ l: Listing, groot: Bool, dark: Bool) -> NSImage {
+        let key = "\(l.kind.rawValue)-\(l.symbol)-\(groot)-\(dark)"
         if let b = cache[key] { return b }
-        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol, dark: dark).scaleEffect(selected ? 1.3 : 1, anchor: .bottom).padding(selected ? 6 : 2))
+        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol, dark: dark).scaleEffect(groot ? 1.3 : 1, anchor: .bottom).padding(groot ? 6 : 2))
         r.scale = 2
         let b = r.nsImage ?? NSImage()
         cache[key] = b
@@ -143,44 +299,116 @@ enum PinBeelden {
 
 final class PinAnnotationView: MKAnnotationView {
     static let id = "pin"
+    private var hover = false
+    private var kaartje: NSHostingView<HoverKaartje>?
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         clusteringIdentifier = "yardigo"
         collisionMode = .rectangle
+        wantsLayer = true
+        layer?.masksToBounds = false
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        hover = false
+        verbergKaartje()
+    }
 
     override func prepareForDisplay() {
         super.prepareForDisplay()
         clusteringIdentifier = "yardigo"
-        toon(selected: isSelected)
+        toon()
     }
 
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        toon(selected: selected)
+        if selected { verbergKaartje() }
+        toon()
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        toon(selected: isSelected)
+        toon()
     }
 
-    private func toon(selected: Bool) {
+    // Muis boven de pin: kort kaartje met de belangrijkste info.
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect], owner: self))
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        hover = true
+        toon()
+        guard !isSelected, kaartje == nil, let l = (annotation as? ListingAnnotation)?.listing else { return }
+        let v = NSHostingView(rootView: HoverKaartje(listing: l))
+        let maat = v.fittingSize
+        v.frame = NSRect(origin: kaartjeOorsprong(maat), size: maat)
+        v.alphaValue = 0
+        addSubview(v)
+        kaartje = v
+        NSAnimationContext.runAnimationGroup { $0.duration = 0.12; v.animator().alphaValue = 1 }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        hover = false
+        verbergKaartje()
+        toon()
+    }
+
+    private func verbergKaartje() {
+        kaartje?.removeFromSuperview()
+        kaartje = nil
+    }
+
+    // Het kaartje steekt buiten de pin uit; klikken daar gaan door naar de kaart.
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let p = convert(point, from: superview)
+        return bounds.contains(p) ? self : nil
+    }
+
+    private func toon() {
         guard let l = (annotation as? ListingAnnotation)?.listing else { return }
-        image = PinBeelden.beeld(l, selected: selected, dark: isDonker(self))
+        image = PinBeelden.beeld(l, groot: isSelected || hover, dark: isDonker(self))
         centerOffset = CGPoint(x: 0, y: -(image?.size.height ?? 0) / 2)
-        displayPriority = selected ? .required : .defaultHigh
-        zPriority = selected ? .max : .defaultUnselected
+        displayPriority = isSelected ? .required : .defaultHigh
+        zPriority = isSelected || hover ? .max : .defaultUnselected
+        kaartje.map { k in k.frame.origin = kaartjeOorsprong(k.frame.size) }
+    }
+
+    private func kaartjeOorsprong(_ maat: NSSize) -> CGPoint {
+        CGPoint(x: (bounds.width - maat.width) / 2, y: isFlipped ? -maat.height + 2 : bounds.height - 2)
+    }
+}
+
+struct HoverKaartje: View {
+    let listing: Listing
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(listing.title)
+                .font(.system(size: 12, weight: .semibold))
+                .lineLimit(2)
+            Text([listing.subLabel, DagLabel.kort(listing.date), listing.timeRange, listing.city].compactMap { $0 }.joined(separator: " · "))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .frame(width: 220, alignment: .leading)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(.separator, lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
+        .padding(6)
     }
 }
 
 // Druppelpin zoals op de website: soortkleur, witte rand, icoon.
-func isDonker(_ v: NSView) -> Bool {
-    v.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-}
-
 struct Pin: View {
     let kind: Kind
     let symbol: String
@@ -245,6 +473,7 @@ final class ClusterAnnotationView: MKAnnotationView {
         r.scale = 2
         image = r.nsImage
         centerOffset = .zero
+        toolTip = "\(leden.count) verkopen. Klik om in te zoomen."
     }
 }
 

@@ -4,6 +4,7 @@ import SwiftUI
 struct YardiGoApp: App {
     @State private var store = ListingStore()
     @AppStorage("weergave") private var weergave: Weergave = .systeem
+    @AppStorage("kaartlaag") private var laag: KaartLaag = .rustig
 
     var body: some Scene {
         WindowGroup {
@@ -28,6 +29,11 @@ struct YardiGoApp: App {
                 }
                 Button("Wissel dag/nacht") { DagNacht.wissel(&weergave) }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
+                Divider()
+                ForEach(Array(KaartLaag.allCases.enumerated()), id: \.element) { i, l in
+                    Button("Kaart: \(l.label)") { laag = l }
+                        .keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: .command)
+                }
             }
         }
     }

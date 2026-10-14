@@ -18,11 +18,13 @@ struct Listing: Identifiable, Decodable, Hashable {
     let timeStart: String?
     let timeEnd: String?
     let images: [String]?
+    let photoCount: Int?
     let status: String?
     let addressRevealMode: String?
     let eventSubtype: String?
     let placedBy: String?
     let sourceUrl: String?
+    let tags: [String]?
     let sourceLabel: String?
     let locationApprox: Bool?
     let shortCode: String?
@@ -53,6 +55,15 @@ struct Listing: Identifiable, Decodable, Hashable {
             ("rommelmarkt", "rommelmarkt"),
         ]
         return regels.first { v.contains($0.0) }?.1 ?? v
+    }
+
+    // Categorie voor filters en zoeken: de marktsoort, of "oprit"/"route".
+    var categorieKey: String {
+        switch kind {
+        case .oprit: return "oprit"
+        case .route: return "route"
+        case .markt: return subKey.isEmpty || subKey == "overig" ? "markt" : subKey
+        }
     }
 
     var subLabel: String {

@@ -19,6 +19,8 @@ targets:
         PRODUCT_NAME: YardiGo
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: YardiGo
+        INFOPLIST_KEY_NSLocationUsageDescription: "YardiGo gebruikt je locatie om verkopen bij jou in de buurt te tonen en op afstand te sorteren."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "YardiGo gebruikt je locatie om verkopen bij jou in de buurt te tonen en op afstand te sorteren."
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
         INFOPLIST_KEY_NSHumanReadableCopyright: "© YardiGo"
         CODE_SIGN_ENTITLEMENTS: YardiGo/YardiGo.entitlements
