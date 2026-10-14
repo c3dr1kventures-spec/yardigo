@@ -30,9 +30,23 @@ final class ListingStore {
         return c
     }()
 
+    // Kopie van de laatst opgehaalde verkopen: de app start daarmee meteen en
+    // ververst op de achtergrond.
+    private static var cacheURL: URL {
+        let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        return dir.appending(path: "listings.json")
+    }
+
     init() {
         let opgeslagen = UserDefaults.standard.stringArray(forKey: "favorites") ?? []
         favorites = Set(opgeslagen.compactMap(UUID.init))
+        if let data = try? Data(contentsOf: Self.cacheURL), let l = try? Self.decode(data) { listings = l }
+    }
+
+    private static func decode(_ data: Data) throws -> [Listing] {
+        let dec = JSONDecoder()
+        dec.keyDecodingStrategy = .convertFromSnakeCase
+        return try dec.decode([Listing].self, from: data)
     }
 
     var selected: Listing? { listings.first { $0.id == selection } }
@@ -78,10 +92,9 @@ final class ListingStore {
                 errorMessage = "De server gaf geen geldige reactie. Probeer het zo opnieuw (⌘R)."
                 return
             }
-            let dec = JSONDecoder()
-            dec.keyDecodingStrategy = .convertFromSnakeCase
-            listings = try dec.decode([Listing].self, from: data)
+            listings = try Self.decode(data)
             errorMessage = nil
+            try? data.write(to: Self.cacheURL, options: .atomic)
         } catch {
             errorMessage = "Kon de verkopen niet laden. Controleer je internetverbinding en druk op ⌘R."
         }

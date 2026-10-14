@@ -4481,6 +4481,28 @@ window.addEventListener('unhandledrejection', function(ev) {
   logError(reason, { type: 'unhandledrejection' });
 });
 
+// Kopie van de verkopen op dit apparaat, zodat de kaart bij een volgend bezoek
+// meteen gevuld is. Gekoppeld aan wie er ingelogd is: na uitloggen of met een
+// ander account wordt de kopie niet gebruikt.
+var YG_LISTINGS_CACHE = 'yg-listings-cache';
+function _cacheEigenaar() {
+  try { var u = JSON.parse(localStorage.getItem('yg-user') || 'null'); return (u && u.id) || 'gast'; } catch(e) { return 'gast'; }
+}
+function leesListingsCache() {
+  try {
+    var c = JSON.parse(localStorage.getItem(YG_LISTINGS_CACHE) || 'null');
+    if (!c || !Array.isArray(c.d) || !c.d.length || c.v !== 1) return null;
+    if (c.u !== _cacheEigenaar() || Date.now() - c.t > 3 * 86400000) return null;
+    var vandaag = new Date().toISOString().slice(0, 10);
+    var d = c.d.filter(function(r) { return (r.date_end || r.date_start || '') >= vandaag; });
+    return d.length ? d : null;
+  } catch(e) { return null; }
+}
+function schrijfListingsCache(data) {
+  try { localStorage.setItem(YG_LISTINGS_CACHE, JSON.stringify({ v: 1, t: Date.now(), u: _cacheEigenaar(), d: data })); }
+  catch(e) { try { localStorage.removeItem(YG_LISTINGS_CACHE); } catch(_) {} }
+}
+
 async function fetchListings() {
   if (!sbClient || SUPABASE_URL.includes('JOUW-PROJECT')) {
     console.log('Supabase niet geconfigureerd, gebruik demo-data');
@@ -8386,7 +8408,7 @@ async function doLogout() {
   if (sbClient) { try { await sbClient.auth.signOut(); } catch(e) {} }
   isGuest = true;
   currentUser = { name: '', email: '' };
-  localStorage.removeItem('yg-user');
+  localStorage.removeItem('yg-user'); localStorage.removeItem('yg-listings-cache');
   updateUserUI();
   if (map) renderMarkers();
   renderList();
@@ -8434,7 +8456,7 @@ async function doDeleteAccount() {
     // Lokale staat opschonen
     isGuest = true;
     currentUser = { name: '', email: '' };
-    localStorage.removeItem('yg-user');
+    localStorage.removeItem('yg-user'); localStorage.removeItem('yg-listings-cache');
     localStorage.removeItem('yg-onboarded');
     localStorage.removeItem('yg-dark');
     updateUserUI();
@@ -16659,24 +16681,37 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Analytics: vuur page-view af (non-blocking)
   try { trackPageView(); } catch(e) {}
 
-  // Probeer data uit Supabase te laden, anders gebruik demo-data
-  try {
-    var supabaseData = await fetchListings();
-    if (supabaseData && supabaseData.length > 0) {
-      sales = supabaseData.map(mapSupabaseToSale);
-      console.log('Geladen uit Supabase:', sales.length, 'listings');
-    } else {
-      console.log('Gebruik demo-data (' + sales.length + ' items)');
+  // Verkopen, onderhoudsstatus en sessie tegelijk ophalen in plaats van na
+  // elkaar. Is er een recente kopie van de verkopen op dit apparaat, dan
+  // tonen we die meteen en verversen we op de achtergrond.
+  var _listingsP = fetchListings();
+  var _settingsP = sbClient
+    ? sbClient.from('app_settings').select('key,value').in('key', ['maintenance_mode', 'banner_text']).then(function(r) { return r; }, function() { return null; })
+    : Promise.resolve(null);
+  var _sessionP = sbClient ? sbClient.auth.getSession().catch(function() { return null; }) : Promise.resolve(null);
+  var _cached = leesListingsCache();
+  if (_cached) {
+    sales = _cached.map(mapSupabaseToSale);
+  } else {
+    try {
+      var supabaseData = await _listingsP;
+      if (supabaseData && supabaseData.length > 0) {
+        sales = supabaseData.map(mapSupabaseToSale);
+        schrijfListingsCache(supabaseData);
+        console.log('Geladen uit Supabase:', sales.length, 'listings');
+      } else {
+        console.log('Gebruik demo-data (' + sales.length + ' items)');
+      }
+    } catch(e) {
+      console.log('Supabase laden mislukt, gebruik demo-data:', e);
     }
-  } catch(e) {
-    console.log('Supabase laden mislukt, gebruik demo-data:', e);
   }
 
-  // Onderhoudsbanner: laad app_settings en toon banner indien actief
+  // Onderhoudsbanner: toon banner indien actief
   if (sbClient) {
     try {
-      var _msRes = await sbClient.from('app_settings').select('key,value').in('key', ['maintenance_mode', 'banner_text']);
-      if (_msRes.data) {
+      var _msRes = await _settingsP;
+      if (_msRes && _msRes.data) {
         var _msMap = {};
         _msRes.data.forEach(function(r) { _msMap[r.key] = r.value; });
         if (_msMap.maintenance_mode === 'true') {
@@ -16691,22 +16726,34 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch(e) {}
   }
 
-  // Herstel sessie: eerst Supabase, dan localStorage als fallback
+  // Herstel sessie: eerst Supabase, dan localStorage als fallback. Met een
+  // kopie van de verkopen wachten we hooguit 600 ms; een trage token-verversing
+  // wordt daarna alsnog verwerkt.
+  var _sessieVerwerkt = false;
+  function _verwerkSessie(sessionRes) {
+    var session = sessionRes && sessionRes.data && sessionRes.data.session;
+    if (_sessieVerwerkt || !session || !session.user) return false;
+    _sessieVerwerkt = true;
+    var u = session.user;
+    var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
+    isGuest = false;
+    currentUser = { name: name, email: u.email, id: u.id };
+    localStorage.setItem('yg-user', JSON.stringify(currentUser));
+    localStorage.setItem('yg-onboarded', '1');
+    ensureProfile(u.id, name, u.email);
+    loadMyInterests(); // laad interesses vanuit DB na sessie-herstel
+    loadInboxBadge(); // laad ongelezen berichten-badge
+    return true;
+  }
   if (sbClient) {
     try {
-      var sessionRes = await sbClient.auth.getSession();
-      var session = sessionRes.data && sessionRes.data.session;
-      if (session && session.user) {
-        var u = session.user;
-        var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
-        isGuest = false;
-        currentUser = { name: name, email: u.email, id: u.id };
-        localStorage.setItem('yg-user', JSON.stringify(currentUser));
-        localStorage.setItem('yg-onboarded', '1');
-        ensureProfile(u.id, name, u.email);
-        loadMyInterests(); // laad interesses vanuit DB na sessie-herstel
-        loadInboxBadge(); // laad ongelezen berichten-badge
+      var sessionRes = _cached
+        ? await Promise.race([_sessionP, new Promise(function(r) { setTimeout(function() { r('wacht'); }, 600); })])
+        : await _sessionP;
+      if (sessionRes === 'wacht') {
+        _sessionP.then(function(res) { if (_verwerkSessie(res)) { try { updateUserUI(); loadAvatarFromProfile(); } catch(e) {} } });
       }
+      else _verwerkSessie(sessionRes);
     } catch(e) {}
   }
   // Fallback: localStorage (als Supabase nog niet geconfigureerd was)
@@ -16726,6 +16773,15 @@ document.addEventListener('DOMContentLoaded', async function() {
   loadAvatarFromProfile();
   initOneSignalIfNative();
   initMap();
+  // Met de kopie gestart: zodra de verse verkopen binnen zijn, lijst en kaart bijwerken.
+  if (_cached) {
+    _listingsP.then(function(data) {
+      if (!data || !data.length) return;
+      schrijfListingsCache(data);
+      sales = data.map(mapSupabaseToSale);
+      try { renderList(); renderMarkers(); updateAttendanceUI(); } catch(e) { console.warn('verversen', e); }
+    });
+  }
   // Splash loader weg — sales zijn geladen en de kaart is opgezet.
   // Korte microtask-vertraging zodat Leaflet de eerste tegels al kan
   // beginnen renderen vóór de fade-out start.
