@@ -7709,7 +7709,7 @@ function setLang(code) {
   applyLang();
   // Re-render dynamische UI (kaartjes/lijsten bouwen zelf tekst)
   try { if (typeof renderList === 'function') renderList(); } catch(e){}
-  try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) renderMarkers(); } catch(e){}
+  try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) { _pinsVergeten(); renderMarkers(); } } catch(e){}
   try { if (typeof renderMySales === 'function') renderMySales(); } catch(e){}
   try { if (typeof updateUserUI === 'function') updateUserUI(); } catch(e){}
   closeLangMenu();
@@ -8263,7 +8263,17 @@ function applyAuthVisibility() {
 }
 
 // ── Mijn verkopen in profiel ──
+// "Mijn verkopen" pas opbouwen als die pagina open is. Voor de beheerder
+// (eigenaar van alle door YardiGo geplaatste verkopen) zijn dat honderden
+// kaarten die anders bij elke start en elke wijziging gebouwd werden.
+var _mySalesVuil = false;
 function renderMySales() {
+  var v = document.getElementById('view-mijn');
+  if (v && !v.classList.contains('active')) { _mySalesVuil = true; return; }
+  _mySalesVuil = false;
+  _renderMySalesNu();
+}
+function _renderMySalesNu() {
   var list = document.getElementById('my-sales-list');
   if (!list) return;
   if (isGuest || !currentUser.email) {
@@ -9284,11 +9294,45 @@ function groupByNeighborhoodSale(listings) {
 // Wordt herbouwd bij elke renderMarkers().
 var _markersById = {};
 
+// Pin per verkoop-object (een verse lijst van de server geeft nieuwe objecten,
+// dus nieuwe pins; oude worden vanzelf opgeruimd).
+var _pinCache = new WeakMap();
+var _pinsOpKaart = new Set();
+function _pinVoor(sale) {
+  var fav = favorites.has(sale.id);
+  var pin = _pinCache.get(sale);
+  if (pin) {
+    if (pin.fav !== fav) { pin.fav = fav; pin.marker.setIcon(createDefaultPin(sale)); }
+    return pin;
+  }
+  pin = { fav: fav, ring: null, marker: null };
+  // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
+  // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
+  if (sale.location_approx) {
+    pin.ring = L.circle([sale.lat, sale.lng], {
+      radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
+      fillOpacity: 0.1, interactive: false
+    });
+  }
+  pin.marker = L.marker([sale.lat, sale.lng], { icon: createDefaultPin(sale) });
+  pin.marker.bindPopup(function() { return createListingPopup(sale); }, { maxWidth: 260 });
+  bindHoverTip(pin.marker, sale);
+  _pinCache.set(sale, pin);
+  return pin;
+}
+// Pins opnieuw opbouwen (bijv. na taalwissel): cache leeg en alles eraf.
+function _pinsVergeten() {
+  _pinsOpKaart.forEach(function(pin) { map.removeLayer(pin.marker); if (pin.ring) map.removeLayer(pin.ring); });
+  _pinsOpKaart = new Set();
+  _pinCache = new WeakMap();
+}
+
 function renderMarkers() {
   // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
   // Als Leaflet niet beschikbaar is (CDN-fout, offline), is de fallback-kaart actief
   // en hoeven we geen markers te renderen.
   if (typeof L === 'undefined' || !map) return;
+  // Losse pins worden hergebruikt (zie onder); alleen overige lagen opruimen.
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
   clusterGroups.forEach(function(g) { map.removeLayer(g); });
@@ -9409,26 +9453,25 @@ function renderMarkers() {
     clusterGroups.push(group);
   });
 
-  // Losse listings als gewone markers
+  // Losse listings als gewone markers. Elke pin wordt één keer gemaakt en bij
+  // filteren hergebruikt: alleen wat verdwijnt of erbij komt verandert op de
+  // kaart. De popup-HTML wordt pas gebouwd als iemand de pin opent.
+  var nuZichtbaar = new Set();
   losseListings.forEach(function(sale) {
-    // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
-    // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
-    if (sale.location_approx) {
-      var ring = L.circle([sale.lat, sale.lng], {
-        radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
-        fillOpacity: 0.1, interactive: false
-      }).addTo(map);
-      markers.push(ring);
+    var pin = _pinVoor(sale);
+    nuZichtbaar.add(pin);
+    if (!_pinsOpKaart.has(pin)) {
+      if (pin.ring) pin.ring.addTo(map);
+      pin.marker.addTo(map);
     }
-    var m = L.marker([sale.lat, sale.lng], {
-      icon: createDefaultPin(sale)
-    });
-    m.bindPopup(createListingPopup(sale), { maxWidth: 260 });
-    bindHoverTip(m, sale);
-    m.addTo(map);
-    markers.push(m);
-    _markersById[sale.id] = { marker: m, cluster: null };
+    _markersById[sale.id] = { marker: pin.marker, cluster: null };
   });
+  _pinsOpKaart.forEach(function(pin) {
+    if (nuZichtbaar.has(pin)) return;
+    map.removeLayer(pin.marker);
+    if (pin.ring) map.removeLayer(pin.ring);
+  });
+  _pinsOpKaart = nuZichtbaar;
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
   if (fb && fb.style.display !== 'none') fbRenderMarkers();
@@ -9757,6 +9800,54 @@ function fmtDate(d) {
   var locale = ({ nl:'nl-NL', en:'en-GB', fr:'fr-FR', de:'de-DE' })[currentLang] || 'nl-NL';
   return new Date(d).toLocaleDateString(locale, { weekday:'short', day:'numeric', month:'short' });
 }
+// ── Lange lijsten in porties ──
+// Met honderden verkopen kost het opbouwen van álle kaarten (tienduizenden
+// elementen) bij elke filterklik merkbaar tijd, vooral op telefoons. We tonen
+// eerst een portie en vullen aan zodra de onderkant in beeld komt.
+var YG_PORTIE = 40;
+var _lijstItems = [];
+var _lijstLeeg = true;
+function _lijstItemHtml(item, idx) {
+  return item.kind === 'bv' ? renderBvCard(item.bv) : createListingCard(item.s, idx);
+}
+// Dichtstbijzijnde container die zelf scrolt (de zijlijst op desktop), anders
+// null = het venster.
+function _scrollOuder(el) {
+  for (var p = el; p && p !== document.body; p = p.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(p).overflowY)) return p;
+  }
+  return null;
+}
+function _vulLijst(el, items, naPortie) {
+  if (el._ygObs) { el._ygObs.disconnect(); el._ygObs = null; }
+  var pos = 0;
+  el.innerHTML = '';
+  function portie() {
+    var eind = Math.min(items.length, pos + YG_PORTIE), html = '';
+    for (var i = pos; i < eind; i++) html += _lijstItemHtml(items[i], i);
+    var oud = el.querySelector(':scope > .yg-meer');
+    if (oud) oud.remove();
+    el.insertAdjacentHTML('beforeend', html);
+    if (naPortie) naPortie(el);
+    pos = eind;
+    if (pos >= items.length || typeof IntersectionObserver === 'undefined') {
+      // Geen observer (oude browser): de rest in één keer.
+      if (pos < items.length) { while (pos < items.length) portie(); }
+      return;
+    }
+    var merk = document.createElement('div');
+    merk.className = 'yg-meer';
+    merk.style.cssText = 'height:1px;grid-column:1/-1';
+    el.appendChild(merk);
+    if (el._ygObs) el._ygObs.disconnect();
+    el._ygObs = new IntersectionObserver(function(e) {
+      if (e[0].isIntersecting) portie();
+    }, { root: _scrollOuder(el), rootMargin: '0px 0px 900px 0px' });
+    el._ygObs.observe(merk);
+  }
+  portie();
+}
+
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
   // Groepeer per buurtverkoop zodat elke buurtverkoop als 1 item geldt.
@@ -9826,6 +9917,8 @@ function renderList() {
   var list = document.getElementById('cardList');
   if (!list) return;
   if (!visible.length) {
+    _lijstItems = [];
+    _lijstLeeg = true;
     var activeFilterNames = Array.from(activeFilters).map(function(t) {
       return TYPES[t] ? TYPES[t].icon + ' ' + TYPES[t].label : t;
     });
@@ -9924,16 +10017,10 @@ function renderList() {
   }
   // Render in volgorde van gesorteerde items (buurtverkopen ingemengd, niet
   // automatisch bovenaan). Buurtverkopen blijven als 1 uitklapbare kaart staan.
-  var html = '';
-  items.forEach(function(item, idx) {
-    if (item.kind === 'bv') {
-      html += renderBvCard(item.bv);
-    } else {
-      html += createListingCard(item.s, idx);
-    }
-  });
-
-  list.innerHTML = html;
+  // In porties: eerst YG_PORTIE kaarten, de rest zodra je erheen scrolt.
+  _lijstItems = items;
+  _lijstLeeg = false;
+  _vulLijst(list, items);
 
   // Op desktop: sync de side-list naast de kaart zodat beide synchroon zijn
   if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
@@ -10325,7 +10412,7 @@ function sv(name, tabEl) {
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
   if (name === 'instellingen') loadSettingsTab();
-  if (name === 'mijn') loadCheckinState();
+  if (name === 'mijn') { loadCheckinState(); if (_mySalesVuil) renderMySales(); }
   if (name === 'home') loadHomeView();
   var fabRow = document.getElementById('fab-row');
   // FAB verbergen op kaart (overlap) en op home (geen sales context)
@@ -15793,16 +15880,19 @@ function _syncKaartSideList() {
   if (!document.body.classList.contains('is-desktop')) return;
   var src = document.getElementById('cardList');
   var dst = document.getElementById('kaart-side-cards');
-  if (src && dst) {
-    dst.innerHTML = src.innerHTML;
-    // Voeg data-sale-id toe aan elke card door het te parsen uit de onclick attr.
-    // De click-handler op #kaart-side-cards gebruikt dit om de juiste pin te focussen.
-    dst.querySelectorAll('.card').forEach(function(card) {
+  // Voeg data-sale-id toe aan elke card door het te parsen uit de onclick attr.
+  // De click-handler op #kaart-side-cards gebruikt dit om de juiste pin te focussen.
+  function tagCards(root) {
+    root.querySelectorAll('.card:not([data-sale-id])').forEach(function(card) {
       var inner = card.querySelector('[onclick*="openDetail"]');
       if (!inner) return;
       var m = (inner.getAttribute('onclick') || '').match(/openDetail\(['"]?([^'"\),]+)['"]?\)/);
       if (m && m[1]) card.dataset.saleId = m[1];
     });
+  }
+  if (src && dst) {
+    if (_lijstLeeg) { if (dst._ygObs) { dst._ygObs.disconnect(); dst._ygObs = null; } dst.innerHTML = src.innerHTML; }
+    else _vulLijst(dst, _lijstItems, tagCards);
   }
   // Synchroniseer ook het aantal-label
   var countSrc = document.getElementById('lcount');
