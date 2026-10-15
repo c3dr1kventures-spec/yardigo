@@ -169,6 +169,10 @@ struct ClusterKaart: NSViewRepresentable {
         map.register(PinAnnotationView.self, forAnnotationViewWithReuseIdentifier: PinAnnotationView.id)
         map.register(ClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: ClusterAnnotationView.id)
         context.coordinator.laag = laag
+        let klik = NSClickGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.kaartGeklikt(_:)))
+        klik.delaysPrimaryMouseButtonEvents = false
+        klik.delegate = context.coordinator
+        map.addGestureRecognizer(klik)
         return map
     }
 
@@ -196,24 +200,40 @@ struct ClusterKaart: NSViewRepresentable {
         }
 
         // Selectie uit de lijst → pin selecteren en ernaartoe vliegen.
+        c.markeer(store.selection, op: map)
         if c.laatsteSelectie != store.selection {
             c.laatsteSelectie = store.selection
             map.selectedAnnotations.forEach { map.deselectAnnotation($0, animated: false) }
-            if let id = store.selection, let a = c.annotations[id] {
-                let span = min(map.region.span.latitudeDelta, 0.25)
-                map.setRegion(MKCoordinateRegion(center: a.coordinate, span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)), animated: true)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { map.selectAnnotation(a, animated: true) }
+            if let id = store.selection, let a = c.annotations[id], let kaart = map as? MiddenKaart {
+                let span = min(map.region.span.latitudeDelta, 0.1)
+                kaart.vlieg(naar: MKCoordinateRegion(center: a.coordinate, span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)))
             }
         }
     }
 
-    final class Coordinator: NSObject, MKMapViewDelegate {
+    final class Coordinator: NSObject, MKMapViewDelegate, NSGestureRecognizerDelegate {
         let store: ListingStore
         var annotations: [UUID: ListingAnnotation] = [:]
         var laatsteSelectie: UUID?
         var laag: KaartLaag = .rustig
 
         init(store: ListingStore) { self.store = store }
+
+        // Laat alleen de gekozen verkoop gloeien.
+        private var gemarkeerd: UUID?
+        func markeer(_ id: UUID?, op map: MKMapView) {
+            guard gemarkeerd != id || (id != nil && annotations[id!]?.uitgelicht == false) else { return }
+            for vorige in [gemarkeerd].compactMap({ $0 }) {
+                if let a = annotations[vorige] { a.uitgelicht = false; (map.view(for: a) as? PinAnnotationView)?.ververs() }
+            }
+            gemarkeerd = id
+            if let id, let a = annotations[id] { a.uitgelicht = true; (map.view(for: a) as? PinAnnotationView)?.ververs() }
+            // Valt de gekozen verkoop in een groepje, dan gloeit het groepje.
+            func groepjes(in v: NSView) -> [ClusterAnnotationView] {
+                v.subviews.flatMap { ($0 as? ClusterAnnotationView).map { [$0] } ?? groepjes(in: $0) }
+            }
+            groepjes(in: map).forEach { $0.prepareForDisplay() }
+        }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKClusterAnnotation {
@@ -228,46 +248,71 @@ struct ClusterKaart: NSViewRepresentable {
             Task { @MainActor in self.store.zichtbaarGebied = rect }
         }
 
+        // Klik op pin of groepje (via MapKit). De gloed tekenen we zelf: MapKit-
+        // selectie verbergt op de Mac de pin, dus die laten we meteen weer los.
+        private var laatsteTreffer = Date.distantPast
         func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+            laatsteTreffer = .now
             guard let annotation = view.annotation else { return }
+            mapView.deselectAnnotation(annotation, animated: false)
             if let cluster = annotation as? MKClusterAnnotation {
-                // Klik op een groepje → inzoomen tot de pinnen uit elkaar vallen.
-                mapView.deselectAnnotation(cluster, animated: false)
-                var rect = MKMapRect.null
-                for m in cluster.memberAnnotations { rect = rect.union(MKMapRect(origin: MKMapPoint(m.coordinate), size: MKMapSize(width: 1, height: 1))) }
-                mapView.setVisibleMapRect(rect, edgePadding: NSEdgeInsets(top: 80, left: 80, bottom: 80, right: 80), animated: true)
-                return
+                // Na het afhandelen van de klik, anders negeert MapKit de zoom.
+                DispatchQueue.main.async { self.zoom(mapView, naar: cluster) }
+            } else if let a = annotation as? ListingAnnotation {
+                laatsteSelectie = a.listing.id
+                Task { @MainActor in self.store.selection = a.listing.id }
             }
-            guard let a = annotation as? ListingAnnotation else { return }
-            laatsteSelectie = a.listing.id
-            Task { @MainActor in if self.store.selection != a.listing.id { self.store.selection = a.listing.id } }
         }
 
-        func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
-            guard let a = view.annotation as? ListingAnnotation else { return }
-            DispatchQueue.main.async {
-                // Alleen leegmaken als er niet meteen een andere pin is gekozen.
-                if mapView.selectedAnnotations.isEmpty && self.store.selection == a.listing.id {
-                    self.laatsteSelectie = nil
-                    self.store.selection = nil
-                }
+        // Klik op een leeg stuk kaart (geen pin geraakt): selectie loslaten.
+        @objc func kaartGeklikt(_ g: NSClickGestureRecognizer) {
+            let klik = Date.now
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                guard self.laatsteTreffer < klik.addingTimeInterval(-0.3), self.store.selection != nil else { return }
+                self.laatsteSelectie = nil
+                self.store.selection = nil
             }
+        }
+
+        func gestureRecognizer(_ g: NSGestureRecognizer, shouldRecognizeSimultaneouslyWith other: NSGestureRecognizer) -> Bool { true }
+
+        // Klik op een groepje → inzoomen tot de pinnen uit elkaar vallen.
+        func zoom(_ mapView: MKMapView, naar cluster: MKClusterAnnotation) {
+            var rect = MKMapRect.null
+            for m in cluster.memberAnnotations { rect = rect.union(MKMapRect(origin: MKMapPoint(m.coordinate), size: MKMapSize(width: 1, height: 1))) }
+            mapView.setVisibleMapRect(rect, edgePadding: NSEdgeInsets(top: 80, left: 80, bottom: 80, right: 80), animated: true)
         }
     }
 }
 
 // Houdt het midden van de kaart vast als het venster groter of kleiner wordt.
+// Tijdens een vlucht naar een verkoop blijft juist dát doel in beeld, ook als
+// het detailpaneel ondertussen openschuift.
 final class MiddenKaart: MKMapView {
+    var doel: MKCoordinateRegion?
+
     override func setFrameSize(_ newSize: NSSize) {
         let midden = centerCoordinate
         let hadMaat = frame.width > 10
+        let anders = newSize != frame.size
         super.setFrameSize(newSize)
-        if hadMaat { setCenter(midden, animated: false) }
+        // Alleen bij een echte maatwijziging; anders breekt dit lopende zooms af.
+        guard hadMaat, anders else { return }
+        if let doel { setRegion(doel, animated: false) } else { setCenter(midden, animated: false) }
+    }
+
+    func vlieg(naar regio: MKCoordinateRegion) {
+        doel = regio
+        setRegion(regio, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            if self?.doel?.center.latitude == regio.center.latitude { self?.doel = nil }
+        }
     }
 }
 
 final class ListingAnnotation: NSObject, MKAnnotation {
     let listing: Listing
+    var uitgelicht = false   // gekozen in de app (lijst of kaart): pin gloeit
     let coordinate: CLLocationCoordinate2D
     var title: String? { listing.title }
     init(listing: Listing) {
@@ -286,10 +331,21 @@ func isDonker(_ v: NSView) -> Bool {
 enum PinBeelden {
     private static var cache: [String: NSImage] = [:]
 
-    static func beeld(_ l: Listing, groot: Bool, dark: Bool) -> NSImage {
-        let key = "\(l.kind.rawValue)-\(l.symbol)-\(groot)-\(dark)"
+    // Vaste ruimte rond de pin in elk beeld, zodat rand, schaduw en gloed er
+    // helemaal op passen en de punt altijd even hoog staat.
+    static let marge: CGFloat = 11
+    // Grootste pin (vergroot + gloed): zo groot is het kader van elke pin.
+    static let kader = CGSize(width: 30 * groot + 2 * marge, height: 38 * groot + 2 * marge)
+    static let groot: CGFloat = 1.25
+
+    static func beeld(_ l: Listing, groot: Bool, gloed: Bool, dark: Bool) -> NSImage {
+        let key = "\(l.kind.rawValue)-\(l.symbol)-\(groot)-\(gloed)-\(dark)"
         if let b = cache[key] { return b }
-        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol, dark: dark).scaleEffect(groot ? 1.3 : 1, anchor: .bottom).padding(groot ? 6 : 2))
+        // Elk beeld even groot (punt onderaan in het midden): MapKit op de Mac
+        // schaalt een beeld dat van formaat wisselt terug naar het eerste formaat.
+        let r = ImageRenderer(content: Pin(kind: l.kind, symbol: l.symbol, dark: dark, schaal: groot ? Self.groot : 1, gloed: gloed)
+            .padding(.bottom, marge)
+            .frame(width: kader.width, height: kader.height, alignment: .bottom))
         r.scale = 2
         let b = r.nsImage ?? NSImage()
         cache[key] = b
@@ -329,6 +385,11 @@ final class PinAnnotationView: MKAnnotationView {
         toon()
     }
 
+    // MapKit op de Mac zet soms alleen deze property, zonder setSelected.
+    override var isSelected: Bool {
+        didSet { if isSelected != oldValue { if isSelected { verbergKaartje() }; toon() } }
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         toon()
@@ -344,7 +405,8 @@ final class PinAnnotationView: MKAnnotationView {
     override func mouseEntered(with event: NSEvent) {
         hover = true
         toon()
-        guard !isSelected, kaartje == nil, let l = (annotation as? ListingAnnotation)?.listing else { return }
+        guard !isSelected, kaartje == nil, let a = annotation as? ListingAnnotation, !a.uitgelicht else { return }
+        let l = a.listing
         let v = NSHostingView(rootView: HoverKaartje(listing: l))
         let maat = v.fittingSize
         v.frame = NSRect(origin: kaartjeOorsprong(maat), size: maat)
@@ -365,23 +427,35 @@ final class PinAnnotationView: MKAnnotationView {
         kaartje = nil
     }
 
+    // Groeperen gebeurt op de pin zelf, niet op de lege ruimte voor de gloed.
+    override var alignmentRectInsets: NSEdgeInsets {
+        let k = PinBeelden.kader, m = PinBeelden.marge
+        let zij = (k.width - 30) / 2
+        return NSEdgeInsets(top: k.height - m - 38, left: zij, bottom: m, right: zij)
+    }
+
     // Het kaartje steekt buiten de pin uit; klikken daar gaan door naar de kaart.
     override func hitTest(_ point: NSPoint) -> NSView? {
         let p = convert(point, from: superview)
-        return bounds.contains(p) ? self : nil
+        return bounds.insetBy(dx: PinBeelden.marge, dy: PinBeelden.marge).contains(p) ? self : nil
     }
 
+    func ververs() { toon() }
+
     private func toon() {
-        guard let l = (annotation as? ListingAnnotation)?.listing else { return }
-        image = PinBeelden.beeld(l, groot: isSelected || hover, dark: isDonker(self))
-        centerOffset = CGPoint(x: 0, y: -(image?.size.height ?? 0) / 2)
-        displayPriority = isSelected ? .required : .defaultHigh
-        zPriority = isSelected || hover ? .max : .defaultUnselected
+        guard let a = annotation as? ListingAnnotation else { return }
+        let gekozen = isSelected || a.uitgelicht
+        if gekozen { verbergKaartje() }
+        image = PinBeelden.beeld(a.listing, groot: gekozen || hover, gloed: gekozen, dark: isDonker(self))
+        // De punt (onderkant minus marge) staat precies op de locatie.
+        centerOffset = CGPoint(x: 0, y: -(PinBeelden.kader.height / 2 - PinBeelden.marge))
+        displayPriority = gekozen ? .required : .defaultHigh
+        zPriority = gekozen || hover ? .max : .defaultUnselected
         kaartje.map { k in k.frame.origin = kaartjeOorsprong(k.frame.size) }
     }
 
     private func kaartjeOorsprong(_ maat: NSSize) -> CGPoint {
-        CGPoint(x: (bounds.width - maat.width) / 2, y: isFlipped ? -maat.height + 2 : bounds.height - 2)
+        CGPoint(x: (bounds.width - maat.width) / 2, y: isFlipped ? -maat.height + PinBeelden.marge : bounds.height - PinBeelden.marge)
     }
 }
 
@@ -413,19 +487,32 @@ struct Pin: View {
     let kind: Kind
     let symbol: String
     var dark = false
+    var schaal: CGFloat = 1
+    var gloed = false     // geselecteerd: zachte gloed langs de rand
 
     var body: some View {
+        let kleur = kind.pinColor(dark: dark)
         ZStack(alignment: .top) {
+            if gloed {
+                // Zachte lichtrand: wit halo + soortkleur die naar buiten uitloopt.
+                PinShape()
+                    .stroke(kleur.opacity(0.85), lineWidth: 9)
+                    .blur(radius: 6)
+                PinShape()
+                    .stroke(.white, lineWidth: 5)
+                    .blur(radius: 2.5)
+                    .shadow(color: .white.opacity(0.8), radius: 4)
+            }
             PinShape()
-                .fill(kind.pinColor(dark: dark))
+                .fill(kleur)
                 .overlay(PinShape().stroke(.white, lineWidth: 2))
-                .frame(width: 30, height: 38)
-                .shadow(color: .black.opacity(0.28), radius: 2, y: 1.5)
+                .shadow(color: .black.opacity(gloed ? 0.15 : 0.28), radius: 2, y: 1.5)
             Image(systemName: symbol)
-                .font(.system(size: 12, weight: .bold))
+                .font(.system(size: 12 * schaal, weight: .bold))
                 .foregroundStyle(.white)
-                .padding(.top, 7)
+                .padding(.top, 7 * schaal)
         }
+        .frame(width: 30 * schaal, height: 38 * schaal)
     }
 }
 
@@ -462,6 +549,9 @@ final class ClusterAnnotationView: MKAnnotationView {
         prepareForDisplay()
     }
 
+    // Groeperen op het bolletje zelf, niet op de ruimte voor de gloed.
+    override var alignmentRectInsets: NSEdgeInsets { NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8) }
+
     override func prepareForDisplay() {
         super.prepareForDisplay()
         guard let c = annotation as? MKClusterAnnotation else { return }
@@ -469,7 +559,8 @@ final class ClusterAnnotationView: MKAnnotationView {
         // Kleur van de soort die het meest voorkomt in het groepje.
         let telling = Dictionary(grouping: leden, by: \.kind).mapValues(\.count)
         let kind = telling.max { $0.value < $1.value }?.key ?? .markt
-        let r = ImageRenderer(content: Bolletje(aantal: leden.count, kleur: kind.pinColor(dark: isDonker(self))).padding(2))
+        let gloed = c.memberAnnotations.contains { ($0 as? ListingAnnotation)?.uitgelicht == true }
+        let r = ImageRenderer(content: Bolletje(aantal: leden.count, kleur: kind.pinColor(dark: isDonker(self)), gloed: gloed).padding(2))
         r.scale = 2
         image = r.nsImage
         centerOffset = .zero
@@ -480,6 +571,7 @@ final class ClusterAnnotationView: MKAnnotationView {
 struct Bolletje: View {
     let aantal: Int
     let kleur: Color
+    var gloed = false
 
     var body: some View {
         let d: CGFloat = aantal < 10 ? 32 : aantal < 50 ? 38 : 46
@@ -492,7 +584,13 @@ struct Bolletje: View {
             .overlay(Circle().stroke(.white, lineWidth: 2.5))
             .background(Circle().fill(kleur.opacity(0.25)).padding(-5))
             .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-            .padding(6)
+            .background {
+                if gloed {
+                    Circle().stroke(kleur.opacity(0.85), lineWidth: 9).blur(radius: 6).padding(-4)
+                    Circle().stroke(.white, lineWidth: 5).blur(radius: 2.5).padding(-2)
+                }
+            }
+            .padding(12)   // altijd even groot: MapKit schaalt wisselende maten terug
     }
 }
 
@@ -511,3 +609,8 @@ struct Legenda: View {
         .background(.regularMaterial, in: Capsule())
     }
 }
+
+
+
+
+

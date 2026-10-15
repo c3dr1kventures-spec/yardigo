@@ -222,12 +222,20 @@ function straatZonderNummer(street: string | null): string | null {
 }
 
 // ── Geocode-terugval (alleen als JSON-LD geen geo heeft) ──────────
-async function pdok(q: string): Promise<{ lat: number; lng: number } | null> {
+async function pdok(q: string, plaats: string | null = null): Promise<{ lat: number; lng: number } | null> {
   try {
-    const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll&q=' + encodeURIComponent(q));
+    const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll,woonplaatsnaam&q=' + encodeURIComponent(q));
     if (!r.ok) return null;
-    const c = (await r.json())?.response?.docs?.[0]?.centroide_ll;
+    const doc = (await r.json())?.response?.docs?.[0];
+    const c = doc?.centroide_ll;
     const m = typeof c === 'string' ? c.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/) : null;
+    // PDOK kent alleen Nederland: bij een Belgische plaats komt er een
+    // gelijknamige straat elders uit. Dan liever geen pin dan een verkeerde.
+    if (plaats && doc?.woonplaatsnaam) {
+      const n = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/g, '');
+      const a = n(doc.woonplaatsnaam), b = n(plaats);
+      if (!(a === b || a.includes(b) || b.includes(a))) return null;
+    }
     return m ? { lng: parseFloat(m[1]), lat: parseFloat(m[2]) } : null;
   } catch { return null; }
 }
@@ -399,7 +407,7 @@ serve(async (req: Request) => {
       s.detail_ok++;
       if ((d.dateEnd || d.dateStart) < today) { s.voorbij++; continue; }
       if ((d.lat == null || d.lng == null) && (d.street || d.city) && (d.country || 'NL') === 'NL') {
-        const g = await pdok([d.street, d.postcode, d.city].filter(Boolean).join(' '));
+        const g = await pdok([d.street, d.postcode, d.city].filter(Boolean).join(' '), d.city);
         if (g) { d.lat = g.lat; d.lng = g.lng; }
       }
       details.push(d);

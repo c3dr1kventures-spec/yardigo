@@ -185,14 +185,24 @@ async function fotoAlsBase64(fileId: string): Promise<{ data: string; media_type
   return { data: btoa(bin), media_type: mt };
 }
 
+function plaatsKlopt(gevonden: string | null | undefined, gevraagd: string | null): boolean {
+  if (!gevraagd || !gevonden) return true;
+  const n = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/g, '');
+  const a = n(gevonden), b = n(gevraagd);
+  return a === b || a.includes(b) || b.includes(a);
+}
+
 async function geocode(adres: string | null, plaats: string | null): Promise<{ lat: number; lng: number } | null> {
   const q = [adres, plaats].filter(Boolean).join(', ');
   if (!q) return null;
   try {
-    const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll&fq=type:(adres+woonplaats+weg)&q=' + encodeURIComponent(q));
-    const c = (await r.json())?.response?.docs?.[0]?.centroide_ll;
+    const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll,woonplaatsnaam&fq=type:(adres+woonplaats+weg)&q=' + encodeURIComponent(q));
+    const doc = (await r.json())?.response?.docs?.[0];
+    const c = doc?.centroide_ll;
     const m = typeof c === 'string' ? c.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/) : null;
-    if (m) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
+    // PDOK kent alleen Nederland en geeft bij een Belgische plaats ("Kerkplein,
+    // Beerse") een gelijknamige straat elders. Plaats moet dus kloppen.
+    if (m && plaatsKlopt(doc?.woonplaatsnaam, plaats)) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
   } catch (_) { /* volgende */ }
   try {
     const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl,be&q=' + encodeURIComponent(q),
