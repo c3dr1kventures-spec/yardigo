@@ -542,7 +542,7 @@ async function locatieControle(sb: any, chat: string, droog = false) {
   const { data } = await sb.from('listings')
     .select('id,title,city,address,latitude,longitude,date_start,time_start,status,short_code,placed_by,claimed_by_user_id')
     .eq('status', 'active').or(`date_start.gte.${vandaag},date_end.gte.${vandaag}`)
-    .is('locatie_check_at', null).not('latitude', 'is', null).order('date_start').limit(100);
+    .is('locatie_check_at', null).not('latitude', 'is', null).order('date_start').limit(1000);
   const st = { gecontroleerd: 0, ok: 0, hersteld: 0, afwijkend: 0, onbekend: 0, storing: 0, over: 0 };
   const hersteld: string[] = [];
   const proef: any[] = [];
@@ -986,21 +986,6 @@ serve(async (req: Request) => {
       const n = await digest(sb, chat, true);
       if (t.onverstuurd > n) await send(chat, `Nog ${t.onverstuurd - n} — stuur /meer voor de volgende.`);
       return json({ ok: true, verstuurd: n });
-    }
-    if (action === 'geotest') {
-      const uit: any = {};
-      for (const [naam, u] of Object.entries({
-        photon: 'https://photon.komoot.io/api/?limit=2&q=Beerse',
-        nominatim: 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=Beerse',
-        pdok: 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&q=Strijen',
-      })) {
-        const t0 = Date.now();
-        try {
-          const r = await fetch(u, { headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl; yardigo.app@gmail.com)', Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
-          uit[naam] = { status: r.status, ms: Date.now() - t0, body: (await r.text()).slice(0, 160) };
-        } catch (e) { uit[naam] = { fout: String(e), ms: Date.now() - t0 }; }
-      }
-      return json(uit);
     }
     if (action === 'report' || action === 'watchdog' || action === 'sample' || action === 'locaties') {
       const chat = await cfg(sb, 'telegram_admin_chat');
