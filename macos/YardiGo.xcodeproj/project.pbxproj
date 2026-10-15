@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		0B0C83E344AA8FA3D37C7649 /* ListingDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6440DA614E80DCBF323FF780 /* ListingDetail.swift */; };
+		39BFB78D1E32BF1EB3F353E2 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4FE27055637644C84786D91 /* Account.swift */; };
 		6215288E83E0896EDFF68D4D /* YardiGoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CDC54AEB96A8097F46D8F60 /* YardiGoApp.swift */; };
+		72F59C1317DA79138A474C56 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3366FEC1D126929CDBB1D3D /* AccountView.swift */; };
 		73583CD453E78B1F3C24800E /* ListingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6BE74D285756C359E0DADD /* ListingStore.swift */; };
 		7C002F04D1792F2C2A6AD44F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD4D431C8C7D33B7F37126ED /* ContentView.swift */; };
 		89F23EF85039094D343616D2 /* Listing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51B866921B80E6B59EDEB0AC /* Listing.swift */; };
@@ -26,6 +28,8 @@
 		6440DA614E80DCBF323FF780 /* ListingDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingDetail.swift; sourceTree = "<group>"; };
 		6CDC54AEB96A8097F46D8F60 /* YardiGoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YardiGoApp.swift; sourceTree = "<group>"; };
 		8A397C1B23F8A5A9F7739D1C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A3366FEC1D126929CDBB1D3D /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		B4FE27055637644C84786D91 /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
 		BB6BE74D285756C359E0DADD /* ListingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListingStore.swift; sourceTree = "<group>"; };
 		BD4D431C8C7D33B7F37126ED /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D12029457AC4DD0FA2548939 /* KaartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaartView.swift; sourceTree = "<group>"; };
@@ -52,6 +56,8 @@
 		57D30B1DCBECB117F04350FF /* YardiGo */ = {
 			isa = PBXGroup;
 			children = (
+				B4FE27055637644C84786D91 /* Account.swift */,
+				A3366FEC1D126929CDBB1D3D /* AccountView.swift */,
 				8A397C1B23F8A5A9F7739D1C /* Assets.xcassets */,
 				BD4D431C8C7D33B7F37126ED /* ContentView.swift */,
 				4659876B6C272D7E011AA964 /* DagNacht.swift */,
@@ -136,6 +142,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				39BFB78D1E32BF1EB3F353E2 /* Account.swift in Sources */,
+				72F59C1317DA79138A474C56 /* AccountView.swift in Sources */,
 				7C002F04D1792F2C2A6AD44F /* ContentView.swift in Sources */,
 				CCB61FB47CE311783D47C55A /* DagNacht.swift in Sources */,
 				BAF8C7960FE16AECF6F3E20C /* KaartView.swift in Sources */,

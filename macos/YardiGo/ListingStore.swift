@@ -26,9 +26,13 @@ enum Sortering: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class ListingStore {
-    static let supabaseURL = URL(string: "https://fwehqudhwzcnkcuypuqw.supabase.co")!
+    nonisolated static let supabaseURL = URL(string: "https://fwehqudhwzcnkcuypuqw.supabase.co")!
     // Publieke anon-sleutel, dezelfde als in index.html.
-    static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI"
+    nonisolated static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI"
+
+    // Ingelogd (zelfde account als yardigo.nl): dan ook adressen en details.
+    private(set) var sessie: Sessie? = Sleutelhanger.lees()
+    var ingelogd: Bool { sessie != nil }
 
     var listings: [Listing] = []
     var details: [UUID: Listing] = [:]
@@ -197,11 +201,60 @@ final class ListingStore {
         if favorites.contains(id) { favorites.remove(id) } else { favorites.insert(id) }
     }
 
-    private func rpc(_ naam: String, body: [String: Any] = [:]) -> URLRequest {
+    // MARK: - Account
+
+    func inloggen(email: String, wachtwoord: String) async throws {
+        let s = try await Auth.inloggen(email: email.trimmingCharacters(in: .whitespaces), wachtwoord: wachtwoord)
+        sessie = s
+        Sleutelhanger.bewaar(s)
+        details = [:]
+        await load()
+        toon("Ingelogd als \(s.email)")
+    }
+
+    func uitloggen() async {
+        if let s = sessie { await Auth.uitloggen(s) }
+        sessie = nil
+        Sleutelhanger.wis()
+        details = [:]
+        try? FileManager.default.removeItem(at: Self.cacheURL)   // geen adressen achterlaten
+        await load()
+        toon("Uitgelogd")
+    }
+
+    // Geldig toegangstoken: ververst vlak voor het verloopt; anoniem als je
+    // niet (meer) ingelogd bent.
+    private var verversen: Task<Sessie?, Never>?
+    private func toegangstoken() async -> String {
+        guard var s = sessie else { return Self.anonKey }
+        if s.verlooptOp.timeIntervalSinceNow < 120 {
+            if verversen == nil {
+                let oud = s
+                verversen = Task { try? await Auth.ververs(oud) }
+            }
+            let nieuw = await verversen?.value
+            verversen = nil
+            guard sessie != nil else { return Self.anonKey }   // intussen uitgelogd
+            if let nieuw {
+                s = nieuw
+                sessie = nieuw
+                Sleutelhanger.bewaar(nieuw)
+            } else if s.verlooptOp < .now {
+                // Verversen mislukt en token verlopen: netjes als gast verder.
+                sessie = nil
+                Sleutelhanger.wis()
+                toon("Je sessie is verlopen. Log opnieuw in om adressen te zien.")
+                return Self.anonKey
+            }
+        }
+        return s.accessToken
+    }
+
+    private func rpc(_ naam: String, body: [String: Any] = [:]) async -> URLRequest {
         var req = URLRequest(url: Self.supabaseURL.appending(path: "rest/v1/rpc/\(naam)"))
         req.httpMethod = "POST"
         req.setValue(Self.anonKey, forHTTPHeaderField: "apikey")
-        req.setValue("Bearer \(Self.anonKey)", forHTTPHeaderField: "Authorization")
+        req.setValue("Bearer \(await toegangstoken())", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         return req
@@ -211,7 +264,14 @@ final class ListingStore {
         isLoading = true
         defer { isLoading = false }
         do {
-            let (data, resp) = try await URLSession.shared.data(for: rpc("get_listings_map"))
+            let (data, resp) = try await URLSession.shared.data(for: await rpc("get_listings_map"))
+            if (resp as? HTTPURLResponse)?.statusCode == 401, sessie != nil {
+                // Token ingetrokken (bijv. elders uitgelogd): als gast verder.
+                sessie = nil
+                Sleutelhanger.wis()
+                toon("Je bent uitgelogd. Log opnieuw in om adressen te zien.")
+                return await load()
+            }
             guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
                 errorMessage = "De server gaf geen geldige reactie. Probeer het zo opnieuw (⌘R)."
                 return
@@ -228,7 +288,7 @@ final class ListingStore {
     // Beschrijving, alle foto's en bron pas ophalen als je een verkoop opent.
     func laadDetail(_ id: UUID) async {
         guard details[id] == nil else { return }
-        guard let (data, resp) = try? await URLSession.shared.data(for: rpc("get_listing_detail", body: ["p_id": id.uuidString.lowercased()])),
+        guard let (data, resp) = try? await URLSession.shared.data(for: await rpc("get_listing_detail", body: ["p_id": id.uuidString.lowercased()])),
               (resp as? HTTPURLResponse)?.statusCode == 200,
               let l = try? Self.decode(Listing.self, data) else { return }
         details[id] = l

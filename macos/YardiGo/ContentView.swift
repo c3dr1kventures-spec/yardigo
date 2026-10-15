@@ -34,6 +34,7 @@ struct ContentView: View {
                 LaagKnop()
             }
             ToolbarItem(placement: .primaryAction) { DagNachtKnop() }
+            ToolbarItem(placement: .primaryAction) { AccountKnop() }
             ToolbarItem(placement: .primaryAction) {
                 Button { Task { await store.load() } } label: {
                     Label("Vernieuwen", systemImage: "arrow.clockwise")

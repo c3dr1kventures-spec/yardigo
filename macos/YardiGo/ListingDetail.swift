@@ -139,10 +139,13 @@ struct ListingDetail: View {
 
     private var adresUitleg: String? {
         guard listing.address?.isEmpty ?? true else { return nil }
-        if listing.kind == .oprit || listing.addressRevealMode == "day_before" {
-            return "Het huisadres verschijnt 24 uur vooraf voor ingelogde bezoekers op yardigo.nl. De pin staat bij benadering."
+        let dagVooraf = listing.kind == .oprit || listing.addressRevealMode == "day_before"
+        if store.ingelogd {
+            return dagVooraf ? "Het huisadres verschijnt 24 uur vooraf. De pin staat bij benadering." : nil
         }
-        return "Het exacte adres zie je na inloggen op yardigo.nl."
+        return dagVooraf
+            ? "Het huisadres verschijnt 24 uur vooraf voor ingelogde bezoekers. De pin staat bij benadering."
+            : "Log in (rechtsboven) om het exacte adres te zien."
     }
 
     private func routeInKaarten() {
