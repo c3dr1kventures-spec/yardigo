@@ -6,6 +6,7 @@ struct ListingDetail: View {
     @Environment(ListingStore.self) private var store
     @Environment(\.openURL) private var openURL
     @State private var fotoIndex = 0
+    @State private var fotoGroot = false
 
     var body: some View {
         ScrollView {
@@ -87,6 +88,13 @@ struct ListingDetail: View {
         .frame(height: 200)
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture { if !fotos.isEmpty { fotoGroot = true } }
+        .onHover { binnen in if !fotos.isEmpty { (binnen ? NSCursor.pointingHand : NSCursor.arrow).set() } }
+        .help(fotos.isEmpty ? "" : "Klik om te vergroten")
+        .sheet(isPresented: $fotoGroot) {
+            FotoBekijker(fotos: fotos, index: $fotoIndex)
+        }
         .animation(.easeInOut(duration: 0.2), value: fotoIndex)
         .onChange(of: listing.id) { fotoIndex = 0 }
     }
@@ -153,5 +161,74 @@ struct ListingDetail: View {
         let item = MKMapItem(placemark: MKPlacemark(coordinate: c))
         item.name = listing.title
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+    }
+}
+
+// Grote weergave van de foto's: klik op de foto in het detailpaneel.
+// Bladeren met ← → of de pijlen, sluiten met Esc of de knop.
+struct FotoBekijker: View {
+    let fotos: [URL]
+    @Binding var index: Int
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        let i = min(index, fotos.count - 1)
+        ZStack {
+            Color.black
+            AsyncImage(url: fotos[i]) { fase in
+                switch fase {
+                case .success(let img): img.resizable().scaledToFit()
+                case .failure: Label("Foto kon niet laden", systemImage: "photo").foregroundStyle(.white.opacity(0.7))
+                default: ProgressView().tint(.white)
+                }
+            }
+            .id(fotos[i])
+            .transition(.opacity)
+            .padding(fotos.count > 1 ? 56 : 16)
+
+            if fotos.count > 1 {
+                HStack {
+                    pijl("chevron.left") { index = (i - 1 + fotos.count) % fotos.count }
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                    Spacer()
+                    pijl("chevron.right") { index = (i + 1) % fotos.count }
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                }
+                .padding(14)
+                Text("\(i + 1) / \(fotos.count)")
+                    .font(.system(size: 12, weight: .semibold)).monospacedDigit()
+                    .padding(.horizontal, 9).padding(.vertical, 4)
+                    .background(.white.opacity(0.15), in: Capsule())
+                    .foregroundStyle(.white)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, 14)
+            }
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(width: 30, height: 30)
+                    .background(.white.opacity(0.15), in: Circle())
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .help("Sluiten (Esc)")
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .padding(14)
+        }
+        .frame(minWidth: 720, idealWidth: 1000, minHeight: 540, idealHeight: 760)
+        .animation(.easeInOut(duration: 0.2), value: index)
+        .onTapGesture(count: 2) { dismiss() }
+    }
+
+    private func pijl(_ symbool: String, _ actie: @escaping () -> Void) -> some View {
+        Button(action: actie) {
+            Image(systemName: symbool)
+                .font(.system(size: 16, weight: .bold))
+                .frame(width: 40, height: 40)
+                .background(.white.opacity(0.15), in: Circle())
+                .foregroundStyle(.white)
+        }
+        .buttonStyle(.plain)
     }
 }
