@@ -1430,6 +1430,9 @@ body.dark .review-card{background:var(--bg2);}
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+.yg-groep-wrap{background:none;border:none;}
+.yg-groep{display:flex;align-items:center;justify-content:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:800 13px/1 Poppins,Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;transition:transform .15s;box-sizing:border-box;}
+.yg-groep:hover{transform:scale(1.08);}
 .leaflet-tooltip.yg-hover-tip{background:#FFFDF8;color:#2C2416;border:none;border-radius:10px;padding:7px 10px;box-shadow:0 4px 14px rgba(44,36,22,.18);font-family:Poppins,sans-serif;width:max-content;max-width:240px;white-space:normal;pointer-events:none}
 .leaflet-tooltip.yg-hover-tip:before{border-top-color:#FFFDF8}
 .yg-tip-title{font-weight:700;font-size:12.5px;line-height:1.3}
@@ -9315,6 +9318,7 @@ function _pinVoor(sale) {
     });
   }
   pin.marker = L.marker([sale.lat, sale.lng], { icon: createDefaultPin(sale) });
+  pin.marker._ygSale = sale;
   pin.marker.bindPopup(function() { return createListingPopup(sale); }, { maxWidth: 260 });
   bindHoverTip(pin.marker, sale);
   _pinCache.set(sale, pin);
@@ -9322,9 +9326,44 @@ function _pinVoor(sale) {
 }
 // Pins opnieuw opbouwen (bijv. na taalwissel): cache leeg en alles eraf.
 function _pinsVergeten() {
-  _pinsOpKaart.forEach(function(pin) { map.removeLayer(pin.marker); if (pin.ring) map.removeLayer(pin.ring); });
+  if (_losseGroep) _losseGroep.clearLayers();
+  _pinsOpKaart.forEach(function(pin) { if (pin.ring) map.removeLayer(pin.ring); });
   _pinsOpKaart = new Set();
   _pinCache = new WeakMap();
+}
+
+// ── Groeperen bij uitzoomen ──
+// Ver uitgezoomd worden pins dicht bij elkaar één bolletje met het aantal
+// (kleur van de soort die erin het meest voorkomt, zoals in de Mac-app).
+// Vanaf regio-niveau (zoom 11) staat elke verkoop weer als losse pin.
+// Pins ver buiten beeld laat de bibliotheek weg; dat scheelt veel op telefoons.
+var YG_GROEP_TOT_ZOOM = 11;
+var _losseGroep = null;
+function _groepIcoon(cluster) {
+  var leden = cluster.getAllChildMarkers(), n = leden.length, tel = {}, top = 'markt';
+  leden.forEach(function(m) {
+    var k = m._ygSale ? saleKind(m._ygSale) : 'markt';
+    tel[k] = (tel[k] || 0) + 1;
+    if (tel[k] > (tel[top] || 0)) top = k;
+  });
+  var kleur = (YG_KIND_COLORS[top] || YG_KIND_COLORS.markt).base;
+  var d = n < 10 ? 34 : n < 50 ? 40 : 48;
+  var html = '<div class="yg-groep" title="' + n + ' verkopen · klik om in te zoomen" style="width:' + d + 'px;height:' + d + 'px;'
+    + 'background:' + kleur + ';box-shadow:0 0 0 5px ' + kleur + '40,0 2px 6px rgba(0,0,0,.28)">' + n + '</div>';
+  return L.divIcon({ html: html, className: 'yg-groep-wrap', iconSize: [d, d], iconAnchor: [d / 2, d / 2] });
+}
+function _losseGroepMaken() {
+  _losseGroep = L.markerClusterGroup({
+    disableClusteringAtZoom: YG_GROEP_TOT_ZOOM,
+    maxClusterRadius: 55,
+    chunkedLoading: true,          // grote aantallen in stukjes toevoegen: geen hapering
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: false,
+    zoomToBoundsOnClick: true,
+    removeOutsideVisibleBounds: true,
+    iconCreateFunction: _groepIcoon
+  });
+  map.addLayer(_losseGroep);
 }
 
 function renderMarkers() {
@@ -9456,21 +9495,25 @@ function renderMarkers() {
   // Losse listings als gewone markers. Elke pin wordt één keer gemaakt en bij
   // filteren hergebruikt: alleen wat verdwijnt of erbij komt verandert op de
   // kaart. De popup-HTML wordt pas gebouwd als iemand de pin opent.
-  var nuZichtbaar = new Set();
+  if (!_losseGroep) _losseGroepMaken();
+  var nuZichtbaar = new Set(), erbij = [], eraf = [];
   losseListings.forEach(function(sale) {
     var pin = _pinVoor(sale);
     nuZichtbaar.add(pin);
     if (!_pinsOpKaart.has(pin)) {
       if (pin.ring) pin.ring.addTo(map);
-      pin.marker.addTo(map);
+      erbij.push(pin.marker);
     }
-    _markersById[sale.id] = { marker: pin.marker, cluster: null };
+    _markersById[sale.id] = { marker: pin.marker, cluster: _losseGroep };
   });
   _pinsOpKaart.forEach(function(pin) {
     if (nuZichtbaar.has(pin)) return;
-    map.removeLayer(pin.marker);
+    eraf.push(pin.marker);
     if (pin.ring) map.removeLayer(pin.ring);
   });
+  // In één keer: veel sneller dan per pin.
+  if (eraf.length) _losseGroep.removeLayers(eraf);
+  if (erbij.length) _losseGroep.addLayers(erbij);
   _pinsOpKaart = nuZichtbaar;
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
@@ -15935,7 +15978,12 @@ function _focusSaleOnMap(saleId) {
   var entry = _markersById[saleId];
   if (!entry) return;
   setTimeout(function() {
-    try { entry.marker.openPopup(); } catch(e) {}
+    try {
+      // Zit de pin in een groepje? Dan eerst inzoomen tot hij los staat.
+      if (entry.cluster && entry.cluster.zoomToShowLayer) {
+        entry.cluster.zoomToShowLayer(entry.marker, function() { entry.marker.openPopup(); });
+      } else entry.marker.openPopup();
+    } catch(e) {}
   }, 400);
 }
 
