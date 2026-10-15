@@ -26,6 +26,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
+import { borgPlek, toetsPlek, veiligeGeocode } from '../_shared/locatie.ts';
 import { bepaalSubtype } from '../_shared/subtypes.ts';
 
 const SITE = 'https://www.yardigo.nl';
@@ -402,7 +403,8 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
 
   const ct = contactUitTekst(tekst);
   const orgUrl = ct.url || e.bron_url || null;
-  const geo = await geocode(e.adres, e.plaats);
+  // Plek moet in de plaats liggen; anders liever geen pin (dan kijkt er een mens naar).
+  const geo = await borgPlek(sb, await geocode(e.adres, e.plaats), e.adres, e.plaats);
   const h = await sb.rpc('discovery_content_hash', { p_title: e.titel, p_date: e.datum, p_city: e.plaats });
   if (h.data) {
     const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: e.datum, p_radius_m: 500 });
@@ -526,6 +528,78 @@ async function bewaker(sb: any, chat: string): Promise<{ ok: boolean; nieuw24: n
   return { ok, nieuw24, live48 };
 }
 
+// ── Locatiecontrole (elk uur): ligt elke pin in de opgegeven plaats? ──
+// YardiGo-pins die niet kloppen worden zo mogelijk automatisch op het juiste
+// adres gezet; lukt dat niet (of is het een advertentie van een gebruiker),
+// dan komt hij hier ter beoordeling langs.
+function kaartLink(lat: number, lng: number): string {
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=13/${lat}/${lng}`;
+}
+
+async function locatieControle(sb: any, chat: string, droog = false) {
+  const eind = Date.now() + 45000;
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const { data } = await sb.from('listings')
+    .select('id,title,city,address,latitude,longitude,date_start,time_start,status,short_code,placed_by,claimed_by_user_id')
+    .eq('status', 'active').or(`date_start.gte.${vandaag},date_end.gte.${vandaag}`)
+    .is('locatie_check_at', null).not('latitude', 'is', null).order('date_start').limit(100);
+  const st = { gecontroleerd: 0, ok: 0, hersteld: 0, afwijkend: 0, onbekend: 0, storing: 0, over: 0 };
+  const hersteld: string[] = [];
+  const proef: any[] = [];
+  let meldingen = 0;
+  for (const l of data || []) {
+    if (Date.now() > eind) { st.over++; continue; }
+    st.gecontroleerd++;
+    const nu = new Date().toISOString();
+    const t = await toetsPlek(sb, { lat: l.latitude, lng: l.longitude }, l.city);
+    if (t.status === 'storing') {
+      // Opzoekdienst onbereikbaar: niets vastleggen, volgend uur opnieuw.
+      if (++st.storing >= 3) break;
+      continue;
+    }
+    if (droog) {   // proefrun: alleen rapporteren
+      st[t.status === 'ok' ? 'ok' : t.status === 'afwijkend' ? 'afwijkend' : 'onbekend']++;
+      if (t.status !== 'ok') proef.push({ status: t.status, km: t.km, titel: l.title, plaats: l.city });
+      continue;
+    }
+    if (t.status === 'ok') {
+      st.ok++;
+      await sb.from('listings').update({ locatie_status: 'ok', locatie_afwijking_km: t.km, locatie_check_at: nu }).eq('id', l.id);
+      continue;
+    }
+    const vanYardigo = l.placed_by === 'yardigo' && !l.claimed_by_user_id;
+    if (t.status === 'afwijkend' && vanYardigo) {
+      const v = await veiligeGeocode(sb, l.address, l.city);
+      if (v && !v.bij_benadering) {
+        st.hersteld++;
+        await sb.from('listings').update({ latitude: v.lat, longitude: v.lng, locatie_status: 'hersteld', locatie_afwijking_km: t.km, locatie_check_at: nu }).eq('id', l.id);
+        hersteld.push(`• ${esc(l.title)} (${esc(l.city || '')}): lag ${t.km} km verkeerd`);
+        continue;
+      }
+    }
+    if (t.status === 'afwijkend') st.afwijkend++; else st.onbekend++;
+    await sb.from('listings').update({ locatie_status: t.status, locatie_afwijking_km: t.km, locatie_check_at: nu }).eq('id', l.id);
+    if (meldingen >= 10) continue;   // rest blijft gemarkeerd; niet de chat volspammen
+    meldingen++;
+    const kop = t.status === 'afwijkend'
+      ? `📍 <b>Pin klopt niet:</b> ligt ${t.km} km van ${esc(l.city || '?')}`
+      : `❓ <b>Plaats niet te controleren:</b> “${esc(l.city || '(leeg)')}” is geen bekende plaatsnaam`;
+    const knoppen: any[] = [];
+    if (t.eenduidig) {
+      knoppen.push({ text: `📍 Naar ${String(l.city).slice(0, 18)}`, callback_data: `lpc:${l.id}` });
+    }
+    knoppen.push({ text: '👍 Plek klopt', callback_data: `lpo:${l.id}` });
+    knoppen.push({ text: '🚫 Offline', callback_data: `lo:${l.id}` });
+    await send(chat, `${kop}${vanYardigo ? '' : '\n<i>Geplaatst door een gebruiker.</i>'}\n\n${listingRegel(l)}\nHuidige pin: ${kaartLink(l.latitude, l.longitude)}`,
+      { reply_markup: { inline_keyboard: [knoppen] } });
+  }
+  if (droog) return { ...st, proef };
+  if (hersteld.length) {
+    await send(chat, `🛠 <b>Pins automatisch rechtgezet</b> (${hersteld.length})\n${hersteld.slice(0, 15).join('\n')}`);
+  }
+  return st;
+}
+
 // Door discover-events gevonden doorlopende agenda's (gemeente, VVV,
 // vereniging) aan de admin voorleggen. Aangezet = elke nacht uitgelezen.
 async function bronVoorstellen(sb: any, chat: string): Promise<number> {
@@ -577,6 +651,19 @@ async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, list
     await bewerk(`👍 Melding genegeerd — advertentie blijft staan\n\n${listingRegel(l)}`);
     return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Genegeerd' });
   }
+  if (actie === 'lpo') {
+    await sb.from('listings').update({ locatie_status: 'handmatig_ok', locatie_check_at: nu }).eq('id', l.id);
+    await bewerk(`👍 Plek goedgekeurd\n\n${listingRegel(l)}`);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Genoteerd' });
+  }
+  if (actie === 'lpc') {
+    const { data: x } = await sb.from('listings').select('city').eq('id', l.id).maybeSingle();
+    const v = await veiligeGeocode(sb, null, x?.city ?? null);
+    if (!v) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Kon de plaats niet eenduidig vinden', show_alert: true });
+    await sb.from('listings').update({ latitude: v.lat, longitude: v.lng, locatie_status: 'hersteld', locatie_check_at: nu }).eq('id', l.id);
+    await bewerk(`📍 Pin naar het centrum van ${esc(x?.city || '')} gezet\n\n${listingRegel(l)}\nNieuwe pin: ${kaartLink(v.lat, v.lng)}`);
+    return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Pin verplaatst' });
+  }
   if (actie === 'qok') {
     await sb.from('quality_checks').update({ verdict: 'ok', decided_at: nu }).eq('listing_id', l.id);
     await bewerk(`✅ Klopt\n\n${listingRegel(l)}`);
@@ -609,7 +696,7 @@ async function afficheKnop(sb: any, chat: string, cq: any, listingId: string) {
 
 async function knop(sb: any, chat: string, cq: any) {
   const [actie, idStr] = String(cq.data || '').split(':');
-  if (['lo', 'lb', 'lk', 'qok', 'qno'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
+  if (['lo', 'lb', 'lk', 'qok', 'qno', 'lpc', 'lpo'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
   if (actie === 'sa' || actie === 'sx') return bronKnop(sb, chat, cq, actie, parseInt(idStr, 10));
   if (actie === 'pv') return afficheKnop(sb, chat, cq, idStr);
   const id = parseInt(idStr, 10);
@@ -771,7 +858,8 @@ async function api(sb: any, req: Request): Promise<Response> {
       if (typeof patch.is_private_seller === 'boolean') patch.status = patch.is_private_seller ? 'tip' : 'nieuw';
       if (b.geocode && (patch.address !== undefined || patch.city !== undefined)) {
         const cur = (await sb.from('pending_events').select('address,city').eq('id', b.id).maybeSingle()).data || {};
-        const g = await geocode((patch.address ?? cur.address) as string | null, (patch.city ?? cur.city) as string | null);
+        const ga = (patch.address ?? cur.address) as string | null, gc = (patch.city ?? cur.city) as string | null;
+        const g = await borgPlek(sb, await geocode(ga, gc), ga, gc);
         if (g) { patch.latitude = g.lat; patch.longitude = g.lng; }
       }
       const r = await sb.from('pending_events').update(patch).eq('id', b.id).in('status', ['tip', 'nieuw']).select(cols).single();
@@ -784,7 +872,7 @@ async function api(sb: any, req: Request): Promise<Response> {
     }
 
     case 'geocode':
-      return apiJson({ geo: await geocode(b.address || null, b.city || null) });
+      return apiJson({ geo: await borgPlek(sb, await geocode(b.address || null, b.city || null), b.address || null, b.city || null) });
 
     case 'publish': {
       const r = await sb.from('pending_events').select(PENDING_COLS).eq('id', b.id).maybeSingle();
@@ -899,7 +987,22 @@ serve(async (req: Request) => {
       if (t.onverstuurd > n) await send(chat, `Nog ${t.onverstuurd - n} — stuur /meer voor de volgende.`);
       return json({ ok: true, verstuurd: n });
     }
-    if (action === 'report' || action === 'watchdog' || action === 'sample') {
+    if (action === 'geotest') {
+      const uit: any = {};
+      for (const [naam, u] of Object.entries({
+        photon: 'https://photon.komoot.io/api/?limit=2&q=Beerse',
+        nominatim: 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=Beerse',
+        pdok: 'https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&q=Strijen',
+      })) {
+        const t0 = Date.now();
+        try {
+          const r = await fetch(u, { headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl; yardigo.app@gmail.com)', Accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+          uit[naam] = { status: r.status, ms: Date.now() - t0, body: (await r.text()).slice(0, 160) };
+        } catch (e) { uit[naam] = { fout: String(e), ms: Date.now() - t0 }; }
+      }
+      return json(uit);
+    }
+    if (action === 'report' || action === 'watchdog' || action === 'sample' || action === 'locaties') {
       const chat = await cfg(sb, 'telegram_admin_chat');
       if (!chat) return json({ ok: false, error: 'geen gekoppelde chat' });
       if (action === 'report') {
@@ -907,6 +1010,7 @@ serve(async (req: Request) => {
         return json({ ok: await stuurMelding(sb, chat, Number(body?.id)) });
       }
       if (action === 'watchdog') return json({ ...(await bewaker(sb, chat)), bronnen: await bronVoorstellen(sb, chat) });
+      if (action === 'locaties') return json({ ok: true, ...(await locatieControle(sb, chat, url.searchParams.has('droog'))) });
       return json({ ok: true, verstuurd: await steekproef(sb, chat) });
     }
     return json({ error: 'onbekende action' }, 400);

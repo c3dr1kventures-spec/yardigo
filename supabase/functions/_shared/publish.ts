@@ -1,4 +1,5 @@
 import { bepaalSubtype, isParticulierSubtype } from './subtypes.ts';
+import { toetsPlek, veiligeGeocode } from './locatie.ts';
 // YardiGo – gedeelde publiceer-logica voor curated events
 //
 // Eén plek die bepaalt of een pending_event zonder menselijke blik live mag,
@@ -13,6 +14,8 @@ import { bepaalSubtype, isParticulierSubtype } from './subtypes.ts';
 //   5. er is een contactweg: website/FB-pagina van de organisator of telefoon
 //   6. titel aanwezig
 //   7. type herkend (niet 'overig')
+// En bij élke publicatie (ook handmatig): de pin moet in de opgegeven plaats
+// liggen (_shared/locatie.ts). Zo niet en niet te herstellen → niet live.
 // Dubbele events zijn vóór het aanmaken van de pending-rij al uitgefilterd.
 //
 // Bronvermelding: de verzamelsite (lead) komt NOOIT in de listing. Alleen de
@@ -76,6 +79,21 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
   const curator = await curatorId(sb);
   if (!curator) throw new Error('geen admin-profiel gevonden als curator');
 
+  // Ligt de pin in de opgegeven plaats? Anders eerst veilig herstellen.
+  let lat = p.latitude, lng = p.longitude;
+  let plek = lat != null && lng != null ? await toetsPlek(sb, { lat, lng }, p.city) : null;
+  let locatieStatus: string | null = plek?.status === 'ok' ? 'ok' : null;   // onbekend/storing: de uurcontrole kijkt later
+  if (plek?.status === 'afwijkend') {
+    const v = await veiligeGeocode(sb, p.address, p.city);
+    if (!v || v.bij_benadering) {
+      throw new Error(`locatie klopt niet: de pin ligt ${plek.km} km van ${p.city}. Zet de pin goed en probeer opnieuw.`);
+    }
+    lat = v.lat; lng = v.lng;
+    plek = await toetsPlek(sb, { lat, lng }, p.city);
+    locatieStatus = 'hersteld';
+    await sb.from('pending_events').update({ latitude: lat, longitude: lng }).eq('id', p.id);
+  }
+
   // Particuliere verkoop (thuisadres): categorie garagesale, zodat de kaart
   // de pin verschuift en het adres pas 24 uur vooraf toont (listing_is_private).
   let subtype = bepaalSubtype(p.event_subtype, null, p.title);
@@ -97,8 +115,9 @@ export async function publishPending(sb: any, p: PendingLike, reviewer: string |
     date_end:            p.date_end,
     time_start:          p.time_start,
     time_end:            p.time_end,
-    latitude:            p.latitude,
-    longitude:           p.longitude,
+    latitude:            lat,
+    longitude:           lng,
+    ...(locatieStatus ? { locatie_status: locatieStatus, locatie_afwijking_km: plek?.km ?? null, locatie_check_at: new Date().toISOString() } : {}),
     source_url:          p.organizer_url || null,
     source_label:        p.organizer_name || null,
     address_reveal_mode: prive ? 'day_before' : 'instant',

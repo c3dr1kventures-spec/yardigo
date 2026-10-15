@@ -31,6 +31,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { bepaalSubtype, SUBCATEGORIE_UITLEG } from '../_shared/subtypes.ts';
 import { autoCheck, publishPending } from '../_shared/publish.ts';
+import { borgPlek } from '../_shared/locatie.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -581,7 +582,7 @@ serve(async (req: Request) => {
 
     for (const r of (pend.data || [])) {
       if (Date.now() > bfDeadline) { bf.budget_op = true; break; }
-      const g = await geocode(r.address, r.city, landUitDomein(r.source_domain));
+      const g = await borgPlek(sb, await geocode(r.address, r.city, landUitDomein(r.source_domain)), r.address, r.city);
       if (g) {
         const u = await sb.from('pending_events')
           .update({ latitude: g.lat, longitude: g.lng }).eq('id', r.id);
@@ -600,7 +601,7 @@ serve(async (req: Request) => {
         if (Date.now() > bfDeadline) { bf.budget_op = true; break; }
         let dom = '';
         try { dom = new URL(r.source_url || '').hostname; } catch (_) {}
-        const g = await geocode(r.address, r.city, landUitDomein(dom));
+        const g = await borgPlek(sb, await geocode(r.address, r.city, landUitDomein(dom)), r.address, r.city);
         if (g) {
           const u = await sb.from('listings')
             .update({ latitude: g.lat, longitude: g.lng }).eq('id', r.id);
