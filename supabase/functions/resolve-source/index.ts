@@ -43,6 +43,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, publishPending } from '../_shared/publish.ts';
 import { bepaalSubtype, MARKT_SUBTYPES } from '../_shared/subtypes.ts';
+import { toetsPlek } from '../_shared/locatie.ts';
 
 const PASSENDE_SUBTYPES = new Set([...MARKT_SUBTYPES, 'rommelroute', 'buurtverkoop']);
 
@@ -632,6 +633,14 @@ serve(async (req: Request) => {
           .gte('latitude', nieuw.latitude - 0.009).lte('latitude', nieuw.latitude + 0.009)
           .gte('longitude', nieuw.longitude - 0.014).lte('longitude', nieuw.longitude + 0.014);
         if (d.count) { check.ok = false; check.redenen.push('mogelijk dubbel met live listing'); }
+      }
+      // Alleen automatisch live als de plaats in onze plaatsenlijst staat
+      // (NL/BE/DE/LU). Anders kwam bv. een brocante in Parijs erdoor.
+      if (check.ok) {
+        const plek = await toetsPlek(sb, { lat: nieuw.latitude, lng: nieuw.longitude }, nieuw.city);
+        if (plek.status === 'onbekend' || plek.status === 'storing') {
+          check.ok = false; check.redenen.push('plaats onbekend (buiten NL/BE/DE?)');
+        }
       }
       patch.auto_check = check;
       const up = await sb.from('pending_events').update(patch).eq('id', item.id);
