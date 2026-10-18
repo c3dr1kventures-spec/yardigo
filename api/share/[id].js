@@ -125,11 +125,10 @@ function buildJsonLd(id, ev) {
       address: {
         '@type': 'PostalAddress',
         addressLocality: ev.city || '',
-        addressCountry: 'NL',
       },
     },
     image: [`${BASE_URL}/api/og/${encodeURIComponent(id)}`],
-    organizer: { '@type': 'Organization', name: 'YardiGo', url: BASE_URL },
+    isAccessibleForFree: true,
     url: `${BASE_URL}/v/${encodeURIComponent(id)}`,
   });
 }
@@ -151,7 +150,7 @@ function buildOgHtml(id, ev) {
     desc  = `${label} op ${dateStr}${tijden ? ' · ' + tijden : ''} in ${city}. Bekijk op de kaart via YardiGo.`;
   } else {
     // Event niet (meer) actief → fallback naar generieke meta i.p.v. 404
-    title = 'YardiGo — Garagesales bij jou in de buurt';
+    title = 'YardiGo: garagesales bij jou in de buurt';
     desc  = "Vind rommelmarkten en garageverkopen bij jou in de buurt. Route, foto's en het volledige overzicht op YardiGo.";
   }
 

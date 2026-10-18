@@ -58,6 +58,7 @@ play-store-assets/
 # bestanden hoeven niet in git, ze worden vers gegenereerd.
 v/
 sitemap.xml
+sitemap-be.xml
 robots.txt
 # Landing pages per plaats+type
 rommelroute/

@@ -5,49 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <!-- SEO meta (uniek per plaats+type combinatie) -->
-<title>{{TYPE_LABEL}} {{CITY}} — komende verkopen | YardiGo</title>
+<title>{{TITLE_TAG}} | YardiGo</title>
 <meta name="description" content="{{META_DESC}}">
 <link rel="canonical" href="{{CANONICAL}}">
+{{ROBOTS_META}}
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{CANONICAL}}">
-<meta property="og:title" content="{{TYPE_LABEL}} {{CITY}} — komende verkopen">
+<meta property="og:title" content="{{TITLE_TAG}}">
 <meta property="og:description" content="{{META_DESC}}">
 <meta property="og:image" content="{{OG_IMAGE}}">
 <meta property="og:site_name" content="YardiGo">
-<meta property="og:locale" content="nl_NL">
+<meta property="og:locale" content="{{OG_LOCALE}}">
 
 <!-- JSON-LD: ItemList of komende verkopen + BreadcrumbList -->
 <script type="application/ld+json">{{JSON_LD}}</script>
 
-<!-- Locale-aware canonical + og:url + og:locale (zelfde HTML op .nl/.be/.de/.app) -->
+<!-- yardigo.app is een spiegel: niet indexeren. De canonical staat vast in
+     de HTML (per land: .nl of .be), dus die hoeft hier niet herschreven. -->
 <script>
 (function() {
   try {
     var host = (location.hostname || '').toLowerCase();
-    if (!host) return;
     if (host === 'yardigo.app' || host === 'www.yardigo.app') {
       var rb = document.createElement('meta');
       rb.name = 'robots'; rb.content = 'noindex,follow';
       document.head.appendChild(rb);
-      return;
     }
-    var canonHost = null, ogLocale = null;
-    if (host.endsWith('yardigo.be'))      { canonHost = 'www.yardigo.be'; ogLocale = 'nl_BE'; }
-    else if (host.endsWith('yardigo.de')) { canonHost = 'www.yardigo.de'; ogLocale = 'de_DE'; }
-    else if (host.endsWith('yardigo.nl')) { canonHost = 'www.yardigo.nl'; ogLocale = 'nl_NL'; }
-    else return;
-    function withHost(url) {
-      try { var u = new URL(url); u.protocol = 'https:'; u.hostname = canonHost; return u.toString(); }
-      catch (e) { return url; }
-    }
-    var canon = document.querySelector('link[rel="canonical"]');
-    if (canon) canon.setAttribute('href', withHost(canon.getAttribute('href')));
-    var ogUrl = document.querySelector('meta[property="og:url"]');
-    if (ogUrl) ogUrl.setAttribute('content', withHost(ogUrl.getAttribute('content')));
-    var ogLoc = document.querySelector('meta[property="og:locale"]');
-    if (ogLoc && ogLocale) ogLoc.setAttribute('content', ogLocale);
   } catch (e) {}
 })();
 </script>
@@ -97,27 +82,23 @@ footer.landing-foot a{color:#E07B39;text-decoration:none;}
     <a class="head-cta" href="/">Open de kaart →</a>
   </header>
 
-  <div class="breadcrumb">
-    <a href="/">Home</a> › <a href="/{{TYPE_PATH}}/">{{TYPE_LABEL}}</a> › {{CITY}}
-  </div>
+  <div class="breadcrumb">{{BREADCRUMB_HTML}}</div>
 
   <h1>{{H1}}</h1>
   <p class="intro">{{INTRO}}</p>
 
-  <div class="stats-row">
-    <div class="stat">📅 <strong>{{UPCOMING_COUNT}}</strong> komende verkopen</div>
-    <div class="stat">📍 <strong>{{CITY}}</strong> en omgeving</div>
-    <div class="stat">🆓 Gratis te bekijken</div>
-  </div>
+  <div class="stats-row">{{STATS_HTML}}</div>
 
   <section>
-    <h2>Komende {{TYPE_LABEL_LOWER}} in {{CITY}}</h2>
+    <h2>{{LIST_TITLE}}</h2>
     {{UPCOMING_LIST}}
   </section>
 
+  {{EXTRA_BLOCK}}
+
   <div class="cta-block">
     <h2>Zelf een {{TYPE_LABEL_LOWER_SINGULAR}} organiseren?</h2>
-    <p>Plaats hem gratis op YardiGo en bereik tienduizenden bezoekers per maand.</p>
+    <p>Plaats hem gratis op YardiGo. Dan staat hij op de kaart voor iedereen in de buurt die op zoek is.</p>
     <a class="cta-btn" href="/">Plaats jouw verkoop →</a>
   </div>
 
@@ -129,11 +110,15 @@ footer.landing-foot a{color:#E07B39;text-decoration:none;}
 </div>
 
 <script>
-// Hydration: redirect echte browsers naar de SPA met focus op deze plaats+type.
+// De lijst wordt bij elke build gemaakt; verkopen die inmiddels voorbij zijn
+// verbergen we voor bezoekers (data-date = YYYY-MM-DD).
 (function() {
-  var isBot = /bot|crawler|spider|crawling/i.test(navigator.userAgent);
-  // Voor v1 sturen we users alleen door als ze op de open-de-kaart-knop
-  // klikken; de landing zelf is full-content en blijft staan.
+  try {
+    var d = new Date(), vandaag = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    document.querySelectorAll('.sale-card[data-date]').forEach(function(el) {
+      if (el.getAttribute('data-date') < vandaag && !el.hasAttribute('data-past')) el.style.display = 'none';
+    });
+  } catch (e) {}
 })();
 </script>
 </body>
