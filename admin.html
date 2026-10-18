@@ -3720,10 +3720,11 @@ async function loadPendingEvents() {
   el.innerHTML = '<div class="loading"><div class="spinner"></div>Laden…</div>';
   // Alleen toekomstige events: verlopen items vervuilden de bovenkant van de lijst.
   var vandaag = new Date().toISOString().slice(0, 10);
-  var res = await sb.from('pending_events').select('*').eq('status','nieuw').gte('date_start', vandaag).order('date_start').limit(200);
+  var res = await sb.from('pending_events').select('*', { count: 'exact' }).eq('status','nieuw').gte('date_start', vandaag).order('date_start').limit(200);
   if (res.error) { el.innerHTML = '<div class="log-empty">Fout: ' + esc(res.error.message) + '</div>'; return; }
   var rows = res.data || [];
-  if (cnt) cnt.textContent = rows.length;
+  var totaal = res.count != null ? res.count : rows.length;
+  if (cnt) cnt.textContent = totaal > rows.length ? rows.length + ' van ' + totaal : rows.length;
   if (!rows.length) { el.innerHTML = '<div class="log-empty" style="padding:14px;text-align:center;font-size:12px">Wachtrij is leeg.</div>'; return; }
   el.innerHTML = rows.map(function(p){
     var d = p.date_start ? new Date(p.date_start + 'T00:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}) : '—';
