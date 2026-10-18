@@ -5,6 +5,7 @@
 -- op lat/lng/cc (zelfde afronding als plaatsen.psv).
 
 alter table public.plaatsen add column if not exists provincie text;
+alter function public.plaats_norm(text) set search_path = '';   -- advisor: vaste search_path
 
 drop function if exists public.get_listings_seo();
 
