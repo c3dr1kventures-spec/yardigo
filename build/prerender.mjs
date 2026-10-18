@@ -10,6 +10,7 @@
 //   <type>/<plaats>/index.html stadspagina per soort
 //   <type>/index.html          overzicht per soort (alle plaatsen + dit weekend)
 //   <type>/dit-weekend/        verkopen van het komende weekend
+//   <type>/provincie/<slug>/   per provincie (NL + BE)
 //   sitemap.xml / sitemap-be.xml  per domein (zelfde bestanden op elk domein)
 //
 // Hydration: zodra een echte browser de pagina laadt, redirect het script
@@ -40,6 +41,20 @@ const DEFAULT_OG_IMAGE = BASE_URL + '/og-image.png';
 function baseFor(land) { return land === 'be' ? BASE_URL_BE : BASE_URL; }
 function ogLocaleFor(land) { return land === 'be' ? 'nl_BE' : 'nl_NL'; }
 const PAGINA_LANDEN = new Set(['nl', 'be', 'de']);
+
+// Provincie-slugs uit plaatsen.provincie (supabase/data/bouw_provincies.py).
+const PROVINCIES = {
+  'drenthe': 'Drenthe', 'friesland': 'Friesland', 'gelderland': 'Gelderland', 'groningen': 'Groningen',
+  'limburg': 'Limburg', 'noord-brabant': 'Noord-Brabant', 'noord-holland': 'Noord-Holland',
+  'utrecht': 'Utrecht', 'zeeland': 'Zeeland', 'zuid-holland': 'Zuid-Holland', 'overijssel': 'Overijssel',
+  'flevoland': 'Flevoland',
+  'west-vlaanderen': 'West-Vlaanderen', 'oost-vlaanderen': 'Oost-Vlaanderen', 'antwerpen': 'Antwerpen',
+  'belgisch-limburg': 'Limburg (België)', 'vlaams-brabant': 'Vlaams-Brabant', 'waals-brabant': 'Waals-Brabant',
+  'henegouwen': 'Henegouwen', 'luik': 'Luik', 'namen': 'Namen', 'belgisch-luxemburg': 'Luxemburg (België)',
+  'brussel': 'Brussel',
+};
+const BE_PROVINCIES = new Set(['west-vlaanderen', 'oost-vlaanderen', 'antwerpen', 'belgisch-limburg', 'vlaams-brabant',
+  'waals-brabant', 'henegouwen', 'luik', 'namen', 'belgisch-luxemburg', 'brussel']);
 
 // Datum als YYYY-MM-DD in NL-tijd (Vercel bouwt in UTC).
 function dagNL(d = new Date()) { return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' }); }
@@ -102,16 +117,20 @@ async function fetchListings() {
   const data = [];
   for (let offset = 0; ; offset += 1000) {
     const url = `${SUPABASE_URL}/rest/v1/rpc/get_listings_seo?limit=1000&offset=${offset}`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
-      body: '{}',
-    });
-    if (!res.ok) {
-      console.error('Failed to fetch listings:', res.status, await res.text());
-      return [];
+    // Mislukt ophalen = build laten falen: dan blijft de vorige deploy live
+    // in plaats van een site met 0 verkopen en een lege sitemap.
+    let deel = null;
+    for (let poging = 1; poging <= 3 && !deel; poging++) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (res.ok) { deel = await res.json(); break; }
+      console.warn(`  listings ophalen mislukt (poging ${poging}):`, res.status, (await res.text()).slice(0, 200));
+      await new Promise(r => setTimeout(r, 3000 * poging));
     }
-    const deel = await res.json();
+    if (!deel) throw new Error('listings ophalen mislukt na 3 pogingen');
     data.push(...deel);
     if (deel.length < 1000) break;
   }
@@ -145,6 +164,7 @@ async function fetchListings() {
       plaats_ok: l.plaats_ok === true,
       organizer_name: l.organizer_name || null,
       organizer_url: l.organizer_url || null,
+      provincie: l.provincie || null,
     }));
 }
 
@@ -300,6 +320,9 @@ function buildLandingGroupsByCategory(listingsWithCat) {
     for (const s of g.sales) tel[s.land] = (tel[s.land] || 0) + 1;
     g.land = Object.keys(tel).sort((a, b) => tel[b] - tel[a])[0];
     g.base = baseFor(g.land);
+    const ptel = {};
+    for (const s of g.sales) if (s.provincie) ptel[s.provincie] = (ptel[s.provincie] || 0) + 1;
+    g.provincie = Object.keys(ptel).sort((a, b) => ptel[b] - ptel[a])[0] || null;
     g.lastmod = g.sales.map(s => s.updated || '').sort().pop() || today;
     const validCoords = g.sales.filter(s => s.lat && s.lng);
     if (validCoords.length) {
@@ -387,7 +410,9 @@ function renderLandingHtml(template, group, allGroups) {
     titleTag: `${group.label} ${cityHuman}: komende verkopen`,
     indexeren: group.indexeren,
     ogLocale: ogLocaleFor(group.land),
-    breadcrumbHtml: `<a href="/">Home</a> › <a href="/${group.path}/">${esc(group.label)}</a> › ${esc(cityHuman)}`,
+    breadcrumbHtml: `<a href="/">Home</a> › <a href="/${group.path}/">${esc(group.label)}</a> › `
+      + (group.provincie && PROVINCIES[group.provincie] ? `<a href="/${group.path}/provincie/${group.provincie}">${esc(PROVINCIES[group.provincie])}</a> › ` : '')
+      + esc(cityHuman),
     statsHtml: statsHtml([
       `📅 <strong>${group.upcoming.length}</strong> komende verkopen`,
       `📍 <strong>${esc(cityHuman)}</strong> en omgeving`,
@@ -462,6 +487,13 @@ function renderTypeIndexHtml(template, t, listings, groups) {
     grid += '</div></section>';
   }
 
+  const provs = provincieTelling(t, listings, today);
+  if (provs.length) {
+    grid = `<section><h2>Per provincie</h2><div class="nearby-grid">`
+      + provs.map(([slug, n]) => `<a class="nearby-link" href="/${t.path}/provincie/${slug}">${esc(PROVINCIES[slug])} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${n})</span></a>`).join('')
+      + '</div></section>' + grid;
+  }
+
   return fillLanding(template, {
     titleTag: `${t.label} in Nederland en België: alle komende ${t.labelPlural}`,
     indexeren: vanType.length > 0,
@@ -488,6 +520,79 @@ function renderTypeIndexHtml(template, t, listings, groups) {
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL + '/' },
         { '@type': 'ListItem', position: 2, name: t.label, item: canonical },
+      ],
+    },
+  });
+}
+
+// Aantal komende verkopen per provincie voor één soort, grootste eerst.
+function provincieTelling(t, listings, today) {
+  const tel = {};
+  for (const l of listings) {
+    if (!t.categories.includes(l.category) || l.date < today || !PROVINCIES[l.provincie]) continue;
+    tel[l.provincie] = (tel[l.provincie] || 0) + 1;
+  }
+  return Object.entries(tel).sort((a, b) => b[1] - a[1]);
+}
+
+function renderProvincieHtml(template, t, slug, listings, groups) {
+  const today = dagNL();
+  const naam = PROVINCIES[slug];
+  const land = BE_PROVINCIES.has(slug) ? 'be' : 'nl';
+  const base = baseFor(land);
+  const komend = listings
+    .filter(l => t.categories.includes(l.category) && l.provincie === slug && l.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const plaatsen = [...groups.values()]
+    .filter(g => g.path === t.path && g.provincie === slug && g.indexeren)
+    .sort((a, b) => b.upcoming.length - a.upcoming.length || a.city.localeCompare(b.city));
+  const canonical = `${base}/${t.path}/provincie/${slug}`;
+
+  let grid = '';
+  if (plaatsen.length) {
+    grid = `<section><h2>Plaatsen in ${esc(naam)}</h2><div class="nearby-grid">`
+      + plaatsen.map(g => `<a class="nearby-link" href="/${t.path}/${g.citySlug}">${esc(g.city)} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${g.upcoming.length})</span></a>`).join('')
+      + '</div></section>';
+  }
+
+  return fillLanding(template, {
+    titleTag: `${t.label} ${naam}: komende ${t.labelPlural}`,
+    indexeren: komend.length > 0,
+    ogLocale: ogLocaleFor(land),
+    breadcrumbHtml: `<a href="/">Home</a> › <a href="/${t.path}/">${esc(t.label)}</a> › ${esc(naam)}`,
+    statsHtml: statsHtml([
+      `📅 <strong>${komend.length}</strong> komende ${esc(t.labelPlural)}`,
+      `📍 <strong>${plaatsen.length}</strong> plaatsen`,
+    ]),
+    listTitle: `Komende ${t.labelPlural} in ${naam}`,
+    listHtml: komend.length
+      ? saleCardsHtml(komend.slice(0, 40), '')
+      : `<div class="empty-box">Er staan nu geen ${esc(t.labelPlural)} in ${esc(naam)} gepland. Zet in de app een melding aan, dan hoor je het als er een bijkomt.</div>`,
+    extraHtml: grid,
+    nearbyHtml: '',
+    labelSingular: t.labelSingular,
+    h1: `${t.label} in ${naam}: komende verkopen`,
+    intro: `Alle ${t.labelPlural} in ${naam} die op YardiGo staan, met datum, tijd en plaats. Kies een plaats voor meer details, foto's en route.`,
+    metaDesc: `Komende ${t.labelPlural} in ${naam}: datum, tijd, plaats en route. Bekijk wat er bij jou in de buurt is en plaats gratis je eigen.`,
+    canonical,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: base + '/' },
+            { '@type': 'ListItem', position: 2, name: t.label, item: `${BASE_URL}/${t.path}/` },
+            { '@type': 'ListItem', position: 3, name: naam, item: canonical },
+          ],
+        },
+        {
+          '@type': 'ItemList',
+          name: `${t.label} ${naam}`,
+          itemListElement: komend.slice(0, 10).map((s, i) => ({
+            '@type': 'ListItem', position: i + 1, url: `${baseFor(s.land)}/v/${s.id}`, name: s.title,
+          })),
+        },
       ],
     },
   });
@@ -539,7 +644,7 @@ function renderWeekendHtml(template, t, listings) {
 // ─── Sitemaps + robots ─────────────────────────────────────────────────
 // Eén sitemap per domein. Omdat dezelfde bestanden op elk domein staan, is
 // https://www.yardigo.be/sitemap-be.xml gewoon bereikbaar.
-function buildSitemaps(listings, landingGroups, types) {
+function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
   const today = dagNL();
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
@@ -556,6 +661,11 @@ function buildSitemaps(listings, landingGroups, types) {
   for (const t of types) {
     per[BASE_URL].push({ loc: `${BASE_URL}/${t.path}/`, lastmod: today, changefreq: 'daily', priority: '0.8' });
     per[BASE_URL].push({ loc: `${BASE_URL}/${t.path}/dit-weekend`, lastmod: today, changefreq: 'daily', priority: '0.8' });
+  }
+  for (const p of provPaginas) {
+    if (!p.indexeren) continue;
+    const b = baseFor(BE_PROVINCIES.has(p.slug) ? 'be' : 'nl');
+    per[b].push({ loc: `${b}/${p.t.path}/provincie/${p.slug}`, lastmod: today, changefreq: 'daily', priority: '0.8' });
   }
   const xml = urls => {
     let x = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -628,7 +738,20 @@ async function main() {
   }
   console.log(`  rendered ${types.length * 2} overzicht- en weekendpagina's`);
 
-  const sm = buildSitemaps(listings, landingGroups, types);
+  // Provinciepagina's: alleen provincies die ooit een verkoop van deze soort hadden.
+  const provPaginas = [];
+  const vandaag = dagNL();
+  for (const t of types) {
+    const slugs = new Set(listings.filter(l => t.categories.includes(l.category) && PROVINCIES[l.provincie]).map(l => l.provincie));
+    const metKomend = new Set(provincieTelling(t, listings, vandaag).map(([slug]) => slug));
+    for (const slug of slugs) {
+      schrijfPagina(`${t.path}/provincie/${slug}`, renderProvincieHtml(landingTemplate, t, slug, listings, landingGroups));
+      provPaginas.push({ t, slug, indexeren: metKomend.has(slug) });
+    }
+  }
+  console.log(`  rendered ${provPaginas.length} provinciepagina's`);
+
+  const sm = buildSitemaps(listings, landingGroups, types, provPaginas);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap.xml'), sm.nl);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap-be.xml'), sm.be);
   writeFileSync(resolve(PROJECT_ROOT, 'robots.txt'), buildRobotsTxt());
