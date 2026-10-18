@@ -43,15 +43,18 @@ as $function$
     select p.cc, p.provincie from plaatsen p
     where p.naam_norm = plaats_norm(l.city)
       and l.latitude is not null
-      and abs(p.lat - l.latitude) < 0.23 and abs(p.lng - l.longitude) < 0.37
+      and p.lat between l.latitude - 0.23 and l.latitude + 0.23
+      and p.lng between l.longitude - 0.37 and l.longitude + 0.37
     order by (p.lat - l.latitude)^2 + (p.lng - l.longitude)^2
     limit 1
   ) m on true
-  -- Anders: land van de dichtstbijzijnde plaats.
+  -- Anders: land van de dichtstbijzijnde plaats. (between i.p.v. abs(): zo
+  -- gebruikt Postgres de index op (lat, lng); met abs() duurde dit 8 s.)
   left join lateral (
     select p.cc, p.provincie from plaatsen p
     where (m.cc is null or m.provincie is null) and l.latitude is not null
-      and abs(p.lat - l.latitude) < 0.2 and abs(p.lng - l.longitude) < 0.3
+      and p.lat between l.latitude - 0.2 and l.latitude + 0.2
+      and p.lng between l.longitude - 0.3 and l.longitude + 0.3
     order by (p.lat - l.latitude)^2 + (p.lng - l.longitude)^2
     limit 1
   ) d on true
