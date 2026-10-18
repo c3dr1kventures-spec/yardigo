@@ -496,7 +496,11 @@ async function importEvents(
       is_private_seller:    st ? prive : null,
       status:               prive ? 'tip' : 'nieuw',
     };
-    const check = autoCheck({ id: 0, ...row }, origineel && !!st);
+    // Een verzamelsite is geen afwijzing: resolve-source zoekt daarna de
+    // organisator en keurt dan opnieuw. Vroeger stond hier 'past niet bij
+    // YardiGo', wat goede markten onterecht afgekeurd liet lijken.
+    const check = autoCheck({ id: 0, ...row }, !!st);
+    if (!origineel) { check.redenen.push('bron is verzamelsite'); check.ok = false; }
     row.auto_check = check;
     const insEv = await sb.from('pending_events').insert(row).select('*').single();
     if (insEv.error) { summary.errors.push('insert_pending: ' + insEv.error.message); continue; }

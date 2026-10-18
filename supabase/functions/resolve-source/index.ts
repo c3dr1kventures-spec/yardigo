@@ -41,6 +41,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { autoCheck, publishPending } from '../_shared/publish.ts';
+import { bepaalSubtype, MARKT_SUBTYPES } from '../_shared/subtypes.ts';
+
+const PASSENDE_SUBTYPES = new Set([...MARKT_SUBTYPES, 'rommelroute', 'buurtverkoop']);
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -86,6 +90,7 @@ interface TeResolven {
   land: string;
   source_url: string | null;
   source_label: string | null;
+  rij?: any;                  // volledige pending-rij (alleen soort 'pending')
 }
 
 interface Verificatie {
@@ -500,16 +505,25 @@ serve(async (req: Request) => {
   const werk: TeResolven[] = [];
 
   if (target === 'pending') {
+    // Alles in de wachtrij waar nog nooit naar de organisator is gezocht.
+    // 'aggregator' zette geen enkele functie meer: discover-events en de bot
+    // laten 'onbekend' staan, meukisleuk zet direct 'onopgelost'. Daardoor
+    // pakte deze stap tot 18 okt 2026 nooit iets op. Eerstvolgende datum
+    // eerst; 'overig' (meestal winkels) en opritverkopen (tips) slaan we over.
+    // Rijen die al een originele bron hebben, worden alleen opnieuw gekeurd.
     const res = await sb.from('pending_events')
-      .select('id,title,city,date_start,source_url,source_label')
-      .eq('source_status', 'aggregator')
+      .select('*')
       .eq('status', 'nieuw')
-      .order('created_at', { ascending: true })
+      .in('source_status', ['aggregator', 'onbekend', 'onopgelost', 'origineel'])
+      .is('source_resolved_at', null)
+      .gt('date_start', vandaag)   // vandaag zoeken heeft geen zin meer
+      .or('event_subtype.is.null,event_subtype.not.in.(overig,opritverkoop)')
+      .order('date_start', { ascending: true })
       .limit(maxItems);
     if (res.error) return json({ error: 'pending_events: ' + res.error.message }, 500);
     for (const r of res.data || []) {
       werk.push({
-        soort: 'pending', id: String(r.id), title: r.title, city: r.city,
+        soort: 'pending', id: String(r.id), title: r.title, city: r.city, rij: r,
         date_start: String(r.date_start).slice(0, 10),
         land: landUitDomein(extractDomain(r.source_url || '')),
         source_url: r.source_url, source_label: r.source_label,
@@ -551,9 +565,13 @@ serve(async (req: Request) => {
     if (Date.now() > deadline) { samenvatting.budget_op = true; break; }
     samenvatting.bekeken++;
 
+    // Al een originele bron met contactweg: niet zoeken, alleen opnieuw keuren.
+    const alOrigineel = item.rij?.source_status === 'origineel' && !!item.rij?.organizer_url;
     let uit: Uitkomst;
     try {
-      uit = await resolveEen(item, braveKey, anthropicKey, blockDomeinen, vandaag, deadline);
+      uit = alOrigineel
+        ? { gevonden: false, notitie: 'al originele bron, opnieuw gekeurd', bekeken: 0 }
+        : await resolveEen(item, braveKey, anthropicKey, blockDomeinen, vandaag, deadline);
     } catch (e) {
       samenvatting.errors.push(item.title + ': ' + (e as Error).message);
       continue;
@@ -569,7 +587,8 @@ serve(async (req: Request) => {
       notitie: uit.notitie,
     });
 
-    if (uit.gevonden) samenvatting.opgelost++; else samenvatting.onopgelost++;
+    if (alOrigineel) samenvatting.herkeurd = (samenvatting.herkeurd || 0) + 1;
+    else if (uit.gevonden) samenvatting.opgelost++; else samenvatting.onopgelost++;
     if (dryRun) continue;
 
     const leadUrl    = item.source_url || '';
@@ -589,11 +608,42 @@ serve(async (req: Request) => {
         patch.source_label       = uit.label;
         patch.source_status      = 'origineel';
         patch.source_confidence  = uit.zekerheid ?? null;
-      } else {
+        // De gevonden organisator is ook de contactweg (net als bij listings).
+        if (!item.rij?.organizer_url) {
+          patch.organizer_url  = uit.url;
+          patch.organizer_name = item.rij?.organizer_name || uit.label;
+        }
+      } else if (!alOrigineel) {
         patch.source_status = 'onopgelost';
       }
+      // Opnieuw keuren met de nieuwe gegevens. Het type bepaalt of het bij
+      // YardiGo past: een herkende markt of route mag, 'overig' niet.
+      const st = bepaalSubtype(item.rij?.event_subtype, null, item.rij?.title);
+      // Een herkende markt of route is geen particuliere verkoop; oudere
+      // rijen hebben dit veld nog leeg ('onbekend of particulier').
+      if (item.rij?.is_private_seller == null && PASSENDE_SUBTYPES.has(st)) patch.is_private_seller = false;
+      const nieuw = { ...(item.rij || {}), ...patch };
+      const check = autoCheck(nieuw, PASSENDE_SUBTYPES.has(st));
+      // Sinds het binnenkomen kan hetzelfde event al live gezet zijn (bv. via
+      // de meukisleuk-import): zelfde dag binnen ~1 km = niet publiceren.
+      if (check.ok && nieuw.latitude != null && nieuw.longitude != null) {
+        const d = await sb.from('listings').select('id', { count: 'exact', head: true })
+          .eq('date_start', nieuw.date_start).in('status', ['active', 'published'])
+          .gte('latitude', nieuw.latitude - 0.009).lte('latitude', nieuw.latitude + 0.009)
+          .gte('longitude', nieuw.longitude - 0.014).lte('longitude', nieuw.longitude + 0.014);
+        if (d.count) { check.ok = false; check.redenen.push('mogelijk dubbel met live listing'); }
+      }
+      patch.auto_check = check;
       const up = await sb.from('pending_events').update(patch).eq('id', item.id);
-      if (up.error) samenvatting.errors.push('update pending ' + item.id + ': ' + up.error.message);
+      if (up.error) { samenvatting.errors.push('update pending ' + item.id + ': ' + up.error.message); continue; }
+      if (check.ok) {
+        try {
+          await publishPending(sb, nieuw, null, check);
+          samenvatting.gepubliceerd = (samenvatting.gepubliceerd || 0) + 1;
+        } catch (e) {
+          samenvatting.errors.push('publish ' + item.id + ': ' + (e as Error).message);
+        }
+      }
     } else {
       // Gepubliceerde listing: bron vervangen, lead in de admin-only tabel.
       const lead = {
