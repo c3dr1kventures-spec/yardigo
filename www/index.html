@@ -498,10 +498,17 @@ body.dark .yg-footer{border-top-color:var(--border);}
 body:not(.is-desktop) .filter-bar{
   flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
   -ms-overflow-style:none;scrollbar-width:none;
-  /* Fade-rand i.p.v. een harde afkap, zodat het als "swipe voor meer" oogt */
-  mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
-  -webkit-mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  --fade-kleur:var(--forest);
 }
+/* Fade-rand i.p.v. een harde afkap, zodat het als "swipe voor meer" oogt.
+   Bewust een sticky overlay en geen mask-image: een masker geldt ook voor de
+   dropdowns die onder de balk openklappen, waardoor die onzichtbaar werden
+   en de lijst erdoorheen leek te vallen. */
+body:not(.is-desktop) .filter-bar::after{
+  content:'';position:sticky;right:-14px;flex:0 0 28px;margin-left:-28px;align-self:stretch;
+  background:linear-gradient(to right, transparent, var(--fade-kleur));pointer-events:none;
+}
+body:not(.is-desktop) .filter-bar--inline{--fade-kleur:var(--bg);}
 body:not(.is-desktop) .filter-bar::-webkit-scrollbar{display:none;}
 body:not(.is-desktop) .filter-bar>*{flex-shrink:0;}
 .fdd-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:white;cursor:pointer;white-space:nowrap;}
@@ -521,7 +528,13 @@ body:not(.is-desktop) .filter-bar>*{flex-shrink:0;}
 .filter-bar .type-pill.active{background:#fff;color:var(--bark);border-color:#fff;}
 .filter-bar .type-pill.p.active{background:var(--amber);color:var(--bark);border-color:var(--amber);}
 .filter-bar .type-pill.b.active{background:var(--terra);color:#fff;border-color:var(--terra);}
-.filter-bar .type-pill.e.active{background:#fff;color:var(--forest);border-color:#fff;}
+/* Evenement = groen, net als de markt-pinnen. Op de groene balk een tint
+   donkerder met witte rand, zodat 'gekozen' toch opvalt. */
+.filter-bar .type-pill.e.active{background:var(--forest-dark);color:#fff;border-color:#fff;}
+.filter-bar--inline .type-pill.e.active{background:var(--forest);color:#fff;border-color:var(--forest);}
+/* Boven de lijst staat de balk op een lichte achtergrond: de niet-gekozen
+   pillen hadden daar witte tekst op wit. */
+.filter-bar--inline .type-pill:not(.active){background:var(--bg2);border-color:var(--border);color:var(--text);}
 
 /* Compacte variant: filter-bar verplaatst naar boven de resultatenlijst
    (mobiel/tablet, alleen op het Lijst-tabblad — zie ygRelocateFilterBar()).
@@ -1231,6 +1244,10 @@ body.dark .cat-chip.active{background:var(--forest);color:white;}
 .card-thumb.particulier{background:var(--amber-light);}
 .card-thumb.buurt{background:#FDF0E7;}
 .card-thumb.evenement{background:#EAF2EC;}
+.card-thumb.kt{flex-direction:column;gap:5px;}
+.card-thumb.kt .kt-ico{display:flex;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));}
+.card-thumb.kt .kt-km{font-size:11px;font-weight:700;color:#fff;letter-spacing:.2px;text-shadow:0 1px 1px rgba(0,0,0,.2);white-space:nowrap;}
+body.is-desktop #cardList.grid-1col .card-thumb.kt .kt-ico svg,body.is-desktop #cardList.grid-2col .card-thumb.kt .kt-ico svg{width:46px;height:46px;}
 .c-dist{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;background:rgba(44,36,22,.7);color:white;border-radius:4px;padding:2px 5px;white-space:nowrap;}
 .card-body{flex:1;padding:10px 12px 10px 10px;min-width:0;cursor:pointer;}
 .card-top{display:flex;align-items:flex-start;gap:6px;margin-bottom:3px;}
@@ -1426,6 +1443,16 @@ body.dark .review-card{background:var(--bg2);}
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+.yg-groep-wrap{background:none;border:none;}
+.yg-groep{display:flex;align-items:center;justify-content:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:800 13px/1 Poppins,Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;transition:transform .15s;box-sizing:border-box;}
+.yg-groep:hover{transform:scale(1.08);}
+.leaflet-tooltip.yg-hover-tip{background:#FFFDF8;color:#2C2416;border:none;border-radius:10px;padding:7px 10px;box-shadow:0 4px 14px rgba(44,36,22,.18);font-family:Poppins,sans-serif;width:max-content;max-width:240px;white-space:normal;pointer-events:none}
+.leaflet-tooltip.yg-hover-tip:before{border-top-color:#FFFDF8}
+.yg-tip-title{font-weight:700;font-size:12.5px;line-height:1.3}
+.yg-tip-meta{font-size:11px;color:#7A6E62;margin-top:2px;line-height:1.35}
+body.dark .leaflet-tooltip.yg-hover-tip{background:#2A2622;color:#F2ECE2;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+body.dark .leaflet-tooltip.yg-hover-tip:before{border-top-color:#2A2622}
+body.dark .yg-tip-meta{color:#A99D8F}
 #maintenance-banner img{width:44px;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(44,36,22,.15));}
 #maintenance-banner .mb-text{flex:1;font-size:12px;font-weight:600;color:#2C2416;line-height:1.4;}
 #maintenance-banner .mb-title{font-size:13px;font-weight:800;color:#C5611A;margin-bottom:1px;}
@@ -3275,6 +3302,12 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <p data-i18n="report.what_wrong">Wat klopt er niet aan deze advertentie?</p>
     <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px" id="report-options">
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Datum of tijd klopt niet" style="accent-color:var(--terra)"> <span data-i18n="report.r_date">Datum of tijd klopt niet</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
+        <input type="radio" name="report-reason" value="Gaat niet (meer) door" style="accent-color:var(--terra)"> <span data-i18n="report.r_cancelled">Gaat niet (meer) door</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
         <input type="radio" name="report-reason" value="Spam of nep advertentie" style="accent-color:var(--terra)"> <span data-i18n="report.r_spam">Spam of nep advertentie</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500">
@@ -3350,7 +3383,10 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Curated banner (door YardiGo verzameld) — onder de kaart -->
       <div id="det-curated-banner" style="display:none;font-size:12px;color:#5A4A3A;margin-bottom:14px;border:1.5px dashed #DDD0BC;background:#FBF6EE;border-radius:10px;padding:12px 14px;line-height:1.55">
         <div style="font-weight:700;color:#7A5C1C;font-size:13px">🔍 <span data-i18n="detail.curated_title">Door YardiGo verzameld</span></div>
-        <div style="margin-top:4px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-desc" style="margin-top:4px"><span data-i18n="detail.curated_desc_prefix">Samengesteld op basis van openbare informatie van</span> <a id="det-curated-source-link" href="#" target="_blank" rel="noopener" style="color:var(--terra);font-weight:600">—</a></div>
+        <div id="det-curated-desc-noref" style="margin-top:4px;display:none" data-i18n="detail.curated_desc_noref">Samengesteld op basis van openbare informatie over dit evenement.</div>
+        <!-- Contact organisator: gevuld vanuit listing_contacts (alleen leesbaar voor ingelogde gebruikers) -->
+        <div id="det-contact" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #DDD0BC"></div>
         <div id="det-curated-actions" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
           <button id="det-claim-btn" onclick="openClaimModal()" style="background:var(--terra);color:white;border:none;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_claim_btn">✨ Claim deze vermelding</button>
           <button onclick="openReport()" style="background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:7px;padding:7px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="detail.curated_report_btn">🚩 Meld een probleem</button>
@@ -3395,7 +3431,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </button>
       <!-- Melden knop (alleen ingelogde leden) -->
       <div class="members-only" id="det-report-wrap" style="text-align:center;margin-top:12px">
-        <button onclick="openReport()" data-i18n="detail.report_btn" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11px;cursor:pointer;text-decoration:underline;padding:4px 8px">🚩 Advertentie melden</button>
+        <button onclick="openReport()" data-i18n="detail.report_btn" style="background:none;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:6px 14px">🚩 Klopt er iets niet? Meld het</button>
       </div>
     </div>
   </div>
@@ -4468,16 +4504,38 @@ window.addEventListener('unhandledrejection', function(ev) {
   logError(reason, { type: 'unhandledrejection' });
 });
 
+// Kopie van de verkopen op dit apparaat, zodat de kaart bij een volgend bezoek
+// meteen gevuld is. Gekoppeld aan wie er ingelogd is: na uitloggen of met een
+// ander account wordt de kopie niet gebruikt.
+var YG_LISTINGS_CACHE = 'yg-listings-cache';
+function _cacheEigenaar() {
+  try { var u = JSON.parse(localStorage.getItem('yg-user') || 'null'); return (u && u.id) || 'gast'; } catch(e) { return 'gast'; }
+}
+function leesListingsCache() {
+  try {
+    var c = JSON.parse(localStorage.getItem(YG_LISTINGS_CACHE) || 'null');
+    if (!c || !Array.isArray(c.d) || !c.d.length || c.v !== 2) return null;
+    if (c.u !== _cacheEigenaar() || Date.now() - c.t > 3 * 86400000) return null;
+    var vandaag = new Date().toISOString().slice(0, 10);
+    var d = c.d.filter(function(r) { return (r.date_end || r.date_start || '') >= vandaag; });
+    return d.length ? d : null;
+  } catch(e) { return null; }
+}
+function schrijfListingsCache(data) {
+  try { localStorage.setItem(YG_LISTINGS_CACHE, JSON.stringify({ v: 2, t: Date.now(), u: _cacheEigenaar(), d: data })); }
+  catch(e) { try { localStorage.removeItem(YG_LISTINGS_CACHE); } catch(_) {} }
+}
+
 async function fetchListings() {
   if (!sbClient || SUPABASE_URL.includes('JOUW-PROJECT')) {
     console.log('Supabase niet geconfigureerd, gebruik demo-data');
     return null; // fallback naar hardcoded data
   }
   try {
-    // Gebruik RPC zodat het adres server-side verborgen wordt voor gasten
-    const { data, error } = await sbClient
-      .rpc('get_listings_for_user')
-      .order('date_start', { ascending: true });
+    // Slanke kaartversie (zelfde privacyregels als get_listings_for_user):
+    // beschrijving, alle foto's en bronlink komen pas bij openen via
+    // get_listing_detail, zie laadVolledigeSale().
+    const { data, error } = await sbClient.rpc('get_listings_map');
 
     if (error) {
       console.error('Fout bij ophalen listings:', error);
@@ -4499,6 +4557,11 @@ function mapSupabaseToSale(item) {
   };
   var emojiMap = { particulier: '🏠', buurt: '🏘️', evenement: '🎪' };
   var mappedType = typeMap[item.category] || typeMap[item.type] || 'particulier';
+  // Door YardiGo verzamelde items staan allemaal onder categorie rommelmarkt;
+  // het subtype zegt dan welke soort het echt is (rommelroute, opritverkoop).
+  var _subLc = String(item.event_subtype || '').toLowerCase();
+  if (_subLc === 'rommelroute' || (_subLc === 'buurtverkoop' && item.placed_by === 'yardigo')) mappedType = 'buurt';
+  else if (['opritverkoop', 'garagesale', 'garageverkoop', 'tuinverkoop'].indexOf(_subLc) >= 0) mappedType = 'particulier';
   var lat = item.latitude || (item.location ? extractCoords(item.location).lat : 52.3);
   var lng = item.longitude || (item.location ? extractCoords(item.location).lng : 5.3);
   var _addrHidden = (item.address === null || typeof item.address === 'undefined' || item.address === '');
@@ -4554,8 +4617,31 @@ function mapSupabaseToSale(item) {
     source_label: item.source_label || null,
     claim_token: item.claim_token || null,
     claimed_by_user_id: item.claimed_by_user_id || null,
-    claimed_at: item.claimed_at || null
+    claimed_at: item.claimed_at || null,
+    // Particuliere verkoop zonder zichtbaar adres: pin is server-side verschoven
+    location_approx: !!item.location_approx,
+    short_code: item.short_code || null,
+    // Uit de slanke kaartversie: details nog niet geladen
+    _lean: typeof item.photo_count === 'number',
+    photo_count: typeof item.photo_count === 'number' ? item.photo_count : (item.images || []).length
   };
+}
+
+// Haalt beschrijving, alle foto's en bron op voor een sale uit de kaartversie.
+var _saleDetailBezig = {};
+function laadVolledigeSale(s) {
+  if (!s || !s._lean || !sbClient) return Promise.resolve(s);
+  if (_saleDetailBezig[s.id]) return _saleDetailBezig[s.id];
+  _saleDetailBezig[s.id] = sbClient.rpc('get_listing_detail', { p_id: s.id }).then(function(r) {
+    delete _saleDetailBezig[s.id];
+    if (r.error || !r.data) return s;
+    var vol = mapSupabaseToSale(r.data);
+    ['description', 'desc', 'photos', 'source_url', 'source_label', 'tags', 'address', 'address_hidden',
+     'address_visible_at', 'claimed_at', 'user_name', 'user_email'].forEach(function(k) { s[k] = vol[k]; });
+    s._lean = false;
+    return s;
+  }, function() { delete _saleDetailBezig[s.id]; return s; });
+  return _saleDetailBezig[s.id];
 }
 
 function extractCoords(location) {
@@ -4837,6 +4923,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Claim deze vermelding",
     'detail.curated_report_btn': "🚩 Meld een probleem",
     'detail.curated_claimed_note': "✓ Geclaimd door organisator",
+    'detail.curated_desc_noref': "Samengesteld op basis van openbare informatie over dit evenement.",
+    'detail.contact_title': "Contact organisator",
+    'detail.contact_login': "Log in om de organisator te contacteren.",
+    'detail.contact_login_btn': "Inloggen",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Bellen",
+    'detail.contact_mail': "Mailen",
+    'detail.contact_none': "Geen contactgegevens bekend.",
     'claim.title': "✨ Claim deze vermelding",
     'claim.intro': "Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.",
     'claim.field_name': "Jouw naam *",
@@ -5058,7 +5152,7 @@ var I18N = {
     'detail.share': '↑ Delen',
     'detail.cta_going': 'Ik ga erheen!',
     'detail.cta_not_going': 'Toch niet',
-    'detail.report_btn': '🚩 Advertentie melden',
+    'detail.report_btn': '🚩 Klopt er iets niet? Meld het',
     'detail.guest_title': 'Maak gratis account aan',
     'detail.guest_sub': 'Zie adressen · Navigeer · Sla op',
     // Profile
@@ -5354,6 +5448,8 @@ var I18N = {
     'report.r_photos': "Ongepaste of aanstootgevende foto's",
     'report.r_address': 'Onjuist adres of locatie',
     'report.r_other': 'Anders',
+    'report.r_date': 'Datum of tijd klopt niet',
+    'report.r_cancelled': 'Gaat niet (meer) door',
     'report.placeholder': 'Optioneel: toelichting…',
     // Route-tab
     'route.stops': 'Stops',
@@ -5521,6 +5617,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Claim this listing",
     'detail.curated_report_btn': "🚩 Report an issue",
     'detail.curated_claimed_note': "✓ Claimed by organizer",
+    'detail.curated_desc_noref': "Compiled from public information about this event.",
+    'detail.contact_title': "Contact organizer",
+    'detail.contact_login': "Log in to contact the organizer.",
+    'detail.contact_login_btn': "Log in",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Call",
+    'detail.contact_mail': "Email",
+    'detail.contact_none': "No contact details known.",
     'claim.title': "✨ Claim this listing",
     'claim.intro': "Are you the organizer? Fill in your details. Our admin verifies claims within 2 business days. Once approved you can add photos and extra info.",
     'claim.field_name': "Your name *",
@@ -5742,7 +5846,7 @@ var I18N = {
     'detail.share': '↑ Share',
     'detail.cta_going': 'I\'ll be there!',
     'detail.cta_not_going': 'Change of plans',
-    'detail.report_btn': '🚩 Report listing',
+    'detail.report_btn': '🚩 Something wrong? Let us know',
     'detail.guest_title': 'Create a free account',
     'detail.guest_sub': 'See addresses · Navigate · Save',
     // Profile
@@ -6038,6 +6142,8 @@ var I18N = {
     'report.r_photos': 'Inappropriate or offensive photos',
     'report.r_address': 'Wrong address or location',
     'report.r_other': 'Other',
+    'report.r_date': 'Date or time is wrong',
+    'report.r_cancelled': 'Cancelled / not happening',
     'report.placeholder': 'Optional: explanation…',
     // Route tab
     'route.stops': 'Stops',
@@ -6205,6 +6311,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Revendiquer cette annonce",
     'detail.curated_report_btn': "🚩 Signaler un problème",
     'detail.curated_claimed_note': "✓ Revendiqué par l'organisateur",
+    'detail.curated_desc_noref': "Compilé à partir d'informations publiques sur cet événement.",
+    'detail.contact_title': "Contacter l'organisateur",
+    'detail.contact_login': "Connectez-vous pour contacter l'organisateur.",
+    'detail.contact_login_btn': "Se connecter",
+    'detail.contact_website': "Site web",
+    'detail.contact_call': "Appeler",
+    'detail.contact_mail': "E-mail",
+    'detail.contact_none': "Aucune coordonnée connue.",
     'claim.title': "✨ Revendiquer cette annonce",
     'claim.intro': "Êtes-vous l'organisateur ? Remplissez vos coordonnées. Notre admin vérifie les revendications dans les 2 jours ouvrables. Une fois approuvée, vous pourrez ajouter des photos et infos.",
     'claim.field_name': "Votre nom *",
@@ -6426,7 +6540,7 @@ var I18N = {
     'detail.share': '↑ Partager',
     'detail.cta_going': 'J\'y serai !',
     'detail.cta_not_going': 'Finalement non',
-    'detail.report_btn': '🚩 Signaler l\'annonce',
+    'detail.report_btn': '🚩 Une erreur ? Signalez-la',
     'detail.guest_title': 'Créez un compte gratuit',
     'detail.guest_sub': 'Voir les adresses · Naviguer · Sauvegarder',
     // Profile
@@ -6722,6 +6836,8 @@ var I18N = {
     'report.r_photos': 'Photos inappropriées ou offensantes',
     'report.r_address': 'Adresse ou lieu incorrect',
     'report.r_other': 'Autre',
+    'report.r_date': 'Date ou heure incorrecte',
+    'report.r_cancelled': 'Annulé / n\'a pas lieu',
     'report.placeholder': 'Facultatif : précisions…',
     // Onglet Itinéraire
     'route.stops': 'Arrêts',
@@ -6887,6 +7003,14 @@ var I18N = {
     'detail.curated_claim_btn': "✨ Diesen Eintrag beanspruchen",
     'detail.curated_report_btn': "🚩 Problem melden",
     'detail.curated_claimed_note': "✓ Vom Organisator beansprucht",
+    'detail.curated_desc_noref': "Zusammengestellt aus öffentlichen Informationen zu dieser Veranstaltung.",
+    'detail.contact_title': "Veranstalter kontaktieren",
+    'detail.contact_login': "Melde dich an, um den Veranstalter zu kontaktieren.",
+    'detail.contact_login_btn': "Anmelden",
+    'detail.contact_website': "Website",
+    'detail.contact_call': "Anrufen",
+    'detail.contact_mail': "E-Mail",
+    'detail.contact_none': "Keine Kontaktdaten bekannt.",
     'claim.title': "✨ Diesen Eintrag beanspruchen",
     'claim.intro': "Bist du der Organisator? Trage deine Daten ein. Unser Admin prüft den Anspruch innerhalb von 2 Werktagen. Nach Genehmigung kannst du Fotos und weitere Infos hinzufügen.",
     'claim.field_name': "Dein Name *",
@@ -7104,7 +7228,7 @@ var I18N = {
     'detail.share': '↑ Teilen',
     'detail.cta_going': 'Ich bin dabei!',
     'detail.cta_not_going': 'Pläne geändert',
-    'detail.report_btn': '🚩 Anzeige melden',
+    'detail.report_btn': '🚩 Stimmt etwas nicht? Melden',
     'detail.guest_title': 'Erstelle ein kostenloses Konto',
     'detail.guest_sub': 'Adressen sehen · Navigieren · Speichern',
     'profile.guest': 'Gast',
@@ -7391,6 +7515,8 @@ var I18N = {
     'report.r_address': 'Falsche Adresse oder Standort',
     'report.r_misleading': 'Irreführende oder falsche Informationen',
     'report.r_other': 'Sonstiges',
+    'report.r_date': 'Datum oder Uhrzeit falsch',
+    'report.r_cancelled': 'Fällt aus / findet nicht statt',
     'report.r_photos': 'Unangemessene oder anstößige Fotos',
     'report.r_spam': 'Spam oder Fake-Anzeige',
     'report.what_wrong': 'Was stimmt mit dieser Anzeige nicht?',
@@ -7599,7 +7725,7 @@ function setLang(code) {
   applyLang();
   // Re-render dynamische UI (kaartjes/lijsten bouwen zelf tekst)
   try { if (typeof renderList === 'function') renderList(); } catch(e){}
-  try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) renderMarkers(); } catch(e){}
+  try { if (typeof renderMarkers === 'function' && typeof map !== 'undefined' && map) { _pinsVergeten(); renderMarkers(); } } catch(e){}
   try { if (typeof renderMySales === 'function') renderMySales(); } catch(e){}
   try { if (typeof updateUserUI === 'function') updateUserUI(); } catch(e){}
   closeLangMenu();
@@ -7946,9 +8072,101 @@ const EVENT_SUBTYPE_ICONS = {
 
 function getSaleIcon(sale) {
   if (sale && sale.type === 'evenement' && sale.event_subtype) {
-    return EVENT_SUBTYPE_ICONS[sale.event_subtype] || TYPES.evenement.icon;
+    var _sk = saleSubKey(sale);
+    return (YG_SUBTYPES[_sk] && YG_SUBTYPES[_sk].emoji) || EVENT_SUBTYPE_ICONS[sale.event_subtype] || TYPES.evenement.icon;
   }
   return TYPES[sale.type] ? TYPES[sale.type].icon : '📍';
+}
+
+// ── Soort + subcategorie ──────────────────────────────────────────
+// Drie soorten met elk een eigen kleur (kaart-pins, lijstkaartjes):
+//   markt (groen)  = rommelmarkten en overige markten (met subcategorie)
+//   route (oranje) = rommelroutes / buurtverkopen
+//   oprit (amber)  = opritverkoop van een particulier
+// Subcategorieën krijgen een eigen simpel lijn-icoon (wit op de kleur).
+var YG_KIND_COLORS = {
+  markt: { base: '#3A6B4A', light: '#4F8A61' },
+  route: { base: '#E07B39', light: '#EC9A5E' },
+  oprit: { base: '#F2A830', light: '#F6BF5A' }
+};
+var YG_SUBTYPES = {
+  rommelmarkt:  { label: 'Rommelmarkt',  icon: 'stall',  emoji: '🧺' },
+  vlooienmarkt: { label: 'Vlooienmarkt', icon: 'stall',  emoji: '🎪' },
+  snuffelmarkt: { label: 'Snuffelmarkt', icon: 'stall',  emoji: '🧺' },
+  jaarmarkt:    { label: 'Jaarmarkt',    icon: 'stall',  emoji: '🎪' },
+  kofferbak:    { label: 'Kofferbakverkoop', icon: 'car', emoji: '🚗' },
+  boekenmarkt:  { label: 'Boekenmarkt',  icon: 'book',   emoji: '📚' },
+  antiekmarkt:  { label: 'Antiekmarkt',  icon: 'vase',   emoji: '🏺' },
+  kerstmarkt:   { label: 'Kerstmarkt',   icon: 'tree',   emoji: '🎄' },
+  braderie:     { label: 'Braderie',     icon: 'flags',  emoji: '🏪' },
+  kinderbeurs:  { label: 'Kinderbeurs',  icon: 'bear',   emoji: '🧸' },
+  kledingmarkt: { label: 'Kledingmarkt', icon: 'hanger', emoji: '👗' }
+};
+function saleKind(s) {
+  return s && s.type === 'buurt' ? 'route' : (s && s.type === 'particulier' ? 'oprit' : 'markt');
+}
+function saleSubKey(s) {
+  var v = String((s && s.event_subtype) || '').toLowerCase().trim();
+  if (!v) return '';
+  if (v.indexOf('kofferbak') >= 0) return 'kofferbak';
+  if (v.indexOf('kerst') >= 0) return 'kerstmarkt';
+  if (v.indexOf('boek') >= 0) return 'boekenmarkt';
+  if (v.indexOf('antiek') >= 0 || v.indexOf('curiosa') >= 0) return 'antiekmarkt';
+  if (v.indexOf('braderie') >= 0) return 'braderie';
+  if (v.indexOf('kinder') >= 0 || v.indexOf('speelgoed') >= 0) return 'kinderbeurs';
+  if (v.indexOf('kleding') >= 0) return 'kledingmarkt';
+  if (v.indexOf('snuffel') >= 0) return 'snuffelmarkt';
+  if (v.indexOf('vlooien') >= 0) return 'vlooienmarkt';
+  if (v.indexOf('jaarmarkt') >= 0) return 'jaarmarkt';
+  if (v.indexOf('rommelmarkt') >= 0) return 'rommelmarkt';
+  return v;
+}
+// Leesbaar label voor chip/popup: bekende subcategorie netjes, anders het
+// eigen label van de organisator met hoofdletter.
+function saleSubLabel(s) {
+  var k = saleSubKey(s);
+  if (!k || k === 'overig') return '';
+  if (YG_SUBTYPES[k]) return YG_SUBTYPES[k].label;
+  var raw = String(s.event_subtype).trim();
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+function saleIconName(s) {
+  var kind = saleKind(s);
+  if (kind === 'oprit') return 'house';
+  if (kind === 'route') return 'route';
+  var k = saleSubKey(s);
+  return (YG_SUBTYPES[k] && YG_SUBTYPES[k].icon) || 'stall';
+}
+var YG_KIND_ICON_PATHS = {
+  stall:  '<path d="M3.5 9.5 5.5 4h13l2 5.5"/><path d="M3.5 9.5c0 1.5 1.1 2.6 2.5 2.6s2.5-1.1 2.5-2.6c0 1.5 1.1 2.6 2.5 2.6h2c1.4 0 2.5-1.1 2.5-2.6 0 1.5 1.1 2.6 2.5 2.6s2.5-1.1 2.5-2.6"/><path d="M5.5 12.1V20M18.5 12.1V20M4 20h16M9 20v-4.5h6V20"/>',
+  route:  '<circle cx="5.5" cy="5.5" r="2.3"/><circle cx="18.5" cy="18.5" r="2.3"/><path d="M8 5.5h7.5a3.25 3.25 0 0 1 0 6.5h-7a3.25 3.25 0 0 0 0 6.5H16"/>',
+  house:  '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.6V20h13V9.6"/><path d="M8.5 20v-6.5h7V20M8.5 16.2h7"/>',
+  book:   '<path d="M3.5 5.5c2.8-1.4 5.8-1.2 8.5.8 2.7-2 5.7-2.2 8.5-.8v13c-2.8-1.4-5.8-1.2-8.5.8-2.7-2-5.7-2.2-8.5-.8z"/><path d="M12 6.3v13"/>',
+  tree:   '<path d="M12 3l4.5 5.5h-2.7l3.7 4.7h-2.7L19 18H5l4.2-4.8H6.5l3.7-4.7H7.5z"/><path d="M12 18v3"/>',
+  car:    '<path d="M3 16.5V13l1.8-4.5h9.4l3.8 4H21v4"/><path d="M3 16.5h1.8M9.2 16.5h5.6M19.2 16.5H21"/><circle cx="7" cy="16.8" r="2"/><circle cx="17" cy="16.8" r="2"/><path d="M14.2 8.5v4"/>',
+  vase:   '<path d="M9 3.5h6M10 3.5v2.8C7.6 7.6 6.5 9.8 6.5 12.6c0 4.2 2.4 7.9 5.5 7.9s5.5-3.7 5.5-7.9c0-2.8-1.1-5-3.5-6.3V3.5"/><path d="M8.2 12h7.6"/>',
+  flags:  '<path d="M2.5 5.5c6 3.6 13 3.6 19 0"/><path d="M5 6.9l1.4 5.3 2.1-4.4M10.6 8.2l1.4 5.3 1.4-5.3M15.5 7.8l2.1 4.4L19 6.9"/><path d="M4 20h16M7 20v-3M17 20v-3"/>',
+  bear:   '<circle cx="12" cy="13.5" r="6.2"/><circle cx="6.6" cy="6.8" r="2.2"/><circle cx="17.4" cy="6.8" r="2.2"/><path d="M10.2 12.4h.01M13.8 12.4h.01M10.5 15.8c.9.7 2.1.7 3 0"/>',
+  hanger: '<path d="M12 8.5V7.6c1.2-.3 2-1.3 2-2.5a2 2 0 0 0-4 0"/><path d="M12 8.5 3.2 15.6c-.6.5-.3 1.4.5 1.4h16.6c.8 0 1.1-.9.5-1.4z"/>'
+};
+function ygKindIconSvg(name, color, size) {
+  return '<svg viewBox="0 0 24 24" width="' + (size || 24) + '" height="' + (size || 24) + '" fill="none" stroke="' + (color || '#fff')
+    + '" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + (YG_KIND_ICON_PATHS[name] || YG_KIND_ICON_PATHS.stall) + '</svg>';
+}
+// Echte afstand vanaf de gebruiker (km, 1 decimaal) of null als de locatie
+// onbekend is — liever niets tonen dan een verzonnen getal.
+function saleDistanceKm(s) {
+  if (!userLocation || typeof s.lat !== 'number' || typeof s.lng !== 'number') return null;
+  var R = 6371, toR = Math.PI / 180;
+  var dLat = (s.lat - userLocation.lat) * toR, dLng = (s.lng - userLocation.lng) * toR;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(userLocation.lat * toR) * Math.cos(s.lat * toR) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function fmtKm(km) {
+  if (km == null) return '';
+  return (km < 10 ? km.toFixed(1) : String(Math.round(km))).replace('.', ',') + ' km';
 }
 
 let sales = [
@@ -8061,7 +8279,17 @@ function applyAuthVisibility() {
 }
 
 // ── Mijn verkopen in profiel ──
+// "Mijn verkopen" pas opbouwen als die pagina open is. Voor de beheerder
+// (eigenaar van alle door YardiGo geplaatste verkopen) zijn dat honderden
+// kaarten die anders bij elke start en elke wijziging gebouwd werden.
+var _mySalesVuil = false;
 function renderMySales() {
+  var v = document.getElementById('view-mijn');
+  if (v && !v.classList.contains('active')) { _mySalesVuil = true; return; }
+  _mySalesVuil = false;
+  _renderMySalesNu();
+}
+function _renderMySalesNu() {
   var list = document.getElementById('my-sales-list');
   if (!list) return;
   if (isGuest || !currentUser.email) {
@@ -8233,7 +8461,7 @@ async function doLogout() {
   if (sbClient) { try { await sbClient.auth.signOut(); } catch(e) {} }
   isGuest = true;
   currentUser = { name: '', email: '' };
-  localStorage.removeItem('yg-user');
+  localStorage.removeItem('yg-user'); localStorage.removeItem('yg-listings-cache');
   updateUserUI();
   if (map) renderMarkers();
   renderList();
@@ -8281,7 +8509,7 @@ async function doDeleteAccount() {
     // Lokale staat opschonen
     isGuest = true;
     currentUser = { name: '', email: '' };
-    localStorage.removeItem('yg-user');
+    localStorage.removeItem('yg-user'); localStorage.removeItem('yg-listings-cache');
     localStorage.removeItem('yg-onboarded');
     localStorage.removeItem('yg-dark');
     updateUserUI();
@@ -8849,16 +9077,16 @@ function initMap() {
   }
 }
 
+// Pin per soort: kleur = soort (markt groen, rommelroute oranje, oprit amber),
+// wit icoon = subcategorie (boekenmarkt, kerstmarkt, kofferbak …).
 function makeMarkerIcon(sale) {
-  var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
-  var c = colors[sale.type];
-  // Curated (door YardiGo verzameld) pins krijgen een subtiele stippellijn-rand
-  // in plaats van een solid rand — herkenbaar bij close-up, niet storend bij overzicht
+  var c = YG_KIND_COLORS[saleKind(sale)].base;
   var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
-  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="2" stroke-dasharray="2.5 1.5"' : 'stroke="white" stroke-width="2"';
-  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg">'
+  var strokeAttrs = 'stroke="white" stroke-width="2"';
+  var icon = YG_KIND_ICON_PATHS[saleIconName(sale)] || YG_KIND_ICON_PATHS.stall;
+  var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.25))">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
-    + '<circle cx="18" cy="16" r="8" fill="white"/>'
+    + '<g transform="translate(9.6 7.6) scale(0.7)" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + icon + '</g>'
     + '</svg>';
   return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
@@ -8870,7 +9098,7 @@ function createListingPopup(sale) {
   // i18n zodat NL/EN/FR/DE consistent zijn met de filters.
   var _headIcon = getSaleIcon(sale);
   var _typeLabel = i18n('type.' + sale.type, t.label);
-  var _headLabel = (sale.type === 'evenement' && sale.event_subtype) ? sale.event_subtype : _typeLabel;
+  var _headLabel = (sale.type === 'evenement' && saleSubLabel(sale)) ? saleSubLabel(sale) : _typeLabel;
   var fav = favorites.has(sale.id);
   // Beperk categorie-tags in popup tot 3 + "+N meer" — voorkomt dat veel
   // categorieën de popup-hoogte uit balans halen.
@@ -8888,6 +9116,9 @@ function createListingPopup(sale) {
     addrHtml = '📍 ' + _popCity + ' · <span style="color:#3A6B4A;font-weight:700">🔒 Adres ' + (_popCd ? 'over ' + escapeHtml(_popCd) : '24u vooraf') + '</span>';
   } else {
     addrHtml = '📍 ' + escapeHtml(sale.address || '');
+  }
+  if (sale.location_approx) {
+    addrHtml += '<div style="font-size:11px;color:#7A6E62;margin-top:3px">Locatie bij benadering — de cirkel geeft het gebied aan</div>';
   }
   var photoHtml = '';
   // Zachte placeholder voor oprit/buurt zonder foto's
@@ -9031,22 +9262,30 @@ function buildBuurtClusterPopup(bv, cluster) {
   return '<div style="font-family:Poppins,sans-serif;min-width:240px;max-width:280px">' + head + body + '</div>';
 }
 
+// Muis boven een pin: kort kaartje met naam, soort, dag, tijd en plaats.
+// Alleen op apparaten met een muis; op touch opent de tik gewoon de popup.
+var _ygHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+function hoverTipHtml(s) {
+  var t = String(s.title || '');
+  if (t.length > 60) t = t.slice(0, 57) + '…';
+  var soort = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : i18n('type.' + s.type, (TYPES[s.type] || {}).label || '');
+  var plaats = (s.address || '').split(',').slice(-1)[0].trim();
+  var regel = [soort, s.date ? fmtDate(s.date) : '', (s.from && s.till) ? s.from + '–' + s.till : '', plaats].filter(Boolean).join(' · ');
+  return '<div class="yg-tip-title">' + escapeHtml(t) + '</div><div class="yg-tip-meta">' + escapeHtml(regel) + '</div>';
+}
+function bindHoverTip(marker, sale) {
+  if (!_ygHover) return;
+  marker.bindTooltip(function() { return hoverTipHtml(sale); }, { direction: 'top', offset: [0, -44], className: 'yg-hover-tip', opacity: 1 });
+  marker.on('popupopen', function() { marker.closeTooltip(); });
+}
+
 function createDefaultPin(sale) {
   return makeMarkerIcon(sale);
 }
 
 function createSmallPin(sale) {
-  // Zelfde grootte als normale markers (36×46) voor consistentie
-  var colors = { particulier: '#F2A830', buurt: '#E07B39', evenement: '#3A6B4A' };
-  var c = colors[sale.type] || '#E07B39';
-  var p = 'M12 1C7.03 1 3 5.03 3 10C3 17 12 31 12 31C12 31 21 17 21 10C21 5.03 16.97 1 12 1Z';
-  var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
-  var strokeAttrs = isCurated ? 'stroke="white" stroke-width="1.5" stroke-dasharray="1.8 1.2"' : 'stroke="white" stroke-width="1.5"';
-  var svg = '<svg width="36" height="46" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="' + p + '" fill="' + c + '" ' + strokeAttrs + '/>'
-    + '<circle cx="12" cy="10" r="5.5" fill="white"/>'
-    + '</svg>';
-  return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
+  // Zelfde pin als losse listings, zodat kleur en icoon overal kloppen.
+  return makeMarkerIcon(sale);
 }
 
 var clusterGroups = [];
@@ -9071,11 +9310,81 @@ function groupByNeighborhoodSale(listings) {
 // Wordt herbouwd bij elke renderMarkers().
 var _markersById = {};
 
+// Pin per verkoop-object (een verse lijst van de server geeft nieuwe objecten,
+// dus nieuwe pins; oude worden vanzelf opgeruimd).
+var _pinCache = new WeakMap();
+var _pinsOpKaart = new Set();
+function _pinVoor(sale) {
+  var fav = favorites.has(sale.id);
+  var pin = _pinCache.get(sale);
+  if (pin) {
+    if (pin.fav !== fav) { pin.fav = fav; pin.marker.setIcon(createDefaultPin(sale)); }
+    return pin;
+  }
+  pin = { fav: fav, ring: null, marker: null };
+  // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
+  // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
+  if (sale.location_approx) {
+    pin.ring = L.circle([sale.lat, sale.lng], {
+      radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
+      fillOpacity: 0.1, interactive: false
+    });
+  }
+  pin.marker = L.marker([sale.lat, sale.lng], { icon: createDefaultPin(sale) });
+  pin.marker._ygSale = sale;
+  pin.marker.bindPopup(function() { return createListingPopup(sale); }, { maxWidth: 260 });
+  bindHoverTip(pin.marker, sale);
+  _pinCache.set(sale, pin);
+  return pin;
+}
+// Pins opnieuw opbouwen (bijv. na taalwissel): cache leeg en alles eraf.
+function _pinsVergeten() {
+  if (_losseGroep) _losseGroep.clearLayers();
+  _pinsOpKaart.forEach(function(pin) { if (pin.ring) map.removeLayer(pin.ring); });
+  _pinsOpKaart = new Set();
+  _pinCache = new WeakMap();
+}
+
+// ── Groeperen bij uitzoomen ──
+// Ver uitgezoomd worden pins dicht bij elkaar één bolletje met het aantal
+// (kleur van de soort die erin het meest voorkomt, zoals in de Mac-app).
+// Vanaf regio-niveau (zoom 11) staat elke verkoop weer als losse pin.
+// Pins ver buiten beeld laat de bibliotheek weg; dat scheelt veel op telefoons.
+var YG_GROEP_TOT_ZOOM = 10;
+var _losseGroep = null;
+function _groepIcoon(cluster) {
+  var leden = cluster.getAllChildMarkers(), n = leden.length, tel = {}, top = 'markt';
+  leden.forEach(function(m) {
+    var k = m._ygSale ? saleKind(m._ygSale) : 'markt';
+    tel[k] = (tel[k] || 0) + 1;
+    if (tel[k] > (tel[top] || 0)) top = k;
+  });
+  var kleur = (YG_KIND_COLORS[top] || YG_KIND_COLORS.markt).base;
+  var d = n < 10 ? 34 : n < 50 ? 40 : 48;
+  var html = '<div class="yg-groep" title="' + n + ' verkopen · klik om in te zoomen" style="width:' + d + 'px;height:' + d + 'px;'
+    + 'background:' + kleur + ';box-shadow:0 0 0 5px ' + kleur + '40,0 2px 6px rgba(0,0,0,.28)">' + n + '</div>';
+  return L.divIcon({ html: html, className: 'yg-groep-wrap', iconSize: [d, d], iconAnchor: [d / 2, d / 2] });
+}
+function _losseGroepMaken() {
+  _losseGroep = L.markerClusterGroup({
+    disableClusteringAtZoom: YG_GROEP_TOT_ZOOM,
+    maxClusterRadius: 55,
+    chunkedLoading: true,          // grote aantallen in stukjes toevoegen: geen hapering
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: false,
+    zoomToBoundsOnClick: true,
+    removeOutsideVisibleBounds: true,
+    iconCreateFunction: _groepIcoon
+  });
+  map.addLayer(_losseGroep);
+}
+
 function renderMarkers() {
   // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
   // Als Leaflet niet beschikbaar is (CDN-fout, offline), is de fallback-kaart actief
   // en hoeven we geen markers te renderen.
   if (typeof L === 'undefined' || !map) return;
+  // Losse pins worden hergebruikt (zie onder); alleen overige lagen opruimen.
   markers.forEach(function(m) { map.removeLayer(m); });
   markers = [];
   clusterGroups.forEach(function(g) { map.removeLayer(g); });
@@ -9161,6 +9470,7 @@ function renderMarkers() {
         icon: createSmallPin(listing)
       });
       marker.bindPopup(createListingPopup(listing), { maxWidth: 260 });
+      bindHoverTip(marker, listing);
       group.addLayer(marker);
       _markersById[listing.id] = { marker: marker, cluster: group };
     });
@@ -9195,16 +9505,29 @@ function renderMarkers() {
     clusterGroups.push(group);
   });
 
-  // Losse listings als gewone markers
+  // Losse listings als gewone markers. Elke pin wordt één keer gemaakt en bij
+  // filteren hergebruikt: alleen wat verdwijnt of erbij komt verandert op de
+  // kaart. De popup-HTML wordt pas gebouwd als iemand de pin opent.
+  if (!_losseGroep) _losseGroepMaken();
+  var nuZichtbaar = new Set(), erbij = [], eraf = [];
   losseListings.forEach(function(sale) {
-    var m = L.marker([sale.lat, sale.lng], {
-      icon: createDefaultPin(sale)
-    });
-    m.bindPopup(createListingPopup(sale), { maxWidth: 260 });
-    m.addTo(map);
-    markers.push(m);
-    _markersById[sale.id] = { marker: m, cluster: null };
+    var pin = _pinVoor(sale);
+    nuZichtbaar.add(pin);
+    if (!_pinsOpKaart.has(pin)) {
+      if (pin.ring) pin.ring.addTo(map);
+      erbij.push(pin.marker);
+    }
+    _markersById[sale.id] = { marker: pin.marker, cluster: _losseGroep };
   });
+  _pinsOpKaart.forEach(function(pin) {
+    if (nuZichtbaar.has(pin)) return;
+    eraf.push(pin.marker);
+    if (pin.ring) map.removeLayer(pin.ring);
+  });
+  // In één keer: veel sneller dan per pin.
+  if (eraf.length) _losseGroep.removeLayers(eraf);
+  if (erbij.length) _losseGroep.addLayers(erbij);
+  _pinsOpKaart = nuZichtbaar;
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
   if (fb && fb.style.display !== 'none') fbRenderMarkers();
@@ -9275,6 +9598,21 @@ function getDateRange(key) {
 }
 var listSortMode = 'date-asc';
 var userLocation = null;
+// Als de bezoeker eerder al locatietoegang gaf, haal de positie stil op zodat
+// de lijst echte afstanden toont (zonder opnieuw om toestemming te vragen).
+setTimeout(function ygQuietLocate() {
+  try {
+    if (userLocation || !navigator.permissions || !navigator.geolocation) return;
+    navigator.permissions.query({ name: 'geolocation' }).then(function(st) {
+      if (st.state !== 'granted') return;
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        if (!userLocation) userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (typeof renderList === 'function') renderList();
+        if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
+      }, function() {}, { maximumAge: 600000, timeout: 8000 });
+    }).catch(function() {});
+  } catch (e) {}
+}, 1200);
 var _lastLocationPersistAt = 0;
 // Slaat de laatst bekende locatie server-side op (max 1x/uur) zodat de
 // "nieuwe verkopen in de buurt"-cron server-side kan matchen zonder dat de
@@ -9347,8 +9685,28 @@ function toggleCatPicker(e) {
   if (!menu) return;
   var wasOpen = menu.classList.contains('open');
   document.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
-  if (!wasOpen) menu.classList.add('open');
+  if (wasOpen) return;
+  // In de filterbalk (scrollt horizontaal) zou een absolute menu worden
+  // afgeknipt; daar positioneren we 'm vast t.o.v. het scherm, net als openDD.
+  if (menu.closest('.filter-bar')) {
+    var r = e.currentTarget.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+    menu.style.left = 'auto';
+  }
+  menu.classList.add('open');
 }
+// Swipen door de filterbalk verschuift de knoppen; open menu's zouden dan
+// los blijven zweven, dus die sluiten we.
+(function() {
+  var bar = document.getElementById('filter-bar');
+  if (!bar) return;
+  bar.addEventListener('scroll', function() {
+    bar.querySelectorAll('.fdd-menu').forEach(function(m) { m.style.display = 'none'; });
+    bar.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  }, { passive: true });
+})();
 function catPickerToggle(cb) {
   var v = cb.value;
   if (cb.checked) activeCatFilters.add(v); else activeCatFilters.delete(v);
@@ -9518,6 +9876,54 @@ function fmtDate(d) {
   var locale = ({ nl:'nl-NL', en:'en-GB', fr:'fr-FR', de:'de-DE' })[currentLang] || 'nl-NL';
   return new Date(d).toLocaleDateString(locale, { weekday:'short', day:'numeric', month:'short' });
 }
+// ── Lange lijsten in porties ──
+// Met honderden verkopen kost het opbouwen van álle kaarten (tienduizenden
+// elementen) bij elke filterklik merkbaar tijd, vooral op telefoons. We tonen
+// eerst een portie en vullen aan zodra de onderkant in beeld komt.
+var YG_PORTIE = 40;
+var _lijstItems = [];
+var _lijstLeeg = true;
+function _lijstItemHtml(item, idx) {
+  return item.kind === 'bv' ? renderBvCard(item.bv) : createListingCard(item.s, idx);
+}
+// Dichtstbijzijnde container die zelf scrolt (de zijlijst op desktop), anders
+// null = het venster.
+function _scrollOuder(el) {
+  for (var p = el; p && p !== document.body; p = p.parentElement) {
+    if (/auto|scroll/.test(getComputedStyle(p).overflowY)) return p;
+  }
+  return null;
+}
+function _vulLijst(el, items, naPortie) {
+  if (el._ygObs) { el._ygObs.disconnect(); el._ygObs = null; }
+  var pos = 0;
+  el.innerHTML = '';
+  function portie() {
+    var eind = Math.min(items.length, pos + YG_PORTIE), html = '';
+    for (var i = pos; i < eind; i++) html += _lijstItemHtml(items[i], i);
+    var oud = el.querySelector(':scope > .yg-meer');
+    if (oud) oud.remove();
+    el.insertAdjacentHTML('beforeend', html);
+    if (naPortie) naPortie(el);
+    pos = eind;
+    if (pos >= items.length || typeof IntersectionObserver === 'undefined') {
+      // Geen observer (oude browser): de rest in één keer.
+      if (pos < items.length) { while (pos < items.length) portie(); }
+      return;
+    }
+    var merk = document.createElement('div');
+    merk.className = 'yg-meer';
+    merk.style.cssText = 'height:1px;grid-column:1/-1';
+    el.appendChild(merk);
+    if (el._ygObs) el._ygObs.disconnect();
+    el._ygObs = new IntersectionObserver(function(e) {
+      if (e[0].isIntersecting) portie();
+    }, { root: _scrollOuder(el), rootMargin: '0px 0px 900px 0px' });
+    el._ygObs.observe(merk);
+  }
+  portie();
+}
+
 function renderList() {
   var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
   // Groepeer per buurtverkoop zodat elke buurtverkoop als 1 item geldt.
@@ -9567,9 +9973,18 @@ function renderList() {
     }
     return 0;
   }
+  // Gelijke waarde (bv. zelfde dag): eerst dichtbij, anders een vaste
+  // menging op id — zo volgt de lijst nooit de volgorde van een bron.
+  function tieVal(item) {
+    if (userLocation) return item.kind === 'bv' ? (item.bv._sortDistance || 0) : dist(userLocation, item.s);
+    var id = String(item.kind === 'bv' ? (item.bv && item.bv.id) : item.s.id), h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+    return h;
+  }
   items.sort(function(a, b) {
     var av = sortVal(a, listSortMode);
     var bv2 = sortVal(b, listSortMode);
+    if (av === bv2) return tieVal(a) - tieVal(b);
     if (listSortMode === 'date-asc' || listSortMode === 'nearby') {
       return av - bv2;
     }
@@ -9578,6 +9993,8 @@ function renderList() {
   var list = document.getElementById('cardList');
   if (!list) return;
   if (!visible.length) {
+    _lijstItems = [];
+    _lijstLeeg = true;
     var activeFilterNames = Array.from(activeFilters).map(function(t) {
       return TYPES[t] ? TYPES[t].icon + ' ' + TYPES[t].label : t;
     });
@@ -9676,16 +10093,10 @@ function renderList() {
   }
   // Render in volgorde van gesorteerde items (buurtverkopen ingemengd, niet
   // automatisch bovenaan). Buurtverkopen blijven als 1 uitklapbare kaart staan.
-  var html = '';
-  items.forEach(function(item, idx) {
-    if (item.kind === 'bv') {
-      html += renderBvCard(item.bv);
-    } else {
-      html += createListingCard(item.s, idx);
-    }
-  });
-
-  list.innerHTML = html;
+  // In porties: eerst YG_PORTIE kaarten, de rest zodra je erheen scrolt.
+  _lijstItems = items;
+  _lijstLeeg = false;
+  _vulLijst(list, items);
 
   // Op desktop: sync de side-list naast de kaart zodat beide synchroon zijn
   if (typeof _syncKaartSideList === 'function') _syncKaartSideList();
@@ -9735,7 +10146,9 @@ function renderBvCard(bv) {
     ? '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')" style="padding:0;overflow:hidden">'
         + '<img src="' + escapeHtml(coverPhoto) + '" data-fallback="🏘️" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">'
       + '</div>'
-    : '<div class="card-thumb buurt" onclick="openDetail(' + orgIdAttr + ')">🏘️</div>';
+    : '<div class="card-thumb kt buurt" onclick="openDetail(' + orgIdAttr + ')" style="background:linear-gradient(155deg,' + YG_KIND_COLORS.route.light + ',' + YG_KIND_COLORS.route.base + ')">'
+      + '<span class="kt-ico">' + ygKindIconSvg('route', '#fff', 34) + '</span>'
+      + (organizer && fmtKm(saleDistanceKm(organizer)) ? '<span class="kt-km">' + fmtKm(saleDistanceKm(organizer)) + '</span>' : '') + '</div>';
   // Adrespil — gebruik declared_count als schatting wanneer meer dan werkelijk aanwezig.
   var declaredCount = bv.info && bv.info.declared_count;
   var displayCount = (declaredCount && declaredCount > nTotal) ? declaredCount : nTotal;
@@ -9787,9 +10200,10 @@ function createListingCard(s, i) {
   // Bij evenementen tonen we het subtype (bijv. "Braderie") in het chip-label
   // en gebruiken we het subtype-icoon als thumb-emoji zodat de lijst aansluit op de kaart.
   var _typeLabelI = i18n('type.' + s.type, t.label);
-  var _chipLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : _typeLabelI;
+  var _chipLabel = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : _typeLabelI;
   var _thumbIcon = getSaleIcon(s);
-  var d2 = (Math.random() * 8 + 0.5).toFixed(1);
+  var _kind = saleKind(s), _kc = YG_KIND_COLORS[_kind];
+  var _km = fmtKm(saleDistanceKm(s));
   // Beperk categorieën in lijstkaart tot 3 + "+N meer" zodat de kaart-hoogte
   // niet uitloopt wanneer een advertentie veel categorieën heeft.
   var tags = renderTagChips(s.tags || [], s.type, { limit: 3 });
@@ -9809,8 +10223,10 @@ function createListingCard(s, i) {
   var idAttr = typeof s.id === 'string' ? "'" + escapeHtml(s.id) + "'" : s.id;
   return '<div class="card" style="animation:fadeUp .4s ' + ((i || 0) * 0.06) + 's both">'
     + (s.photos && s.photos.length
-      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy"><span class="c-dist">📍 ' + d2 + ' km</span></div>'
-      : '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')">' + escapeHtml(_thumbIcon) + '<span class="c-dist">📍 ' + d2 + ' km</span></div>')
+      ? '<div class="card-thumb ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="padding:0;overflow:hidden;background:' + _kc.base + '"><img src="' + escapeHtml(s.photos[0]) + '" data-fallback="' + escapeHtml(_thumbIcon) + '" class="card-thumb-img" style="width:100%;height:100%;object-fit:cover" loading="lazy">' + (_km ? '<span class="c-dist">' + _km + '</span>' : '') + '</div>'
+      : '<div class="card-thumb kt ' + s.type + '" onclick="openDetail(' + idAttr + ')" style="background:linear-gradient(155deg,' + _kc.light + ',' + _kc.base + ')">'
+        + '<span class="kt-ico">' + ygKindIconSvg(saleIconName(s), '#fff', 34) + '</span>'
+        + (_km ? '<span class="kt-km">' + _km + '</span>' : '') + '</div>')
     + '<div class="card-body" onclick="openDetail(' + idAttr + ')">'
     + '<div class="card-top"><div class="card-title">' + ((s.placed_by === 'yardigo' && !s.claimed_by_user_id) ? '<span title="Door YardiGo verzameld" style="font-size:11px;opacity:0.65;margin-right:4px">🔍</span>' : '') + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
@@ -10072,7 +10488,7 @@ function sv(name, tabEl) {
   if (name === 'kaart' && map) { setTimeout(function() { map.invalidateSize(); }, 60); }
   if (name === 'route') updateRouteView();
   if (name === 'instellingen') loadSettingsTab();
-  if (name === 'mijn') loadCheckinState();
+  if (name === 'mijn') { loadCheckinState(); if (_mySalesVuil) renderMySales(); }
   if (name === 'home') loadHomeView();
   var fabRow = document.getElementById('fab-row');
   // FAB verbergen op kaart (overlap) en op home (geen sales context)
@@ -10167,16 +10583,50 @@ function _emptyTipSale() {
 // ══════════════════════════════════════════════════
 // DETAIL
 // ══════════════════════════════════════════════════
+// Contact van de organisator bij een door YardiGo verzameld event. De gegevens
+// staan in listing_contacts; RLS geeft alleen ingelogde gebruikers leestoegang,
+// dus gasten krijgen een inlog-uitnodiging i.p.v. de gegevens.
+async function renderCuratedContact(listingId) {
+  var el = document.getElementById('det-contact');
+  if (!el) return;
+  el.style.display = 'none'; el.innerHTML = '';
+  var titel = '<div style="font-weight:700;color:#7A5C1C;margin-bottom:6px">📇 ' + escapeHtml(i18n('detail.contact_title', 'Contact organisator')) + '</div>';
+  var knop = 'display:inline-block;background:white;color:#7A5C1C;border:1px solid #DDD0BC;border-radius:7px;padding:6px 11px;font-size:12px;font-weight:700;text-decoration:none;margin:0 6px 6px 0';
+  if (isGuest || !sbClient) {
+    el.innerHTML = titel + '<div style="margin-bottom:6px">' + escapeHtml(i18n('detail.contact_login', 'Log in om de organisator te contacteren.')) + '</div>'
+      + '<a href="#" onclick="openLogin();return false" style="' + knop + '">🔑 ' + escapeHtml(i18n('detail.contact_login_btn', 'Inloggen')) + '</a>';
+    el.style.display = '';
+    return;
+  }
+  var res = await sbClient.from('listing_contacts').select('organizer_name,website_url,email,phone').eq('listing_id', listingId).maybeSingle();
+  if (String(detailSaleId) !== String(listingId)) return; // gebruiker zit inmiddels op een ander event
+  var c = res.data;
+  if (!c || (!c.website_url && !c.email && !c.phone)) return;
+  var veiligeUrl = c.website_url && /^https?:\/\//i.test(c.website_url) ? c.website_url : null;
+  var html = titel + (c.organizer_name ? '<div style="margin-bottom:6px">' + escapeHtml(c.organizer_name) + '</div>' : '');
+  if (veiligeUrl) html += '<a href="' + escapeHtml(veiligeUrl) + '" target="_blank" rel="noopener" style="' + knop + '">🌐 ' + escapeHtml(i18n('detail.contact_website', 'Website')) + '</a>';
+  if (c.phone)    html += '<a href="tel:' + escapeHtml(c.phone.replace(/[^\d+]/g, '')) + '" style="' + knop + '">📞 ' + escapeHtml(i18n('detail.contact_call', 'Bellen')) + ' · ' + escapeHtml(c.phone) + '</a>';
+  if (c.email)    html += '<a href="mailto:' + escapeHtml(c.email) + '" style="' + knop + '">✉️ ' + escapeHtml(i18n('detail.contact_mail', 'Mailen')) + '</a>';
+  el.innerHTML = html;
+  el.style.display = '';
+}
+
 function openDetail(id) {
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
+  if (s._lean) {
+    // Toon direct wat we hebben; vul aan zodra de details binnen zijn.
+    laadVolledigeSale(s).then(function(v) {
+      if (v && !v._lean && String(detailSaleId) === String(v.id)) openDetail(v.id);
+    });
+  }
   detailSaleId = s.id; carouselIdx = 0;
   var t = TYPES[s.type], fav = favorites.has(id);
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
   var badge = document.getElementById('det-type-badge');
   var _detIcon = getSaleIcon(s);
-  var _detLabel = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : t.label;
+  var _detLabel = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : t.label;
   if (badge) { badge.textContent = _detIcon + ' ' + _detLabel; badge.style.background = colors[s.type]; badge.style.color = textColors[s.type]; }
   var sampleBadge = document.getElementById('det-sample-badge');
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
@@ -10189,10 +10639,14 @@ function openDetail(id) {
     if (s.placed_by === 'yardigo') {
       banner.style.display = '';
       var link = document.getElementById('det-curated-source-link');
-      if (link) {
-        link.href = s.source_url || '#';
-        link.textContent = (s.source_label || s.source_url || '—') + ' ↗';
+      var heeftBron = !!s.source_url;
+      document.getElementById('det-curated-desc').style.display = heeftBron ? '' : 'none';
+      document.getElementById('det-curated-desc-noref').style.display = heeftBron ? 'none' : '';
+      if (link && heeftBron) {
+        link.href = s.source_url;
+        link.textContent = (s.source_label || s.source_url) + ' ↗';
       }
+      renderCuratedContact(s.id);
       var claimBtn   = document.getElementById('det-claim-btn');
       var claimedTag = document.getElementById('det-curated-claimed');
       if (s.claimed_by_user_id) {
@@ -10993,7 +11447,7 @@ function openPromoPack() {
   closeShare();
   // Vul de poster-content
   var t = TYPES[s.type];
-  var _typeLbl = (s.type === 'evenement' && s.event_subtype) ? s.event_subtype : (t ? t.label : '');
+  var _typeLbl = (s.type === 'evenement' && saleSubLabel(s)) ? saleSubLabel(s) : (t ? t.label : '');
   var _icon = getSaleIcon(s);
   document.getElementById('pp-type-badge').textContent = _icon + ' ' + _typeLbl;
   document.getElementById('pp-title').textContent = s.title;
@@ -15502,16 +15956,19 @@ function _syncKaartSideList() {
   if (!document.body.classList.contains('is-desktop')) return;
   var src = document.getElementById('cardList');
   var dst = document.getElementById('kaart-side-cards');
-  if (src && dst) {
-    dst.innerHTML = src.innerHTML;
-    // Voeg data-sale-id toe aan elke card door het te parsen uit de onclick attr.
-    // De click-handler op #kaart-side-cards gebruikt dit om de juiste pin te focussen.
-    dst.querySelectorAll('.card').forEach(function(card) {
+  // Voeg data-sale-id toe aan elke card door het te parsen uit de onclick attr.
+  // De click-handler op #kaart-side-cards gebruikt dit om de juiste pin te focussen.
+  function tagCards(root) {
+    root.querySelectorAll('.card:not([data-sale-id])').forEach(function(card) {
       var inner = card.querySelector('[onclick*="openDetail"]');
       if (!inner) return;
       var m = (inner.getAttribute('onclick') || '').match(/openDetail\(['"]?([^'"\),]+)['"]?\)/);
       if (m && m[1]) card.dataset.saleId = m[1];
     });
+  }
+  if (src && dst) {
+    if (_lijstLeeg) { if (dst._ygObs) { dst._ygObs.disconnect(); dst._ygObs = null; } dst.innerHTML = src.innerHTML; }
+    else _vulLijst(dst, _lijstItems, tagCards);
   }
   // Synchroniseer ook het aantal-label
   var countSrc = document.getElementById('lcount');
@@ -15554,7 +16011,12 @@ function _focusSaleOnMap(saleId) {
   var entry = _markersById[saleId];
   if (!entry) return;
   setTimeout(function() {
-    try { entry.marker.openPopup(); } catch(e) {}
+    try {
+      // Zit de pin in een groepje? Dan eerst inzoomen tot hij los staat.
+      if (entry.cluster && entry.cluster.zoomToShowLayer) {
+        entry.cluster.zoomToShowLayer(entry.marker, function() { entry.marker.openPopup(); });
+      } else entry.marker.openPopup();
+    } catch(e) {}
   }, 400);
 }
 
@@ -16442,24 +16904,37 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Analytics: vuur page-view af (non-blocking)
   try { trackPageView(); } catch(e) {}
 
-  // Probeer data uit Supabase te laden, anders gebruik demo-data
-  try {
-    var supabaseData = await fetchListings();
-    if (supabaseData && supabaseData.length > 0) {
-      sales = supabaseData.map(mapSupabaseToSale);
-      console.log('Geladen uit Supabase:', sales.length, 'listings');
-    } else {
-      console.log('Gebruik demo-data (' + sales.length + ' items)');
+  // Verkopen, onderhoudsstatus en sessie tegelijk ophalen in plaats van na
+  // elkaar. Is er een recente kopie van de verkopen op dit apparaat, dan
+  // tonen we die meteen en verversen we op de achtergrond.
+  var _listingsP = fetchListings();
+  var _settingsP = sbClient
+    ? sbClient.from('app_settings').select('key,value').in('key', ['maintenance_mode', 'banner_text']).then(function(r) { return r; }, function() { return null; })
+    : Promise.resolve(null);
+  var _sessionP = sbClient ? sbClient.auth.getSession().catch(function() { return null; }) : Promise.resolve(null);
+  var _cached = leesListingsCache();
+  if (_cached) {
+    sales = _cached.map(mapSupabaseToSale);
+  } else {
+    try {
+      var supabaseData = await _listingsP;
+      if (supabaseData && supabaseData.length > 0) {
+        sales = supabaseData.map(mapSupabaseToSale);
+        schrijfListingsCache(supabaseData);
+        console.log('Geladen uit Supabase:', sales.length, 'listings');
+      } else {
+        console.log('Gebruik demo-data (' + sales.length + ' items)');
+      }
+    } catch(e) {
+      console.log('Supabase laden mislukt, gebruik demo-data:', e);
     }
-  } catch(e) {
-    console.log('Supabase laden mislukt, gebruik demo-data:', e);
   }
 
-  // Onderhoudsbanner: laad app_settings en toon banner indien actief
+  // Onderhoudsbanner: toon banner indien actief
   if (sbClient) {
     try {
-      var _msRes = await sbClient.from('app_settings').select('key,value').in('key', ['maintenance_mode', 'banner_text']);
-      if (_msRes.data) {
+      var _msRes = await _settingsP;
+      if (_msRes && _msRes.data) {
         var _msMap = {};
         _msRes.data.forEach(function(r) { _msMap[r.key] = r.value; });
         if (_msMap.maintenance_mode === 'true') {
@@ -16474,22 +16949,34 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch(e) {}
   }
 
-  // Herstel sessie: eerst Supabase, dan localStorage als fallback
+  // Herstel sessie: eerst Supabase, dan localStorage als fallback. Met een
+  // kopie van de verkopen wachten we hooguit 600 ms; een trage token-verversing
+  // wordt daarna alsnog verwerkt.
+  var _sessieVerwerkt = false;
+  function _verwerkSessie(sessionRes) {
+    var session = sessionRes && sessionRes.data && sessionRes.data.session;
+    if (_sessieVerwerkt || !session || !session.user) return false;
+    _sessieVerwerkt = true;
+    var u = session.user;
+    var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
+    isGuest = false;
+    currentUser = { name: name, email: u.email, id: u.id };
+    localStorage.setItem('yg-user', JSON.stringify(currentUser));
+    localStorage.setItem('yg-onboarded', '1');
+    ensureProfile(u.id, name, u.email);
+    loadMyInterests(); // laad interesses vanuit DB na sessie-herstel
+    loadInboxBadge(); // laad ongelezen berichten-badge
+    return true;
+  }
   if (sbClient) {
     try {
-      var sessionRes = await sbClient.auth.getSession();
-      var session = sessionRes.data && sessionRes.data.session;
-      if (session && session.user) {
-        var u = session.user;
-        var name = (u.user_metadata && u.user_metadata.display_name) ? u.user_metadata.display_name : emailToName(u.email);
-        isGuest = false;
-        currentUser = { name: name, email: u.email, id: u.id };
-        localStorage.setItem('yg-user', JSON.stringify(currentUser));
-        localStorage.setItem('yg-onboarded', '1');
-        ensureProfile(u.id, name, u.email);
-        loadMyInterests(); // laad interesses vanuit DB na sessie-herstel
-        loadInboxBadge(); // laad ongelezen berichten-badge
+      var sessionRes = _cached
+        ? await Promise.race([_sessionP, new Promise(function(r) { setTimeout(function() { r('wacht'); }, 600); })])
+        : await _sessionP;
+      if (sessionRes === 'wacht') {
+        _sessionP.then(function(res) { if (_verwerkSessie(res)) { try { updateUserUI(); loadAvatarFromProfile(); } catch(e) {} } });
       }
+      else _verwerkSessie(sessionRes);
     } catch(e) {}
   }
   // Fallback: localStorage (als Supabase nog niet geconfigureerd was)
@@ -16509,6 +16996,15 @@ document.addEventListener('DOMContentLoaded', async function() {
   loadAvatarFromProfile();
   initOneSignalIfNative();
   initMap();
+  // Met de kopie gestart: zodra de verse verkopen binnen zijn, lijst en kaart bijwerken.
+  if (_cached) {
+    _listingsP.then(function(data) {
+      if (!data || !data.length) return;
+      schrijfListingsCache(data);
+      sales = data.map(mapSupabaseToSale);
+      try { renderList(); renderMarkers(); updateAttendanceUI(); } catch(e) { console.warn('verversen', e); }
+    });
+  }
   // Splash loader weg — sales zijn geladen en de kaart is opgezet.
   // Korte microtask-vertraging zodat Leaflet de eerste tegels al kan
   // beginnen renderen vóór de fade-out start.
@@ -16544,6 +17040,24 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
     setTimeout(function() { tryOpen(8); }, 800);
+  })();
+
+  // ─── Deellink om direct te plaatsen ──────────────────────
+  // yardigo.nl/verkoop (opritverkoop) en /aanmelden (markt) openen het
+  // plaatsformulier; ook gasten mogen invullen, inloggen pas bij publiceren.
+  // ?plaatsen=particulier|buurt|evenement kiest meteen het type.
+  (function handlePlaatsenDeepLink() {
+    var params = new URLSearchParams(location.search);
+    var t = params.get('plaatsen');
+    if (t === null) t = ({ '/verkoop': 'particulier', '/aanmelden': 'evenement' })[(location.pathname || '').replace(/\/$/, '')] || null;
+    if (t === null) return;
+    try { history.replaceState({}, '', '/'); } catch(e) {}
+    setTimeout(async function() {
+      try {
+        await openAdd();
+        if (['particulier', 'buurt', 'evenement'].indexOf(t) >= 0 && typeof selType === 'function') selType(t);
+      } catch(e) { console.warn('plaatsen-deeplink:', e); }
+    }, 900);
   })();
 
   // ─── Uitschrijf-handlers ─────────────────────────────────
@@ -16616,32 +17130,10 @@ function sendReport() {
   var btn = document.querySelector('#reportOv .btn-feedback-send');
   btn.textContent = '⏳ Versturen...';
   btn.disabled = true;
-  var saleInfo = '';
-  if (typeof detailSaleId !== 'undefined' && detailSaleId) {
-    var s = sales.find(function(x){ return String(x.id) === String(detailSaleId); });
-    if (s) saleInfo = '\n\nAdvertentie: ' + s.title + ' (ID: ' + detailSaleId + ')';
-  }
-  // Afzender-info
-  var senderName  = (currentUser && currentUser.name)  ? currentUser.name  : 'Onbekend';
-  var senderEmail = (currentUser && currentUser.email) ? currentUser.email : '';
-  var senderId    = (currentUser && currentUser.id)    ? currentUser.id    : '';
-  var senderBlock = '\n\n─────────────\nAfzender: ' + senderName +
-                    '\nE-mail: '  + (senderEmail || '(geen)') +
-                    '\nUser-id: ' + (senderId    || '(onbekend)') +
-                    '\nPagina: '  + (location.pathname || '/');
-  fetch('https://api.web3forms.com/submit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({
-      access_key: 'd773551b-e958-449f-b60a-5aab393f6c0a',
-      subject: '[YardiGo Melding] ' + reason + ' - ' + senderName,
-      message: reason + (extra ? '\n\nToelichting: ' + extra : '') + saleInfo + senderBlock,
-      from_name: 'YardiGo Melding – ' + senderName,
-      email:   senderEmail || undefined,
-      replyto: senderEmail || undefined
-    })
-  })
-  .then(function(r){ return r.json(); })
+  if (!detailSaleId || !sbClient) { btn.textContent = '🚩 Verstuur melding'; btn.disabled = false; return; }
+  // Melding gaat naar YardiGo (database + Telegram van de beheerder), niet meer via e-mail.
+  Promise.resolve(sbClient.rpc('report_listing', { p_listing_id: String(detailSaleId), p_reason: reason, p_note: extra || null }))
+  .then(function(res){ return { success: !res.error, message: res.error && res.error.message }; })
   .then(function(data){
     btn.textContent = '🚩 Verstuur melding';
     btn.disabled = false;
@@ -16819,6 +17311,14 @@ var _editingSaleId = null;
 var _deletingSaleId = null;
 
 function openEditSale(id) {
+  var _s0 = sales.find(function(x) { return String(x.id) === String(id); });
+  if (_s0 && _s0._lean) {
+    laadVolledigeSale(_s0).then(function(v) {
+      if (v && !v._lean) openEditSale(id);
+      else toast(i18n('toast.listing_not_found', 'Advertentie niet gevonden'));
+    });
+    return;
+  }
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) { toast(i18n('toast.listing_not_found', 'Advertentie niet gevonden')); return; }
   var isOwner = (currentUser.id && s.user_id) ? (s.user_id === currentUser.id)
