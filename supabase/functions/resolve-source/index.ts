@@ -625,6 +625,11 @@ serve(async (req: Request) => {
       if (item.rij?.is_private_seller == null && PASSENDE_SUBTYPES.has(st)) patch.is_private_seller = false;
       const nieuw = { ...(item.rij || {}), ...patch };
       const check = autoCheck(nieuw, PASSENDE_SUBTYPES.has(st));
+      // Een import die zichzelf tegenspreekt (bv. titel noemt een andere
+      // plaats dan het adres) blijft voor een mens, ook met organisator.
+      if ((item.rij?.auto_check?.redenen || []).includes('bron spreekt zichzelf tegen')) {
+        check.ok = false; check.redenen.push('bron spreekt zichzelf tegen');
+      }
       // Sinds het binnenkomen kan hetzelfde event al live gezet zijn (bv. via
       // de meukisleuk-import): zelfde dag binnen ~1 km = niet publiceren.
       if (check.ok && nieuw.latitude != null && nieuw.longitude != null) {

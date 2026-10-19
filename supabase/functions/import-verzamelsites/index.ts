@@ -32,7 +32,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, publishPending } from '../_shared/publish.ts';
 import { bepaalSubtype, SUBTYPES } from '../_shared/subtypes.ts';
-import { borgPlek, veiligeGeocode } from '../_shared/locatie.ts';
+import { borgPlek, norm, toetsPlek, veiligeGeocode } from '../_shared/locatie.ts';
 import { zoekAffiche } from '../_shared/affiche.ts';
 
 const CORS_HEADERS = {
@@ -122,6 +122,47 @@ function organisatorUrl(url: string | null | undefined, leadDomein: string): str
   } catch { return null; }
 }
 
+// Photon (OSM) kent ook gebouwen en zalen ("Sporthal De Meent, Huizen"), PDOK
+// alleen adressen. Alleen een treffer die zelf een gebouw/straat/adres is én
+// in de juiste plaats ligt telt; een plaats als treffer is een gok (centrum).
+async function photonExact(sb: any, q: string, cc: string, plaats: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const r = await fetch('https://photon.komoot.io/api/?limit=5&q=' + encodeURIComponent(q),
+      { headers: { Accept: 'application/json', 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl)' }, signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    for (const f of (await r.json())?.features || []) {
+      const pr = f?.properties || {};
+      if (cc && String(pr.countrycode || '').toLowerCase() !== cc) continue;
+      if (pr.osm_key === 'place' || ['city', 'town', 'village', 'district', 'county', 'state', 'country', 'locality'].includes(pr.type)) continue;
+      const c = f?.geometry?.coordinates;
+      if (!Array.isArray(c) || c.length < 2) continue;
+      const p = { lng: c[0], lat: c[1] };
+      if ((await toetsPlek(sb, p, plaats)).status === 'ok') return p;
+    }
+  } catch (_) { /* best-effort */ }
+  return null;
+}
+
+// Alleen een exacte plek; anders null (dan zet een mens de pin).
+async function locatie(sb: any, d: Item): Promise<{ lat: number; lng: number } | null> {
+  if (!d.city) return null;
+  if (d.lat != null && d.lng != null) {
+    const g = await borgPlek(sb, { lat: d.lat, lng: d.lng }, d.street, d.city);
+    if (g) return g;
+  }
+  if (d.street) {
+    const g = await veiligeGeocode(sb, [d.street, d.postcode].filter(Boolean).join(' '), d.city);
+    if (g && !g.bij_benadering) return { lat: g.lat, lng: g.lng };
+  }
+  const cc = (d.country || 'NL').toLowerCase();
+  for (const q of [[d.venue, d.street, d.city], [d.venue, d.city], [d.street, d.city]]) {
+    if (q.filter(Boolean).length < 2) continue;
+    const g = await photonExact(sb, q.filter(Boolean).join(', '), cc, d.city);
+    if (g) return g;
+  }
+  return null;
+}
+
 // ── Gemeenschappelijk itemformaat ──────────────────────────────────
 interface Item {
   ref: string; site: Site; leadUrl: string;
@@ -146,7 +187,10 @@ function vanJsonLd(ev: any, site: Site, ref: string, leadUrl: string): Item | nu
     dateEnd: end && end.slice(0, 10) !== start.slice(0, 10) ? end.slice(0, 10) : null,
     timeStart: tijd(start), timeEnd: tijd(end),
     venue: loc.name && loc.name !== addr.streetAddress ? decodeEntities(String(loc.name)).trim() : null,
-    street: String(addr.streetAddress || '').trim() || null,
+    street: (() => {
+      const st = String(addr.streetAddress || '').trim();
+      return st && norm(st.replace(/\(.*?\)/g, '')) !== norm(addr.addressLocality) && /\d|straat|weg|laan|plein|dijk|kade|singel|markt/i.test(st) ? st : null;
+    })(),
     postcode: String(addr.postalCode || '').trim() || null,
     city: String(addr.addressLocality || '').trim() || null,
     country: addr.addressCountry ? String(addr.addressCountry).toUpperCase().slice(0, 2) : null,
@@ -251,7 +295,7 @@ async function lijstRondsnuffelen(vandaag: string, diag: string[]): Promise<Kand
 }
 
 // ── Claude: herschrijven + classificeren ───────────────────────────
-interface AiItem { ref: string; titel?: string; beschrijving?: string; event_subtype?: string; is_particulier?: boolean; past_bij_yardigo?: boolean; }
+interface AiItem { ref: string; titel?: string; beschrijving?: string; event_subtype?: string; is_particulier?: boolean; past_bij_yardigo?: boolean; gegevens_kloppen?: boolean; }
 const AI_BATCH = 8;
 
 async function classify(key: string, items: Item[], diag: string[]): Promise<Map<string, AiItem>> {
@@ -272,15 +316,16 @@ async function classifyBatch(key: string, items: Item[], diag: string[]): Promis
   const system = [
     'Je verwerkt aankondigingen van tweedehands-verkopen voor YardiGo, een kaart met rommelmarkten, vlooienmarkten, opritverkopen en kofferbakverkopen in Nederland en België.',
     'Antwoord UITSLUITEND met één JSON-object: {"items":[...]}, geen tekst erbuiten.',
-    'Per item: {"ref": string, "titel": string, "beschrijving": string, "event_subtype": string, "is_particulier": bool, "past_bij_yardigo": bool}',
+    'Per item: {"ref": string, "titel": string, "beschrijving": string, "event_subtype": string, "is_particulier": bool, "past_bij_yardigo": bool, "gegevens_kloppen": bool}',
     '- titel: korte, nette titel (max 70 tekens), zonder datum en zonder hoofdletters-geschreeuw.',
     '- beschrijving: EIGEN formulering in het Nederlands, 1-2 zinnen, max 220 tekens. Nooit zinnen letterlijk overnemen. Geen telefoonnummers, e-mail of URLs, en geen datum of tijden (die staan al apart).',
     '- event_subtype: één van ' + [...SUBTYPES].join(', ') + '. opritverkoop = één huis; rommelroute/buurtverkoop = meerdere adressen in een buurt of dorp; anders de soort markt (snuffelmarkt/vlooienmarkt/jaarmarkt alleen als de bron dat woord gebruikt; kinderbeurs = kinderkleding-/speelgoedbeurs; kledingmarkt = kledingbeurs). Gemengde markt = de eerstgenoemde soort.',
     '- is_particulier: true als het een verkoop door een privépersoon bij huis is (garage sale, opruiming, verhuisverkoop, tuinverkoop). false bij een vereniging, kerk, school, bedrijf, gemeente of beroepsorganisator. Ook false bij een buurt-, wijk- of dorpsbrede garage sale of rommelroute met meerdere adressen.',
     '- past_bij_yardigo: true bij verkoop van tweedehands spullen door particulieren of op een markt (rommelmarkt, vlooienmarkt, brocante, kofferbak, kleding-/speelgoedbeurs, boekenmarkt, garage sale). false bij winkels, webshops, kringloopwinkels met gewone openingsdagen, verzamel-/platenbeurzen voor handelaren, kunstmarkten met nieuw werk, kermissen, braderieën zonder tweedehands, veilingen.',
+    '- gegevens_kloppen: false als de gegevens elkaar tegenspreken, bijvoorbeeld titel of tekst noemen een andere plaats of zaal dan plaats/locatie/adres, of een andere datum dan datum. Anders true. De titel mag dan geen plaatsnaam bevatten die niet bij plaats hoort.',
   ].join('\n');
   const user = JSON.stringify(items.map(d => ({
-    ref: d.ref, titel: d.title, organisator: d.organizerName, plaats: d.city, locatie: d.venue, tekst: d.rawDescription,
+    ref: d.ref, titel: d.title, datum: d.dateStart, organisator: d.organizerName, plaats: d.city, locatie: d.venue, adres: d.street, tekst: d.rawDescription,
   })));
   for (const model of ANTHROPIC_MODELS) {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -405,16 +450,10 @@ serve(async (req: Request) => {
     const subtype = bepaalSubtype(SUBTYPES.has(a.event_subtype || '') ? a.event_subtype : null, null, titel);
     const adres = [d.venue, d.street].filter(Boolean).join(', ') || null;
 
-    // Locatie: geo van de bron toetsen, anders exact adres; plaatscentrum alleen als noodgreep.
-    let lat = d.lat, lng = d.lng, bijBenadering = false;
-    if (lat != null && lng != null) {
-      const g = await borgPlek(sb, { lat, lng }, d.street, d.city);
-      lat = g?.lat ?? null; lng = g?.lng ?? null;
-    }
-    if (lat == null || lng == null) {
-      const g = await veiligeGeocode(sb, d.street ? [d.street, d.postcode].filter(Boolean).join(' ') : null, d.city);
-      if (g) { lat = g.lat; lng = g.lng; bijBenadering = g.bij_benadering; }
-    }
+    // Locatie: alleen exact (bron-geo, adres of zaal). Nooit een plaatscentrum
+    // opslaan: resolve-source zou zo'n rij later met een gok-pin publiceren.
+    const plek = await locatie(sb, d);
+    const lat = plek?.lat ?? null, lng = plek?.lng ?? null;
 
     const h = await sb.rpc('discovery_content_hash', { p_title: titel, p_date: d.dateStart, p_city: d.city });
     if (h.error) { s.errors.push('hash: ' + h.error.message); continue; }
@@ -446,7 +485,7 @@ serve(async (req: Request) => {
       organizer_name: d.organizerName, organizer_url: d.organizerUrl,
       is_private_seller: typeof a.is_particulier === 'boolean' ? a.is_particulier : null,
       external_ref: d.ref,
-      raw_ai_response: { ai: a, venue: d.venue, postcode: d.postcode, country: d.country, street_full: d.street, locatie_bij_benadering: bijBenadering },
+      raw_ai_response: { ai: a, venue: d.venue, postcode: d.postcode, country: d.country, street_full: d.street, },
       status: isPart ? 'tip' : 'nieuw',
     };
 
@@ -458,12 +497,12 @@ serve(async (req: Request) => {
     }
 
     const check = autoCheck({ id: 0, ...row }, a.past_bij_yardigo === true);
-    if (bijBenadering) { check.redenen.push('locatie bij benadering'); check.ok = false; }
+    if (a.gegevens_kloppen === false) { check.redenen.push('bron spreekt zichzelf tegen'); check.ok = false; }
     row.auto_check = check;
     if (dryRun) {
       s.ingevoegd++; check.ok ? s.gepubliceerd++ : (isPart ? s.tips++ : s.wachtrij++);
       (s.preview ||= []).push({ ref: d.ref, titel, desc: row.description, subtype, datum: d.dateStart, tijd: [d.timeStart, d.timeEnd],
-        plaats: d.city, adres: row.address, ll: [lat, lng], benadering: bijBenadering, org: d.organizerName, web: d.organizerUrl,
+        plaats: d.city, adres: row.address, ll: [lat, lng], org: d.organizerName, web: d.organizerUrl,
         past: a.past_bij_yardigo, uitkomst: check.ok ? 'live' : isPart ? 'tip' : 'wachtrij', redenen: check.redenen });
       continue;
     }
