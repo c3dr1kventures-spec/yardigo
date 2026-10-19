@@ -2948,6 +2948,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       </button>
     </div>
 
+    <!-- Tip insturen zonder account (Fase 2): affiche → telegram-bot?tip → wachtrij -->
+    <div style="padding:14px 16px 0">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg2);border:1.5px solid var(--border);border-radius:14px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800;color:var(--text)" data-i18n="tip.home_title">📮 Mis je een markt?</div>
+          <div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px" data-i18n="tip.home_sub">Stuur de affiche of flyer in, ook zonder account. Wij zetten hem op de kaart.</div>
+        </div>
+        <button onclick="openTipModal()" style="flex-shrink:0;background:var(--terra);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer" data-i18n="tip.home_btn">Tip insturen</button>
+      </div>
+    </div>
+
     <!-- Desktop layout: posts links (70%), sidebar rechts (30%) met ads en uitgelicht.
          Op mobiel zit alles gewoon in één kolom. -->
     <div class="home-content-grid">
@@ -3470,6 +3481,35 @@ body.dark .bv-addr-row:active { background: var(--bg); }
       <!-- Alleen zichtbaar na post-publish modal: optie om dit modal voortaan over te slaan -->
       <div id="share-publish-skip-row" style="display:none;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);text-align:center">
         <button onclick="dismissPostPublishShare()" style="background:none;border:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:11.5px;cursor:pointer;text-decoration:underline" data-i18n="share.publish_dismiss">Sluiten en niet meer tonen na publiceren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ TIP overlay (affiche insturen zonder account) ═══════════ -->
+<div class="overlay" id="tipOv" onclick="if(event.target===this)closeTipModal()">
+  <div class="sheet" style="max-height:92vh;max-width:520px">
+    <div class="sheet-handle"></div>
+    <div style="padding:18px 22px 28px">
+      <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px" data-i18n="tip.title">📮 Tip een markt</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.55" data-i18n="tip.intro">Maak een foto van de affiche of flyer. Wij lezen de gegevens uit en zetten de markt na een korte controle op de kaart.</div>
+      <div id="tip-form-wrap">
+        <button type="button" onclick="document.getElementById('tip-file').click()" style="width:100%;padding:11px;border-radius:10px;border:2px dashed var(--terra);background:#FDF0E7;color:#A04A18;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer" data-i18n="tip.pick">📷 Kies foto van affiche</button>
+        <input type="file" id="tip-file" accept="image/*" style="display:none" onchange="tipPickFile(this)">
+        <img id="tip-thumb" alt="" style="display:none;margin-top:10px;max-height:160px;max-width:100%;border-radius:10px;border:1px solid var(--border)">
+        <label style="display:block;margin-top:12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px" data-i18n="tip.text_label">Extra info (optioneel)</label>
+        <textarea id="tip-text" maxlength="600" rows="2" data-i18n-placeholder="tip.text_ph" placeholder="Bijv. een link naar de organisator" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;margin-top:4px;resize:vertical"></textarea>
+        <input type="text" id="tip-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <div style="font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.5" data-i18n="tip.privacy">De foto wordt door AI gelezen. Zet er geen persoonlijke gegevens van jezelf bij; we vragen geen naam of e-mail.</div>
+        <div id="tip-msg" style="display:none;margin-top:10px;font-size:12px;font-weight:600;line-height:1.5"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button onclick="closeTipModal()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="tip.cancel">Annuleren</button>
+          <button id="tip-send" onclick="submitTip()" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--terra);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer" data-i18n="tip.send">Versturen</button>
+        </div>
+      </div>
+      <div id="tip-done" style="display:none">
+        <div id="tip-done-text" style="background:#F0F6F2;border:1.5px solid #C7DFCF;border-radius:10px;padding:14px;font-size:13px;font-weight:600;color:#2C4A36;line-height:1.6"></div>
+        <button onclick="closeTipModal()" style="width:100%;margin-top:14px;padding:11px;border-radius:10px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer">OK</button>
       </div>
     </div>
   </div>
@@ -4932,6 +4972,24 @@ var I18N = {
     'detail.contact_call': "Bellen",
     'detail.contact_mail': "Mailen",
     'detail.contact_none': "Geen contactgegevens bekend.",
+    'tip.home_title': "📮 Mis je een markt?",
+    'tip.home_sub': "Stuur de affiche of flyer in, ook zonder account. Wij zetten hem op de kaart.",
+    'tip.home_btn': "Tip insturen",
+    'tip.title': "📮 Tip een markt",
+    'tip.intro': "Maak een foto van de affiche of flyer. Wij lezen de gegevens uit en zetten de markt na een korte controle op de kaart.",
+    'tip.pick': "📷 Kies foto van affiche",
+    'tip.text_label': "Extra info (optioneel)",
+    'tip.text_ph': "Bijv. een link naar de organisator",
+    'tip.privacy': "De foto wordt door AI gelezen. Zet er geen persoonlijke gegevens van jezelf bij; we vragen geen naam of e-mail.",
+    'tip.send': "Versturen",
+    'tip.cancel': "Annuleren",
+    'tip.sending': "Bezig met lezen…",
+    'tip.ok': "✓ Bedankt! We bekijken je tip en zetten hem zo snel mogelijk op de kaart.",
+    'tip.exists': "Deze markt staat al op YardiGo. Bedankt!",
+    'tip.err_unread': "We konden hierin geen markt vinden. Is de tekst goed leesbaar?",
+    'tip.err_limit': "Je hebt al veel tips gestuurd. Probeer het later opnieuw.",
+    'tip.err_generic': "Versturen lukte niet. Probeer het opnieuw.",
+    'tip.need_photo': "Kies eerst een foto, of beschrijf de markt in het tekstvak.",
     'claim.title': "✨ Claim deze vermelding",
     'claim.intro': "Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.",
     'claim.field_name': "Jouw naam *",
@@ -5626,6 +5684,24 @@ var I18N = {
     'detail.contact_call': "Call",
     'detail.contact_mail': "Email",
     'detail.contact_none': "No contact details known.",
+    'tip.home_title': "📮 Missing a market?",
+    'tip.home_sub': "Send us the poster or flyer, no account needed. We'll put it on the map.",
+    'tip.home_btn': "Send a tip",
+    'tip.title': "📮 Tip us a market",
+    'tip.intro': "Take a photo of the poster or flyer. We read the details and add the market to the map after a quick check.",
+    'tip.pick': "📷 Choose photo of poster",
+    'tip.text_label': "Extra info (optional)",
+    'tip.text_ph': "E.g. a link to the organiser",
+    'tip.privacy': "The photo is read by AI. Please don't include personal details about yourself; we don't ask for your name or email.",
+    'tip.send': "Send",
+    'tip.cancel': "Cancel",
+    'tip.sending': "Reading…",
+    'tip.ok': "✓ Thanks! We'll review your tip and add it to the map as soon as possible.",
+    'tip.exists': "This market is already on YardiGo. Thanks!",
+    'tip.err_unread': "We couldn't find a market in this. Is the text clearly readable?",
+    'tip.err_limit': "You've sent a lot of tips. Please try again later.",
+    'tip.err_generic': "Sending failed. Please try again.",
+    'tip.need_photo': "Choose a photo first, or describe the market in the text box.",
     'claim.title': "✨ Claim this listing",
     'claim.intro': "Are you the organizer? Fill in your details. Our admin verifies claims within 2 business days. Once approved you can add photos and extra info.",
     'claim.field_name': "Your name *",
@@ -6320,6 +6396,24 @@ var I18N = {
     'detail.contact_call': "Appeler",
     'detail.contact_mail': "E-mail",
     'detail.contact_none': "Aucune coordonnée connue.",
+    'tip.home_title': "📮 Il manque un marché ?",
+    'tip.home_sub': "Envoie-nous l'affiche ou le flyer, sans compte. Nous l'ajoutons à la carte.",
+    'tip.home_btn': "Envoyer",
+    'tip.title': "📮 Signaler un marché",
+    'tip.intro': "Prends en photo l'affiche ou le flyer. Nous lisons les informations et ajoutons le marché à la carte après une rapide vérification.",
+    'tip.pick': "📷 Choisir une photo de l'affiche",
+    'tip.text_label': "Infos supplémentaires (facultatif)",
+    'tip.text_ph': "Par ex. un lien vers l'organisateur",
+    'tip.privacy': "La photo est lue par une IA. N'y ajoute pas de données personnelles te concernant ; nous ne demandons ni nom ni e-mail.",
+    'tip.send': "Envoyer",
+    'tip.cancel': "Annuler",
+    'tip.sending': "Lecture en cours…",
+    'tip.ok': "✓ Merci ! Nous examinons ton signalement et l'ajoutons à la carte dès que possible.",
+    'tip.exists': "Ce marché est déjà sur YardiGo. Merci !",
+    'tip.err_unread': "Nous n'avons trouvé aucun marché ici. Le texte est-il bien lisible ?",
+    'tip.err_limit': "Tu as déjà envoyé beaucoup de signalements. Réessaie plus tard.",
+    'tip.err_generic': "L'envoi a échoué. Réessaie.",
+    'tip.need_photo': "Choisis d'abord une photo, ou décris le marché dans la zone de texte.",
     'claim.title': "✨ Revendiquer cette annonce",
     'claim.intro': "Êtes-vous l'organisateur ? Remplissez vos coordonnées. Notre admin vérifie les revendications dans les 2 jours ouvrables. Une fois approuvée, vous pourrez ajouter des photos et infos.",
     'claim.field_name': "Votre nom *",
@@ -7012,6 +7106,24 @@ var I18N = {
     'detail.contact_call': "Anrufen",
     'detail.contact_mail': "E-Mail",
     'detail.contact_none': "Keine Kontaktdaten bekannt.",
+    'tip.home_title': "📮 Fehlt ein Markt?",
+    'tip.home_sub': "Schick uns das Plakat oder den Flyer, auch ohne Konto. Wir setzen ihn auf die Karte.",
+    'tip.home_btn': "Tipp senden",
+    'tip.title': "📮 Markt melden",
+    'tip.intro': "Fotografiere das Plakat oder den Flyer. Wir lesen die Angaben aus und setzen den Markt nach einer kurzen Prüfung auf die Karte.",
+    'tip.pick': "📷 Foto vom Plakat wählen",
+    'tip.text_label': "Zusätzliche Infos (optional)",
+    'tip.text_ph': "Z. B. ein Link zum Veranstalter",
+    'tip.privacy': "Das Foto wird von einer KI gelesen. Füge keine persönlichen Daten über dich hinzu; wir fragen nicht nach Name oder E-Mail.",
+    'tip.send': "Senden",
+    'tip.cancel': "Abbrechen",
+    'tip.sending': "Wird gelesen…",
+    'tip.ok': "✓ Danke! Wir prüfen deinen Tipp und setzen ihn so schnell wie möglich auf die Karte.",
+    'tip.exists': "Dieser Markt ist schon auf YardiGo. Danke!",
+    'tip.err_unread': "Wir konnten hier keinen Markt finden. Ist der Text gut lesbar?",
+    'tip.err_limit': "Du hast schon viele Tipps gesendet. Versuche es später noch einmal.",
+    'tip.err_generic': "Senden fehlgeschlagen. Bitte versuche es erneut.",
+    'tip.need_photo': "Wähle zuerst ein Foto oder beschreibe den Markt im Textfeld.",
     'claim.title': "✨ Diesen Eintrag beanspruchen",
     'claim.intro': "Bist du der Organisator? Trage deine Daten ein. Unser Admin prüft den Anspruch innerhalb von 2 Werktagen. Nach Genehmigung kannst du Fotos und weitere Infos hinzufügen.",
     'claim.field_name': "Dein Name *",
@@ -11143,6 +11255,74 @@ function openClaimModal() {
   document.getElementById('claim-form-wrap').style.display = '';
   document.getElementById('claim-result-wrap').style.display = 'none';
   document.getElementById('claimOv').classList.add('open');
+}
+
+// ── Tip insturen zonder account ─────────────────────────────────────
+// Gaat naar telegram-bot?tip: parse-event, dubbelcheck, wachtrij; Christian
+// keurt hem in Telegram goed. Geen login, rem zit server-side (per IP).
+var _tipImage = null;
+function openTipModal() {
+  _tipImage = null;
+  document.getElementById('tip-file').value = '';
+  document.getElementById('tip-text').value = '';
+  document.getElementById('tip-website').value = '';
+  var th = document.getElementById('tip-thumb'); th.style.display = 'none'; th.src = '';
+  document.getElementById('tip-msg').style.display = 'none';
+  document.getElementById('tip-form-wrap').style.display = '';
+  document.getElementById('tip-done').style.display = 'none';
+  var b = document.getElementById('tip-send'); b.disabled = false; b.textContent = i18n('tip.send', 'Versturen');
+  document.getElementById('tipOv').classList.add('open');
+}
+function closeTipModal() {
+  document.getElementById('tipOv').classList.remove('open');
+}
+async function tipPickFile(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  try {
+    _tipImage = await ygAiResizeForParse(file, 1600);
+    var th = document.getElementById('tip-thumb');
+    th.src = 'data:' + _tipImage.media_type + ';base64,' + _tipImage.data;
+    th.style.display = 'block';
+    document.getElementById('tip-msg').style.display = 'none';
+  } catch (e) {
+    _tipImage = null;
+    tipMelding(i18n('tip.err_generic', 'Versturen lukte niet. Probeer het opnieuw.'));
+  }
+}
+function tipMelding(t) {
+  var m = document.getElementById('tip-msg');
+  m.textContent = t; m.style.color = '#C5612A'; m.style.display = 'block';
+}
+async function submitTip() {
+  var tekst = document.getElementById('tip-text').value.trim();
+  if (!_tipImage && tekst.length < 20) { tipMelding(i18n('tip.need_photo', 'Kies eerst een foto, of beschrijf de markt in het tekstvak.')); return; }
+  var b = document.getElementById('tip-send');
+  b.disabled = true; b.textContent = i18n('tip.sending', 'Bezig met lezen…');
+  try {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/telegram-bot?tip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ text: tekst || undefined, image: _tipImage || undefined,
+                             website: document.getElementById('tip-website').value || undefined })
+    });
+    var j = await res.json().catch(function() { return {}; });
+    if (j.ok) {
+      document.getElementById('tip-done-text').textContent = j.status === 'bestaat_al'
+        ? i18n('tip.exists', 'Deze markt staat al op YardiGo. Bedankt!')
+        : i18n('tip.ok', '✓ Bedankt! We bekijken je tip en zetten hem zo snel mogelijk op de kaart.');
+      document.getElementById('tip-form-wrap').style.display = 'none';
+      document.getElementById('tip-done').style.display = '';
+      return;
+    }
+    tipMelding(j.reason === 'niet_gelezen' ? i18n('tip.err_unread', 'We konden hierin geen markt vinden. Is de tekst goed leesbaar?')
+      : (j.reason === 'limiet' || j.reason === 'vol') ? i18n('tip.err_limit', 'Je hebt al veel tips gestuurd. Probeer het later opnieuw.')
+      : j.reason === 'leeg' ? i18n('tip.need_photo', 'Kies eerst een foto, of beschrijf de markt in het tekstvak.')
+      : i18n('tip.err_generic', 'Versturen lukte niet. Probeer het opnieuw.'));
+  } catch (e) {
+    tipMelding(i18n('tip.err_generic', 'Versturen lukte niet. Probeer het opnieuw.'));
+  }
+  b.disabled = false; b.textContent = i18n('tip.send', 'Versturen');
 }
 
 function closeClaimModal() {
