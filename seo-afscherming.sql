@@ -37,3 +37,6 @@ end $$;
 
 revoke all on function public.get_listings_seo_build(text) from public;
 grant execute on function public.get_listings_seo_build(text) to anon, authenticated;
+
+-- Stap 2 uitgevoerd 19 okt 2026 (na geslaagde Vercel-build met de nieuwe functie):
+-- revoke execute on function public.get_listings_seo() from public, anon, authenticated;

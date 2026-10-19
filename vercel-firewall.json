@@ -1,0 +1,93 @@
+{
+  "_uitleg": "Vercel-firewall yardigo (19 okt 2026). Ingesteld via vercel api PATCH /v1/security/firewall/config. Alleen ter documentatie; de echte stand staat in Vercel.",
+  "managedRules": {
+    "ai_bots": {
+      "active": true,
+      "action": "deny"
+    },
+    "bot_protection": {
+      "active": true,
+      "action": "challenge"
+    }
+  },
+  "rules": [
+    {
+      "name": "Linkvoorbeelden social media toestaan",
+      "description": "WhatsApp/Facebook/Telegram e.d. mogen deellinks en afbeeldingen ophalen (anders geen voorbeeld bij delen)",
+      "active": true,
+      "conditionGroup": [
+        {
+          "conditions": [
+            {
+              "op": "re",
+              "type": "user_agent",
+              "value": "facebookexternalhit|Facebot|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|redditbot|Iframely|Signal"
+            },
+            {
+              "op": "re",
+              "type": "path",
+              "value": "^/(v|s|api)/"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "op": "re",
+              "type": "user_agent",
+              "value": "facebookexternalhit|Facebot|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|redditbot|Iframely|Signal"
+            },
+            {
+              "op": "re",
+              "type": "path",
+              "value": "\\.(png|jpe?g|webp)$"
+            }
+          ]
+        }
+      ],
+      "action": {
+        "mitigate": {
+          "action": "bypass"
+        }
+      }
+    },
+    {
+      "name": "Scrapers afremmen (pagina's per IP)",
+      "description": "Max 120 paginaverzoeken per minuut per IP; zoekmachines uitgezonderd. Statische bestanden tellen niet mee.",
+      "active": true,
+      "conditionGroup": [
+        {
+          "conditions": [
+            {
+              "neg": true,
+              "op": "re",
+              "type": "path",
+              "value": "\\.(js|css|png|jpe?g|webp|svg|ico|woff2?|json|webmanifest|map)$"
+            },
+            {
+              "neg": true,
+              "op": "re",
+              "type": "user_agent",
+              "value": "Googlebot|bingbot|Applebot|DuckDuckBot|YandexBot"
+            }
+          ]
+        }
+      ],
+      "action": {
+        "mitigate": {
+          "action": "rate_limit",
+          "actionDuration": "5m",
+          "rateLimit": {
+            "action": "rate_limit",
+            "algo": "fixed_window",
+            "keys": [
+              "ip"
+            ],
+            "limit": 120,
+            "window": 60
+          }
+        }
+      }
+    }
+  ]
+}
