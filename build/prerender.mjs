@@ -679,8 +679,20 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
   return { nl: xml(per[BASE_URL]), be: xml(per[BASE_URL_BE]), aantallen: { nl: per[BASE_URL].length, be: per[BASE_URL_BE].length } };
 }
 
+// Zoekmachines (Google, Bing, Apple, DuckDuckGo) en AI-zoekdiensten die
+// bezoekers doorsturen mogen alles lezen. AI-trainingscrawlers en
+// SEO-/datascrapers niet: die nemen ons aanbod over zonder iets terug te geven.
+// Let op: robots.txt is een verzoek; nette bots houden zich eraan, kwaadwillende niet.
+const GEBLOKKEERDE_BOTS = [
+  'GPTBot', 'ClaudeBot', 'anthropic-ai', 'CCBot', 'Google-Extended', 'Applebot-Extended',
+  'Bytespider', 'meta-externalagent', 'FacebookBot', 'Amazonbot', 'cohere-ai', 'cohere-training-data-crawler',
+  'Diffbot', 'ImagesiftBot', 'Omgilibot', 'Omgili', 'Timpibot', 'Webzio-Extended', 'AI2Bot', 'img2dataset',
+  'AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot', 'DataForSeoBot', 'BLEXBot', 'PetalBot', 'SeekportBot', 'Scrapy',
+];
+
 function buildRobotsTxt() {
-  return `User-agent: *
+  return GEBLOKKEERDE_BOTS.map((b) => `User-agent: ${b}\nDisallow: /\n`).join('\n') + `
+User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /bevestig.html
