@@ -1227,7 +1227,8 @@ body.dark .hpc-form textarea{background:var(--bg2);color:var(--text);}
 .adm-upload-status{font-size:11px;color:var(--muted);}
 
 /* ── MAP ── */
-#map{height:calc(100svh - 230px);min-height:280px;width:100%;touch-action:none;}
+/* isolation: Leaflet-lagen (z-index 400+) blijven binnen de kaart, anders vallen de filtermenu's erachter */
+#map{height:calc(100svh - 230px);min-height:280px;width:100%;touch-action:none;isolation:isolate;}
 
 /* ── LIST ── */
 .list-wrap{padding:12px;}
