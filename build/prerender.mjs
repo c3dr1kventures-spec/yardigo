@@ -32,6 +32,9 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ||
 // dat we in index.html zetten (https://www.yardigo.nl/). Een mismatch zou
 // Google twijfel geven over welke versie van de URL geïndexeerd moet worden.
 const BASE_URL = process.env.BASE_URL || 'https://www.yardigo.nl';
+// Geheime sleutel voor get_listings_seo_build (alleen in Vercel-env; zie
+// seo-afscherming.sql). Zonder sleutel kan niemand de volledige set ophalen.
+const SEO_BUILD_KEY = process.env.SEO_BUILD_KEY || '';
 const BASE_URL_BE = 'https://www.yardigo.be';
 const DEFAULT_OG_IMAGE = BASE_URL + '/og-image.png';
 
@@ -111,12 +114,13 @@ function cityFromAddress(addr, city) {
 }
 
 async function fetchListings() {
+  if (!SEO_BUILD_KEY) throw new Error('SEO_BUILD_KEY ontbreekt (Vercel-env of lokaal: export SEO_BUILD_KEY=...)');
   // Via RPC: adres/coördinaten van particuliere verkopen komen er server-side al
   // verborgen/verschoven uit (zie privacy-lockdown.sql).
   // De API geeft maximaal 1000 rijen per keer; daarom in porties ophalen.
   const data = [];
   for (let offset = 0; ; offset += 1000) {
-    const url = `${SUPABASE_URL}/rest/v1/rpc/get_listings_seo?limit=1000&offset=${offset}`;
+    const url = `${SUPABASE_URL}/rest/v1/rpc/get_listings_seo_build?limit=1000&offset=${offset}`;
     // Mislukt ophalen = build laten falen: dan blijft de vorige deploy live
     // in plaats van een site met 0 verkopen en een lege sitemap.
     let deel = null;
@@ -124,7 +128,7 @@ async function fetchListings() {
       const res = await fetch(url, {
         method: 'POST',
         headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
-        body: '{}',
+        body: JSON.stringify({ p_sleutel: SEO_BUILD_KEY }),
       });
       if (res.ok) { deel = await res.json(); break; }
       console.warn(`  listings ophalen mislukt (poging ${poging}):`, res.status, (await res.text()).slice(0, 200));
