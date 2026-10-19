@@ -85,7 +85,7 @@ async function setCfg(sb: any, key: string, value: string) {
 }
 
 // ── Kaartje ────────────────────────────────────────────────────────
-const PENDING_COLS = 'id,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url';
+const PENDING_COLS = 'id,discovered_via_query,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url';
 
 function datumNl(d: string | null): string {
   if (!d) return '?';
@@ -100,6 +100,7 @@ function heeftContact(p: any): boolean {
 function kaartTekst(p: any): string {
   const tijd = p.time_start ? ` ${String(p.time_start).slice(0, 5)}${p.time_end ? '–' + String(p.time_end).slice(0, 5) : ''}` : '';
   const regels = [
+    ...(p.discovered_via_query === TIP_VIA ? ['📮 <b>Tip via de website, zonder account</b>'] : []),
     `${p.is_private_seller ? '🏠' : '🎪'} <b>${esc(p.title)}</b>`,
     `📅 ${datumNl(p.date_start)}${p.date_end ? ' t/m ' + datumNl(p.date_end) : ''}${tijd}`,
     `📍 ${esc(p.city || '?')}${p.address ? ' — ' + esc(p.address) : ''}${p.latitude == null ? ' ⚠️ geen coördinaten' : ''}`,
@@ -376,7 +377,7 @@ async function bestaandItem(sb: any, ref: any, contact: { url: string | null; te
 }
 
 // Affiche/tekst → parse-event → geocode → dedupe → pending_events.
-async function maakItem(sb: any, tekst: string, image: { data: string; media_type: string } | null): Promise<Maak> {
+async function maakItem(sb: any, tekst: string, image: { data: string; media_type: string } | null, via = 'telegram'): Promise<Maak> {
   // Alleen een (Facebook-)link gedeeld? Haal de openbare preview op: tekst + afbeelding.
   const link = contactUitTekst(tekst).url;
   let parseTekst = tekst;
@@ -422,9 +423,9 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
     date_start: e.datum, time_start: e.starttijd, time_end: e.eindtijd,
     city: e.plaats, address: e.adres,
     latitude: geo?.lat ?? null, longitude: geo?.lng ?? null,
-    source_url: orgUrl || 'telegram', source_domain: orgUrl ? domainOf(orgUrl) : 'telegram',
+    source_url: orgUrl || via, source_domain: orgUrl ? domainOf(orgUrl) : via,
     source_label: e.bron_naam, source_status: orgUrl ? 'origineel' : 'onbekend',
-    discovered_via_query: 'telegram', content_hash: h.data || randomHex(16),
+    discovered_via_query: via, content_hash: h.data || randomHex(16),
     organizer_name: e.bron_naam, organizer_url: orgUrl,
     contact_phone: ct.tel, contact_email: ct.mail,
     is_private_seller: isPart, status: isPart ? 'tip' : 'nieuw',
@@ -944,9 +945,74 @@ async function api(sb: any, req: Request): Promise<Response> {
   return apiJson({ error: 'onbekende op' }, 400);
 }
 
+// ── Tip via de website (zonder account) ────────────────────────────
+// Openbaar: iedereen kan een affiche/flyer insturen. Gaat altijd naar de
+// wachtrij (nooit direct live) en het kaartje in Telegram zegt erbij dat het
+// van een anonieme bezoeker komt. Rem op de kosten (elke tip is een AI-call):
+// per IP 5/uur en 10/dag, en alle tips samen 100/dag. Het IP wordt niet
+// bewaard: alleen een gezouten hash, als uuid in ai_parse_usage (prefix
+// a0000000 zodat tips te onderscheiden zijn van ingelogde gebruikers).
+const TIP_VIA = 'website-tip';
+const TIP_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'content-type, apikey, authorization, x-client-info',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const TIP_MEDIA = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+function tipJson(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...TIP_CORS } });
+}
+
+async function tipLimiet(sb: any, req: Request): Promise<string | null> {
+  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'onbekend';
+  const zout = (await cfg(sb, 'cron_secret')) ?? '';
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(zout + '|tip|' + ip));
+  const h = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const id = `a0000000-${h.slice(0, 4)}-${h.slice(4, 8)}-${h.slice(8, 12)}-${h.slice(12, 24)}`;
+  const uur = new Date(Date.now() - 3600e3).toISOString();
+  const dag = new Date(Date.now() - 86400e3).toISOString();
+  const tel = async (q: any) => (await q).count ?? 0;
+  const basis = () => sb.from('ai_parse_usage').select('id', { count: 'exact', head: true });
+  if (await tel(basis().gte('user_id', 'a0000000-0000-0000-0000-000000000000')
+    .lte('user_id', 'a0000000-ffff-ffff-ffff-ffffffffffff').gte('created_at', dag)) >= 100) return 'vol';
+  if (await tel(basis().eq('user_id', id).gte('created_at', dag)) >= 10) return 'limiet';
+  if (await tel(basis().eq('user_id', id).gte('created_at', uur)) >= 5) return 'limiet';
+  await sb.from('ai_parse_usage').insert({ user_id: id });
+  return null;
+}
+
+async function tip(sb: any, req: Request): Promise<Response> {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: TIP_CORS });
+  const body = await req.json().catch(() => null);
+  if (!body) return tipJson({ ok: false, reason: 'ongeldig' }, 400);
+  if (body.website) return tipJson({ ok: true, status: 'ontvangen' });   // honeypot: bots vullen alles in
+  const tekst = String(body.text || '').slice(0, 2000).trim();
+  const img = body.image;
+  const image = img && typeof img.data === 'string' && TIP_MEDIA.has(img.media_type) && img.data.length < 7_000_000
+    ? { data: img.data, media_type: img.media_type } : null;
+  if (!image && tekst.length < 20) return tipJson({ ok: false, reason: 'leeg' }, 400);
+  const limiet = await tipLimiet(sb, req);
+  if (limiet) return tipJson({ ok: false, reason: limiet }, 429);
+
+  const r = await maakItem(sb, tekst, image, TIP_VIA);
+  if (r.ok) {
+    const chat = await cfg(sb, 'telegram_admin_chat');
+    if (chat) await stuurKaart(sb, chat, r.row);
+    return tipJson({ ok: true, status: 'ontvangen' });
+  }
+  if (r.dup && r.dup.kind !== 'afgewezen') return tipJson({ ok: true, status: 'bestaat_al', title: r.dup.title, url: r.dup.kind === 'live' ? r.dup.url : null });
+  if (r.dup) return tipJson({ ok: true, status: 'ontvangen' });
+  return tipJson({ ok: false, reason: 'niet_gelezen' });
+}
+
 // ── Main ───────────────────────────────────────────────────────────
 serve(async (req: Request) => {
   const url = new URL(req.url);
+  if (url.searchParams.has('tip')) {
+    if (req.method !== 'POST' && req.method !== 'OPTIONS') return tipJson({ error: 'Method not allowed' }, 405);
+    if (!TOKEN) return tipJson({ error: 'niet beschikbaar' }, 500);
+    return tip(createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } }), req);
+  }
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   if (!TOKEN) return json({ error: 'TELEGRAM_BOT_TOKEN ontbreekt' }, 500);
