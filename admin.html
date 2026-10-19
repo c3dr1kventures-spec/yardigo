@@ -366,6 +366,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
 
   <div class="nav">
     <div class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-tab" onclick="switchTab('dekking',this)">🗺️ Dekking</div>
     <div class="nav-tab" onclick="switchTab('analytics',this)">📈 Analytics</div>
     <div class="nav-tab" id="nav-moderation" onclick="switchTab('moderation',this)">🔔 Moderatie <span class="tab-badge" id="pending-badge" style="display:none">0</span></div>
     <div class="nav-tab" onclick="switchTab('listings',this)">📋 Advertenties</div>
@@ -395,6 +396,15 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel"><div class="panel-title">Top favorieten <span>meest opgeslagen</span></div><div id="fav-list"><div class="spinner"></div></div></div>
         <div class="panel"><div class="panel-title">Conversietrechter <span>gebruikersreis</span></div><div id="funnel-list"><div class="spinner"></div></div></div>
         <div class="panel" style="grid-column:1/-1"><div class="panel-title">Recente advertenties <span id="recent-subtitle"></span></div><div id="recent-list"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ════ DEKKING (Fase 2: belangrijkste KPI) ════ -->
+    <div class="tab-pane" id="tab-dekking">
+      <div class="stat-grid" id="dek-stats"><div class="stat-card"><div class="spinner"></div></div></div>
+      <div class="dash-grid">
+        <div class="panel"><div class="panel-title">Per provincie <span id="dek-weekend-label"></span></div><div id="dek-prov"><div class="spinner"></div></div></div>
+        <div class="panel"><div class="panel-title">Witte vlekken <span>20.000+ inwoners, niets binnen 10 km in 30 dagen</span></div><div id="dek-vlekken" style="max-height:520px;overflow-y:auto;overflow-x:hidden"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -1449,6 +1459,7 @@ function switchTab(name,el){
   if(name==='moderation') renderModerationTable();
   if(name==='errors') loadErrors();
   if(name==='analytics') loadAnalytics();
+  if(name==='dekking') loadDekking();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
   if(name==='reviews') loadReviews();
   if(name==='guestbook') loadGuestbookAdmin();
@@ -2029,6 +2040,48 @@ function extractCityFromAddress(addr){
   var cand=parts[i].replace(/^\d{4}\s?[A-Z]{0,2}\s+/i,'').trim();
   return cand.length>1?cand:null;
 }
+// ══════════════════════════════════════════════════
+// DEKKING: aanbod per provincie, witte vlekken, bron-mix (rpc admin_dekking)
+// ══════════════════════════════════════════════════
+var PROV_NAMEN={'noord-brabant':'Noord-Brabant','zuid-holland':'Zuid-Holland','noord-holland':'Noord-Holland',
+  'limburg':'Limburg','overijssel':'Overijssel','gelderland':'Gelderland','groningen':'Groningen','utrecht':'Utrecht',
+  'friesland':'Friesland','zeeland':'Zeeland','drenthe':'Drenthe','flevoland':'Flevoland',
+  'antwerpen':'Antwerpen','oost-vlaanderen':'Oost-Vlaanderen','west-vlaanderen':'West-Vlaanderen',
+  'vlaams-brabant':'Vlaams-Brabant','belgisch-limburg':'Limburg (BE)','brussel':'Brussel','henegouwen':'Henegouwen',
+  'luik':'Luik','namen':'Namen','waals-brabant':'Waals-Brabant','belgisch-luxemburg':'Luxemburg (BE)'};
+function dekVlag(cc){return cc==='be'?'🇧🇪':'🇳🇱';}
+async function loadDekking(){
+  var res=await sb.rpc('admin_dekking');
+  if(res.error){
+    document.getElementById('dek-stats').innerHTML='<div class="stat-card warn"><div class="s-label">Fout</div><div class="s-sub">'+escapeHtml(res.error.message)+'</div></div>';
+    return;
+  }
+  var d=res.data, mix=d.bron_mix||{}, totaal=(mix.organisator||0)+(mix.import||0)+(mix.flyer||0);
+  function pct(n){return totaal?Math.round((n||0)/totaal*100)+'%':'0%';}
+  var fmt=function(iso){return new Date(iso+'T12:00:00').toLocaleDateString('nl-NL',{day:'numeric',month:'short'});};
+  var wk=fmt(d.weekend.van)+' t/m '+fmt(d.weekend.tot);
+  var pend=d.pending||{};
+  document.getElementById('dek-stats').innerHTML=
+    statCard('Komend weekend',d.totaal_weekend,wk,'accent')+
+    statCard('Komende 30 dagen',d.totaal_30,'Actieve listings','')+
+    statCard('Te beoordelen',pend.events||0,(pend.tips||0)+' tips · '+(pend.listings||0)+' listings',(pend.events||0)>50?'warn':'')+
+    statCard('Van organisatoren',pct(mix.organisator),'Import '+pct(mix.import)+' · flyer '+pct(mix.flyer),(mix.organisator||0)<totaal/10?'warn':'green');
+  document.getElementById('dek-weekend-label').textContent='weekend '+wk+' · 30 dagen';
+  var prov=d.per_provincie||[], mx=Math.max(1,...prov.map(function(p){return p.dertig_dagen;}));
+  document.getElementById('dek-prov').innerHTML=prov.map(function(p){
+    var w=Math.round(p.dertig_dagen/mx*100), leeg=p.weekend===0;
+    return '<div class="city-row"><div class="city-name" style="width:150px;flex-shrink:0;'+(leeg?'color:var(--red);font-weight:700':'')+'">'+dekVlag(p.land)+' '+escapeHtml(PROV_NAMEN[p.provincie]||p.provincie)+'</div>'+
+      '<div class="city-bar-wrap"><div class="city-bar-fill" style="width:'+w+'%"></div></div>'+
+      '<div class="city-count" style="min-width:52px;white-space:nowrap" title="weekend / 30 dagen">'+p.weekend+' / '+p.dertig_dagen+'</div></div>';
+  }).join('');
+  var vl=d.witte_vlekken||[];
+  document.getElementById('dek-vlekken').innerHTML=vl.length?vl.map(function(v){
+    return '<div class="city-row"><div class="city-name" style="width:180px;flex-shrink:0">'+dekVlag(v.cc)+' '+escapeHtml(v.naam)+'</div>'+
+      '<div style="flex:1;font-size:11px;color:var(--muted)">'+escapeHtml(PROV_NAMEN[v.provincie]||v.provincie||'')+'</div>'+
+      '<div class="city-count">'+Math.round(v.inwoners/1000)+'k</div></div>';
+  }).join(''):'<div class="empty"><div class="e-icon">🎉</div><div class="e-text">Overal aanbod</div></div>';
+}
+
 function renderCityChart(listings){
   var cities={};
   listings.forEach(function(l){
