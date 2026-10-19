@@ -498,10 +498,17 @@ body.dark .yg-footer{border-top-color:var(--border);}
 body:not(.is-desktop) .filter-bar{
   flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
   -ms-overflow-style:none;scrollbar-width:none;
-  /* Fade-rand i.p.v. een harde afkap, zodat het als "swipe voor meer" oogt */
-  mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
-  -webkit-mask-image:linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  --fade-kleur:var(--forest);
 }
+/* Fade-rand i.p.v. een harde afkap, zodat het als "swipe voor meer" oogt.
+   Bewust een sticky overlay en geen mask-image: een masker geldt ook voor de
+   dropdowns die onder de balk openklappen, waardoor die onzichtbaar werden
+   en de lijst erdoorheen leek te vallen. */
+body:not(.is-desktop) .filter-bar::after{
+  content:'';position:sticky;right:-14px;flex:0 0 28px;margin-left:-28px;align-self:stretch;
+  background:linear-gradient(to right, transparent, var(--fade-kleur));pointer-events:none;
+}
+body:not(.is-desktop) .filter-bar--inline{--fade-kleur:var(--bg);}
 body:not(.is-desktop) .filter-bar::-webkit-scrollbar{display:none;}
 body:not(.is-desktop) .filter-bar>*{flex-shrink:0;}
 .fdd-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 12px;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;color:white;cursor:pointer;white-space:nowrap;}
@@ -521,7 +528,13 @@ body:not(.is-desktop) .filter-bar>*{flex-shrink:0;}
 .filter-bar .type-pill.active{background:#fff;color:var(--bark);border-color:#fff;}
 .filter-bar .type-pill.p.active{background:var(--amber);color:var(--bark);border-color:var(--amber);}
 .filter-bar .type-pill.b.active{background:var(--terra);color:#fff;border-color:var(--terra);}
-.filter-bar .type-pill.e.active{background:#fff;color:var(--forest);border-color:#fff;}
+/* Evenement = groen, net als de markt-pinnen. Op de groene balk een tint
+   donkerder met witte rand, zodat 'gekozen' toch opvalt. */
+.filter-bar .type-pill.e.active{background:var(--forest-dark);color:#fff;border-color:#fff;}
+.filter-bar--inline .type-pill.e.active{background:var(--forest);color:#fff;border-color:var(--forest);}
+/* Boven de lijst staat de balk op een lichte achtergrond: de niet-gekozen
+   pillen hadden daar witte tekst op wit. */
+.filter-bar--inline .type-pill:not(.active){background:var(--bg2);border-color:var(--border);color:var(--text);}
 
 /* Compacte variant: filter-bar verplaatst naar boven de resultatenlijst
    (mobiel/tablet, alleen op het Lijst-tabblad — zie ygRelocateFilterBar()).
@@ -9672,8 +9685,28 @@ function toggleCatPicker(e) {
   if (!menu) return;
   var wasOpen = menu.classList.contains('open');
   document.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
-  if (!wasOpen) menu.classList.add('open');
+  if (wasOpen) return;
+  // In de filterbalk (scrollt horizontaal) zou een absolute menu worden
+  // afgeknipt; daar positioneren we 'm vast t.o.v. het scherm, net als openDD.
+  if (menu.closest('.filter-bar')) {
+    var r = e.currentTarget.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+    menu.style.left = 'auto';
+  }
+  menu.classList.add('open');
 }
+// Swipen door de filterbalk verschuift de knoppen; open menu's zouden dan
+// los blijven zweven, dus die sluiten we.
+(function() {
+  var bar = document.getElementById('filter-bar');
+  if (!bar) return;
+  bar.addEventListener('scroll', function() {
+    bar.querySelectorAll('.fdd-menu').forEach(function(m) { m.style.display = 'none'; });
+    bar.querySelectorAll('.cat-picker-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  }, { passive: true });
+})();
 function catPickerToggle(cb) {
   var v = cb.value;
   if (cb.checked) activeCatFilters.add(v); else activeCatFilters.delete(v);
