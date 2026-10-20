@@ -701,5 +701,16 @@ grant execute on function public.route_opruimen() to service_role;
 --     body := '{}'::jsonb, timeout_milliseconds := 120000);
 -- $$);
 
--- Let op: expire_old_pending_confirmations() staat (nog) niet in cron. Pending
--- buur-adressen verlopen dus niet vanzelf na 7 dagen. Inplannen = besluit Christian.
+-- Cron (20 okt 2026, akkoord Christian): pending buur-adressen verlopen na 7 dagen.
+-- Stond nooit ingepland; bij de eerste run zijn 2 adressen uit mei gewist.
+-- select cron.schedule('yardigo-buur-bevestiging-verlopen', '40 3 * * *',
+--   $$ select public.expire_old_pending_confirmations(); $$);
+
+-- Analytics (20 okt 2026): de analytics_*-functies hadden al een admincheck,
+-- maar waren voor anon aanroepbaar. Nu alleen nog voor ingelogde gebruikers:
+-- do $$ declare f regprocedure; begin
+--   for f in select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+--            where n.nspname = 'public' and p.proname like 'analytics\_%' loop
+--     execute format('revoke execute on function %s from public, anon', f);
+--     execute format('grant execute on function %s to authenticated', f);
+--   end loop; end $$;
