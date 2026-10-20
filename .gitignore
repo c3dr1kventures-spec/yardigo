@@ -61,7 +61,7 @@ sitemap.xml
 sitemap-be.xml
 robots.txt
 # Landing pages per plaats+type
-rommelroute/
+/rommelroute/
 rommelmarkt/
 vlooienmarkt/
 opritverkoop/
