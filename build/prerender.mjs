@@ -702,6 +702,7 @@ Disallow: /admin.html
 Disallow: /bevestig.html
 Disallow: /tg
 Disallow: /herhaal
+Disallow: /doe-mee
 
 Sitemap: ${BASE_URL}/sitemap.xml
 Sitemap: ${BASE_URL_BE}/sitemap-be.xml

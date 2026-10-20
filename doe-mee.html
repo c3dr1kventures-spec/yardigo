@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Doe mee met de rommelroute</title>
+  <!-- Fase 3: open inschrijving voor buren. De organisator deelt
+       /doe-mee?r=<code> (link of QR); een buur meldt zich zelf aan en geeft
+       daarmee zelf toestemming. De organisator keurt goed in de app.
+       /doe-mee?t=<token> is de persoonlijke link van de buur: status bekijken,
+       uitnodiging voor een volgende editie bevestigen of afmelden.
+       Zie rommelroute-organisator.sql. -->
+  <style>
+    :root { --terra:#E07B39; --forest:#3A6B4A; --bark:#2C2416; --muted:#7A6E62; --bg:#F9F5EF; --bg2:#F2EADD; --border:#EDE8DF; --danger:#C44; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 16px 64px; color: var(--bark); background: var(--bg); line-height: 1.6; }
+    h1 { font-size: 24px; color: var(--terra); margin: 0 0 4px; }
+    .lede { font-size: 14px; color: var(--muted); margin: 0 0 20px; }
+    .card { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 18px; margin: 18px 0; }
+    .label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin: 12px 0 4px; }
+    .label:first-child { margin-top: 0; }
+    .opt { text-transform: none; font-weight: 500; letter-spacing: 0; }
+    .val { font-size: 15px; font-weight: 600; margin-bottom: 8px; word-wrap: break-word; }
+    .rij { display: flex; gap: 10px; }
+    .rij > div { flex: 1; min-width: 0; }
+    input[type=text], input[type=email], textarea { width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 15px; background: white; color: var(--bark); }
+    textarea { resize: vertical; min-height: 64px; }
+    .vink { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; margin-top: 14px; cursor: pointer; }
+    .vink input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+    .vink.uit { opacity: .45; }
+    button { font-family: inherit; font-size: 15px; font-weight: 700; border-radius: 12px; padding: 14px; cursor: pointer; border: none; width: 100%; }
+    .btn-primary { background: var(--forest); color: white; margin: 16px 0 10px; }
+    .btn-secondary { background: white; color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-danger { background: white; color: var(--danger); border: 1.5px solid var(--danger); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .ok { background: #EAF5EE; border-left: 3px solid var(--forest); color: #1F4A2D; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin: 18px 0; font-weight: 600; }
+    .err { background: #FBEEEE; border-left: 3px solid var(--danger); color: #7A2222; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin: 18px 0; font-weight: 600; }
+    .note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+    .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--bg2); color: var(--bark); }
+    .badge.goed { background: #EAF5EE; color: #1F4A2D; }
+    .badge.wacht { background: #FFF4E6; color: #A04A18; }
+    .link-box { font-size: 13px; background: var(--bg2); border-radius: 8px; padding: 10px; word-break: break-all; margin-top: 8px; }
+    .back { display: inline-block; font-size: 14px; font-weight: 600; color: var(--forest); text-decoration: none; margin-top: 12px; }
+    .logo { font-size: 26px; font-weight: 800; color: var(--terra); margin-bottom: 24px; letter-spacing: -.5px; }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    footer { margin-top: 48px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; }
+    footer a { color: var(--terra); }
+  </style>
+</head>
+<body>
+  <div class="logo">📍 YardiGo</div>
+  <h1 id="kop" data-t="titel">Doe mee met de rommelroute</h1>
+  <p class="lede" id="lede" data-t="intro">Verkoop je ook spullen bij jou voor de deur? Meld je adres aan, dan komt het op de kaart zodra de organisator het goedkeurt.</p>
+
+  <div id="laden" class="card"><div class="val" data-t="laden">Even geduld…</div></div>
+  <div id="fout" class="err" style="display:none"></div>
+
+  <div id="route" class="card" style="display:none">
+    <div class="label" data-t="route">Rommelroute</div>
+    <div class="val" id="c-titel"></div>
+    <div class="label" data-t="wanneer">Wanneer</div>
+    <div class="val" id="c-wanneer"></div>
+    <div id="c-org-wrap"><div class="label" data-t="organisator">Organisator</div><div class="val" id="c-org"></div></div>
+  </div>
+
+  <form id="formulier" class="card" style="display:none" onsubmit="aanmelden(event)">
+    <label class="label" for="i-adres" data-t="adres">Straat en huisnummer</label>
+    <input type="text" id="i-adres" autocomplete="street-address" maxlength="120" required>
+    <div class="rij">
+      <div><label class="label" for="i-postcode" data-t="postcode">Postcode</label><input type="text" id="i-postcode" autocomplete="postal-code" maxlength="10"></div>
+      <div><label class="label" for="i-plaats" data-t="plaats">Plaats</label><input type="text" id="i-plaats" autocomplete="address-level2" maxlength="80" required></div>
+    </div>
+    <label class="label" for="i-naam"><span data-t="naam">Naam</span> <span class="opt" data-t="optioneel">(optioneel)</span></label>
+    <input type="text" id="i-naam" autocomplete="given-name" maxlength="60" data-tp="naamPh">
+    <label class="label" for="i-wat"><span data-t="wat">Wat verkoop je?</span> <span class="opt" data-t="optioneel">(optioneel)</span></label>
+    <textarea id="i-wat" maxlength="300" data-tp="watPh"></textarea>
+    <label class="label" for="i-email"><span data-t="email">E-mail</span> <span class="opt" data-t="optioneel">(optioneel)</span></label>
+    <input type="email" id="i-email" autocomplete="email" maxlength="120" oninput="emailVeranderd()">
+    <p class="note" data-t="emailUitleg">Alleen voor berichten over deze rommelroute, zoals je goedkeuring of een wijziging van de organisator.</p>
+    <div class="hp" aria-hidden="true"><label>Website <input type="text" id="i-website" tabindex="-1" autocomplete="off"></label></div>
+
+    <label class="vink"><input type="checkbox" id="i-toestemming" required><span data-t="toestemming">Ik woon op dit adres (of mag het opgeven) en geef toestemming om het tijdens deze rommelroute op de kaart van YardiGo te tonen.</span></label>
+    <label class="vink uit" id="vink-uitnodigen"><input type="checkbox" id="i-uitnodigen" disabled><span data-t="uitnodigen">Mail me als deze rommelroute opnieuw georganiseerd wordt.</span></label>
+
+    <button type="submit" class="btn-primary" id="b-aanmelden" data-t="aanmelden">Aanmelden</button>
+    <p class="note"><span data-t="privacyKort">Je kunt je altijd weer afmelden; dan wissen we je gegevens direct.</span> <a href="/privacy" data-t="privacy">Privacy</a></p>
+  </form>
+
+  <div id="status" class="card" style="display:none">
+    <div class="label" data-t="jouwAdres">Jouw adres</div>
+    <div class="val" id="s-adres"></div>
+    <div class="label" data-t="status">Status</div>
+    <div class="val"><span class="badge" id="s-badge"></span></div>
+    <p class="note" id="s-uitleg"></p>
+    <button type="button" class="btn-primary" id="b-bevestig" onclick="bevestig()" style="display:none" data-t="weerMee">Ja, ik doe weer mee</button>
+    <button type="button" class="btn-danger" id="b-afmelden" onclick="afmelden()" style="display:none;margin-top:10px" data-t="afmelden">Afmelden</button>
+  </div>
+
+  <div id="klaar" style="display:none">
+    <div class="ok" id="klaar-tekst"></div>
+    <div id="klaar-link-wrap" class="card" style="display:none">
+      <div class="label" data-t="bewaarLink">Bewaar deze link</div>
+      <p class="note" data-t="bewaarUitleg">Hiermee bekijk je je aanmelding of meld je je af.</p>
+      <div class="link-box" id="klaar-link"></div>
+    </div>
+    <a class="back" id="route-link" href="/" data-t="bekijk">Bekijk de route op YardiGo</a>
+  </div>
+
+  <footer><span data-t="footer">YardiGo helpt buren hun rommelroute op de kaart te zetten.</span> <a href="/privacy" data-t="privacy">Privacy</a></footer>
+
+  <script>
+    var SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
+    var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+
+    var T = {
+      nl: { titel: 'Doe mee met de rommelroute', intro: 'Verkoop je ook spullen bij jou voor de deur? Meld je adres aan, dan komt het op de kaart zodra de organisator het goedkeurt.',
+        titelStatus: 'Jouw aanmelding', introStatus: 'Hier zie je de stand van je aanmelding en kun je je afmelden.',
+        laden: 'Even geduld…', route: 'Rommelroute', wanneer: 'Wanneer', organisator: 'Organisator',
+        adres: 'Straat en huisnummer', postcode: 'Postcode', plaats: 'Plaats', naam: 'Naam', optioneel: '(optioneel)',
+        naamPh: 'Bijvoorbeeld: Fam. de Vries', wat: 'Wat verkoop je?', watPh: 'Bijvoorbeeld: kinderkleding, boeken, gereedschap',
+        email: 'E-mail', emailUitleg: 'Alleen voor berichten over deze rommelroute, zoals je goedkeuring of een wijziging van de organisator.',
+        toestemming: 'Ik woon op dit adres (of mag het opgeven) en geef toestemming om het tijdens deze rommelroute op de kaart van YardiGo te tonen.',
+        uitnodigen: 'Mail me als deze rommelroute opnieuw georganiseerd wordt.',
+        aanmelden: 'Aanmelden', bezig: 'Adres zoeken…', privacyKort: 'Je kunt je altijd weer afmelden; dan wissen we je gegevens direct.', privacy: 'Privacy',
+        jouwAdres: 'Jouw adres', status: 'Status', weerMee: 'Ja, ik doe weer mee', afmelden: 'Afmelden', zeker: 'Zeker weten? Tik nog een keer om af te melden',
+        bewaarLink: 'Bewaar deze link', bewaarUitleg: 'Hiermee bekijk je je aanmelding of meld je je af.', bekijk: 'Bekijk de route op YardiGo',
+        footer: 'YardiGo helpt buren hun rommelroute op de kaart te zetten.',
+        st_nieuw: 'Wacht op goedkeuring', st_uitgenodigd: 'Uitgenodigd', st_goedgekeurd: 'Op de kaart', st_afgewezen: 'Niet goedgekeurd', st_ingetrokken: 'Afgemeld', st_verlopen: 'Verlopen',
+        ui_nieuw: 'De organisator bekijkt je aanmelding. Daarna staat je adres op de kaart.', ui_uitgenodigd: 'De organisator nodigt je uit om weer mee te doen. Zonder jouw ja komt je adres niet op de kaart.',
+        ui_goedgekeurd: 'Je adres staat op de kaart van deze rommelroute.', ui_afgewezen: 'De organisator heeft deze aanmelding niet goedgekeurd. Je gegevens zijn gewist.',
+        ui_ingetrokken: 'Je hebt je afgemeld. Je gegevens zijn gewist.', ui_verlopen: 'Deze aanmelding is verlopen. Je gegevens zijn gewist.',
+        okNieuw: 'Aangemeld! De organisator krijgt een bericht en keurt je aanmelding goed. Daarna staat je adres op de kaart.',
+        okBestaat: 'Dit adres is al aangemeld voor deze rommelroute.', okWeerMee: 'Top, je staat weer op de kaart!', okAf: 'Je bent afgemeld. We hebben je adres en gegevens gewist.',
+        gesloten: 'De inschrijving voor deze rommelroute is gesloten.', voorbij: 'Deze rommelroute is al geweest.', onbekend: 'Deze link klopt niet (meer).',
+        teVer: 'Dit adres ligt te ver van de rommelroute. Klopt het adres?', nietGevonden: 'We kunnen dit adres niet vinden. Controleer straat, huisnummer en plaats.',
+        limiet: 'Er zijn net veel aanmeldingen gedaan. Probeer het over een uur nog eens.', ongeldig: 'Controleer de ingevulde gegevens.', mislukt: 'Dat lukte niet. Probeer het later nog eens.' },
+      en: { titel: 'Join the yard sale route', intro: 'Selling things at your door too? Sign up your address and it goes on the map once the organiser approves it.',
+        titelStatus: 'Your sign-up', introStatus: 'Here you can see the status of your sign-up and withdraw.',
+        laden: 'One moment…', route: 'Yard sale route', wanneer: 'When', organisator: 'Organiser',
+        adres: 'Street and house number', postcode: 'Postcode', plaats: 'Town', naam: 'Name', optioneel: '(optional)',
+        naamPh: 'For example: The Smith family', wat: 'What are you selling?', watPh: "For example: children's clothes, books, tools",
+        email: 'Email', emailUitleg: 'Only for messages about this route, such as your approval or a change by the organiser.',
+        toestemming: 'I live at this address (or may give it) and agree that it is shown on the YardiGo map during this yard sale route.',
+        uitnodigen: 'Email me when this route is organised again.',
+        aanmelden: 'Sign up', bezig: 'Looking up address…', privacyKort: 'You can always withdraw; we then delete your details right away.', privacy: 'Privacy',
+        jouwAdres: 'Your address', status: 'Status', weerMee: 'Yes, count me in', afmelden: 'Withdraw', zeker: 'Are you sure? Tap again to withdraw',
+        bewaarLink: 'Keep this link', bewaarUitleg: 'Use it to view your sign-up or withdraw.', bekijk: 'View the route on YardiGo',
+        footer: 'YardiGo helps neighbours put their yard sale route on the map.',
+        st_nieuw: 'Waiting for approval', st_uitgenodigd: 'Invited', st_goedgekeurd: 'On the map', st_afgewezen: 'Not approved', st_ingetrokken: 'Withdrawn', st_verlopen: 'Expired',
+        ui_nieuw: 'The organiser is reviewing your sign-up. Your address then goes on the map.', ui_uitgenodigd: 'The organiser invites you to join again. Your address will not go on the map without your yes.',
+        ui_goedgekeurd: 'Your address is on the map of this route.', ui_afgewezen: 'The organiser did not approve this sign-up. Your details have been deleted.',
+        ui_ingetrokken: 'You have withdrawn. Your details have been deleted.', ui_verlopen: 'This sign-up has expired. Your details have been deleted.',
+        okNieuw: 'Signed up! The organiser gets a message and will approve your sign-up. Your address then goes on the map.',
+        okBestaat: 'This address is already signed up for this route.', okWeerMee: 'Great, you are back on the map!', okAf: 'You have withdrawn. We deleted your address and details.',
+        gesloten: 'Sign-up for this route is closed.', voorbij: 'This route has already taken place.', onbekend: 'This link is not valid (anymore).',
+        teVer: 'This address is too far from the route. Is the address correct?', nietGevonden: 'We cannot find this address. Please check street, number and town.',
+        limiet: 'There have just been many sign-ups. Please try again in an hour.', ongeldig: 'Please check the details you entered.', mislukt: 'That did not work. Please try again later.' },
+      fr: { titel: 'Participez au parcours de vide-greniers', intro: "Vous vendez aussi devant chez vous ? Inscrivez votre adresse : elle apparaîtra sur la carte dès que l'organisateur l'aura approuvée.",
+        titelStatus: 'Votre inscription', introStatus: "Consultez l'état de votre inscription ou désinscrivez-vous.",
+        laden: 'Un instant…', route: 'Parcours', wanneer: 'Quand', organisator: 'Organisateur',
+        adres: 'Rue et numéro', postcode: 'Code postal', plaats: 'Localité', naam: 'Nom', optioneel: '(facultatif)',
+        naamPh: 'Par exemple : Famille Dupont', wat: 'Que vendez-vous ?', watPh: 'Par exemple : vêtements enfants, livres, outils',
+        email: 'E-mail', emailUitleg: "Uniquement pour les messages sur ce parcours, comme votre approbation ou un changement de l'organisateur.",
+        toestemming: "J'habite à cette adresse (ou je peux la donner) et j'accepte qu'elle soit affichée sur la carte YardiGo pendant ce parcours.",
+        uitnodigen: "Écrivez-moi quand ce parcours est de nouveau organisé.",
+        aanmelden: "S'inscrire", bezig: "Recherche de l'adresse…", privacyKort: 'Vous pouvez toujours vous désinscrire ; nous effaçons alors aussitôt vos données.', privacy: 'Confidentialité',
+        jouwAdres: 'Votre adresse', status: 'Statut', weerMee: 'Oui, je participe', afmelden: 'Se désinscrire', zeker: 'Vous êtes sûr ? Touchez encore pour vous désinscrire',
+        bewaarLink: 'Gardez ce lien', bewaarUitleg: 'Il permet de voir votre inscription ou de vous désinscrire.', bekijk: 'Voir le parcours sur YardiGo',
+        footer: 'YardiGo aide les voisins à mettre leur parcours de vide-greniers sur la carte.',
+        st_nieuw: "En attente d'approbation", st_uitgenodigd: 'Invité', st_goedgekeurd: 'Sur la carte', st_afgewezen: 'Non approuvé', st_ingetrokken: 'Désinscrit', st_verlopen: 'Expiré',
+        ui_nieuw: "L'organisateur examine votre inscription. Votre adresse apparaîtra ensuite sur la carte.", ui_uitgenodigd: "L'organisateur vous invite à participer de nouveau. Sans votre accord, votre adresse n'apparaîtra pas sur la carte.",
+        ui_goedgekeurd: 'Votre adresse est sur la carte de ce parcours.', ui_afgewezen: "L'organisateur n'a pas approuvé cette inscription. Vos données ont été effacées.",
+        ui_ingetrokken: 'Vous vous êtes désinscrit. Vos données ont été effacées.', ui_verlopen: 'Cette inscription a expiré. Vos données ont été effacées.',
+        okNieuw: "Inscrit ! L'organisateur reçoit un message et approuvera votre inscription. Votre adresse apparaîtra ensuite sur la carte.",
+        okBestaat: 'Cette adresse est déjà inscrite pour ce parcours.', okWeerMee: 'Parfait, vous êtes de nouveau sur la carte !', okAf: 'Vous êtes désinscrit. Nous avons effacé votre adresse et vos données.',
+        gesloten: 'Les inscriptions pour ce parcours sont closes.', voorbij: 'Ce parcours a déjà eu lieu.', onbekend: "Ce lien n'est pas (ou plus) valide.",
+        teVer: 'Cette adresse est trop loin du parcours. Est-elle correcte ?', nietGevonden: "Nous ne trouvons pas cette adresse. Vérifiez la rue, le numéro et la localité.",
+        limiet: "Il y a eu beaucoup d'inscriptions. Réessayez dans une heure.", ongeldig: 'Vérifiez les informations saisies.', mislukt: 'Cela n’a pas fonctionné. Réessayez plus tard.' },
+      de: { titel: 'Mach mit beim Hofflohmarkt', intro: 'Verkaufst du auch vor deiner Tür? Melde deine Adresse an, dann kommt sie auf die Karte, sobald die Organisation sie bestätigt.',
+        titelStatus: 'Deine Anmeldung', introStatus: 'Hier siehst du den Stand deiner Anmeldung und kannst dich abmelden.',
+        laden: 'Einen Moment…', route: 'Hofflohmarkt', wanneer: 'Wann', organisator: 'Organisation',
+        adres: 'Straße und Hausnummer', postcode: 'Postleitzahl', plaats: 'Ort', naam: 'Name', optioneel: '(optional)',
+        naamPh: 'Zum Beispiel: Familie Müller', wat: 'Was verkaufst du?', watPh: 'Zum Beispiel: Kinderkleidung, Bücher, Werkzeug',
+        email: 'E-Mail', emailUitleg: 'Nur für Nachrichten zu diesem Hofflohmarkt, etwa deine Bestätigung oder eine Änderung der Organisation.',
+        toestemming: 'Ich wohne an dieser Adresse (oder darf sie angeben) und bin einverstanden, dass sie während dieses Hofflohmarkts auf der YardiGo-Karte gezeigt wird.',
+        uitnodigen: 'Schreib mir, wenn dieser Hofflohmarkt wieder stattfindet.',
+        aanmelden: 'Anmelden', bezig: 'Adresse wird gesucht…', privacyKort: 'Du kannst dich jederzeit abmelden; dann löschen wir deine Daten sofort.', privacy: 'Datenschutz',
+        jouwAdres: 'Deine Adresse', status: 'Status', weerMee: 'Ja, ich bin dabei', afmelden: 'Abmelden', zeker: 'Sicher? Tippe noch einmal zum Abmelden',
+        bewaarLink: 'Diesen Link aufheben', bewaarUitleg: 'Damit siehst du deine Anmeldung oder meldest dich ab.', bekijk: 'Route auf YardiGo ansehen',
+        footer: 'YardiGo hilft Nachbarn, ihren Hofflohmarkt auf die Karte zu bringen.',
+        st_nieuw: 'Wartet auf Bestätigung', st_uitgenodigd: 'Eingeladen', st_goedgekeurd: 'Auf der Karte', st_afgewezen: 'Nicht bestätigt', st_ingetrokken: 'Abgemeldet', st_verlopen: 'Abgelaufen',
+        ui_nieuw: 'Die Organisation prüft deine Anmeldung. Danach steht deine Adresse auf der Karte.', ui_uitgenodigd: 'Die Organisation lädt dich ein, wieder mitzumachen. Ohne dein Ja kommt deine Adresse nicht auf die Karte.',
+        ui_goedgekeurd: 'Deine Adresse steht auf der Karte dieses Hofflohmarkts.', ui_afgewezen: 'Die Organisation hat diese Anmeldung nicht bestätigt. Deine Daten wurden gelöscht.',
+        ui_ingetrokken: 'Du hast dich abgemeldet. Deine Daten wurden gelöscht.', ui_verlopen: 'Diese Anmeldung ist abgelaufen. Deine Daten wurden gelöscht.',
+        okNieuw: 'Angemeldet! Die Organisation bekommt eine Nachricht und bestätigt deine Anmeldung. Danach steht deine Adresse auf der Karte.',
+        okBestaat: 'Diese Adresse ist für diesen Hofflohmarkt schon angemeldet.', okWeerMee: 'Super, du bist wieder auf der Karte!', okAf: 'Du bist abgemeldet. Wir haben deine Adresse und Daten gelöscht.',
+        gesloten: 'Die Anmeldung für diesen Hofflohmarkt ist geschlossen.', voorbij: 'Dieser Hofflohmarkt hat schon stattgefunden.', onbekend: 'Dieser Link ist nicht (mehr) gültig.',
+        teVer: 'Diese Adresse liegt zu weit vom Hofflohmarkt entfernt. Stimmt die Adresse?', nietGevonden: 'Wir finden diese Adresse nicht. Bitte prüfe Straße, Hausnummer und Ort.',
+        limiet: 'Gerade gab es viele Anmeldungen. Bitte versuche es in einer Stunde noch einmal.', ongeldig: 'Bitte prüfe deine Angaben.', mislukt: 'Das hat nicht geklappt. Bitte versuche es später noch einmal.' }
+    };
+    var q = new URLSearchParams(location.search);
+    var taal = (q.get('lang') || navigator.language || 'nl').slice(0, 2).toLowerCase();
+    if (!T[taal]) taal = 'nl';
+    var t = T[taal];
+    document.documentElement.lang = taal;
+    document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t[el.dataset.t]; });
+    document.querySelectorAll('[data-tp]').forEach(function (el) { el.placeholder = t[el.dataset.tp]; });
+    document.title = t.titel + ' | YardiGo';
+    var code = (q.get('r') || '').replace(/[^a-z0-9]/gi, '');
+    var token = q.get('t') || '';
+    var ctx = null, afmeldenGeklikt = false;
+
+    function $(id) { return document.getElementById(id); }
+    function toon(ids) { ['laden', 'route', 'formulier', 'status', 'klaar'].forEach(function (x) { $(x).style.display = ids.indexOf(x) >= 0 ? '' : 'none'; }); }
+    function fout(msg) { $('fout').textContent = msg; $('fout').style.display = msg ? '' : 'none'; if (msg) $('fout').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    function datumTekst(iso) {
+      return new Date(iso + 'T12:00:00').toLocaleDateString({ nl: 'nl-NL', en: 'en-GB', fr: 'fr-BE', de: 'de-DE' }[taal], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    function wanneer(c) {
+      return datumTekst(c.datum) + (c.datum_eind && c.datum_eind !== c.datum ? ' – ' + datumTekst(c.datum_eind) : '')
+        + (c.tijd_van ? ', ' + c.tijd_van + (c.tijd_tot ? '–' + c.tijd_tot : '') : '');
+    }
+    async function rpc(fn, body) {
+      var r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      var j = await r.json().catch(function () { return null; });
+      if (!r.ok) throw new Error((j && j.message) || ('HTTP ' + r.status));
+      return j;
+    }
+    function routeTonen(c) {
+      $('c-titel').textContent = c.titel;
+      $('c-wanneer').textContent = wanneer(c) + (c.plaats ? ' · ' + c.plaats : '');
+      if (c.organisator) $('c-org').textContent = c.organisator; else $('c-org-wrap').style.display = 'none';
+      if (c.hoofd_id) $('route-link').href = '/v/' + c.hoofd_id;
+    }
+    function emailVeranderd() {
+      var heeft = /\S+@\S+\.\S+/.test($('i-email').value);
+      $('i-uitnodigen').disabled = !heeft;
+      if (!heeft) $('i-uitnodigen').checked = false;
+      $('vink-uitnodigen').classList.toggle('uit', !heeft);
+    }
+
+    // ── Adres opzoeken: PDOK (NL), anders OpenStreetMap ──
+    async function zoekAdres(adres, postcode, plaats) {
+      try {
+        var pq = [adres, postcode, plaats].filter(Boolean).join(' ');
+        var r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fq=type:adres&q=' + encodeURIComponent(pq));
+        var d = await r.json();
+        var doc = d && d.response && d.response.docs && d.response.docs[0];
+        // Alleen een treffer als de plaats ook klopt; anders is het een gok elders in NL.
+        if (doc && doc.centroide_ll && plaats && doc.woonplaatsnaam && doc.woonplaatsnaam.toLowerCase().indexOf(plaats.toLowerCase().split(' ')[0]) >= 0) {
+          var m = /POINT\(([-\d.]+) ([-\d.]+)\)/.exec(doc.centroide_ll);
+          var straatKlopt = doc.straatnaam && adres.toLowerCase().indexOf(doc.straatnaam.toLowerCase()) >= 0;
+          var norm = function (x) { return String(x || '').toLowerCase().replace(/[\s\-]/g, ''); };
+          var getypt = straatKlopt ? norm(adres.slice(adres.toLowerCase().indexOf(doc.straatnaam.toLowerCase()) + doc.straatnaam.length)) : '';
+          // PDOK kiest bij twijfel een ander huisnummer (1 wordt 1A-01). Dan houden
+          // we het getypte adres aan; de plek in dezelfde straat klopt dan nog.
+          var exact = straatKlopt && getypt && getypt === norm(String(doc.huisnummer) + (doc.huisletter || '') + (doc.huisnummertoevoeging || ''));
+          if (m && straatKlopt) return { lat: +m[2], lng: +m[1],
+            adres: exact ? doc.straatnaam + ' ' + doc.huisnummer + (doc.huisletter || '') + (doc.huisnummertoevoeging ? '-' + doc.huisnummertoevoeging : '') : adres,
+            postcode: exact ? (doc.postcode || postcode) : postcode, plaats: doc.woonplaatsnaam };
+        }
+      } catch (e) {}
+      try {
+        var nq = [adres, postcode, plaats].filter(Boolean).join(', ');
+        var r2 = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=nl,be,de,fr,lu&q=' + encodeURIComponent(nq), { headers: { 'Accept-Language': taal } });
+        var d2 = await r2.json();
+        if (d2 && d2[0]) return { lat: +d2[0].lat, lng: +d2[0].lon, adres: adres, postcode: postcode, plaats: plaats };
+      } catch (e) {}
+      return null;
+    }
+
+    async function aanmelden(ev) {
+      ev.preventDefault();
+      fout('');
+      var adres = $('i-adres').value.trim(), postcode = $('i-postcode').value.trim(), plaats = $('i-plaats').value.trim();
+      if (!adres || !plaats || !$('i-toestemming').checked) { fout(t.ongeldig); return; }
+      var knop = $('b-aanmelden');
+      knop.disabled = true; knop.textContent = t.bezig;
+      try {
+        var gevonden = await zoekAdres(adres, postcode, plaats);
+        if (!gevonden) { fout(t.nietGevonden); return; }
+        var res = await rpc('route_aanmelden', {
+          p_code: code, p_adres: gevonden.adres, p_postcode: gevonden.postcode || null, p_plaats: gevonden.plaats || plaats,
+          p_lat: gevonden.lat, p_lng: gevonden.lng,
+          p_naam: $('i-naam').value.trim() || null, p_email: $('i-email').value.trim() || null, p_wat: $('i-wat').value.trim() || null,
+          p_taal: taal, p_mag_uitnodigen: $('i-uitnodigen').checked, p_website: $('i-website').value || null
+        });
+        if (!res || !res.ok) {
+          var reden = res && res.reden;
+          fout(reden === 'te_ver' ? t.teVer : reden === 'limiet' ? t.limiet : reden === 'gesloten' ? t.gesloten : reden === 'voorbij' ? t.voorbij : reden === 'ongeldig' ? t.ongeldig : t.mislukt);
+          return;
+        }
+        if (res.status === 'bestaat_al') { $('klaar-tekst').textContent = t.okBestaat; toon(['route', 'klaar']); return; }
+        $('klaar-tekst').textContent = t.okNieuw;
+        if (res.token) {
+          $('klaar-link').textContent = location.origin + '/doe-mee?t=' + res.token + '&lang=' + taal;
+          $('klaar-link-wrap').style.display = '';
+        }
+        toon(['route', 'klaar']);
+      } catch (e) { fout(t.mislukt); }
+      finally { knop.disabled = false; knop.textContent = t.aanmelden; }
+    }
+
+    function statusTonen(s) {
+      $('kop').textContent = t.titelStatus; $('lede').textContent = t.introStatus;
+      routeTonen(s);
+      $('c-org-wrap').style.display = 'none';
+      $('s-adres').textContent = s.adres ? [s.adres, s.plaats].filter(Boolean).join(', ') : '–';
+      $('s-badge').textContent = t['st_' + s.status] || s.status;
+      $('s-badge').className = 'badge' + (s.status === 'goedgekeurd' ? ' goed' : (s.status === 'nieuw' || s.status === 'uitgenodigd') ? ' wacht' : '');
+      $('s-uitleg').textContent = t['ui_' + s.status] || '';
+      var actief = ['nieuw', 'uitgenodigd', 'goedgekeurd'].indexOf(s.status) >= 0 && !s.voorbij;
+      $('b-bevestig').style.display = s.status === 'uitgenodigd' && !s.voorbij ? '' : 'none';
+      $('b-afmelden').style.display = actief ? '' : 'none';
+      toon(['route', 'status']);
+    }
+
+    async function bevestig() {
+      $('b-bevestig').disabled = true; fout('');
+      try {
+        var r = await rpc('route_aanmelding_bevestig', { p_token: token });
+        if (r && r.ok) { $('klaar-tekst').textContent = t.okWeerMee; toon(['route', 'klaar']); }
+        else fout(r && r.reden === 'voorbij' ? t.voorbij : r && r.reden === 'verlopen' ? t.ui_verlopen : t.mislukt);
+      } catch (e) { fout(t.mislukt); }
+      $('b-bevestig').disabled = false;
+    }
+
+    async function afmelden() {
+      // Twee keer tikken in plaats van een browser-dialoog.
+      if (!afmeldenGeklikt) { afmeldenGeklikt = true; $('b-afmelden').textContent = t.zeker; return; }
+      $('b-afmelden').disabled = true; fout('');
+      try {
+        var r = await rpc('route_afmelden', { p_token: token });
+        if (r && r.ok) { $('klaar-tekst').textContent = t.okAf; toon(['klaar']); }
+        else fout(t.mislukt);
+      } catch (e) { fout(t.mislukt); }
+      $('b-afmelden').disabled = false;
+    }
+
+    async function laad() {
+      try {
+        if (/^[0-9a-f-]{36}$/i.test(token)) {
+          var s = await rpc('route_aanmelding_status', { p_token: token });
+          if (!s) { toon([]); fout(t.onbekend); return; }
+          statusTonen(s);
+          return;
+        }
+        if (!code) { toon([]); fout(t.onbekend); return; }
+        ctx = await rpc('route_aanmelding_context', { p_code: code });
+        if (!ctx) { toon([]); fout(t.onbekend); return; }
+        routeTonen(ctx);
+        if (ctx.voorbij) { toon(['route']); fout(t.voorbij); return; }
+        if (!ctx.open) { toon(['route']); fout(t.gesloten); return; }
+        toon(['route', 'formulier']);
+      } catch (e) { toon([]); fout(t.mislukt); }
+    }
+    laad();
+  </script>
+</body>
+</html>
