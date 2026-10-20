@@ -9,6 +9,8 @@
 //      editie "mail me bij een volgende editie" aanvinkte).
 //   4. Organisator: rapport na afloop (weergaven, ik ga, favorieten, adressen).
 //   5. Opruimen (route_opruimen): dataminimalisatie.
+//   6. Buur, ochtend van de route (vanaf 7:00): link om de live-status te zetten
+//      (Fase 4). Verlopen live-statussen worden ook hier opgeruimd.
 //
 // Bericht van de organisator aan alle deelnemers (POST, ingelogd):
 //   { "actie": "bericht", "groep_id": "bv-...", "tekst": "..." }
@@ -75,6 +77,10 @@ const T: Record<Taal, Record<string, string>> = {
     berOnderwerp: 'Bericht over {titel}',
     berIntro: '{org} (organisator van <b>{titel}</b> op {datum}) stuurt je dit bericht:',
     berOrg: 'De organisator',
+    liveOnderwerp: 'Vandaag is het zover: {titel}',
+    liveTekst: 'Vandaag is <b>{titel}</b>{tijd}. Laat bezoekers live zien hoe het bij jou gaat: open, bijna leeg of gesloten. Eén tik is genoeg, en je kunt het de hele dag aanpassen.',
+    liveKnop: 'Mijn status zetten',
+    liveOnder: 'Bewaar deze mail: via dezelfde knop pas je je status later weer aan.',
   },
   en: {
     hoi: 'Hi {naam},', hoiAnoniem: 'Hi,',
@@ -99,6 +105,10 @@ const T: Record<Taal, Record<string, string>> = {
     berOnderwerp: 'Message about {titel}',
     berIntro: '{org} (organiser of <b>{titel}</b> on {datum}) sends you this message:',
     berOrg: 'The organiser',
+    liveOnderwerp: 'Today is the day: {titel}',
+    liveTekst: 'Today is <b>{titel}</b>{tijd}. Let visitors see live how things are going at your place: open, almost sold out or closed. One tap is enough, and you can change it all day.',
+    liveKnop: 'Set my status',
+    liveOnder: 'Keep this email: use the same button to update your status later.',
   },
   fr: {
     hoi: 'Bonjour {naam},', hoiAnoniem: 'Bonjour,',
@@ -123,6 +133,10 @@ const T: Record<Taal, Record<string, string>> = {
     berOnderwerp: 'Message concernant {titel}',
     berIntro: '{org} (organisateur de <b>{titel}</b> le {datum}) vous envoie ce message :',
     berOrg: "L'organisateur",
+    liveOnderwerp: "C'est aujourd'hui : {titel}",
+    liveTekst: "C'est aujourd'hui <b>{titel}</b>{tijd}. Montrez en direct aux visiteurs comment ça se passe chez vous : ouvert, presque vide ou fermé. Un seul clic suffit, et vous pouvez le modifier toute la journée.",
+    liveKnop: 'Indiquer mon statut',
+    liveOnder: 'Gardez cet e-mail : le même bouton vous permet de modifier votre statut plus tard.',
   },
   de: {
     hoi: 'Hallo {naam},', hoiAnoniem: 'Hallo,',
@@ -147,6 +161,10 @@ const T: Record<Taal, Record<string, string>> = {
     berOnderwerp: 'Nachricht zu {titel}',
     berIntro: '{org} (Organisation von <b>{titel}</b> am {datum}) schickt dir diese Nachricht:',
     berOrg: 'Die Organisation',
+    liveOnderwerp: 'Heute ist es so weit: {titel}',
+    liveTekst: 'Heute ist <b>{titel}</b>{tijd}. Zeig Besuchern live, wie es bei dir läuft: geöffnet, fast leer oder geschlossen. Ein Tippen reicht, und du kannst es den ganzen Tag ändern.',
+    liveKnop: 'Meinen Status setzen',
+    liveOnder: 'Bewahre diese E-Mail auf: Mit demselben Button änderst du deinen Status später wieder.',
   },
 };
 
@@ -257,6 +275,28 @@ async function mailBuren(sb: SupabaseClient, dryRun: boolean) {
   return { goedgekeurd: ok, uitgenodigd: uit };
 }
 
+// Ochtend van de route: buren krijgen hun persoonlijke link om live te zetten
+// of ze open, bijna leeg of gesloten zijn (Fase 4, live-status.sql).
+async function liveOchtend(sb: SupabaseClient, dryRun: boolean) {
+  const { data, error } = await sb.rpc('route_live_kandidaten');
+  if (error) return { fout: error.message };
+  let n = 0;
+  for (const a of data || []) {
+    if (dryRun) continue;
+    const taal: Taal = isTaal(a.taal) ? a.taal : 'nl';
+    const t = T[taal];
+    const tijdTekst = a.tijd_van ? ', ' + a.tijd_van + (a.tijd_tot ? '–' + a.tijd_tot : '') : '';
+    const v = { titel: esc(a.titel), tijd: tijdTekst, naam: esc(a.naam || '') };
+    const hoi = a.naam ? vul(t.hoi, v) : t.hoiAnoniem;
+    const html = mailHtml(hoi, alinea(vul(t.liveTekst, v)),
+      { tekst: t.liveKnop, link: `${SITE}/doe-mee?t=${a.token}&lang=${taal}` }, t.liveOnder, t.voetBuur);
+    // Ook bij mislukken markeren: liever één gemiste mail dan elk uur opnieuw.
+    if (await stuurMail(a.email, vul(t.liveOnderwerp, { titel: a.titel }), html, 'live')) n++;
+    await sb.rpc('route_live_gemaild', { p_id: a.aanmelding_id });
+  }
+  return { kandidaten: (data || []).length, gemaild: n };
+}
+
 async function rapporten(sb: SupabaseClient, dryRun: boolean) {
   const { data, error } = await sb.rpc('route_rapport_kandidaten');
   if (error) { console.error('rapport', error.message); return { fout: error.message }; }
@@ -345,10 +385,13 @@ serve(async (req: Request) => {
   const uit: Record<string, unknown> = { dryRun };
   uit.aanmeldingen = await meldNieuweAanmeldingen(sb, dryRun);
   uit.buren = await mailBuren(sb, dryRun);
+  uit.live = await liveOchtend(sb, dryRun);
   uit.rapporten = await rapporten(sb, dryRun);
   if (!dryRun) {
     const o = await sb.rpc('route_opruimen');
     uit.opruimen = o.error ? o.error.message : o.data;
+    const l = await sb.rpc('live_status_opruimen');
+    uit.live_opgeruimd = l.error ? l.error.message : l.data;
   }
   return json({ ok: true, ...uit });
 });

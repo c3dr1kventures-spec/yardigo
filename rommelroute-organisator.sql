@@ -198,9 +198,12 @@ begin
     -- app kan buur-rijen daar niet betrouwbaar van het eigen adres onderscheiden.
     'adressen', coalesce((
       select jsonb_agg(jsonb_build_object(
+        'id', l.id,
         'adres', l.address, 'label', coalesce(l.participant_display_name, l.confirmation_address_label),
         'lat', l.latitude, 'lng', l.longitude, 'status', l.confirmation_status, 'hoofd', l.id = h.id,
-        'token', case when l.confirmation_status = 'pending' then l.confirmation_token end
+        -- Token ook bij bevestigd: de organisator kan de buur dan de live-link
+        -- (/doe-mee?t=) sturen om op de dag zelf de status te zetten (Fase 4).
+        'token', case when l.confirmation_status in ('pending', 'confirmed') then l.confirmation_token end
       ) order by (l.id = h.id) desc, l.created_at)
       from listings l
       where l.neighborhood_group_id = p_groep and coalesce(l.address, '') <> ''

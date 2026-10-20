@@ -2123,6 +2123,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button class="fdd-btn" id="btn-datum" onclick="openDD(event,'datum')"><span data-i18n="filter.date_label">📅 Datum</span>: <span id="lbl-datum" data-i18n="filter.date.all_short">Alle</span> ▾</button>
     <div class="fdd-menu" id="dd-datum">
       <div class="fdd-opt sel" data-datekey="all" onclick="pickD('all','filter.date.all_short')" data-i18n="filter.date.all">Alle datums</div>
+      <div class="fdd-opt" data-datekey="nu" onclick="pickD('nu','filter.date.now')" data-i18n="filter.date.now">Nu open</div>
       <div class="fdd-opt" data-datekey="today" onclick="pickD('today','filter.date.today')" data-i18n="filter.date.today">Vandaag</div>
       <div class="fdd-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')" data-i18n="filter.date.weekend">Dit weekend</div>
       <div class="fdd-opt" data-datekey="week" onclick="pickD('week','filter.date.week')" data-i18n="filter.date.week">Deze week</div>
@@ -2227,6 +2228,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="lijst-side-group">
       <div class="lijst-side-h">📅 Datum</div>
       <button class="ls-opt active" data-datekey="all" onclick="pickD('all','filter.date.all_short')">Alle datums</button>
+      <button class="ls-opt" data-datekey="nu" onclick="pickD('nu','filter.date.now')" data-i18n="filter.date.now">Nu open</button>
       <button class="ls-opt" data-datekey="today" onclick="pickD('today','filter.date.today')">Vandaag</button>
       <button class="ls-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')">Dit weekend</button>
       <button class="ls-opt" data-datekey="week" onclick="pickD('week','filter.date.week')">Deze week</button>
@@ -3365,6 +3367,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="padding:16px">
       <div id="det-title" style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">Titel</div>
       <div id="det-meta" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
+      <div id="det-live"></div>
       <div id="det-addr" style="font-size:12px;color:var(--muted);margin-bottom:4px"></div>
       <div id="det-addr-guest" style="display:none;font-size:12px;color:var(--muted);margin-bottom:4px;cursor:pointer;border:1.5px dashed #F2C89A;border-radius:8px;padding:6px 10px" onclick="guestGate('adres')">
         <span id="det-addr-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒
@@ -4636,6 +4639,7 @@ function mapSupabaseToSale(item) {
     lat: lat,
     lng: lng,
     date: item.date_start || item.date || '',
+    date_end: item.date_end || null,
     from: item.time_start ? String(item.time_start).substring(0, 5) : '09:00',
     till: item.time_end   ? String(item.time_end).substring(0, 5)   : '17:00',
     tags: item.tags || [],
@@ -5006,6 +5010,26 @@ var I18N = {
     // Fase 3: rommelroute beheren
     'route.manage_btn': "⚙️ Beheer",
     'route.loading': "Laden…",
+    "filter.date.now": "Nu open",
+    "live.open": "Open",
+    "live.bijna_leeg": "Bijna leeg",
+    "live.gesloten": "Gesloten",
+    "live.nog_veel": "nog veel",
+    "live.nog_veel_kies": "Nog veel van… (optioneel)",
+    "live.titel": "Live vandaag",
+    "live.zojuist": "zojuist",
+    "live.min_geleden": "{n} min geleden",
+    "live.uur_geleden": "{n} uur geleden",
+    "live.opgeslagen": "Status bijgewerkt",
+    "live.fout": "Status kon niet worden opgeslagen",
+    "live.fout_niet_vandaag": "Dit kan alleen op de dag van de verkoop zelf",
+    "live.fout_voorbij": "De verkoop is voor vandaag al afgelopen",
+    "live.fout_te_snel": "Even wachten, en probeer het dan opnieuw",
+    "live.link_btn": "🔗 Live-link",
+    "live.link_text": "Op de dag van {titel} kun je hier met één tik laten zien of je open, bijna leeg of gesloten bent:",
+    "live.route_overgeslagen": "✨ Route geoptimaliseerd, {n} gesloten adres(sen) overgeslagen",
+    "live.n_open": "{n} open",
+    "live.n_gesloten": "{n} gesloten",
     'route.error': "Dat lukte niet. Probeer het later nog eens.",
     'route.past_badge': "Voorbij",
     'route.stat_views': "keer bekeken",
@@ -5787,6 +5811,26 @@ var I18N = {
     // Fase 3: rommelroute beheren
     'route.manage_btn': "⚙️ Manage",
     'route.loading': "Loading…",
+    "filter.date.now": "Open now",
+    "live.open": "Open",
+    "live.bijna_leeg": "Almost sold out",
+    "live.gesloten": "Closed",
+    "live.nog_veel": "still lots of",
+    "live.nog_veel_kies": "Still lots of… (optional)",
+    "live.titel": "Live today",
+    "live.zojuist": "just now",
+    "live.min_geleden": "{n} min ago",
+    "live.uur_geleden": "{n} h ago",
+    "live.opgeslagen": "Status updated",
+    "live.fout": "Could not save the status",
+    "live.fout_niet_vandaag": "This only works on the day of the sale",
+    "live.fout_voorbij": "The sale has already ended for today",
+    "live.fout_te_snel": "Please wait a moment and try again",
+    "live.link_btn": "🔗 Live link",
+    "live.link_text": "On the day of {titel}, one tap here shows visitors whether you are open, almost sold out or closed:",
+    "live.route_overgeslagen": "✨ Route optimised, {n} closed address(es) skipped",
+    "live.n_open": "{n} open",
+    "live.n_gesloten": "{n} closed",
     'route.error': "That did not work. Please try again later.",
     'route.past_badge': "Past",
     'route.stat_views': "views",
@@ -6568,6 +6612,26 @@ var I18N = {
     // Fase 3: rommelroute beheren
     'route.manage_btn': "⚙️ Gérer",
     'route.loading': "Chargement…",
+    "filter.date.now": "Ouvert maintenant",
+    "live.open": "Ouvert",
+    "live.bijna_leeg": "Presque vide",
+    "live.gesloten": "Fermé",
+    "live.nog_veel": "encore beaucoup de",
+    "live.nog_veel_kies": "Encore beaucoup de… (facultatif)",
+    "live.titel": "En direct aujourd'hui",
+    "live.zojuist": "à l'instant",
+    "live.min_geleden": "il y a {n} min",
+    "live.uur_geleden": "il y a {n} h",
+    "live.opgeslagen": "Statut mis à jour",
+    "live.fout": "Impossible d'enregistrer le statut",
+    "live.fout_niet_vandaag": "Possible uniquement le jour de la vente",
+    "live.fout_voorbij": "La vente est déjà terminée pour aujourd'hui",
+    "live.fout_te_snel": "Patientez un instant puis réessayez",
+    "live.link_btn": "🔗 Lien direct",
+    "live.link_text": "Le jour de {titel}, un seul clic ici montre si vous êtes ouvert, presque vide ou fermé :",
+    "live.route_overgeslagen": "✨ Itinéraire optimisé, {n} adresse(s) fermée(s) ignorée(s)",
+    "live.n_open": "{n} ouvert(s)",
+    "live.n_gesloten": "{n} fermé(s)",
     'route.error': "Cela n’a pas fonctionné. Réessayez plus tard.",
     'route.past_badge': "Passé",
     'route.stat_views': "vues",
@@ -7347,6 +7411,26 @@ var I18N = {
     // Fase 3: rommelroute beheren
     'route.manage_btn': "⚙️ Verwalten",
     'route.loading': "Wird geladen…",
+    "filter.date.now": "Jetzt geöffnet",
+    "live.open": "Geöffnet",
+    "live.bijna_leeg": "Fast leer",
+    "live.gesloten": "Geschlossen",
+    "live.nog_veel": "noch viel",
+    "live.nog_veel_kies": "Noch viel… (optional)",
+    "live.titel": "Heute live",
+    "live.zojuist": "gerade eben",
+    "live.min_geleden": "vor {n} Min.",
+    "live.uur_geleden": "vor {n} Std.",
+    "live.opgeslagen": "Status aktualisiert",
+    "live.fout": "Status konnte nicht gespeichert werden",
+    "live.fout_niet_vandaag": "Das geht nur am Tag des Verkaufs",
+    "live.fout_voorbij": "Der Verkauf ist für heute schon vorbei",
+    "live.fout_te_snel": "Kurz warten und dann erneut versuchen",
+    "live.link_btn": "🔗 Live-Link",
+    "live.link_text": "Am Tag von {titel} zeigst du hier mit einem Tippen, ob du geöffnet, fast leer oder geschlossen bist:",
+    "live.route_overgeslagen": "✨ Route optimiert, {n} geschlossene Adresse(n) übersprungen",
+    "live.n_open": "{n} geöffnet",
+    "live.n_gesloten": "{n} geschlossen",
     'route.error': "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
     'route.past_badge': "Vorbei",
     'route.stat_views': "Aufrufe",
@@ -8796,6 +8880,8 @@ function _renderMySalesNu() {
             actions = '<button type="button" onclick="reshareOneBuurtLink(\'' + escapeHtml(row.id) + '\')" '
               + 'style="margin-top:6px;padding:6px 10px;border-radius:7px;border:1.5px solid var(--terra);background:var(--terra);color:white;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">📨 Link opnieuw delen</button>';
           }
+          // Op de dag zelf: live-status per adres (de organisator mag dat voor iedereen).
+          if (status === 'confirmed') actions += liveKnoppenHtml(row);
           return '<div style="padding:8px 10px;border-top:1px solid var(--border)">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
               + '<div style="flex:1;min-width:0">'
@@ -8807,7 +8893,7 @@ function _renderMySalesNu() {
             + actions
           + '</div>';
         }).join('');
-        bvAddressesHtml = '<details style="margin-top:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">'
+        bvAddressesHtml = '<details' + (saleIsVandaag(s) ? ' open' : '') + ' style="margin-top:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">'
           + '<summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:700;color:var(--bark);list-style:none;display:flex;justify-content:space-between;align-items:center">'
             + '<span>📋 Adressen van buren (' + grp.length + ')</span>'
             + '<span style="color:var(--muted);font-size:10px;font-weight:500">tik om uit te klappen</span>'
@@ -8840,6 +8926,7 @@ function _renderMySalesNu() {
           + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
         + '</div>'
       + '</div>'
+      + (bvAddressesHtml ? '' : liveKnoppenHtml(s))
       + bvAddressesHtml
     + '</div>';
   }).join('') + eerdereRoutesHtml(display);
@@ -8972,6 +9059,123 @@ function pasIkGaToe() {
   sales.forEach(function(s) { if (!s.is_sample) s.interested = _ikGaAantallen[s.id] || 0; });
 }
 
+// ── Live-status op de dag zelf (Fase 4, live-status.sql) ──
+// Verkoper of buur zet open / bijna leeg / gesloten; de server geeft alleen
+// statussen die nu gelden (vervallen na de eindtijd van vandaag).
+var _liveStatus = {};   // listing_id -> { status, categorie, updated_at }
+var _liveTimer = null;
+function vandaagIso() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function saleIsVandaag(s) {
+  var v = vandaagIso();
+  return !!(s && s.date) && s.date <= v && (s.date_end || s.date) >= v;
+}
+function liveVan(s) { return (s && _liveStatus[s.id]) || null; }
+// Nu open: vandaag, niet op gesloten gezet, en binnen de tijden (tenzij de
+// verkoper zelf al op open/bijna leeg zette).
+function saleNuOpen(s) {
+  if (!saleIsVandaag(s)) return false;
+  var l = liveVan(s);
+  if (l) return l.status !== 'gesloten';
+  var d = new Date(), nu = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  return nu >= (s.from || '00:00') && nu < (s.till || '23:59');
+}
+function saleGesloten(s) { var l = liveVan(s); return !!(l && l.status === 'gesloten'); }
+function liveGeleden(iso) {
+  var min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 1) return i18n('live.zojuist', 'zojuist');
+  if (min < 60) return i18n('live.min_geleden', '{n} min geleden').replace('{n}', min);
+  return i18n('live.uur_geleden', '{n} uur geleden').replace('{n}', Math.floor(min / 60));
+}
+function liveRegelHtml(s) {
+  var l = liveVan(s);
+  if (!l) return '';
+  var kl = { open: '#3A6B4A', bijna_leeg: '#C8701F', gesloten: '#6B6259' }[l.status];
+  var ic = { open: '🟢', bijna_leeg: '🟠', gesloten: '⚫' }[l.status];
+  var t = ic + ' ' + i18n('live.' + l.status, l.status);
+  if (l.categorie && l.status !== 'gesloten') t += ' · ' + i18n('live.nog_veel', 'nog veel') + ' ' + ygTagLabel(l.categorie);
+  return '<div class="live-regel" style="font-size:11px;font-weight:700;color:' + kl + ';margin:3px 0">' + escapeHtml(t)
+    + ' <span style="font-weight:500;color:var(--muted)">· ' + escapeHtml(liveGeleden(l.updated_at)) + '</span></div>';
+}
+async function laadLiveStatussen() {
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.rpc('live_statussen');
+    if (res.error) return;
+    var nieuw = {};
+    (res.data || []).forEach(function(r) { nieuw[r.listing_id] = { status: r.status, categorie: r.categorie, updated_at: r.updated_at }; });
+    var veranderd = JSON.stringify(nieuw) !== JSON.stringify(_liveStatus);
+    _liveStatus = nieuw;
+    // Bij "Nu open" ook zonder wijziging hertekenen: de tijd schuift door.
+    if (veranderd || activeDateFilter === 'nu') liveHertekenen();
+  } catch (e) {}
+}
+// Rommelroute-kaart in de lijst: "🟢 3 open · ⚫ 1 gesloten" (alleen als er live-statussen zijn).
+function liveRouteSamenvatting(lijst) {
+  var open = 0, dicht = 0;
+  (lijst || []).forEach(function(x) { var l = liveVan(x); if (!l) return; if (l.status === 'gesloten') dicht++; else open++; });
+  if (!open && !dicht) return '';
+  var t = [];
+  if (open) t.push('🟢 ' + i18n('live.n_open', '{n} open').replace('{n}', open));
+  if (dicht) t.push('⚫ ' + i18n('live.n_gesloten', '{n} gesloten').replace('{n}', dicht));
+  return '<div style="font-size:11px;font-weight:700;color:#3A6B4A;margin:3px 0">' + escapeHtml(t.join(' · ')) + '</div>';
+}
+function liveHertekenen() {
+  if (typeof renderMarkers === 'function') renderMarkers();
+  if (typeof renderList === 'function') renderList();
+  if (typeof updateRouteView === 'function') updateRouteView();
+}
+// Elke 2 minuten verversen, alleen als het tabblad zichtbaar is en er vandaag iets is.
+function startLiveVerversen() {
+  if (_liveTimer) return;
+  var magNu = function() { return !document.hidden && sales.some(saleIsVandaag); };
+  if (sales.some(saleIsVandaag)) laadLiveStatussen();
+  _liveTimer = setInterval(function() { if (magNu()) laadLiveStatussen(); }, 120000);
+  document.addEventListener('visibilitychange', function() { if (magNu()) laadLiveStatussen(); });
+}
+// Knoppen voor de eigenaar (Mijn verkopen, route-beheer). Alleen op de dag zelf.
+function liveKnoppenHtml(s) {
+  if (!saleIsVandaag(s)) return '';
+  var l = liveVan(s) || {};
+  var sid = escapeHtml(String(s.id));
+  var knop = function(st, ic) {
+    var aan = l.status === st;
+    return '<button onclick="event.stopPropagation();liveZet(\'' + sid + '\',\'' + st + '\')" style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ' + (aan ? 'var(--green,#3A6B4A)' : 'var(--border,#E5DDD0)') + ';background:' + (aan ? 'rgba(58,107,74,.1)' : 'white') + ';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink,#2C2416)">' + ic + ' ' + escapeHtml(i18n('live.' + st, st)) + '</button>';
+  };
+  var tags = (s.tags || []).filter(Boolean);
+  var cat = '';
+  if (tags.length && l.status && l.status !== 'gesloten') {
+    cat = '<select onclick="event.stopPropagation()" onchange="liveZet(\'' + sid + '\',\'' + l.status + '\',this.value)" style="width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1.5px solid var(--border,#E5DDD0);font-family:inherit;font-size:11px;background:white">'
+      + '<option value="">' + escapeHtml(i18n('live.nog_veel_kies', 'Nog veel van… (optioneel)')) + '</option>'
+      + tags.map(function(tg) { return '<option value="' + escapeHtml(tg) + '"' + (l.categorie === tg ? ' selected' : '') + '>' + escapeHtml(i18n('live.nog_veel', 'nog veel') + ' ' + ygTagLabel(tg)) + '</option>'; }).join('')
+      + '</select>';
+  }
+  return '<div class="live-knoppen" style="margin-top:8px;padding:8px;border-radius:10px;background:#F7F3EC">'
+    + '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">' + escapeHtml(i18n('live.titel', 'Live vandaag')) + '</div>'
+    + '<div style="display:flex;gap:5px">' + knop('open', '🟢') + knop('bijna_leeg', '🟠') + knop('gesloten', '⚫') + '</div>' + cat + '</div>';
+}
+async function liveZet(id, status, categorie) {
+  if (!sbClient || isGuest) return;
+  try {
+    var res = await sbClient.rpc('live_status_zet', { p_listing: id, p_status: status, p_categorie: categorie || null });
+    var r = res.data || {};
+    if (res.error || !r.ok) {
+      var reden = (r && r.reden) || 'fout';
+      toast(i18n('live.fout_' + reden, i18n('live.fout', 'Status kon niet worden opgeslagen')));
+      return;
+    }
+    _liveStatus[id] = { status: r.status, categorie: r.categorie, updated_at: new Date().toISOString() };
+    toast(i18n('live.opgeslagen', 'Status bijgewerkt'));
+    liveHertekenen();
+    if (typeof renderMySales === 'function') renderMySales();
+    if (_routeData && typeof renderRouteBeheer === 'function') renderRouteBeheer();
+  } catch (e) {
+    toast(i18n('live.fout', 'Status kon niet worden opgeslagen'));
+  }
+}
+
 async function openRouteBeheer(groepId) {
   if (isGuest) { guestGate('rommelroute'); return; }
   var body = document.getElementById('route-body');
@@ -9085,8 +9289,16 @@ function renderRouteBeheer() {
         + (x.status === 'pending'
           ? '<span style="display:flex;gap:6px;align-items:center"><span style="font-size:10px;font-weight:700;color:#A04A18">⏳ ' + escapeHtml(i18n('route.pending', 'Wacht op bevestiging')) + '</span>'
             + (x.token && !r.voorbij ? _rbKnop(escapeHtml(i18n('route.resend', '📨 Link')), "routeDeelBevestiging(" + i + ")") : '') + '</span>'
-          : '<span style="font-size:10px;font-weight:700;color:#2C4A36">✅</span>')
+          : '<span style="display:flex;gap:6px;align-items:center">'
+            + (x.token && !x.hoofd && !r.voorbij ? _rbKnop(escapeHtml(i18n('live.link_btn', '🔗 Live-link')), 'routeLiveLink(' + i + ')') : '')
+            + '<span style="font-size:10px;font-weight:700;color:#2C4A36">✅</span></span>')
         + '</div>';
+      // Op de dag zelf: status per adres zetten (organisator is eigenaar van alle rijen).
+      if (x.status === 'confirmed' && x.id) {
+        var _ls = sales.filter(function(z) { return String(z.id) === String(x.id); })[0]
+          || { id: x.id, date: r.datum, date_end: r.datum_eind || null, tags: [] };
+        adInh += liveKnoppenHtml(_ls);
+      }
     });
     h += _rbBlok(escapeHtml(i18n('route.addresses_title', 'Adressen op de route')) + ' (' + adr.length + ')', adInh);
   }
@@ -9164,6 +9376,16 @@ async function routeBeoordeel(id, goed) {
     await herlaadRouteBeheer(_routeData.groep_id);
     if (goed) herlaadVerkopen();
   } catch(e) { console.warn('beoordelen:', e); toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')); }
+}
+// Persoonlijke link voor een bevestigde buur: daarmee zet hij op de dag zelf
+// zijn live-status zonder account (/doe-mee?t=).
+function routeLiveLink(i) {
+  var x = (_routeData.adressen || [])[i];
+  if (!x || !x.token) return;
+  var link = YG_SITE + '/doe-mee?t=' + encodeURIComponent(x.token) + '&lang=' + (currentLang || 'nl');
+  var tekst = rtxt('live.link_text', 'Op de dag van {titel} kun je hier met één tik laten zien of je open, bijna leeg of gesloten bent:', { titel: _routeData.titel || '' });
+  if (navigator.share) { navigator.share({ title: _routeData.titel, text: tekst, url: link }).catch(function(){}); return; }
+  window.open('https://wa.me/?text=' + encodeURIComponent(tekst + '\n' + link), '_blank');
 }
 function routeDeelBevestiging(i) {
   var x = (_routeData.adressen || [])[i];
@@ -9938,12 +10160,17 @@ function initMap() {
 function makeMarkerIcon(sale) {
   var c = YG_KIND_COLORS[saleKind(sale)].base;
   var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
+  // Live-status (Fase 4): gesloten = grijs en half doorzichtig, open/bijna leeg = stipje.
+  var live = liveVan(sale);
+  if (live && live.status === 'gesloten') c = '#9A9086';
   var strokeAttrs = 'stroke="white" stroke-width="2"';
   var icon = YG_KIND_ICON_PATHS[saleIconName(sale)] || YG_KIND_ICON_PATHS.stall;
   var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.25))">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
     + '<g transform="translate(9.6 7.6) scale(0.7)" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + icon + '</g>'
+    + (live && live.status !== 'gesloten' ? '<circle cx="29" cy="7" r="5.5" fill="' + (live.status === 'open' ? '#2FA84F' : '#F08A24') + '" stroke="white" stroke-width="2"/>' : '')
     + '</svg>';
+  if (live && live.status === 'gesloten') svg = '<div style="opacity:.5">' + svg + '</div>';
   return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
@@ -10027,6 +10254,7 @@ function createListingPopup(sale) {
     + '<div class="pop-meta">&#128197; ' + fmtDate(sale.date) + ' &middot; &#128336; ' + escapeHtml(sale.from || '') + '&ndash;' + escapeHtml(sale.till || '') + '</div>'
     + '</div>'
     + '<div class="pop-body">'
+    + liveRegelHtml(sale)
     + '<div class="pop-addr">' + addrHtml + '</div>'
     + '<div class="pop-tags">' + tagsHtml + '</div>'
     + '<div class="pop-actions">'
@@ -10173,11 +10401,12 @@ var _pinsOpKaart = new Set();
 function _pinVoor(sale) {
   var fav = favorites.has(sale.id);
   var pin = _pinCache.get(sale);
+  var lk = JSON.stringify(liveVan(sale) && [liveVan(sale).status]);
   if (pin) {
-    if (pin.fav !== fav) { pin.fav = fav; pin.marker.setIcon(createDefaultPin(sale)); }
+    if (pin.fav !== fav || pin.live !== lk) { pin.fav = fav; pin.live = lk; pin.marker.setIcon(createDefaultPin(sale)); }
     return pin;
   }
-  pin = { fav: fav, ring: null, marker: null };
+  pin = { fav: fav, live: lk, ring: null, marker: null };
   // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
   // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
   if (sale.location_approx) {
@@ -10422,7 +10651,9 @@ function saleMatchesFilters(s) {
     var hasCat = (s.tags || []).some(function(t) { return _catsToCheck.has(t); });
     if (!hasCat) return false;
   }
-  if (activeDateFilter !== 'all') {
+  if (activeDateFilter === 'nu') {
+    if (!saleNuOpen(s)) return false;
+  } else if (activeDateFilter !== 'all') {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
     if (range && (sd < range[0] || sd > range[1])) return false;
   }
@@ -10879,7 +11110,9 @@ function renderList() {
         // Type-filter
         if (activeFilters.size > 0 && !activeFilters.has(s.type)) return false;
         // Date-filter (reuse bestaande getDateRange)
-        if (hasDateFilter) {
+        if (activeDateFilter === 'nu') {
+          if (!saleNuOpen(s)) return false;
+        } else if (hasDateFilter) {
           var _sd = new Date(s.date), _rng = getDateRange(activeDateFilter);
           if (_rng && (_sd < _rng[0] || _sd > _rng[1])) return false;
         }
@@ -11026,6 +11259,7 @@ function renderBvCard(bv) {
         + '<span class="type-chip buurt">' + escapeHtml(i18n('type.buurt', 'Rommelroute')) + '</span>'
       + '</div>'
       + '<div class="card-addr">' + addrLine + '</div>'
+      + liveRouteSamenvatting(bv.listings)
       + '<div class="card-tags">' + tags + '</div>'
       + '<div class="card-foot">'
         + addrPill
@@ -11087,6 +11321,7 @@ function createListingCard(s, i) {
     + '<div class="card-top"><div class="card-title">' + ((s.placed_by === 'yardigo' && !s.claimed_by_user_id) ? '<span title="Door YardiGo verzameld" style="font-size:11px;opacity:0.65;margin-right:4px">🔍</span>' : '') + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
     + '<div class="card-addr">' + addr + '</div>'
+    + liveRegelHtml(s)
     + '<div class="card-tags">' + tags + '</div>'
     + '<div class="card-foot"><span class="c-time ' + s.type + '">' + (s.date ? '📅 ' + fmtDate(s.date) + ' · ' : '') + '🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
     + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
@@ -11184,8 +11419,10 @@ function updateRouteView() {
   if (!list) return;
   if (!ordered.length) { list.innerHTML = ''; if (empty) empty.style.display = 'block'; if (stats) stats.style.display = 'none'; return; }
   if (empty) empty.style.display = 'none'; if (stats) stats.style.display = 'grid';
+  // Afstand en tijd zonder gesloten adressen (live-status).
+  var _open = ordered.filter(function(s) { return !saleGesloten(s); });
   var totalDist = 0;
-  for (var i = 1; i < ordered.length; i++) totalDist += dist(ordered[i-1], ordered[i]);
+  for (var i = 1; i < _open.length; i++) totalDist += dist(_open[i-1], _open[i]);
   var speeds = { auto: 40, fiets: 15, lopen: 5 };
   var speed = speeds[transportMode] || 40;
   var sc = document.getElementById('stopCount'), dk = document.getElementById('distKm'), tm = document.getElementById('timeMin');
@@ -11205,10 +11442,12 @@ function updateRouteView() {
       _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' (adres zichtbaar na inloggen)';
     }
     var sid = escapeHtml(String(s.id));
-    return '<div class="route-stop-card">'
-      + '<div class="route-stop-num" style="background:' + colors[s.type] + '">' + (i+1) + '</div>'
+    var _dicht = saleGesloten(s);
+    return '<div class="route-stop-card"' + (_dicht ? ' style="opacity:.5"' : '') + '>'
+      + '<div class="route-stop-num" style="background:' + (_dicht ? '#9A9086' : colors[s.type]) + '">' + (i+1) + '</div>'
       + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.title) + '</div>'
-      + '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _addrLine + '</div></div>'
+      + '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _addrLine + '</div>'
+      + liveRegelHtml(s) + '</div>'
       + '<div class="route-order-btns">'
       + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',-1)" ' + (i === 0 ? 'disabled' : '') + '>▲</button>'
       + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',1)" ' + (i === ordered.length - 1 ? 'disabled' : '') + '>▼</button>'
@@ -11239,10 +11478,13 @@ function moveRouteStop(id, dir) {
 function optimizeAndSaveRoute() {
   var inRoute = sales.filter(function(s) { return routeSet.has(s.id); });
   if (!inRoute.length) { toast(i18n('toast.add_sales_first', 'Voeg eerst verkopen toe')); return; }
-  var opt = optimizeRoute(inRoute.slice());
-  routeOrder = opt.map(function(s) { return String(s.id); });
+  // Gesloten adressen (live-status) slaan we over: achteraan, buiten de route.
+  var dicht = inRoute.filter(saleGesloten);
+  var opt = optimizeRoute(inRoute.filter(function(s) { return !saleGesloten(s); }));
+  routeOrder = opt.concat(dicht).map(function(s) { return String(s.id); });
   saveRoute(); updateRouteView();
-  toast(i18n('toast.route_optimized', '✨ Route geoptimaliseerd!'));
+  toast(dicht.length ? i18n('live.route_overgeslagen', '✨ Route geoptimaliseerd, {n} gesloten adres(sen) overgeslagen').replace('{n}', dicht.length)
+                     : i18n('toast.route_optimized', '✨ Route geoptimaliseerd!'));
 }
 
 // ── Auto-route: plan route op basis van GPS-locatie ──
@@ -11252,7 +11494,7 @@ function autoRouteFromLocation() {
   toast(i18n('toast.fetching_location', '📍 Locatie ophalen…'));
   navigator.geolocation.getCurrentPosition(function(pos) {
     var userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
+    var visible = sales.filter(function(s) { return saleMatchesFilters(s) && !saleGesloten(s); });
     if (!visible.length) { toast(i18n('toast.no_sales_found', 'Geen verkopen gevonden')); return; }
     var sorted = visible.slice().sort(function(a, b) { return dist(userPos, a) - dist(userPos, b); });
     routeSet.clear();
@@ -11489,6 +11731,8 @@ function openDetail(id) {
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
   document.getElementById('det-title').textContent = s.title;
   document.getElementById('det-meta').textContent = '📅 ' + fmtDate(s.date) + ' · 🕐 ' + s.from + '–' + s.till;
+  var _detLive = document.getElementById('det-live');
+  if (_detLive) _detLive.innerHTML = liveRegelHtml(s);
   // Curated banner: alleen tonen voor 'Door YardiGo verzameld' evenementen
   (function() {
     var banner = document.getElementById('det-curated-banner');
@@ -17856,6 +18100,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   laadIkGaAantallen();
+  startLiveVerversen();
 
   // Onderhoudsbanner: toon banner indien actief
   if (sbClient) {

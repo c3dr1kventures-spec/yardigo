@@ -40,6 +40,10 @@
     .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--bg2); color: var(--bark); }
     .badge.goed { background: #EAF5EE; color: #1F4A2D; }
     .badge.wacht { background: #FFF4E6; color: #A04A18; }
+    .live-rij { display: flex; gap: 8px; margin-top: 12px; }
+    .live-rij button { flex: 1; padding: 14px 6px; font-size: 14px; background: white; color: var(--bark); border: 2px solid var(--border); }
+    .live-rij button.aan { border-color: var(--forest); background: #EAF5EE; color: #1F4A2D; }
+    select { width: 100%; font-family: inherit; font-size: 14px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--border); background: white; margin-top: 10px; }
     .link-box { font-size: 13px; background: var(--bg2); border-radius: 8px; padding: 10px; word-break: break-all; margin-top: 8px; }
     .back { display: inline-block; font-size: 14px; font-weight: 600; color: var(--forest); text-decoration: none; margin-top: 12px; }
     .logo { font-size: 26px; font-weight: 800; color: var(--terra); margin-bottom: 24px; letter-spacing: -.5px; }
@@ -97,6 +101,21 @@
     <button type="button" class="btn-danger" id="b-afmelden" onclick="afmelden()" style="display:none;margin-top:10px" data-t="afmelden">Afmelden</button>
   </div>
 
+  <!-- Fase 4: live-status op de dag zelf (live-status.sql) -->
+  <div id="live" class="card" style="display:none">
+    <div class="label" data-t="liveKop">Live op de dag zelf</div>
+    <p class="note" id="l-uitleg" data-t="liveUitleg"></p>
+    <div id="l-knoppen">
+      <div class="live-rij">
+        <button type="button" data-st="open" onclick="liveZet('open')">🟢 <span data-t="lOpen">Open</span></button>
+        <button type="button" data-st="bijna_leeg" onclick="liveZet('bijna_leeg')">🟠 <span data-t="lBijna">Bijna leeg</span></button>
+        <button type="button" data-st="gesloten" onclick="liveZet('gesloten')">⚫ <span data-t="lDicht">Gesloten</span></button>
+      </div>
+      <select id="l-cat" onchange="liveZet(liveHuidig, this.value)" style="display:none"></select>
+      <div class="ok" id="l-ok" style="display:none"></div>
+    </div>
+  </div>
+
   <div id="klaar" style="display:none">
     <div class="ok" id="klaar-tekst"></div>
     <div id="klaar-link-wrap" class="card" style="display:none">
@@ -134,7 +153,8 @@
         okBestaat: 'Dit adres is al aangemeld voor deze rommelroute.', okWeerMee: 'Top, je staat weer op de kaart!', okAf: 'Je bent afgemeld. We hebben je adres en gegevens gewist.',
         gesloten: 'De inschrijving voor deze rommelroute is gesloten.', voorbij: 'Deze rommelroute is al geweest.', onbekend: 'Deze link klopt niet (meer).',
         teVer: 'Dit adres ligt te ver van de rommelroute. Klopt het adres?', nietGevonden: 'We kunnen dit adres niet vinden. Controleer straat, huisnummer en plaats.',
-        limiet: 'Er zijn net veel aanmeldingen gedaan. Probeer het over een uur nog eens.', ongeldig: 'Controleer de ingevulde gegevens.', mislukt: 'Dat lukte niet. Probeer het later nog eens.' },
+        limiet: 'Er zijn net veel aanmeldingen gedaan. Probeer het over een uur nog eens.', ongeldig: 'Controleer de ingevulde gegevens.', mislukt: 'Dat lukte niet. Probeer het later nog eens.',
+        liveKop: "Live op de dag zelf", liveUitleg: "Laat bezoekers zien hoe het bij jou gaat. Je kunt het de hele dag aanpassen.", lOpen: "Open", lBijna: "Bijna leeg", lDicht: "Gesloten", nogVeelKies: "Nog veel van… (optioneel)", nogVeel: "nog veel", liveOk: "Opgeslagen! Bezoekers zien het nu op de kaart.", liveLater: "Op de dag zelf kun je hier met één tik laten zien of je open, bijna leeg of gesloten bent.", liveVoorbij: "De verkoop is voor vandaag al afgelopen.", liveTeSnel: "Even wachten, en probeer het dan opnieuw." },
       en: { titel: 'Join the yard sale route', intro: 'Selling things at your door too? Sign up your address and it goes on the map once the organiser approves it.',
         titelStatus: 'Your sign-up', introStatus: 'Here you can see the status of your sign-up and withdraw.',
         laden: 'One moment…', route: 'Yard sale route', wanneer: 'When', organisator: 'Organiser',
@@ -155,7 +175,8 @@
         okBestaat: 'This address is already signed up for this route.', okWeerMee: 'Great, you are back on the map!', okAf: 'You have withdrawn. We deleted your address and details.',
         gesloten: 'Sign-up for this route is closed.', voorbij: 'This route has already taken place.', onbekend: 'This link is not valid (anymore).',
         teVer: 'This address is too far from the route. Is the address correct?', nietGevonden: 'We cannot find this address. Please check street, number and town.',
-        limiet: 'There have just been many sign-ups. Please try again in an hour.', ongeldig: 'Please check the details you entered.', mislukt: 'That did not work. Please try again later.' },
+        limiet: 'There have just been many sign-ups. Please try again in an hour.', ongeldig: 'Please check the details you entered.', mislukt: 'That did not work. Please try again later.',
+        liveKop: "Live on the day", liveUitleg: "Show visitors how things are going at your place. You can change it all day.", lOpen: "Open", lBijna: "Almost sold out", lDicht: "Closed", nogVeelKies: "Still lots of… (optional)", nogVeel: "still lots of", liveOk: "Saved! Visitors now see it on the map.", liveLater: "On the day itself, one tap here shows whether you are open, almost sold out or closed.", liveVoorbij: "The sale has already ended for today.", liveTeSnel: "Please wait a moment and try again." },
       fr: { titel: 'Participez au parcours de vide-greniers', intro: "Vous vendez aussi devant chez vous ? Inscrivez votre adresse : elle apparaîtra sur la carte dès que l'organisateur l'aura approuvée.",
         titelStatus: 'Votre inscription', introStatus: "Consultez l'état de votre inscription ou désinscrivez-vous.",
         laden: 'Un instant…', route: 'Parcours', wanneer: 'Quand', organisator: 'Organisateur',
@@ -176,7 +197,8 @@
         okBestaat: 'Cette adresse est déjà inscrite pour ce parcours.', okWeerMee: 'Parfait, vous êtes de nouveau sur la carte !', okAf: 'Vous êtes désinscrit. Nous avons effacé votre adresse et vos données.',
         gesloten: 'Les inscriptions pour ce parcours sont closes.', voorbij: 'Ce parcours a déjà eu lieu.', onbekend: "Ce lien n'est pas (ou plus) valide.",
         teVer: 'Cette adresse est trop loin du parcours. Est-elle correcte ?', nietGevonden: "Nous ne trouvons pas cette adresse. Vérifiez la rue, le numéro et la localité.",
-        limiet: "Il y a eu beaucoup d'inscriptions. Réessayez dans une heure.", ongeldig: 'Vérifiez les informations saisies.', mislukt: 'Cela n’a pas fonctionné. Réessayez plus tard.' },
+        limiet: "Il y a eu beaucoup d'inscriptions. Réessayez dans une heure.", ongeldig: 'Vérifiez les informations saisies.', mislukt: 'Cela n’a pas fonctionné. Réessayez plus tard.',
+        liveKop: "En direct le jour même", liveUitleg: "Montrez aux visiteurs comment ça se passe chez vous. Vous pouvez le modifier toute la journée.", lOpen: "Ouvert", lBijna: "Presque vide", lDicht: "Fermé", nogVeelKies: "Encore beaucoup de… (facultatif)", nogVeel: "encore beaucoup de", liveOk: "Enregistré ! Les visiteurs le voient maintenant sur la carte.", liveLater: "Le jour même, un seul clic ici montre si vous êtes ouvert, presque vide ou fermé.", liveVoorbij: "La vente est déjà terminée pour aujourd'hui.", liveTeSnel: "Patientez un instant puis réessayez." },
       de: { titel: 'Mach mit beim Hofflohmarkt', intro: 'Verkaufst du auch vor deiner Tür? Melde deine Adresse an, dann kommt sie auf die Karte, sobald die Organisation sie bestätigt.',
         titelStatus: 'Deine Anmeldung', introStatus: 'Hier siehst du den Stand deiner Anmeldung und kannst dich abmelden.',
         laden: 'Einen Moment…', route: 'Hofflohmarkt', wanneer: 'Wann', organisator: 'Organisation',
@@ -197,7 +219,8 @@
         okBestaat: 'Diese Adresse ist für diesen Hofflohmarkt schon angemeldet.', okWeerMee: 'Super, du bist wieder auf der Karte!', okAf: 'Du bist abgemeldet. Wir haben deine Adresse und Daten gelöscht.',
         gesloten: 'Die Anmeldung für diesen Hofflohmarkt ist geschlossen.', voorbij: 'Dieser Hofflohmarkt hat schon stattgefunden.', onbekend: 'Dieser Link ist nicht (mehr) gültig.',
         teVer: 'Diese Adresse liegt zu weit vom Hofflohmarkt entfernt. Stimmt die Adresse?', nietGevonden: 'Wir finden diese Adresse nicht. Bitte prüfe Straße, Hausnummer und Ort.',
-        limiet: 'Gerade gab es viele Anmeldungen. Bitte versuche es in einer Stunde noch einmal.', ongeldig: 'Bitte prüfe deine Angaben.', mislukt: 'Das hat nicht geklappt. Bitte versuche es später noch einmal.' }
+        limiet: 'Gerade gab es viele Anmeldungen. Bitte versuche es in einer Stunde noch einmal.', ongeldig: 'Bitte prüfe deine Angaben.', mislukt: 'Das hat nicht geklappt. Bitte versuche es später noch einmal.',
+        liveKop: "Live am Tag selbst", liveUitleg: "Zeig Besuchern, wie es bei dir läuft. Du kannst es den ganzen Tag ändern.", lOpen: "Geöffnet", lBijna: "Fast leer", lDicht: "Geschlossen", nogVeelKies: "Noch viel… (optional)", nogVeel: "noch viel", liveOk: "Gespeichert! Besucher sehen es jetzt auf der Karte.", liveLater: "Am Tag selbst zeigst du hier mit einem Tippen, ob du geöffnet, fast leer oder geschlossen bist.", liveVoorbij: "Der Verkauf ist für heute schon vorbei.", liveTeSnel: "Kurz warten und dann erneut versuchen." }
     };
     var q = new URLSearchParams(location.search);
     var taal = (q.get('lang') || navigator.language || 'nl').slice(0, 2).toLowerCase();
@@ -212,7 +235,7 @@
     var ctx = null, afmeldenGeklikt = false;
 
     function $(id) { return document.getElementById(id); }
-    function toon(ids) { ['laden', 'route', 'formulier', 'status', 'klaar'].forEach(function (x) { $(x).style.display = ids.indexOf(x) >= 0 ? '' : 'none'; }); }
+    function toon(ids) { ['laden', 'route', 'formulier', 'status', 'live', 'klaar'].forEach(function (x) { $(x).style.display = ids.indexOf(x) >= 0 ? '' : 'none'; }); }
     function fout(msg) { $('fout').textContent = msg; $('fout').style.display = msg ? '' : 'none'; if (msg) $('fout').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
     function datumTekst(iso) {
       return new Date(iso + 'T12:00:00').toLocaleDateString({ nl: 'nl-NL', en: 'en-GB', fr: 'fr-BE', de: 'de-DE' }[taal], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -342,12 +365,62 @@
       $('b-afmelden').disabled = false;
     }
 
+    // ── Live-status (Fase 4): zelfde token als de aanmelding/bevestiging ──
+    var liveCtx = null, liveHuidig = null;
+    async function liveLaden() {
+      try { liveCtx = await rpc('live_status_token_context', { p_token: token }); } catch (e) { liveCtx = null; }
+      if (!liveCtx) return false;
+      liveHuidig = liveCtx.status || null;
+      liveTekenen();
+      return true;
+    }
+    function liveTekenen() {
+      var c = liveCtx;
+      $('l-knoppen').style.display = c.vandaag ? '' : 'none';
+      $('l-uitleg').textContent = c.vandaag ? t.liveUitleg : t.liveLater;
+      document.querySelectorAll('.live-rij button').forEach(function (b) { b.classList.toggle('aan', b.dataset.st === liveHuidig); });
+      var sel = $('l-cat'), tags = (c.tags || []).filter(Boolean);
+      sel.style.display = tags.length && liveHuidig && liveHuidig !== 'gesloten' ? '' : 'none';
+      sel.innerHTML = '';
+      var leeg = document.createElement('option'); leeg.value = ''; leeg.textContent = t.nogVeelKies; sel.appendChild(leeg);
+      tags.forEach(function (tg) {
+        var o = document.createElement('option'); o.value = tg; o.textContent = t.nogVeel + ' ' + tg;
+        if (c.categorie === tg) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+    async function liveZet(st, cat) {
+      if (!st) return;
+      fout(''); $('l-ok').style.display = 'none';
+      try {
+        var r = await rpc('live_status_zet_token', { p_token: token, p_status: st, p_categorie: cat || null });
+        if (r && r.ok) {
+          liveHuidig = r.status; liveCtx.status = r.status; liveCtx.categorie = r.categorie;
+          liveTekenen();
+          $('l-ok').textContent = t.liveOk; $('l-ok').style.display = '';
+        } else fout(r && r.reden === 'voorbij' ? t.liveVoorbij : r && r.reden === 'te_snel' ? t.liveTeSnel : t.mislukt);
+      } catch (e) { fout(t.mislukt); }
+    }
+
     async function laad() {
       try {
         if (/^[0-9a-f-]{36}$/i.test(token)) {
           var s = await rpc('route_aanmelding_status', { p_token: token });
-          if (!s) { toon([]); fout(t.onbekend); return; }
+          if (!s) {
+            // Buur uit de oude bevestigingsflow (geen aanmelding): alleen live-status.
+            if (await liveLaden()) {
+              $('kop').textContent = t.liveKop; $('lede').textContent = '';
+              toon(['live']);
+              return;
+            }
+            toon([]); fout(t.onbekend); return;
+          }
           statusTonen(s);
+          if (s.status === 'goedgekeurd' && !s.voorbij && await liveLaden()) {
+            // Op de dag zelf staat live bovenaan, afmelden eronder.
+            if (liveCtx.vandaag) $('status').before($('live'));
+            toon(['route', 'status', 'live']);
+          }
           return;
         }
         if (!code) { toon([]); fout(t.onbekend); return; }
