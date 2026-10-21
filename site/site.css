@@ -1,0 +1,300 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   YardiGo website: gedeelde basisstijl (ronde 3.1)
+
+   Alleen voor de website-pagina's. De app (index.html) gebruikt dit niet,
+   zodat de iOS-, Android- en Mac-apps er niets van merken.
+
+   Kleuren per soort volgen het logo en de app (index.html, `colors`):
+     markten       groen  #3A6B4A  (de achtergrond van het logo)
+     rommelroutes  oranje #E07B39  ("Go")
+     opritverkoop  geel   #F2A830  (de "i")
+     winkels       bruin  #8A5A2B  (het houten bordje)
+   Verkopen staan op de kaart als prijskaartje met dag en tijd (.yg-tag),
+   winkels als vierkante pin (.yg-shop).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --yg-forest: #3A6B4A;
+  --yg-forest-dark: #2A5038;
+  --yg-fern: #7BA67B;
+  --yg-terra: #E07B39;
+  --yg-terra-dark: #C5612A;
+  --yg-amber: #F2A830;
+  --yg-amber-text: #7A5A10;
+  --yg-wood: #8A5A2B;
+  --yg-wood-text: #6B4520;
+  --yg-wood-tint: #F1E6D3;
+  --yg-ink: #1E2922;
+  --yg-muted: #55625A;
+  --yg-line: #E1E7DE;
+  --yg-line-strong: #D3DACF;
+  --yg-land: #EEF2EA;
+  --yg-tint: #F3F6F1;
+  --yg-paper: #FFFFFF;
+  --yg-focus: #2F6FDB;
+  --yg-live: #46A03C;
+
+  --yg-font: "Geologica", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --yg-radius-s: 10px;
+  --yg-radius-m: 14px;
+  --yg-radius-l: 18px;
+  --yg-wrap: 1200px;
+  --yg-shadow-float: 0 6px 20px rgba(30, 41, 34, .16);
+}
+
+/* ── Basis ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--yg-font);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--yg-ink);
+  background: var(--yg-paper);
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--yg-forest); }
+a:hover { color: var(--yg-forest-dark); }
+:focus-visible { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
+.yg-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.yg-wrap {
+  max-width: var(--yg-wrap);
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+@media (min-width: 760px) { .yg-wrap { padding-left: 24px; padding-right: 24px; } }
+
+/* ── Typografie ──────────────────────────────────────────────────────── */
+.yg-h1 { margin: 0; font-size: clamp(30px, 5vw, 56px); font-weight: 700; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+.yg-h2 { margin: 0; font-size: clamp(24px, 3vw, 32px); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
+.yg-h3 { margin: 0; font-size: 19px; font-weight: 700; line-height: 1.25; }
+.yg-lead { margin: 0; font-size: clamp(17px, 1.6vw, 19px); color: var(--yg-muted); max-width: 38em; }
+.yg-meta { font-size: 14px; color: var(--yg-muted); }
+.yg-num { font-variant-numeric: tabular-nums; }
+
+/* ── Logo ────────────────────────────────────────────────────────────── */
+.yg-logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--yg-ink); font-weight: 800; font-size: 21px; letter-spacing: -0.02em; }
+.yg-logo:hover { color: var(--yg-ink); }
+.yg-logo img { width: 22px; height: 28px; display: block; }
+.yg-logo .yg-i { color: var(--yg-amber); }
+.yg-logo .yg-go { color: var(--yg-terra); }
+
+/* ── Kop ─────────────────────────────────────────────────────────────── */
+.yg-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--yg-paper); border-bottom: 1px solid var(--yg-line); }
+.yg-header__bar { display: flex; align-items: center; gap: 24px; min-height: 60px; }
+.yg-nav { display: flex; align-items: center; gap: 20px; font-size: 15px; font-weight: 500; }
+.yg-nav a { color: var(--yg-ink); text-decoration: none; padding: 6px 0; border-bottom: 2.5px solid transparent; }
+.yg-nav a:hover { border-bottom-color: var(--yg-line-strong); }
+.yg-nav a[aria-current="page"] { font-weight: 700; border-bottom-color: var(--yg-forest); }
+.yg-header__end { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.yg-menu-btn { display: none; width: 44px; height: 44px; border: 1px solid var(--yg-line-strong); border-radius: var(--yg-radius-s); background: var(--yg-paper); place-items: center; cursor: pointer; }
+.yg-menu-btn svg { width: 20px; height: 20px; }
+@media (max-width: 959px) {
+  .yg-header__bar { gap: 10px; }
+  .yg-header__bar > .yg-nav, .yg-header__end > .yg-nav { display: none; }
+  .yg-menu-btn { display: grid; }
+  .yg-header__end .yg-btn { padding: 10px 12px; font-size: 14px; }
+}
+.yg-menu { display: none; border-top: 1px solid var(--yg-line); padding-block: 8px 16px; }
+.yg-menu.is-open { display: block; }
+.yg-menu a { display: block; padding: 12px 0; font-size: 17px; font-weight: 500; color: var(--yg-ink); text-decoration: none; border-bottom: 1px solid var(--yg-line); }
+@media (min-width: 960px) { .yg-menu, .yg-menu.is-open { display: none; } }
+
+/* ── Knoppen ─────────────────────────────────────────────────────────── */
+.yg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 16px; border-radius: var(--yg-radius-s); border: 1.5px solid transparent; font-weight: 600; font-size: 15px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.yg-btn--primary { background: var(--yg-forest); color: #FFFFFF; }
+.yg-btn--primary:hover { background: var(--yg-forest-dark); color: #FFFFFF; }
+.yg-btn--dark { background: var(--yg-ink); color: #FFFFFF; }
+.yg-btn--dark:hover { background: #000000; color: #FFFFFF; }
+.yg-btn--outline { background: var(--yg-paper); color: var(--yg-ink); border-color: var(--yg-ink); }
+.yg-btn--outline:hover { background: var(--yg-tint); color: var(--yg-ink); }
+.yg-btn--light { background: #FFFFFF; color: var(--yg-forest-dark); }
+.yg-btn--ghost { background: transparent; color: var(--yg-forest-dark); padding-left: 4px; padding-right: 4px; }
+.yg-btn--block { display: flex; width: 100%; }
+.yg-btn svg { width: 16px; height: 16px; flex: none; }
+
+/* ── Chips (filters, lagen) ──────────────────────────────────────────── */
+.yg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.yg-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--yg-line-strong); background: var(--yg-paper); color: var(--yg-ink); font-size: 14px; cursor: pointer; }
+.yg-chip[aria-pressed="true"] { border: 1.5px solid var(--yg-forest); background: var(--yg-land); font-weight: 600; }
+.yg-chip--day[aria-pressed="true"] { border-color: var(--yg-ink); background: var(--yg-ink); color: #FFFFFF; }
+.yg-chip .yg-count { font-weight: 500; opacity: .75; }
+
+/* Kleine merktekens per soort, voor chips, legenda en lijsten. */
+.yg-mark { display: inline-block; flex: none; }
+.yg-mark--markt { width: 16px; height: 10px; border-radius: 3px 5px 5px 3px; background: var(--yg-forest); }
+.yg-mark--route { width: 18px; height: 0; border-top: 3px dashed var(--yg-terra); }
+.yg-mark--oprit { width: 13px; height: 13px; background: var(--yg-amber); clip-path: polygon(50% 0, 100% 42%, 100% 100%, 0 100%, 0 42%); }
+.yg-mark--winkel { width: 12px; height: 12px; border-radius: 3px; background: var(--yg-wood); }
+
+/* ── Kaartpins ───────────────────────────────────────────────────────── */
+/* Prijskaartje: verkoop met dag en tijd. Plaats met left/top op het punt;
+   het puntje onderaan wijst naar de locatie. */
+.yg-tag { position: absolute; transform: translate(-50%, calc(-100% - 6px)); display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px 5px 17px; border-radius: 6px 10px 10px 6px; font: 600 13px/1.2 var(--yg-font); white-space: nowrap; background: var(--yg-forest); color: #FFFFFF; border: 0; box-shadow: 0 2px 8px rgba(30, 41, 34, .28); text-decoration: none; cursor: pointer; }
+.yg-tag::before { content: ""; position: absolute; left: 6px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--yg-land); }
+.yg-tag::after { content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid var(--yg-forest); }
+.yg-tag:hover { color: #FFFFFF; }
+.yg-tag--route { background: var(--yg-terra); color: var(--yg-ink); }
+.yg-tag--route::after { border-top-color: var(--yg-terra); }
+.yg-tag--route::before { background: var(--yg-ink); }
+.yg-tag--oprit { background: var(--yg-amber); color: var(--yg-ink); }
+.yg-tag--oprit::after { border-top-color: var(--yg-amber); }
+.yg-tag--oprit::before { background: var(--yg-ink); }
+.yg-tag--route:hover, .yg-tag--oprit:hover { color: var(--yg-ink); }
+.yg-tag.is-selected { background: var(--yg-ink); color: #FFFFFF; z-index: 3; box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 6px var(--yg-ink); }
+.yg-tag.is-selected::after { border-top-color: var(--yg-ink); }
+.yg-tag.is-selected::before { background: #FFFFFF; }
+.yg-tag svg { position: static; width: 12px; height: 12px; flex: none; }
+/* Statische variant (in lijsten): zelfde vorm, zonder positie en puntje. */
+.yg-tag--inline { position: static; transform: none; box-shadow: none; }
+.yg-tag--inline::after { display: none; }
+
+/* Stip: minder belangrijk of verder weg. */
+.yg-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--yg-forest); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .3); }
+.yg-dot--route { background: var(--yg-terra); }
+.yg-dot--oprit { background: var(--yg-amber); }
+
+/* Winkel: vierkante pin. */
+.yg-shop { text-decoration: none; position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 3px; background: var(--yg-wood); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .35); }
+.yg-shop--label { width: auto; height: auto; margin: 0; transform: translate(-50%, calc(-100% - 6px)); padding: 4px 9px; border: 0; border-radius: 6px; color: #FFFFFF; font: 600 13px/1.2 var(--yg-font); white-space: nowrap; }
+
+/* Genummerde stop in Mijn rondje (de volgorde is echt een volgorde). */
+.yg-stop { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--yg-forest); color: #FFFFFF; font-weight: 700; font-size: 14px; border: 3px solid #FFFFFF; box-shadow: 0 3px 10px rgba(30, 41, 34, .3); }
+.yg-stop--oprit { background: var(--yg-amber); color: var(--yg-ink); }
+.yg-stop--route { background: var(--yg-terra); color: var(--yg-ink); }
+.yg-stop--winkel { background: var(--yg-wood); border-radius: 9px; }
+
+/* ── Labels ──────────────────────────────────────────────────────────── */
+.yg-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+.yg-badge--open { background: #E4EFE3; color: var(--yg-forest-dark); }
+.yg-badge--soon { background: var(--yg-wood-tint); color: #5C4420; }
+.yg-badge--shop { background: var(--yg-wood); color: #FFFFFF; }
+.yg-trust { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--yg-forest-dark); }
+.yg-trust svg { width: 13px; height: 13px; }
+.yg-live { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--yg-live); box-shadow: 0 0 0 4px rgba(70, 160, 60, .22); }
+
+/* ── Vlakken ─────────────────────────────────────────────────────────── */
+.yg-panel { background: var(--yg-tint); border-radius: var(--yg-radius-m); padding: 16px; }
+.yg-band { background: var(--yg-forest-dark); color: #FFFFFF; }
+.yg-band .yg-lead, .yg-band .yg-meta { color: #CFE0D3; }
+
+/* ── Voet ────────────────────────────────────────────────────────────── */
+.yg-footer { border-top: 1px solid var(--yg-line); margin-top: 48px; padding-block: 28px 40px; font-size: 14px; color: var(--yg-muted); }
+.yg-footer__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; }
+.yg-footer h2 { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--yg-ink); }
+.yg-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.yg-footer a { color: var(--yg-muted); text-decoration: none; }
+.yg-footer a:hover { color: var(--yg-ink); text-decoration: underline; }
+.yg-footer__base { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--yg-line); }
+.yg-lang { display: inline-flex; gap: 4px; margin-left: auto; }
+.yg-lang a { padding: 4px 8px; border-radius: 6px; color: var(--yg-ink); text-decoration: none; font-weight: 500; }
+.yg-lang a[aria-current="true"] { background: var(--yg-land); font-weight: 700; }
+
+/* ── Leaflet-koppeling ───────────────────────────────────────────────── */
+.yg-pin { background: none; border: 0; }
+.yg-pin:focus-visible .yg-tag { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
+.yg-me { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: #FFFFFF; border: 3.5px solid var(--yg-ink); box-shadow: 0 2px 6px rgba(30, 41, 34, .3); }
+.yg-me::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--yg-ink); }
+.leaflet-container { font-family: var(--yg-font); background: var(--yg-land); }
+.leaflet-control-attribution { font-size: 11px; }
+
+/* ── Startpagina ─────────────────────────────────────────────────────── */
+.yg-hero { position: relative; }
+.yg-hero__map { position: relative; height: 320px; margin: 0 16px; border-radius: var(--yg-radius-l); overflow: hidden; background: var(--yg-land); }
+.yg-hero__map .yg-kaart { position: absolute; inset: 0; }
+.yg-hero__open { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 500; box-shadow: 0 6px 18px rgba(30, 41, 34, .3); border-radius: 999px; }
+.yg-card { padding: 20px 16px 16px; display: grid; gap: 12px; }
+.yg-card__live { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 500; color: var(--yg-forest-dark); }
+.yg-card .yg-h1 { font-size: clamp(30px, 4.2vw, 46px); }
+.yg-field { display: grid; gap: 4px; }
+.yg-field label, .yg-field .yg-label { font-size: 14px; font-weight: 600; }
+.yg-input { display: flex; align-items: center; border: 1.5px solid var(--yg-ink); border-radius: 12px; padding-left: 12px; background: var(--yg-paper); }
+.yg-input input { flex: 1; min-width: 0; border: 0; outline: none; padding: 12px 10px; background: transparent; font-size: 16px; }
+.yg-input button { width: 44px; height: 44px; border: 0; background: transparent; display: grid; place-items: center; cursor: pointer; }
+.yg-input:focus-within { box-shadow: 0 0 0 3px rgba(47, 111, 219, .35); }
+.yg-seg { display: flex; gap: 6px; }
+.yg-seg button { flex: 1; border: 1px solid var(--yg-line-strong); background: var(--yg-paper); border-radius: 10px; padding: 9px 4px; font-size: 14px; cursor: pointer; }
+.yg-seg button[aria-pressed="true"] { border: 1.5px solid var(--yg-forest); background: var(--yg-land); font-weight: 600; }
+.yg-error { margin: 0; font-size: 14px; color: #9B2C1F; }
+@media (min-width: 960px) {
+  .yg-hero { height: 620px; }
+  .yg-hero__map { position: absolute; inset: 0; margin: 0; border-radius: 0; height: auto; }
+  .yg-hero__open { display: none; }
+  .yg-hero .yg-wrap { position: relative; height: 100%; pointer-events: none; }
+  .yg-card { position: absolute; z-index: 600; top: 40px; left: 24px; width: 470px; padding: 26px; background: var(--yg-paper); border-radius: var(--yg-radius-l); box-shadow: 0 18px 50px rgba(30, 41, 34, .22); pointer-events: auto; }
+}
+
+.yg-section { padding-block: 40px 8px; }
+.yg-section__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.yg-rows { list-style: none; margin: 0; padding: 0; }
+.yg-rows li { border-top: 1px solid var(--yg-line); }
+.yg-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 13px 8px; margin: 0 -8px; border-radius: 10px; text-decoration: none; color: var(--yg-ink); }
+.yg-row:hover, .yg-row.is-hot { background: var(--yg-tint); color: var(--yg-ink); }
+.yg-row strong { display: block; font-size: 16px; font-weight: 600; line-height: 1.3; }
+.yg-row .yg-km { font-size: 14px; color: var(--yg-muted); white-space: nowrap; }
+.yg-row .yg-tag--inline { justify-self: start; margin-top: 1px; padding: 3px 8px; font-size: 12.5px; }
+@media (min-width: 960px) { .yg-rows--cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; } }
+
+.yg-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 960px) { .yg-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+.yg-tile { background: var(--yg-tint); border-radius: var(--yg-radius-m); padding: 18px; display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: var(--yg-ink); }
+.yg-tile:hover { color: var(--yg-ink); background: #EAF0E6; }
+.yg-tile strong { font-size: 18px; }
+.yg-tile span:last-child { font-size: 15px; color: var(--yg-muted); }
+.yg-tile .yg-big { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+
+.yg-cities { display: flex; flex-wrap: wrap; gap: 8px; }
+.yg-cities a { display: inline-flex; gap: 6px; padding: 8px 12px; border: 1px solid var(--yg-line-strong); border-radius: 999px; text-decoration: none; color: var(--yg-ink); font-size: 15px; }
+.yg-cities a:hover { border-color: var(--yg-ink); color: var(--yg-ink); }
+.yg-cities .yg-count { color: var(--yg-muted); }
+
+/* ── Kaartpagina ─────────────────────────────────────────────────────── */
+.yg-mappage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.yg-mappage .yg-header { position: relative; top: 0; }
+.yg-toolbar { flex: none; border-bottom: 1px solid var(--yg-line); padding-block: 10px; display: flex; gap: 8px; align-items: center; overflow-x: auto; scrollbar-width: none; }
+.yg-toolbar::-webkit-scrollbar { display: none; }
+.yg-toolbar .yg-chip { flex: none; }
+.yg-toolbar__sep { flex: none; width: 1px; height: 28px; background: var(--yg-line); margin: 0 4px; }
+.yg-split { flex: 1; min-height: 0; display: grid; grid-template-rows: 46% minmax(0, 1fr); }
+.yg-split__map { position: relative; order: 1; }
+.yg-split__map .yg-kaart { position: absolute; inset: 0; }
+.yg-split__list { order: 2; overflow: auto; border-top: 1px solid var(--yg-line); padding: 12px 16px 24px; }
+@media (min-width: 960px) {
+  .yg-split { grid-template-rows: none; grid-template-columns: 460px minmax(0, 1fr); }
+  .yg-split__list { order: 1; border-top: 0; border-right: 1px solid var(--yg-line); padding: 16px 20px 24px; }
+  .yg-split__map { order: 2; }
+}
+.yg-split__list h1 { margin: 0 0 4px; font-size: 20px; font-weight: 700; }
+.yg-mapctl { position: absolute; z-index: 600; right: 12px; top: 12px; display: grid; gap: 6px; }
+.yg-mapctl button { width: 44px; height: 44px; border-radius: 12px; border: 0; background: var(--yg-paper); box-shadow: 0 3px 10px rgba(30, 41, 34, .16); font-size: 22px; display: grid; place-items: center; cursor: pointer; color: var(--yg-ink); }
+.yg-legend { position: absolute; z-index: 600; left: 12px; bottom: 24px; background: rgba(255, 255, 255, .95); border-radius: 12px; padding: 8px 12px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; box-shadow: 0 2px 10px rgba(30, 41, 34, .15); }
+.yg-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.yg-popup .leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 10px 30px rgba(30, 41, 34, .25); }
+.yg-popup .leaflet-popup-content { margin: 14px 16px; font-family: var(--yg-font); font-size: 14px; line-height: 1.4; min-width: 220px; }
+.yg-popup h3 { margin: 0 0 4px; font-size: 16px; line-height: 1.25; }
+.yg-popup p { margin: 0 0 10px; color: var(--yg-muted); }
+.yg-popup .yg-btns { display: flex; gap: 8px; }
+.yg-popup .yg-btn { min-height: 38px; padding: 8px 12px; font-size: 14px; }
+.yg-popup a.yg-btn--primary, .yg-popup a.yg-btn--primary:hover { color: #FFFFFF; }
+.yg-popup a.yg-btn--outline { color: var(--yg-ink); }
+.yg-mappage > * { min-width: 0; }
+/* Automatische marges zetten "stretch" in een flex-kolom uit; daarom hier 0. */
+.yg-mappage > .yg-toolbar { max-width: 100%; margin-left: 0; margin-right: 0; }
+@media (max-width: 959px) {
+  .yg-mappage .yg-header__end > .yg-btn { display: none; }
+  .yg-mappage .yg-header__bar > form { flex: 1; }
+  .yg-legend { display: none; }
+  .yg-split__map .yg-mapctl button { width: 40px; height: 40px; }
+}
+@media (max-width: 599px) {
+  .yg-row { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="100" viewBox="0 0 80 100" fill="none">
+  <!-- Oranje pin met witte cirkel, houten bordje en gras: zelfde beeldmerk als de app (index.html, header). -->
+  <path d="M40 4C24.5 4 12 16.5 12 32C12 52 40 82 40 82C40 82 68 52 68 32C68 16.5 55.5 4 40 4Z" fill="#E07B39"/>
+  <ellipse cx="32" cy="20" rx="7" ry="5" fill="#FFFFFF" opacity="0.22"/>
+  <circle cx="40" cy="31" r="13" fill="#FFFFFF"/>
+  <rect x="36" y="80" width="8" height="14" rx="2" fill="#C68B3C"/>
+  <rect x="22" y="70" width="36" height="18" rx="3" fill="#D4964A"/>
+  <line x1="26" y1="76" x2="54" y2="76" stroke="#BF7E30" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="26" y1="81" x2="54" y2="81" stroke="#BF7E30" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <ellipse cx="40" cy="96" rx="18" ry="5" fill="#3A6B4A" opacity="0.7"/>
+</svg>

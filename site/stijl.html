@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>YardiGo stijl</title>
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@300..800&display=swap">
+<link rel="stylesheet" href="/site/site.css">
+<script src="/site/site.js" defer></script>
+<style>
+  /* Alleen voor deze testpagina. */
+  .proef { padding-block: 32px; display: grid; gap: 40px; }
+  .proef section { display: grid; gap: 14px; }
+  .proef h2:not(.yg-h2) { font-size: 13px; font-weight: 600; color: var(--yg-muted); margin: 0; }
+  .rij { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .kleur { display: grid; gap: 6px; font-size: 13px; width: 120px; }
+  .kleur span { height: 56px; border-radius: var(--yg-radius-s); border: 1px solid var(--yg-line); }
+  .kaartje { position: relative; height: 300px; border-radius: var(--yg-radius-l); overflow: hidden; background: var(--yg-land); }
+  .kaartje > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<header class="yg-header">
+  <div class="yg-wrap yg-header__bar">
+    <a class="yg-logo" href="/" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina">
+      <img src="/site/logo.svg" alt="" width="22" height="28">
+      <span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span>
+    </a>
+    <nav class="yg-nav" aria-label="Hoofdmenu">
+      <a href="/" data-i18n="nav.map">Kaart</a>
+      <a href="/rommelmarkt/dit-weekend" aria-current="page" data-i18n="nav.agenda">Agenda</a>
+      <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
+      <a href="/opritverkoop" data-i18n="nav.driveway">Opritverkoop</a>
+      <a href="/winkels" data-i18n="nav.shops">Winkels</a>
+    </nav>
+    <div class="yg-header__end">
+      <nav class="yg-nav" aria-label="Organiseren"><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></nav>
+      <a class="yg-btn yg-btn--primary" href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a>
+      <button class="yg-menu-btn" type="button" aria-expanded="false" aria-controls="yg-menu" data-i18n-aria="nav.menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="yg-wrap yg-menu" id="yg-menu">
+    <a href="/" data-i18n="nav.map">Kaart</a>
+    <a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a>
+    <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
+    <a href="/opritverkoop" data-i18n="nav.driveway">Opritverkoop</a>
+    <a href="/winkels" data-i18n="nav.shops">Winkels</a>
+    <a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a>
+  </div>
+</header>
+
+<main class="yg-wrap proef">
+  <section>
+    <h1 class="yg-h1">Rommelmarkten, rommelroutes en winkels bij jou in de buurt</h1>
+    <p class="yg-lead">Testpagina voor de basis van de nieuwe website. Niet gelinkt en niet in Google. Kies onderaan een taal om de vertalingen te zien.</p>
+  </section>
+
+  <section aria-labelledby="s-kleur">
+    <h2 id="s-kleur">Kleuren per soort</h2>
+    <div class="rij">
+      <div class="kleur"><span style="background:#3A6B4A"></span><strong data-i18n="type.markets">Markten</strong>#3A6B4A</div>
+      <div class="kleur"><span style="background:#E07B39"></span><strong data-i18n="nav.routes">Rommelroutes</strong>#E07B39</div>
+      <div class="kleur"><span style="background:#F2A830"></span><strong data-i18n="nav.driveway">Opritverkoop</strong>#F2A830</div>
+      <div class="kleur"><span style="background:#8A5A2B"></span><strong data-i18n="nav.shops">Winkels</strong>#8A5A2B</div>
+      <div class="kleur"><span style="background:#2A5038"></span><strong>Bosgroen donker</strong>#2A5038</div>
+      <div class="kleur"><span style="background:#EEF2EA"></span><strong>Land</strong>#EEF2EA</div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-knop">
+    <h2 id="s-knop">Knoppen</h2>
+    <div class="rij">
+      <a class="yg-btn yg-btn--primary" href="#" data-i18n="nav.post">Verkoop aanmelden</a>
+      <a class="yg-btn yg-btn--dark" href="#" data-i18n="act.openMap">Open de kaart</a>
+      <a class="yg-btn yg-btn--outline" href="#" data-i18n="act.route">Route</a>
+      <button class="yg-btn yg-btn--ghost" type="button" data-i18n="act.alert">Melding aanzetten</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-chip">
+    <h2 id="s-chip">Chips</h2>
+    <div class="yg-chips">
+      <button class="yg-chip yg-chip--day" type="button" aria-pressed="true"><span data-i18n="when.weekend">Dit weekend</span> <span class="yg-count">22</span></button>
+      <button class="yg-chip yg-chip--day" type="button" aria-pressed="false"><span data-i18n="when.today">Vandaag</span></button>
+      <button class="yg-chip" type="button" aria-pressed="true"><span class="yg-mark yg-mark--markt"></span><span data-i18n="type.markets">Markten</span></button>
+      <button class="yg-chip" type="button" aria-pressed="true"><span class="yg-mark yg-mark--route"></span><span data-i18n="nav.routes">Rommelroutes</span></button>
+      <button class="yg-chip" type="button" aria-pressed="true"><span class="yg-mark yg-mark--oprit"></span><span data-i18n="nav.driveway">Opritverkoop</span></button>
+      <button class="yg-chip" type="button" aria-pressed="false"><span class="yg-mark yg-mark--winkel"></span><span data-i18n="nav.shops">Winkels</span></button>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-pin">
+    <h2 id="s-pin">Pins op de kaart</h2>
+    <div class="kaartje">
+      <svg viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0 H180 C160 80 140 180 120 300 H0 Z" fill="#C6DDE3"/>
+        <path d="M120 230 C300 210 500 240 800 220" fill="none" stroke="#B8D3DC" stroke-width="10"/>
+        <g stroke="#D3DACF" stroke-width="8" fill="none"><path d="M200 300 L420 150 L800 120"/><path d="M420 0 L420 300"/></g>
+        <g stroke="#FFFFFF" stroke-width="4" fill="none"><path d="M200 300 L420 150 L800 120"/><path d="M420 0 L420 300"/></g>
+      </svg>
+      <a class="yg-tag" href="#" style="left:300px;top:120px">za en zo 9:00</a>
+      <a class="yg-tag is-selected" href="#" style="left:470px;top:110px">zo 9:30</a>
+      <a class="yg-tag yg-tag--route" href="#" style="left:620px;top:170px">za 10:00</a>
+      <a class="yg-tag yg-tag--oprit" href="#" style="left:250px;top:250px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M3 11 L12 4 L21 11 V20 H3 Z"/></svg>zo 10:00</a>
+      <span class="yg-dot" style="left:560px;top:250px"></span>
+      <span class="yg-dot yg-dot--oprit" style="left:700px;top:90px"></span>
+      <a class="yg-shop" href="#" aria-label="Kringloop van Nu" style="left:420px;top:200px"></a>
+      <a class="yg-shop yg-shop--label" href="#" style="left:650px;top:260px">open tot 17:00</a>
+    </div>
+  </section>
+
+  <section aria-labelledby="s-label">
+    <h2 id="s-label">Labels en stops</h2>
+    <div class="rij">
+      <span class="yg-badge yg-badge--open">Nog 4 uur 40 open</span>
+      <span class="yg-badge yg-badge--soon">Sluit over 1 uur 10</span>
+      <span class="yg-badge yg-badge--shop" data-i18n="shop.thrift">Kringloop</span>
+      <span class="yg-trust"><svg viewBox="0 0 24 24" fill="none" stroke="#3A6B4A" stroke-width="3" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span data-i18n="trust.organiser">Bevestigd door organisator</span></span>
+      <span class="yg-meta"><span class="yg-live"></span> <span data-i18n="when.now">Nu</span> 11:20</span>
+      <span class="yg-tag yg-tag--inline">zo 25</span>
+      <span class="yg-tag yg-tag--inline yg-tag--oprit">zo 25</span>
+    </div>
+    <div class="rij">
+      <span class="yg-stop">1</span><span class="yg-stop">2</span><span class="yg-stop yg-stop--winkel">3</span><span class="yg-stop yg-stop--oprit">4</span>
+    </div>
+  </section>
+
+  <section class="yg-band" style="border-radius:var(--yg-radius-l);padding:28px">
+    <h2 class="yg-h2" style="color:#fff">Organiseer je iets? Zet het op de kaart.</h2>
+    <p class="yg-lead">Gratis, en dezelfde dag online.</p>
+    <div class="rij"><a class="yg-btn yg-btn--light" href="#" data-i18n="nav.post">Verkoop aanmelden</a></div>
+  </section>
+</main>
+
+<footer class="yg-footer">
+  <div class="yg-wrap">
+    <div class="yg-footer__grid">
+      <div>
+        <a class="yg-logo" href="/" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina"><img src="/site/logo.svg" alt="" width="22" height="28"><span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span></a>
+        <p data-i18n="foot.nocookies">Geen cookiemuur: YardiGo volgt je niet.</p>
+      </div>
+      <nav aria-labelledby="f-ontdek"><h2 id="f-ontdek" data-i18n="foot.discover">Ontdekken</h2>
+        <ul><li><a href="/" data-i18n="nav.map">Kaart</a></li><li><a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a></li><li><a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a></li><li><a href="/opritverkoop" data-i18n="nav.driveway">Opritverkoop</a></li><li><a href="/winkels" data-i18n="nav.shops">Winkels</a></li></ul>
+      </nav>
+      <nav aria-labelledby="f-org"><h2 id="f-org" data-i18n="foot.organise">Organiseren</h2>
+        <ul><li><a href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a></li><li><a href="/organisatoren" data-i18n="act.startRoute">Rommelroute starten</a></li><li><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></li></ul>
+      </nav>
+      <nav aria-labelledby="f-yg"><h2 id="f-yg" data-i18n="foot.about">YardiGo</h2>
+        <ul><li><a href="/" data-i18n="foot.app">De app</a></li><li><a href="/privacy" data-i18n="foot.privacy">Privacy</a></li><li><a href="/voorwaarden" data-i18n="foot.terms">Voorwaarden</a></li></ul>
+      </nav>
+    </div>
+    <div class="yg-footer__base">
+      <span data-i18n="foot.domains">yardigo.nl, yardigo.be en yardigo.de</span>
+      <span data-i18n="foot.osm">Kaartgegevens en winkels: © OpenStreetMap-bijdragers</span>
+      <nav class="yg-lang" aria-label="Taal" data-i18n-aria="foot.lang">
+        <a data-lang="nl" href="?lang=nl">NL</a><a data-lang="en" href="?lang=en">EN</a><a data-lang="fr" href="?lang=fr">FR</a><a data-lang="de" href="?lang=de">DE</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
