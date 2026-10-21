@@ -331,21 +331,24 @@ SELECT
    '%' || regexp_replace(regexp_replace(coalesce(l.source_url, ''), '^[a-z]+://', '', 'i'),
                          '/.*$', '') || '%')
     AS email_domain_matches_source,
-  (now() - u.created_at)::int / 86400 AS requester_account_age_days,
+  (EXTRACT(epoch FROM now() - p.created_at)::bigint / 86400)::integer AS requester_account_age_days,
   (SELECT count(*) FROM public.listing_claims c2
    WHERE c2.requested_by_user_id = c.requested_by_user_id
      AND c2.id <> c.id) AS requester_previous_claim_count
 FROM public.listing_claims c
 JOIN public.listings l ON l.id = c.listing_id
-LEFT JOIN auth.users u ON u.id = c.requested_by_user_id
+LEFT JOIN public.profiles p ON p.id = c.requested_by_user_id
 WHERE c.status = 'pending'
+  -- View draait als owner (bypass RLS) → rijen alleen zichtbaar voor admins
+  AND public.is_yg_admin(auth.uid())
 ORDER BY c.created_at DESC;
 
 COMMENT ON VIEW public.listing_claims_queue IS
   'Openstaande claim-aanvragen met verificatie-helpers voor admin-review (anti-fraude).';
 
--- View is alleen leesbaar door admins (via security barrier via parent table RLS)
+-- View is alleen leesbaar door admins (is_yg_admin-filter in de WHERE)
 ALTER VIEW public.listing_claims_queue OWNER TO postgres;
+REVOKE ALL ON public.listing_claims_queue FROM anon, authenticated;
 GRANT SELECT ON public.listing_claims_queue TO authenticated;
 
 
