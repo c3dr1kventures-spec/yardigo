@@ -9988,6 +9988,14 @@ function hideWelcomeSheet(cb) {
   body.style.transform = 'translateY(100%)';
   setTimeout(function() { sheet.style.display = 'none'; if (cb) cb(); }, 450);
 }
+// Op het web pas na 3 bekeken verkopen: een inlogscherm bij binnenkomst
+// verjaagt bezoekers en telt bij Google als opdringerig (mobiel).
+var _welkomGezien = {};
+function telWelkomWeergave(id) {
+  if (window.Capacitor || !isGuest || localStorage.getItem('yg-onboarded')) return;
+  _welkomGezien[id] = true;
+  if (Object.keys(_welkomGezien).length === 3) setTimeout(showWelcomeSheet, 1500);
+}
 function dismissWelcomeSheet() {
   hideWelcomeSheet(function() {
     isGuest = true;
@@ -11725,6 +11733,7 @@ function openDetail(id) {
   }
   detailSaleId = s.id; carouselIdx = 0;
   telWeergave(s.id);
+  telWelkomWeergave(s.id);
   var t = TYPES[s.type], fav = favorites.has(id);
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
@@ -18287,8 +18296,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   })();
 
-  // Toon welcome sheet na 3 sec voor nieuwe gebruikers
-  if (!localStorage.getItem('yg-onboarded')) {
+  // Toon welcome sheet na 3 sec voor nieuwe gebruikers, alleen in de app
+  // (op het web: zie telWelkomWeergave)
+  if (window.Capacitor && !localStorage.getItem('yg-onboarded')) {
     setTimeout(showWelcomeSheet, 3000);
   }
 
