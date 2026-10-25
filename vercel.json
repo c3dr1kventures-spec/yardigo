@@ -5,6 +5,9 @@
   "outputDirectory": ".",
   "installCommand": "",
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/home", "destination": "/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/verkoop", "destination": "/" },
     { "source": "/aanmelden", "destination": "/" },

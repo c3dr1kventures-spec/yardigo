@@ -652,7 +652,6 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
   const today = dagNL();
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
-  per[BASE_URL].push({ loc: BASE_URL + '/home', changefreq: 'weekly', priority: '0.8' });
   per[BASE_URL_BE].push({ loc: BASE_URL_BE + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
   for (const l of listings) {
     const b = baseFor(l.land);
