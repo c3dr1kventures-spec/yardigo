@@ -12,6 +12,7 @@
 //   <type>/dit-weekend/        verkopen van het komende weekend
 //   <type>/provincie/<slug>/   per provincie (NL + BE)
 //   sitemap.xml / sitemap-be.xml  per domein (zelfde bestanden op elk domein)
+//   locale/be-nl.html          startpagina yardigo.be/ (via middleware.js)
 //
 // Hydration: zodra een echte browser de pagina laadt, redirect het script
 // naar / met sessionStorage flag, waardoor de SPA direct het detail opent.
@@ -653,6 +654,7 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
   per[BASE_URL_BE].push({ loc: BASE_URL_BE + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
+  per[BASE_URL_BE].push({ loc: BASE_URL_BE + '/fr', lastmod: today, changefreq: 'daily', priority: '0.9' });
   for (const l of listings) {
     const b = baseFor(l.land);
     per[b].push({ loc: `${b}/v/${l.id}`, lastmod: l.updated || undefined, changefreq: 'weekly', priority: '0.7' });
@@ -702,10 +704,50 @@ Disallow: /bevestig.html
 Disallow: /tg
 Disallow: /herhaal
 Disallow: /doe-mee
+Disallow: /locale/
 
 Sitemap: ${BASE_URL}/sitemap.xml
 Sitemap: ${BASE_URL_BE}/sitemap-be.xml
 `;
+}
+
+// Nederlandstalige startpagina voor yardigo.be. index.html is één bestand voor alle domeinen
+// en had in de ruwe HTML canonical/lang/titel van .nl; JS zette dat pas later
+// goed. middleware.js serveert deze variant op yardigo.be/. Frans staat op
+// /fr (fr.html). Teksten gelijk aan I18N.nl in index.html.
+const BE_STARTPAGINAS = [
+  {
+    bestand: 'locale/be-nl.html', lang: 'nl-BE', url: BASE_URL_BE + '/', ogLocale: 'nl_BE',
+    titel: 'YardiGo: Ontdek garagesales bij jou in de buurt',
+    beschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.',
+    ogBeschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.',
+    twBeschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart.',
+  },
+];
+
+function renderBeStartpagina(html, p) {
+  const vervang = (re, nieuw) => {
+    if (!re.test(html)) throw new Error(`startpagina ${p.bestand}: ${re} niet gevonden in index.html`);
+    html = html.replace(re, nieuw);
+  };
+  vervang(/<html lang="[^"]*">/, `<html lang="${p.lang}">`);
+  vervang(/<title>[^<]*<\/title>/, `<title>${esc(p.titel)}</title>`);
+  vervang(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(p.beschrijving)}">`);
+  vervang(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${p.url}">`);
+  vervang(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${p.url}">`);
+  vervang(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${esc(p.titel)}">`);
+  vervang(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${esc(p.ogBeschrijving)}">`);
+  vervang(/<meta property="og:locale" content="[^"]*">/, `<meta property="og:locale" content="${p.ogLocale}">`);
+  vervang(/<meta name="twitter:title" content="[^"]*">/, `<meta name="twitter:title" content="${esc(p.titel)}">`);
+  vervang(/<meta name="twitter:description" content="[^"]*">/, `<meta name="twitter:description" content="${esc(p.twBeschrijving)}">`);
+  return html;
+}
+
+function schrijfBeStartpaginas() {
+  const index = readFileSync(resolve(PROJECT_ROOT, 'index.html'), 'utf-8');
+  mkdirSync(resolve(PROJECT_ROOT, 'locale'), { recursive: true });
+  for (const p of BE_STARTPAGINAS) writeFileSync(resolve(PROJECT_ROOT, p.bestand), renderBeStartpagina(index, p));
+  console.log(`  wrote Belgische startpagina → /locale/be-nl.html`);
 }
 
 function schrijfPagina(relDir, html) {
@@ -718,6 +760,7 @@ function schrijfPagina(relDir, html) {
 async function main() {
   console.log('→ YardiGo prerender starting…');
   console.log('  base URL:', BASE_URL, '+', BASE_URL_BE);
+  schrijfBeStartpaginas();
 
   const template = readFileSync(resolve(__dirname, 'templates/sale-detail.html'), 'utf-8');
   const listings = await fetchListings();

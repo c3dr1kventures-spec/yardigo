@@ -66,6 +66,8 @@ rommelmarkt/
 vlooienmarkt/
 opritverkoop/
 garageverkoop/
+# Belgische startpagina's (yardigo.be/ en /fr)
+locale/
 
 # Supabase CLI lokale link-state (per-machine)
 supabase/.temp/
