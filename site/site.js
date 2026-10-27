@@ -221,6 +221,44 @@
     'home.photos': '{n} Fotos', 'home.poster': 'Plakat für {t}', 'home.byType': 'Garagenverkäufe zuerst'
   });
 
+  // Pagina van één verkoop (/nieuw/verkoop).
+  Object.assign(T.nl, {
+    'det.back': 'Terug naar de kaart', 'det.forSale': 'Wat er te koop is', 'det.about': 'Over deze verkoop', 'det.when': 'Wanneer', 'det.where': 'Waar',
+    'det.addrLogin': 'Het huisnummer zie je met een gratis account in de app.', 'det.addrFrom': 'Het adres verschijnt op {d}.',
+    'det.approx': 'De kaart toont het gebied, niet het precieze huis.', 'det.route': 'Route', 'det.cal': 'In agenda', 'det.share': 'Delen', 'det.copied': 'Link gekopieerd',
+    'det.openApp': 'Bekijk in de app', 'det.photoOf': 'Foto {i} van {n}', 'det.prev': 'Vorige foto', 'det.next': 'Volgende foto',
+    'det.day': 'Maak er een dag van', 'det.dayTxt': 'Ook die dag, binnen {k} km', 'det.dayNone': 'Nog niets anders in de buurt op die dag.',
+    'det.owner': 'Is dit jouw verkoop? Zet er foto\'s van je spullen bij. Kopers komen eerder als ze zien wat er ligt.', 'det.ownerBtn': 'Foto\'s toevoegen in de app',
+    'det.notFound': 'Deze verkoop bestaat niet meer of is al geweest.', 'det.source': 'Bron: {s}'
+  });
+  Object.assign(T.en, {
+    'det.back': 'Back to the map', 'det.forSale': 'What is for sale', 'det.about': 'About this sale', 'det.when': 'When', 'det.where': 'Where',
+    'det.addrLogin': 'You see the house number with a free account in the app.', 'det.addrFrom': 'The address appears on {d}.',
+    'det.approx': 'The map shows the area, not the exact house.', 'det.route': 'Directions', 'det.cal': 'Add to calendar', 'det.share': 'Share', 'det.copied': 'Link copied',
+    'det.openApp': 'View in the app', 'det.photoOf': 'Photo {i} of {n}', 'det.prev': 'Previous photo', 'det.next': 'Next photo',
+    'det.day': 'Make a day of it', 'det.dayTxt': 'Also that day, within {k} km', 'det.dayNone': 'Nothing else nearby on that day yet.',
+    'det.owner': 'Is this your sale? Add photos of your items. Buyers come sooner when they see what is there.', 'det.ownerBtn': 'Add photos in the app',
+    'det.notFound': 'This sale no longer exists or has already taken place.', 'det.source': 'Source: {s}'
+  });
+  Object.assign(T.fr, {
+    'det.back': 'Retour à la carte', 'det.forSale': 'Ce qui est à vendre', 'det.about': 'À propos de cette vente', 'det.when': 'Quand', 'det.where': 'Où',
+    'det.addrLogin': 'Le numéro de maison est visible avec un compte gratuit dans l’appli.', 'det.addrFrom': 'L’adresse apparaît le {d}.',
+    'det.approx': 'La carte montre la zone, pas la maison exacte.', 'det.route': 'Itinéraire', 'det.cal': 'Ajouter à l’agenda', 'det.share': 'Partager', 'det.copied': 'Lien copié',
+    'det.openApp': 'Voir dans l’appli', 'det.photoOf': 'Photo {i} sur {n}', 'det.prev': 'Photo précédente', 'det.next': 'Photo suivante',
+    'det.day': 'Faites-en une journée', 'det.dayTxt': 'Le même jour, à moins de {k} km', 'det.dayNone': 'Rien d’autre à proximité ce jour-là pour l’instant.',
+    'det.owner': 'C’est votre vente ? Ajoutez des photos de vos objets. Les acheteurs viennent plus vite quand ils voient ce qu’il y a.', 'det.ownerBtn': 'Ajouter des photos dans l’appli',
+    'det.notFound': 'Cette vente n’existe plus ou a déjà eu lieu.', 'det.source': 'Source : {s}'
+  });
+  Object.assign(T.de, {
+    'det.back': 'Zurück zur Karte', 'det.forSale': 'Was verkauft wird', 'det.about': 'Über diesen Verkauf', 'det.when': 'Wann', 'det.where': 'Wo',
+    'det.addrLogin': 'Die Hausnummer siehst du mit einem kostenlosen Konto in der App.', 'det.addrFrom': 'Die Adresse erscheint am {d}.',
+    'det.approx': 'Die Karte zeigt das Gebiet, nicht das genaue Haus.', 'det.route': 'Route', 'det.cal': 'In den Kalender', 'det.share': 'Teilen', 'det.copied': 'Link kopiert',
+    'det.openApp': 'In der App ansehen', 'det.photoOf': 'Foto {i} von {n}', 'det.prev': 'Vorheriges Foto', 'det.next': 'Nächstes Foto',
+    'det.day': 'Mach einen Tag daraus', 'det.dayTxt': 'Am selben Tag, im Umkreis von {k} km', 'det.dayNone': 'Noch nichts anderes in der Nähe an diesem Tag.',
+    'det.owner': 'Ist das dein Verkauf? Füg Fotos deiner Sachen hinzu. Käufer kommen eher, wenn sie sehen, was es gibt.', 'det.ownerBtn': 'Fotos in der App hinzufügen',
+    'det.notFound': 'Diesen Verkauf gibt es nicht mehr oder er hat schon stattgefunden.', 'det.source': 'Quelle: {s}'
+  });
+
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
 
   function kiesTaal() {

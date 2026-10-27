@@ -86,6 +86,24 @@
       });
   }
 
+  // Eén verkoop met alle foto's en de beschrijving; zelfde privacyregels als de lijst.
+  function detail(id) {
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/get_listing_detail', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id: id })
+    }).then(function (r) { if (!r.ok) throw new Error('detail ' + r.status); return r.json(); })
+      .then(function (item) {
+        var v = item && naarVerkoop(item);
+        if (!v) return null;
+        return Object.assign(v, {
+          fotosAlle: (item.images || []).filter(Boolean), fotos: (item.images || []).length,
+          beschrijving: item.description || '', tags: item.tags || [], adres: item.address || '',
+          adresVanaf: item.address_visible_at || null, bron: item.source_label || ''
+        });
+      });
+  }
+
   // Verkopen in een periode; dagen = welke dagen van de periode hij open is.
   function inPeriode(lijst, p) {
     return lijst.map(function (v) {
@@ -113,6 +131,37 @@
 
   // Beeld bij een verkoop: de eigen foto of het affiche, anders de tekening van de soort.
   function beeld(v) { return v.foto || '/site/img/' + v.soort + '.svg'; }
+
+  // ── Kaartjes met beeld (startpagina, verkooppagina) ────────────────
+  var SOORT_TEKST = { oprit: 'type.driveway', route: 'type.route', markt: 'type.market' };
+  function soortTekst(v) { return YG.t(SOORT_TEKST[v.soort]); }
+  function link(v) { return '/nieuw/verkoop?id=' + encodeURIComponent(v.id); }
+
+  function dagTekst(v) {
+    var d = v.dagen.length > 1 ? label(Object.assign({}, v, { begin: null })) : dagLang(v.dagen[0]);
+    return d + (v.begin ? ', ' + tijden(v) : '');
+  }
+
+  function beeldHtml(v, klein) {
+    var alt = v.foto ? YG.t('home.poster', { t: v.titel }) : '';
+    var html = '<img src="' + esc(beeld(v)) + '" alt="' + esc(alt) + '" loading="lazy" decoding="async">';
+    if (klein) return html;
+    html += '<span class="yg-badge yg-badge--' + v.soort + '">' + esc(soortTekst(v)) + '</span>';
+    if (v.fotos > 1) html += '<span class="yg-item__n yg-num">' + esc(YG.t('home.photos', { n: v.fotos })) + '</span>';
+    return html;
+  }
+
+  function kaartje(v) {
+    var li = document.createElement('li');
+    li.innerHTML = '<a class="yg-item" href="' + link(v) + '" data-id="' + esc(v.id) + '">' +
+      '<span class="yg-item__img">' + beeldHtml(v) + '</span>' +
+      '<span class="yg-item__txt">' +
+        '<span class="yg-item__day yg-item__day--' + v.soort + '">' + esc(dagTekst(v)) + '</span>' +
+        '<strong>' + esc(v.titel) + '</strong>' +
+        '<span class="yg-meta">' + esc([v.plaats, v.km != null ? Math.round(v.km) + ' ' + YG.t('unit.km') : ''].filter(Boolean).join(', ')) + '</span>' +
+      '</span></a>';
+    return li;
+  }
 
   function afstand(a, b) {
     var r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
@@ -247,7 +296,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
+    detail: detail, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN
   };
 })();
