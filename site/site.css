@@ -453,6 +453,13 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 /* Kringloopwinkels aanzetten: duidelijk een keuze die nog uit staat. */
 .yg-chip--extra { border-style: dashed; border-color: var(--yg-wood); color: var(--yg-wood-text); }
 .yg-chip--extra[aria-pressed="true"] { border-style: solid; background: var(--yg-wood-tint); color: var(--yg-ink); }
+/* Zachte bruine gloed die een paar keer pulseert: dit kun je aanzetten. Stopt
+   vanzelf; bij 'minder beweging' staat hij stil (regel onderaan). */
+.yg-chip--extra[aria-pressed="false"] { animation: yg-gloed 2.4s ease-in-out 1s 5; }
+@keyframes yg-gloed {
+  0%, 100% { box-shadow: 0 2px 8px rgba(30, 41, 34, .1), 0 0 0 0 rgba(138, 90, 43, 0); }
+  50% { box-shadow: 0 2px 8px rgba(30, 41, 34, .1), 0 0 0 6px rgba(138, 90, 43, .22), 0 0 14px 2px rgba(138, 90, 43, .28); }
+}
 .yg-shop { cursor: pointer; }
 /* Op de startpagina is de winkellaag een bijzaak: kleiner en rustiger. */
 .yg-chip--klein { min-height: 32px; padding: 4px 10px; font-size: 13px; }
