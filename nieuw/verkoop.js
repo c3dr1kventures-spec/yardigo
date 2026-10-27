@@ -1,4 +1,4 @@
-// YardiGo nieuwe verkooppagina (/nieuw/verkoop?id=…): galerij met foto's of
+// YardiGo verkooppagina (/nieuw/verkoop?id=… en /v/{id}): galerij met foto's of
 // het affiche, wat er te koop is, wanneer en waar, en wat er die dag nog meer
 // in de buurt is. Adres en precieze plek volgen de privacyregels van de RPC:
 // zonder account geen adres, en bij garagesales alleen het gebied.
@@ -80,7 +80,8 @@
 
   // ── Invullen ─────────────────────────────────────────────────────────
   function vulIn() {
-    document.title = v.titel + ' | YardiGo';
+    // De vooraf gebouwde /v/-pagina heeft al een titel met datum en plaats (voor Google).
+    if (!document.body.hasAttribute('data-id')) document.title = v.titel + ' | YardiGo';
     v.dagen = dagen(v);
     $('soort').textContent = K.soortTekst(v);
     $('soort').className = 'yg-badge yg-badge--' + v.soort;
@@ -146,7 +147,9 @@
 
   function start() {
     K = window.YGKaart;
-    var id = new URLSearchParams(location.search).get('id') || '';
+    // /nieuw/verkoop?id=… of de vooraf gebouwde /v/{id} (build/prerender.mjs).
+    var pad = /\/v\/([0-9a-f-]{36})/i.exec(location.pathname);
+    var id = new URLSearchParams(location.search).get('id') || document.body.getAttribute('data-id') || (pad && pad[1]) || '';
     if (!/^[0-9a-f-]{36}$/i.test(id)) { fout(YG.t('det.notFound')); return; }
     $('delen').addEventListener('click', delen);
     $('agenda').addEventListener('click', agenda);

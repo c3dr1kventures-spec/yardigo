@@ -211,40 +211,94 @@ function buildJsonLd(sale) {
   };
 }
 
-function renderSaleHtml(template, sale) {
-  const date = sale.date || sale.date_start;
-  const from = sale.from_time || sale.from || '';
-  const till = sale.till_time || sale.till || '';
-  const typeKey = sale.type || 'particulier';
-  const typeLabel = sale.event_subtype || TYPE_LABELS[typeKey] || '';
-  const city = cityFromAddress(sale.address, sale.city);
-  const dateLong = fmtDate(date);
-  const dateShort = fmtDateShort(date);
-  const time = from && till ? `${from}–${till}` : (from || till);
-  const locationStr = sale.address_hidden ? city : (sale.address || city);
-  const metaDesc = (sale.description || `${typeLabel} in ${city} op ${dateLong}. Tijden: ${time}. Bekijk foto's, route en wie er nog meer komt op YardiGo.`).slice(0, 200);
-  const leadText = (sale.description || `Op ${dateLong} vindt er een ${typeLabel.toLowerCase()} plaats in ${city}. Open YardiGo voor foto's, route en het volledige overzicht.`).slice(0, 400);
-  const ogImage = Array.isArray(sale.photos) && sale.photos.length ? sale.photos[0] : DEFAULT_OG_IMAGE;
-  const jsonLd = JSON.stringify(buildJsonLd(sale));
-  const canonical = `${baseFor(sale.land)}/v/${sale.id}`;
+// ─── Verkooppagina in de 3.2-stijl (/v/{id}) ──────────────────────────
+// Basis is nieuw/verkoop.html (dezelfde pagina die bezoekers krijgen); de build
+// vult de inhoud alvast in, zodat Google alles leest. nieuw/verkoop.js maakt
+// hem daarna interactief (kaartje, route, agenda, delen, maak er een dag van).
+// NIEUWE_SITE: zolang de nieuwe site nog niet op / staat, gaan bezoekers
+// (geen bots) door naar de app, zoals voorheen.
+const NIEUWE_SITE = false;
+const SOORT_LABEL = { oprit: 'Garagesale', route: 'Rommelroute', markt: 'Markt' };
 
-  return template
-    .replace(/{{LANG}}/g, 'nl')
-    .replace(/{{TITLE}}/g, esc(sale.title))
-    .replace(/{{DATE}}/g, esc(dateShort))
-    .replace(/{{DATE_LONG}}/g, esc(dateLong))
-    .replace(/{{TIME}}/g, esc(time || 'tijd t.b.a.'))
-    .replace(/{{CITY}}/g, esc(city || ''))
-    .replace(/{{LOCATION}}/g, esc(locationStr))
-    .replace(/{{META_DESC}}/g, esc(metaDesc))
-    .replace(/{{CANONICAL}}/g, esc(canonical))
-    .replace(/{{OG_IMAGE}}/g, esc(ogImage))
-    .replace(/{{OG_LOCALE}}/g, ogLocaleFor(sale.land))
-    .replace(/{{TYPE_KEY}}/g, esc(typeKey))
-    .replace(/{{TYPE_LABEL}}/g, esc(typeLabel))
-    .replace(/{{LEAD_TEXT}}/g, esc(leadText))
-    .replace(/{{JSON_LD}}/g, jsonLd)
-    .replace(/{{SALE_ID_JSON}}/g, JSON.stringify(String(sale.id)));
+function vervangVerplicht(html, oud, nieuw, wat) {
+  if (!html.includes(oud)) throw new Error(`verkooppagina: ${wat} niet gevonden in nieuw/verkoop.html`);
+  return html.replace(oud, nieuw);
+}
+
+function renderVerkoopHtml(shell, sale, listings) {
+  const soort = soortVan(sale);
+  const prive = soort !== 'markt';
+  const base = baseFor(sale.land);
+  const canonical = `${base}/v/${sale.id}`;
+  const city = cityFromAddress(sale.address, sale.city);
+  const datum = sale.date ? new Date(sale.date + 'T12:00:00Z') : null;
+  const dagKort = datum ? datum.toLocaleDateString('nl-NL', { weekday: 'short', timeZone: 'UTC' }).replace('.', '') : '';
+  const wanneer = dagEnTijd(sale);
+  const waar = prive || sale.address_hidden || !sale.address ? city : sale.address + (city && !sale.address.includes(city) ? ', ' + city : '');
+  const fotos = (sale.photos || []).filter(Boolean);
+  const beeld = fotos[0] || `/site/img/${soort}.svg`;
+  const titel = `${sale.title}, ${fmtDateShort(sale.date)} in ${city}`;
+  const metaDesc = (sale.description || `${SOORT_LABEL[soort]} in ${city} op ${wanneer}. Bekijk wat er te koop is, de route en wat er die dag nog meer in de buurt is.`).slice(0, 200);
+  const ogImage = fotos[0] || DEFAULT_OG_IMAGE;
+
+  // Maak er een dag van: dezelfde dag, binnen 15 km, garagesales eerst.
+  const volgorde = { oprit: 0, route: 1, markt: 2 };
+  const dag = listings.filter(l => l.id !== sale.id && l.date === sale.date && l.lat && sale.lat && distKm(sale, l) <= 15 && l.title !== sale.title)
+    .sort((a, b) => (volgorde[soortVan(a)] - volgorde[soortVan(b)]) || distKm(sale, a) - distKm(sale, b)).slice(0, 8);
+
+  const meta = `<title>${esc(titel)} | YardiGo</title>
+<meta name="description" content="${esc(metaDesc)}">
+<link rel="canonical" href="${esc(canonical)}">
+<meta property="og:type" content="event">
+<meta property="og:url" content="${esc(canonical)}">
+<meta property="og:title" content="${esc(titel)}">
+<meta property="og:description" content="${esc(metaDesc)}">
+<meta property="og:image" content="${esc(ogImage)}">
+<meta property="og:site_name" content="YardiGo">
+<meta property="og:locale" content="${ogLocaleFor(sale.land)}">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">${JSON.stringify(buildJsonLd(sale)).replace(/</g, '\\u003c')}</script>
+<script>try{var h=(location.hostname||'').toLowerCase();if(h==='yardigo.app'||h==='www.yardigo.app'){var rb=document.createElement('meta');rb.name='robots';rb.content='noindex,follow';document.head.appendChild(rb);}}catch(e){}</script>
+${NIEUWE_SITE ? '' : `<script>if(!/bot|crawler|spider|crawling/i.test(navigator.userAgent)){try{sessionStorage.setItem('yg-open-sale',${JSON.stringify(String(sale.id))});}catch(e){}location.replace('/?v='+${JSON.stringify(encodeURIComponent(sale.id))});}</script>`}`;
+
+  let h = shell;
+  h = h.replace(/<!--[^>]*Testversie[^>]*-->\n?/, '');
+  h = vervangVerplicht(h, '<meta name="robots" content="noindex,nofollow">', '', 'noindex');
+  h = h.replace(/<title>[^<]*<\/title>\n<meta name="description" content="[^"]*">/, meta);
+  h = vervangVerplicht(h, '<body>', `<body data-id="${esc(sale.id)}">`, 'body');
+  h = vervangVerplicht(h, 'id="laden" role="status" data-i18n="det.loading">Verkoop laden…</p>', 'id="laden" role="status" hidden></p>', 'laden');
+  h = vervangVerplicht(h, '<div class="yg-det__grid" id="inhoud" hidden>', '<div class="yg-det__grid" id="inhoud">', 'inhoud');
+  h = vervangVerplicht(h, 'id="galerij" aria-label=""', `id="galerij" aria-label="${esc(sale.title)}"`, 'galerij');
+  h = vervangVerplicht(h, '<img id="groot" src="" alt=""', `<img id="groot" src="${esc(beeld)}" alt="${fotos.length ? esc('Foto 1 van ' + fotos.length + ', ' + sale.title) : ''}"`, 'foto');
+  if (fotos.length < 2) {
+    h = h.replace('id="vorige"', 'id="vorige" hidden').replace('id="volgende"', 'id="volgende" hidden').replace('<span class="yg-item__n yg-num" id="teller"></span>', '<span class="yg-item__n yg-num" id="teller" hidden></span>');
+  }
+  if (sale.description) {
+    h = vervangVerplicht(h, '<section class="yg-det__block" id="over" hidden', '<section class="yg-det__block" id="over"', 'over');
+    h = vervangVerplicht(h, '<p class="yg-det__txt" id="tekst"></p>', `<p class="yg-det__txt" id="tekst">${esc(sale.description)}</p>`, 'tekst');
+  }
+  h = vervangVerplicht(h, '<span class="yg-badge" id="soort"></span>', `<span class="yg-badge yg-badge--${soort}" id="soort">${SOORT_LABEL[soort]}</span>`, 'soort');
+  h = vervangVerplicht(h, '<h1 class="yg-det__h1" id="titel"></h1>', `<h1 class="yg-det__h1" id="titel">${esc(sale.title)}</h1>`, 'titel');
+  h = vervangVerplicht(h, '<span id="datum-dag"></span><strong id="datum-nr"></strong>', `<span id="datum-dag">${esc(dagKort)}</span><strong id="datum-nr">${datum ? datum.getUTCDate() : ''}</strong>`, 'datum');
+  h = vervangVerplicht(h, '<p id="wanneer"></p>', `<p id="wanneer">${esc(wanneer)}</p>`, 'wanneer');
+  h = vervangVerplicht(h, '<p id="waar"></p>', `<p id="waar">${esc(waar)}</p>`, 'waar');
+  if (prive) {
+    h = vervangVerplicht(h, '<p class="yg-meta" id="adres-info"></p>', '<p class="yg-meta" id="adres-info">Het huisnummer zie je met een gratis account in de app.</p>', 'adres-info');
+    h = vervangVerplicht(h, '<a class="yg-btn yg-btn--primary" id="route"', '<a class="yg-btn yg-btn--primary" id="route" hidden', 'route');
+    h = vervangVerplicht(h, '<p class="yg-meta" id="benadering" hidden', '<p class="yg-meta" id="benadering"', 'benadering');
+  } else if (sale.lat && sale.lng) {
+    h = vervangVerplicht(h, 'id="route" href="#"', `id="route" href="https://www.google.com/maps/dir/?api=1&amp;destination=${sale.lat.toFixed(5)},${sale.lng.toFixed(5)}"`, 'route-link');
+  }
+  h = vervangVerplicht(h, 'id="app" href="/"', `id="app" href="/?v=${esc(sale.id)}"`, 'app-link');
+  if (dag.length) {
+    h = vervangVerplicht(h, '<section class="yg-section" id="dag" hidden', '<section class="yg-section" id="dag"', 'dag');
+    h = vervangVerplicht(h, '<ul class="yg-grid" id="dag-lijst"></ul>', '<ul class="yg-grid" id="dag-lijst">' + dag.map(l => {
+      const s2 = soortVan(l), f = (l.photos || [])[0];
+      return `<li><a class="yg-item" href="/v/${esc(l.id)}"><span class="yg-item__img"><img src="${esc(f || `/site/img/${s2}.svg`)}" alt="" width="320" height="240" loading="lazy"><span class="yg-badge yg-badge--${s2}">${SOORT_LABEL[s2]}</span></span>` +
+        `<span class="yg-item__txt"><span class="yg-item__day yg-item__day--${s2}">${esc(dagEnTijd(l))}</span><strong>${esc(l.title)}</strong><span class="yg-meta">${esc(cityFromAddress(l.address, l.city))}, ${Math.round(distKm(sale, l))} km</span></span></a></li>`;
+    }).join('') + '</ul>', 'dag-lijst');
+  }
+  return h;
 }
 
 // ─── Landing pages (per plaats + type) ──────────────────────────────────
@@ -943,20 +997,20 @@ async function main() {
   console.log('  base URL:', BASE_URL, '+', BASE_URL_BE);
   schrijfBeStartpaginas();
 
-  const template = readFileSync(resolve(__dirname, 'templates/sale-detail.html'), 'utf-8');
+  const shell = readFileSync(resolve(PROJECT_ROOT, 'nieuw/verkoop.html'), 'utf-8');
   const listings = await fetchListings();
   console.log(`  fetched ${listings.length} listings`);
 
   let rendered = 0;
   for (const sale of listings) {
     try {
-      schrijfPagina(`v/${sale.id}`, renderSaleHtml(template, sale));
+      schrijfPagina(`v/${sale.id}`, renderVerkoopHtml(shell, sale, listings));
       rendered++;
     } catch (e) {
       console.warn(`  skip ${sale.id}:`, e.message);
     }
   }
-  console.log(`  rendered ${rendered} sale-detail pages → /v/{id}/index.html`);
+  console.log(`  rendered ${rendered} verkooppagina's (3.2) → /v/{id}/index.html`);
 
   const landingTemplate = readFileSync(resolve(__dirname, 'templates/landing.html'), 'utf-8');
   const landingGroups = buildLandingGroupsByCategory(listings);
