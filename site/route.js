@@ -246,6 +246,83 @@
     meld(t('rt.ordered'));
   }
 
+  // ── Suggesties langs de route ────────────────────────────────────────
+  // Verkopen en winkels die op de dag van de route open zijn en dicht bij de
+  // lijn tussen je stops liggen. Nooit automatisch toegevoegd. 'bron' laat
+  // later ruimte voor gesponsorde stops; nu altijd 'nabij'.
+  var kandidaten = null, winkelsGeladen = false;
+  var MARGE_KM = { auto: 3, fiets: 1.5, lopen: 0.7 };
+  function laadKandidaten() {
+    var K = window.YGKaart;
+    if (!K || kandidaten) return;
+    kandidaten = [];
+    K.laad().then(function (lijst) {
+      lijst.forEach(function (v) { kandidaten.push(K.stopVan(Object.assign({ dagen: [v.van] }, v))); });
+      tekenPaneel();
+    }).catch(function () {});
+  }
+  function laadWinkels() {
+    var K = window.YGKaart;
+    if (!K || winkelsGeladen || !kandidaten) return;
+    winkelsGeladen = true;
+    K.winkels().then(function (lijst) {
+      lijst.forEach(function (w) { kandidaten.push(K.stopWinkel(w)); });
+      tekenPaneel();
+    }).catch(function () { winkelsGeladen = false; });
+  }
+  // Afstand (km) van punt p tot het lijnstuk a-b, in een platte projectie rond a.
+  function totLijn(p, a, b) {
+    var c = Math.cos(a.lat * Math.PI / 180), k = 111.32;
+    var bx = (b.lng - a.lng) * c * k, by = (b.lat - a.lat) * k, px = (p.lng - a.lng) * c * k, py = (p.lat - a.lat) * k;
+    var l = bx * bx + by * by, f = l ? Math.max(0, Math.min(1, (px * bx + py * by) / l)) : 0;
+    var dx = px - f * bx, dy = py - f * by;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function suggesties() {
+    if (!kandidaten || stops.length < 1) return [];
+    var d = routeDatum(), p = punten(), marge = MARGE_KM[actief.vervoer] || 3;
+    var gekozen = {};
+    stops.forEach(function (s) { gekozen[s.id] = true; });
+    var uit = [];
+    kandidaten.forEach(function (c) {
+      if (gekozen[c.id]) return;
+      if (c.soort === 'winkel') { var o = openOp(c.tijden, d); if (!o || !o.length) return; }
+      else if (!c.van || d < c.van || d > c.tot) return;
+      var best = Infinity, na = 0;
+      if (p.length === 1) best = km(c, p[0]);
+      for (var i = 1; i < p.length; i++) { var x = totLijn(c, p[i - 1], p[i]); if (x < best) { best = x; na = i; } }
+      if (best <= marge) uit.push({ stop: c, km: best, na: na, bron: 'nabij' });
+    });
+    var volg = { oprit: 0, route: 1, markt: 2, winkel: 3 };
+    return uit.sort(function (a, b) { return (volg[a.stop.soort] - volg[b.stop.soort]) || a.km - b.km; }).slice(0, 5);
+  }
+  // Toevoegen op de plek waar hij het minst omrijdt: na de stop waar hij het dichtst bij ligt.
+  function voegSuggestieToe(id) {
+    var s = suggesties().filter(function (x) { return x.stop.id === id; })[0];
+    if (!s) return;
+    var plekInStops = Math.max(0, s.na - (actief.start ? 1 : 0));
+    stops.splice(Math.min(plekInStops, stops.length), 0, s.stop);
+    bewaar();
+    meld(t('rt.added', { t: s.stop.titel }));
+  }
+  function suggestieHtml() {
+    laadKandidaten();
+    var lijst = suggesties();
+    var html = '<section class="yg-rt-sugg" aria-labelledby="yg-rt-sugg-kop"><h3 id="yg-rt-sugg-kop">' + esc(t('rt.suggTitle')) + '</h3>';
+    if (lijst.length) {
+      var winkels = lijst.filter(function (x) { return x.stop.soort === 'winkel'; }).length;
+      html += '<p class="yg-meta">' + esc(t((winkels === lijst.length ? 'rt.suggShops' : 'rt.suggN') + (lijst.length === 1 ? '1' : ''), { n: lijst.length })) + '</p><ul>';
+      html += lijst.map(function (x) {
+        var s = x.stop, info = s.soort === 'winkel' ? stopInfo(s).tijd : [s.begin ? hhmm(s.begin) + (s.eind ? '-' + hhmm(s.eind) : '') : ''].join('');
+        return '<li><span class="yg-stop yg-stop--' + s.soort + '" aria-hidden="true"></span><span class="yg-routelijst__txt"><strong>' + esc(s.titel) + '</strong>' +
+          '<span class="yg-meta">' + esc([s.soort === 'winkel' ? s.sub : '', s.plaats, info, t('rt.suggKm', { km: x.km < 1 ? x.km.toFixed(1).replace('.', ',') : Math.round(x.km) })].filter(Boolean).join(' · ')) + '</span></span>' +
+          '<button type="button" class="yg-btn yg-btn--outline" data-actie="sugg" data-sid="' + esc(s.id) + '" aria-label="' + esc(t('rt.add') + ': ' + s.titel) + '">' + esc(t('rt.add')) + '</button></li>';
+      }).join('') + '</ul>';
+    } else html += '<p class="yg-meta">' + esc(t(kandidaten && kandidaten.length ? 'rt.suggNone' : 'rt.suggLoading')) + '</p>';
+    if (!winkelsGeladen) html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="suggWinkels">' + esc(t('rt.suggShopsOn')) + '</button>';
+    return html + '</section>';
+  }
+
   // ── Links naar de kaart-apps ─────────────────────────────────────────
   function punt(s) { return s.lat.toFixed(5) + ',' + s.lng.toFixed(5); }
   // Wat nog in de navigatie hoort: niet geweest en zonder melding (dicht, voorbij, weg, andere dag).
@@ -464,6 +541,8 @@
     else if (actie === 'weg') { stops.splice(i, 1); bewaar(); }
     else if (actie === 'leeg') { stops.splice(0, stops.length); actief.geweest = []; bewaar(); }
     else if (actie === 'kortste') slimmeVolgorde();
+    else if (actie === 'sugg') voegSuggestieToe(b.getAttribute('data-sid'));
+    else if (actie === 'suggWinkels') { laadWinkels(); b.disabled = true; }
     else if (actie === 'deel') deel(b);
     else if (actie === 'geweest') {
       var id = stops[i].id, k = actief.geweest.indexOf(id);
@@ -622,6 +701,7 @@
     html += '<p class="yg-meta yg-rt-som">' + esc(t('rt.sum', { n: stops.length, km: Math.round(totaalKm()) })) + '</p>';
     if (stops.length > 2) html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="kortste">' + esc(t('rt.order')) + '</button>';
     if (gebied) html += '<p class="yg-routepaneel__let">' + esc(t('rt.approx')) + '</p>';
+    html += suggestieHtml();
 
     // Openen in een kaart-app; lange routes in delen.
     var g = delen(PER_LINK.google), a = delen(PER_LINK.apple);

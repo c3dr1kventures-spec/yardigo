@@ -515,6 +515,13 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-mijnroutes__naam { display: flex; gap: 6px; }
 .yg-mijnroutes__naam input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; font: inherit; font-size: 16px; }
 .yg-rt-pin { background: none; border: 0; }
+.yg-rt-sugg { display: grid; gap: 8px; padding: 12px 14px; border: 1px dashed var(--yg-line-strong); border-radius: 12px; }
+.yg-rt-sugg h3 { margin: 0; font-size: 16px; }
+.yg-rt-sugg ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.yg-rt-sugg li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.yg-rt-sugg .yg-stop { width: 14px; height: 14px; border-width: 2px; box-shadow: none; }
+.yg-rt-sugg .yg-btn { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+.yg-rt-sugg .yg-btn--ghost { justify-self: start; }
 .yg-routepaneel__greep { display: none; }
 @media (max-width: 599px) {
   .yg-routepaneel__greep { display: grid; place-items: center; align-self: stretch; height: 28px; margin-bottom: -8px; padding: 0; border: 0; background: none; cursor: pointer; flex: none; }
