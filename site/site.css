@@ -433,14 +433,14 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 
 /* ── Route ────────────────────────────────────────────────────────────── */
 /* Knop rechtsonder zodra er iets in je route staat; paneel van rechts (telefoon: van onder). */
-.yg-routebalk { position: fixed; z-index: 900; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 12px 18px; border: 0; border-radius: 999px; background: var(--yg-ink); color: #FFFFFF; font: 600 15px/1.2 var(--yg-font); box-shadow: 0 8px 24px rgba(30, 41, 34, .3); cursor: pointer; }
+.yg-routebalk { position: fixed; z-index: 1050; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 12px 18px; border: 0; border-radius: 999px; background: var(--yg-ink); color: #FFFFFF; font: 600 15px/1.2 var(--yg-font); box-shadow: 0 8px 24px rgba(30, 41, 34, .3); cursor: pointer; }
 .yg-routebalk svg { width: 20px; height: 20px; }
 .yg-routebalk:hover { background: #000000; }
 .yg-route-open .yg-routebalk { display: none; }
 /* Ruimte onderaan zodat de routeknop niets van de pagina afdekt. */
 .yg-route-actief { padding-bottom: 76px; }
 .yg-mappage.yg-route-actief { padding-bottom: 0; }
-.yg-routepaneel { position: fixed; z-index: 950; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
+.yg-routepaneel { position: fixed; z-index: 1100; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 599px) { .yg-routepaneel { top: auto; max-height: 85vh; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(30, 41, 34, .25); } }
 .yg-routepaneel__kop { display: flex; align-items: center; justify-content: space-between; }
 .yg-routepaneel__kop h2 { margin: 0; font-size: 22px; }
@@ -464,6 +464,70 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-routepaneel .yg-btn--ghost { align-self: flex-start; }
 .yg-routeknop[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
 .yg-stop--markt { background: var(--yg-forest); }
+.yg-stop--start { background: var(--yg-paper); color: var(--yg-ink); border-color: var(--yg-ink); }
+
+/* Dagplanner (site/route.js): je dag, stops slepen, volgende stop, mijn routes. */
+.yg-routepaneel__kop { gap: 8px; }
+.yg-routepaneel__kop h2 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.yg-routepaneel__mijn { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+.yg-rt-dag { border: 1px solid var(--yg-line); border-radius: 12px; background: var(--yg-tint); }
+.yg-rt-dag summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 12px 14px; cursor: pointer; list-style: none; }
+.yg-rt-dag summary::-webkit-details-marker { display: none; }
+.yg-rt-dag summary::after { content: '▾'; margin-left: auto; color: var(--yg-muted); }
+.yg-rt-dag[open] summary::after { content: '▴'; }
+.yg-rt-dag summary .yg-label { font-weight: 600; }
+.yg-rt-dag__velden { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 12px; }
+.yg-rt-dag__velden label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.yg-rt-dag__velden input, .yg-rt-dag__velden select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; background: var(--yg-paper); font: inherit; font-size: 16px; color: var(--yg-ink); }
+.yg-rt-dag .yg-field { padding: 0 14px 14px; }
+.yg-rt-punt form { display: flex; gap: 6px; margin-top: 6px; }
+.yg-rt-punt form input { flex: 1; min-width: 0; }
+.yg-rt-volgende { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 12px 14px; border-radius: 12px; background: var(--yg-land); }
+.yg-rt-volgende .yg-meta { grid-column: 1; font-size: 13px; }
+.yg-rt-volgende strong { grid-column: 1; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+.yg-rt-volgende .yg-btn { grid-column: 2; grid-row: 1 / span 2; }
+.yg-routelijst li { grid-template-columns: 18px 30px minmax(0, 1fr) auto; }
+.yg-routelijst__btns { display: grid; grid-template-columns: repeat(2, 34px); gap: 4px; }
+.yg-routelijst__btns button { width: 34px; height: 34px; }
+/* Kaartpagina op desktop: het paneel staat naast de kaart, niet erover. */
+@media (min-width: 960px) {
+  .yg-mappage.yg-route-open .yg-split, .yg-mappage.yg-route-open .yg-toolbar, .yg-mappage.yg-route-open .yg-header { margin-right: min(400px, 100%); }
+}
+.yg-routelijst li.is-sleep { background: var(--yg-tint); box-shadow: 0 6px 18px rgba(30, 41, 34, .18); border-radius: 10px; }
+.yg-routelijst li.is-geweest .yg-routelijst__txt { opacity: .55; }
+.yg-routelijst li.is-geweest .yg-routelijst__txt strong { text-decoration: line-through; }
+.yg-routelijst__greep { display: grid; place-items: center; height: 44px; color: var(--yg-muted); font-size: 14px; letter-spacing: -3px; cursor: grab; touch-action: none; user-select: none; }
+.yg-routelijst__greep:active { cursor: grabbing; }
+.yg-routelijst__let { margin-top: 2px; font-size: 13px; font-weight: 600; color: #9B2C1F; }
+.yg-routelijst__btns button[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
+.yg-rt-som { margin: -6px 0 0; font-size: 13px; }
+.yg-rt-delen { display: grid; gap: 6px; }
+.yg-rt-delen .yg-label { font-size: 14px; font-weight: 600; }
+.yg-rt-link { width: 100%; padding: 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; font-size: 14px; }
+.yg-mijnroutes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.yg-mijnroutes li { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--yg-line); border-radius: 12px; }
+.yg-mijnroutes li[aria-current="true"] { border-color: var(--yg-forest); background: var(--yg-tint); }
+.yg-mijnroutes__open { display: grid; gap: 2px; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: var(--yg-ink); cursor: pointer; }
+.yg-mijnroutes__open strong { font-size: 16px; }
+.yg-mijnroutes__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.yg-mijnroutes__btns button { min-height: 36px; padding: 4px 10px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); font: inherit; font-size: 14px; cursor: pointer; }
+.yg-mijnroutes__vraag { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+.yg-mijnroutes__naam { display: flex; gap: 6px; }
+.yg-mijnroutes__naam input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; font: inherit; font-size: 16px; }
+.yg-rt-pin { background: none; border: 0; }
+.yg-routepaneel__greep { display: none; }
+@media (max-width: 599px) {
+  .yg-routepaneel__greep { display: grid; place-items: center; align-self: stretch; height: 28px; margin-bottom: -8px; padding: 0; border: 0; background: none; cursor: pointer; flex: none; }
+  .yg-routepaneel__greep::before { content: ''; width: 44px; height: 5px; border-radius: 3px; background: var(--yg-line-strong); }
+}
+.yg-rt-pin .yg-stop { width: 30px; height: 30px; font-size: 13px; }
+@media (max-width: 599px) {
+  .yg-routepaneel { max-height: 60vh; max-height: 60svh; padding-top: 6px; }
+  .yg-routepaneel.is-vol { max-height: 92vh; max-height: 92svh; }
+  .yg-rt-dag__velden { grid-template-columns: 1fr; }
+  .yg-routelijst__btns { grid-template-columns: repeat(2, 40px); }
+  .yg-routelijst__btns button { width: 40px; height: 40px; }
+}
 
 /* Kringloopwinkels aanzetten: duidelijk een keuze die nog uit staat. */
 .yg-chip--extra { border-style: dashed; border-color: var(--yg-wood); color: var(--yg-wood-text); }

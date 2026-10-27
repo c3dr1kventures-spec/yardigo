@@ -127,6 +127,9 @@
       }
     });
 
+    // Je route als genummerde stops op de kaart (site/route.js).
+    if (window.YGRoute) YGRoute.opKaart(kaart.map);
+
     // Kringloopwinkels: standaard uit, laden pas bij aanzetten.
     $('winkels').addEventListener('click', function () {
       var b = $('winkels'), aan = b.getAttribute('aria-pressed') !== 'true';

@@ -230,10 +230,12 @@
   var WINKEL_TEKST = { kringloop: 'shop.thrift', tweedehands: 'shop.secondhand', antiek: 'shop.antique', goede_doel: 'shop.charity' };
   function winkelSoort(w) { return YG.t(WINKEL_TEKST[w.soort] || 'shop.secondhand'); }
   function stopVan(v) {
-    return { id: v.id, titel: v.titel, soort: v.soort, lat: v.lat, lng: v.lng, plaats: v.plaats, sub: dagTekst(v), benadering: !!v.benadering };
+    return { id: v.id, titel: v.titel, soort: v.soort, lat: v.lat, lng: v.lng, plaats: v.plaats, sub: dagTekst(v), benadering: !!v.benadering,
+      van: v.van, tot: v.tot, begin: v.begin || null, eind: v.eind || null };
   }
   function stopWinkel(w) {
-    return { id: w.id, titel: w.naam || winkelSoort(w), soort: 'winkel', lat: w.lat, lng: w.lng, plaats: w.plaats, sub: winkelSoort(w), benadering: false };
+    return { id: w.id, titel: w.naam || winkelSoort(w), soort: 'winkel', lat: w.lat, lng: w.lng, plaats: w.plaats, sub: winkelSoort(w), benadering: false,
+      tijden: w.tijden || null };
   }
   function routeKnop(stop) { return window.YGRoute ? window.YGRoute.knop(stop) : ''; }
   function winkelPopupHtml(w) {
@@ -286,7 +288,10 @@
     return fetch(pdok).then(function (r) { if (!r.ok) throw new Error('pdok ' + r.status); return r.json(); }).then(function (j) {
       var d = j && j.response && j.response.docs && j.response.docs[0];
       var m = d && /POINT\(([-\d.]+) ([-\d.]+)\)/.exec(d.centroide_ll);
-      if (m) return { naam: (d.woonplaatsnaam || d.weergavenaam.split(',')[0]).replace(/^Gemeente /, ''), lat: parseFloat(m[2]), lng: parseFloat(m[1]) };
+      // PDOK kent alleen Nederland en geeft altijd iets terug ('Gent' wordt 'Sas van Gent'):
+      // alleen aannemen als de naam met de zoekterm begint of als het een postcode is.
+      var naam = d && (d.woonplaatsnaam || d.weergavenaam.split(',')[0]).replace(/^Gemeente /, '');
+      if (m && (d.type === 'postcode' || norm(naam).indexOf(norm(q)) === 0)) return { naam: naam, lat: parseFloat(m[2]), lng: parseFloat(m[1]) };
       return nominatim();
     }).catch(function () { return nominatim().catch(function () { return null; }); });
   }
