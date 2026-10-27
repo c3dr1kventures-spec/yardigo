@@ -159,6 +159,68 @@
     'map.filters': 'Filter', 'map.list': 'Liste', 'map.map': 'Karte', 'time.until': 'bis', 'time.and': 'und', 'unit.km': 'km'
   });
 
+  // Ronde 3.2: garagesales voorop, foto's en affiches, uitleg met Cedrik.
+  Object.assign(T.nl, {
+    'nav.driveway': 'Garagesales', 'nav.markets': 'Rommelmarkten', 'type.driveway': 'Garagesale',
+    'home.title': 'Garagesales, rommelroutes en rommelmarkten bij jou in de buurt',
+    'home.locBtn': 'Toon wat er bij mij in de buurt is', 'home.locBusy': 'Even kijken waar je bent', 'home.orType': 'of typ een plaats', 'home.layers': 'Lagen op de kaart',
+    'home.howTitle': 'Zo werkt YardiGo',
+    'home.how1': 'Kijk op de kaart', 'home.how1Txt': 'Elke pin is een verkoop met dag en tijd. Geel is een garagesale, oranje een rommelroute, groen een markt.',
+    'home.how2': 'Bekijk wat er te koop is', 'home.how2Txt': 'Garagesales laten foto\'s van hun spullen zien. Bij markten en routes zie je het affiche.',
+    'home.how3': 'Maak er een dag van', 'home.how3Txt': 'Combineer een paar garagesales met een markt in de buurt en vraag de route op. Kijken is gratis.',
+    'home.garTitle': 'Garagesales: kijk vooraf wat er te koop is', 'home.garNear': 'Garagesales rond {p}',
+    'home.garTxt': 'Bij een garagesale verkoopt één huishouden vanaf de oprit, of een hele buurt tegelijk op een rommelroute.',
+    'home.garNone': 'Nog geen garagesales in de buurt. Ken je er een, of houd je er zelf een?',
+    'home.garPost': 'Garagesale aanmelden', 'home.garPostTxt': 'Gratis. Zet er foto\'s van je spullen bij, dan weten kopers wat ze kunnen verwachten.',
+    'home.allGar': 'Alle garagesales', 'home.marketPost': 'Markt aanmelden',
+    'home.photos': '{n} foto\'s', 'home.poster': 'Affiche van {t}', 'home.byType': 'Garagesales eerst'
+  });
+  Object.assign(T.en, {
+    'nav.driveway': 'Garage sales', 'nav.markets': 'Flea markets', 'type.driveway': 'Garage sale',
+    'home.title': 'Garage sales, yard sale routes and flea markets near you',
+    'home.locBtn': 'Show what is near me', 'home.locBusy': 'Finding your location', 'home.orType': 'or type a town', 'home.layers': 'Map layers',
+    'home.howTitle': 'How YardiGo works',
+    'home.how1': 'Look at the map', 'home.how1Txt': 'Every pin is a sale with its day and time. Yellow is a garage sale, orange a yard sale route, green a market.',
+    'home.how2': 'See what is for sale', 'home.how2Txt': 'Garage sales show photos of their items. For markets and routes you see the poster.',
+    'home.how3': 'Make a day of it', 'home.how3Txt': 'Combine a few garage sales with a market nearby and get directions. Browsing is free.',
+    'home.garTitle': 'Garage sales: see what is for sale before you go', 'home.garNear': 'Garage sales around {p}',
+    'home.garTxt': 'At a garage sale one household sells from the driveway, or a whole neighbourhood at once on a yard sale route.',
+    'home.garNone': 'No garage sales nearby yet. Know of one, or holding one yourself?',
+    'home.garPost': 'List a garage sale', 'home.garPostTxt': 'Free. Add photos of your items so buyers know what to expect.',
+    'home.allGar': 'All garage sales', 'home.marketPost': 'List a market',
+    'home.photos': '{n} photos', 'home.poster': 'Poster for {t}', 'home.byType': 'Garage sales first'
+  });
+  Object.assign(T.fr, {
+    'nav.driveway': 'Ventes de garage', 'nav.markets': 'Brocantes', 'type.driveway': 'Vente de garage',
+    'home.title': 'Ventes de garage, circuits brocante et brocantes près de chez vous',
+    'home.locBtn': 'Voir ce qui est près de moi', 'home.locBusy': 'Recherche de votre position', 'home.orType': 'ou tapez une ville', 'home.layers': 'Couches de la carte',
+    'home.howTitle': 'Comment fonctionne YardiGo',
+    'home.how1': 'Regardez la carte', 'home.how1Txt': 'Chaque repère est une vente avec son jour et son heure. Jaune pour une vente de garage, orange pour un circuit brocante, vert pour un marché.',
+    'home.how2': 'Voyez ce qui est à vendre', 'home.how2Txt': 'Les ventes de garage montrent des photos de leurs objets. Pour les marchés et les circuits, vous voyez l’affiche.',
+    'home.how3': 'Faites-en une journée', 'home.how3Txt': 'Combinez quelques ventes de garage avec un marché proche et obtenez l’itinéraire. Regarder est gratuit.',
+    'home.garTitle': 'Ventes de garage : voyez ce qui est à vendre avant d’y aller', 'home.garNear': 'Ventes de garage autour de {p}',
+    'home.garTxt': 'Lors d’une vente de garage, un ménage vend devant chez lui, ou tout un quartier en même temps lors d’un circuit brocante.',
+    'home.garNone': 'Pas encore de vente de garage près d’ici. Vous en connaissez une, ou vous en organisez une ?',
+    'home.garPost': 'Annoncer une vente de garage', 'home.garPostTxt': 'Gratuit. Ajoutez des photos de vos objets pour que les acheteurs sachent à quoi s’attendre.',
+    'home.allGar': 'Toutes les ventes de garage', 'home.marketPost': 'Annoncer un marché',
+    'home.photos': '{n} photos', 'home.poster': 'Affiche de {t}', 'home.byType': 'Ventes de garage d’abord'
+  });
+  Object.assign(T.de, {
+    'nav.driveway': 'Garagenverkäufe', 'nav.markets': 'Flohmärkte', 'type.driveway': 'Garagenverkauf',
+    'home.title': 'Garagenverkäufe, Hofflohmärkte und Flohmärkte in deiner Nähe',
+    'home.locBtn': 'Zeig, was in meiner Nähe ist', 'home.locBusy': 'Standort wird gesucht', 'home.orType': 'oder gib einen Ort ein', 'home.layers': 'Kartenebenen',
+    'home.howTitle': 'So funktioniert YardiGo',
+    'home.how1': 'Schau auf die Karte', 'home.how1Txt': 'Jede Markierung ist ein Verkauf mit Tag und Uhrzeit. Gelb ist ein Garagenverkauf, orange ein Hofflohmarkt, grün ein Markt.',
+    'home.how2': 'Sieh, was verkauft wird', 'home.how2Txt': 'Garagenverkäufe zeigen Fotos ihrer Sachen. Bei Märkten und Hofflohmärkten siehst du das Plakat.',
+    'home.how3': 'Mach einen Tag daraus', 'home.how3Txt': 'Kombiniere ein paar Garagenverkäufe mit einem Markt in der Nähe und lass dir die Route zeigen. Schauen ist kostenlos.',
+    'home.garTitle': 'Garagenverkäufe: sieh vorher, was es gibt', 'home.garNear': 'Garagenverkäufe um {p}',
+    'home.garTxt': 'Beim Garagenverkauf verkauft ein Haushalt vor der Tür, beim Hofflohmarkt ein ganzes Viertel zugleich.',
+    'home.garNone': 'Noch keine Garagenverkäufe in der Nähe. Kennst du einen oder machst du selbst einen?',
+    'home.garPost': 'Garagenverkauf eintragen', 'home.garPostTxt': 'Kostenlos. Füg Fotos deiner Sachen hinzu, damit Käufer wissen, was sie erwartet.',
+    'home.allGar': 'Alle Garagenverkäufe', 'home.marketPost': 'Markt eintragen',
+    'home.photos': '{n} Fotos', 'home.poster': 'Plakat für {t}', 'home.byType': 'Garagenverkäufe zuerst'
+  });
+
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
 
   function kiesTaal() {
