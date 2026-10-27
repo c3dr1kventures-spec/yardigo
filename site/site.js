@@ -163,7 +163,7 @@
   Object.assign(T.nl, {
     'nav.driveway': 'Garagesales', 'nav.markets': 'Rommelmarkten', 'type.driveway': 'Garagesale',
     'home.title': 'Garagesales, rommelroutes en rommelmarkten bij jou in de buurt',
-    'home.locBtn': 'Toon wat er bij mij in de buurt is', 'home.locBusy': 'Even kijken waar je bent', 'home.orType': 'of typ een plaats', 'home.layers': 'Lagen op de kaart',
+    'home.locBtn': 'Toon wat er bij mij in de buurt is', 'home.locBusy': 'Even kijken waar je bent…', 'det.loading': 'Verkoop laden…', 'nav.skip': 'Naar de inhoud', 'home.orType': 'of typ een plaats', 'home.layers': 'Lagen op de kaart',
     'home.howTitle': 'Zo werkt YardiGo',
     'home.how1': 'Kijk op de kaart', 'home.how1Txt': 'Elke pin is een verkoop met dag en tijd. Geel is een garagesale, oranje een rommelroute, groen een markt.',
     'home.how2': 'Bekijk wat er te koop is', 'home.how2Txt': 'Garagesales laten foto\'s van hun spullen zien. Bij markten en routes zie je het affiche.',
@@ -178,7 +178,7 @@
   Object.assign(T.en, {
     'nav.driveway': 'Garage sales', 'nav.markets': 'Flea markets', 'type.driveway': 'Garage sale',
     'home.title': 'Garage sales, yard sale routes and flea markets near you',
-    'home.locBtn': 'Show what is near me', 'home.locBusy': 'Finding your location', 'home.orType': 'or type a town', 'home.layers': 'Map layers',
+    'home.locBtn': 'Show what is near me', 'home.locBusy': 'Finding your location…', 'det.loading': 'Loading sale…', 'nav.skip': 'Skip to content', 'home.orType': 'or type a town', 'home.layers': 'Map layers',
     'home.howTitle': 'How YardiGo works',
     'home.how1': 'Look at the map', 'home.how1Txt': 'Every pin is a sale with its day and time. Yellow is a garage sale, orange a yard sale route, green a market.',
     'home.how2': 'See what is for sale', 'home.how2Txt': 'Garage sales show photos of their items. For markets and routes you see the poster.',
@@ -193,7 +193,7 @@
   Object.assign(T.fr, {
     'nav.driveway': 'Ventes de garage', 'nav.markets': 'Brocantes', 'type.driveway': 'Vente de garage',
     'home.title': 'Ventes de garage, circuits brocante et brocantes près de chez vous',
-    'home.locBtn': 'Voir ce qui est près de moi', 'home.locBusy': 'Recherche de votre position', 'home.orType': 'ou tapez une ville', 'home.layers': 'Couches de la carte',
+    'home.locBtn': 'Voir ce qui est près de moi', 'home.locBusy': 'Recherche de votre position…', 'det.loading': 'Chargement de la vente…', 'nav.skip': 'Aller au contenu', 'home.orType': 'ou tapez une ville', 'home.layers': 'Couches de la carte',
     'home.howTitle': 'Comment fonctionne YardiGo',
     'home.how1': 'Regardez la carte', 'home.how1Txt': 'Chaque repère est une vente avec son jour et son heure. Jaune pour une vente de garage, orange pour un circuit brocante, vert pour un marché.',
     'home.how2': 'Voyez ce qui est à vendre', 'home.how2Txt': 'Les ventes de garage montrent des photos de leurs objets. Pour les marchés et les circuits, vous voyez l’affiche.',
@@ -208,7 +208,7 @@
   Object.assign(T.de, {
     'nav.driveway': 'Garagenverkäufe', 'nav.markets': 'Flohmärkte', 'type.driveway': 'Garagenverkauf',
     'home.title': 'Garagenverkäufe, Hofflohmärkte und Flohmärkte in deiner Nähe',
-    'home.locBtn': 'Zeig, was in meiner Nähe ist', 'home.locBusy': 'Standort wird gesucht', 'home.orType': 'oder gib einen Ort ein', 'home.layers': 'Kartenebenen',
+    'home.locBtn': 'Zeig, was in meiner Nähe ist', 'home.locBusy': 'Standort wird gesucht…', 'det.loading': 'Verkauf wird geladen…', 'nav.skip': 'Zum Inhalt', 'home.orType': 'oder gib einen Ort ein', 'home.layers': 'Kartenebenen',
     'home.howTitle': 'So funktioniert YardiGo',
     'home.how1': 'Schau auf die Karte', 'home.how1Txt': 'Jede Markierung ist ein Verkauf mit Tag und Uhrzeit. Gelb ist ein Garagenverkauf, orange ein Hofflohmarkt, grün ein Markt.',
     'home.how2': 'Sieh, was verkauft wird', 'home.how2Txt': 'Garagenverkäufe zeigen Fotos ihrer Sachen. Bei Märkten und Hofflohmärkten siehst du das Plakat.',

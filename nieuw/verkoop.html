@@ -21,6 +21,7 @@
 </head>
 <body>
 
+<a class="yg-skip" href="#inhoud-start" data-i18n="nav.skip">Naar de inhoud</a>
 <header class="yg-header">
   <div class="yg-wrap yg-header__bar">
     <a class="yg-logo" href="/nieuw" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina">
@@ -52,14 +53,14 @@
   </div>
 </header>
 
-<main class="yg-wrap yg-det" id="det" aria-live="polite">
+<main class="yg-wrap yg-det" id="inhoud-start">
   <p class="yg-det__back"><a href="/nieuw/kaart" id="terug"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg> <span data-i18n="det.back">Terug naar de kaart</span></a></p>
-  <p class="yg-meta" id="laden">&nbsp;</p>
+  <p class="yg-meta" id="laden" role="status" data-i18n="det.loading">Verkoop laden…</p>
   <div class="yg-det__grid" id="inhoud" hidden>
     <div class="yg-det__main">
-      <section class="yg-gal" aria-roledescription="carousel" id="galerij">
+      <section class="yg-gal" aria-roledescription="carousel" id="galerij" aria-label="">
         <div class="yg-gal__big">
-          <img id="groot" src="" alt="">
+          <img id="groot" src="" alt="" width="800" height="600" fetchpriority="high">
           <button class="yg-gal__nav yg-gal__nav--prev" type="button" id="vorige" data-i18n-aria="det.prev" aria-label="Vorige foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
           <button class="yg-gal__nav yg-gal__nav--next" type="button" id="volgende" data-i18n-aria="det.next" aria-label="Volgende foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
           <span class="yg-item__n yg-num" id="teller"></span>

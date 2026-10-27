@@ -60,6 +60,9 @@ a { color: var(--yg-forest); }
 a:hover { color: var(--yg-forest-dark); }
 :focus-visible { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 [hidden] { display: none !important; }
+button, .yg-btn, .yg-chip { touch-action: manipulation; }
+.yg-skip { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 14px; border-radius: 10px; background: var(--yg-ink); color: #FFFFFF; font-weight: 600; text-decoration: none; }
+.yg-skip:focus { top: 12px; color: #FFFFFF; }
 .yg-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .yg-wrap {
