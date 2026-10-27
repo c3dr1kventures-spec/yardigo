@@ -1,5 +1,7 @@
 # Slimme dagplanner (28 okt 2026)
 
+**Stand 28 okt (lokaal gecommit, niet gepusht):** fase 1 klaar, fase 1b klaar (tabel `opgeslagen_routes` staat al in de database), uit fase 3 de suggesties langs de route en de openbare deellink klaar. Fase 2 wacht op de ORS-sleutel.
+
 Keuzes van Christian: **website** (`site/route.js`, `/kaart`) wordt de dagplanner, met opslaan in het account van `/app`; routedienst **OpenRouteService** (ORS).
 
 ## 1. Hoe het nu werkt

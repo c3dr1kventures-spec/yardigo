@@ -31,6 +31,7 @@
   var bekend = {};
   var routes, actief;
   var knopEl, paneel, weergave = 'route', wisVraag = null, hernoem = null;
+  var terug = null;   // { stops, geweest, tekst }: om weghalen of leegmaken ongedaan te maken
   var controle = {};   // id → 'weg' | 'gewijzigd' (na controle bij openen)
   var kaartLaag = null;
 
@@ -68,6 +69,7 @@
   function heeft(id) { return plek(id) > -1; }
 
   function wissel(stop) {
+    terug = null;
     var i = plek(stop.id);
     if (i > -1) stops.splice(i, 1); else stops.push(stop);
     bewaar();
@@ -459,6 +461,7 @@
     if (!li || e.button > 0) return;
     e.preventDefault();
     li.classList.add('is-sleep');
+    document.body.classList.add('yg-sleept');
     var beweeg = function (ev) {
       var y = ev.clientY;
       var anderen = Array.prototype.filter.call(lijst.children, function (x) { return x !== li; });
@@ -470,6 +473,7 @@
       document.removeEventListener('pointerup', los);
       document.removeEventListener('pointercancel', los);
       li.classList.remove('is-sleep');
+      document.body.classList.remove('yg-sleept');
       var volgorde = Array.prototype.map.call(lijst.children, function (x) { return +x.getAttribute('data-i'); });
       var nieuw = volgorde.map(function (i) { return stops[i]; });
       if (volgorde.some(function (v, i) { return v !== i; })) { stops.splice.apply(stops, [0, stops.length].concat(nieuw)); bewaar(); meld(t('rt.moved')); }
@@ -527,9 +531,12 @@
     haalAccount();
   }
 
+  function onthoud(tekst) { terug = { stops: stops.slice(), geweest: actief.geweest.slice(), tekst: tekst }; }
+
   function klik(e) {
     var b = e.target.closest('button');
     if (!b) return;
+    if (b.getAttribute('data-actie') !== 'ongedaan') terug = terug && b.getAttribute('data-actie') !== 'weg' && b.getAttribute('data-actie') !== 'leeg' ? null : terug;
     var i = Number(b.getAttribute('data-i'));
     var actie = b.getAttribute('data-actie');
     var rid = b.getAttribute('data-rid');
@@ -538,8 +545,12 @@
     else if (actie === 'grootte') { paneel.classList.toggle('is-vol'); tekenPaneel(); var gr = paneel.querySelector('[data-actie="grootte"]'); if (gr) gr.focus(); }
     else if (actie === 'op' && i > 0) { stops.splice(i - 1, 0, stops.splice(i, 1)[0]); bewaar(); focusOp('op', i - 1); }
     else if (actie === 'neer' && i < stops.length - 1) { stops.splice(i + 1, 0, stops.splice(i, 1)[0]); bewaar(); focusOp('neer', i + 1); }
-    else if (actie === 'weg') { stops.splice(i, 1); bewaar(); }
-    else if (actie === 'leeg') { stops.splice(0, stops.length); actief.geweest = []; bewaar(); }
+    else if (actie === 'weg') { onthoud(t('rt.removed', { t: stops[i].titel })); stops.splice(i, 1); bewaar(); focusKop(); }
+    else if (actie === 'leeg') { onthoud(t('rt.cleared')); stops.splice(0, stops.length); actief.geweest = []; bewaar(); focusKop(); }
+    else if (actie === 'ongedaan' && terug) {
+      stops.splice.apply(stops, [0, stops.length].concat(terug.stops)); actief.geweest = terug.geweest; terug = null;
+      bewaar(); meld(t('rt.undone')); focusKop();
+    }
     else if (actie === 'kortste') slimmeVolgorde();
     else if (actie === 'sugg') voegSuggestieToe(b.getAttribute('data-sid'));
     else if (actie === 'suggWinkels') { laadWinkels(); b.disabled = true; }
@@ -658,6 +669,7 @@
     var html = greepHtml() + '<div class="yg-routepaneel__kop"><h2 id="yg-route-kop" tabindex="-1">' + esc(naamVan(actief)) + '</h2>' +
       '<button type="button" class="yg-btn yg-btn--ghost yg-routepaneel__mijn" data-actie="mijn">' + esc(t('rt.myRoutes')) + (routes.length > 1 ? ' (' + routes.length + ')' : '') + '</button>' +
       '<button type="button" class="yg-routepaneel__dicht" data-actie="sluit" aria-label="' + esc(t('rt.close')) + '">×</button></div>';
+    if (terug) html += '<p class="yg-rt-terug" role="status">' + esc(terug.tekst) + ' <button type="button" class="yg-btn yg-btn--outline" data-actie="ongedaan">' + esc(t('rt.undo')) + '</button></p>';
     if (!stops.length) {
       paneel.innerHTML = html + '<p class="yg-meta">' + esc(t('rt.empty')) + '</p>';
       return;
