@@ -104,6 +104,12 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
   .yg-menu-btn { display: grid; }
   .yg-header__end .yg-btn { padding: 10px 12px; font-size: 14px; }
 }
+/* Smalle desktop: 'Voor organisatoren' staat ook in de band en de voet. */
+@media (max-width: 1199px) {
+  .yg-header__end > .yg-nav { display: none; }
+  .yg-header__bar > .yg-nav { gap: 16px; font-size: 14.5px; }
+  .yg-logo { flex: none; }
+}
 .yg-menu { display: none; border-top: 1px solid var(--yg-line); padding-block: 8px 16px; }
 .yg-menu.is-open { display: block; }
 .yg-menu a { display: block; padding: 12px 0; font-size: 17px; font-weight: 500; color: var(--yg-ink); text-decoration: none; border-bottom: 1px solid var(--yg-line); }

@@ -161,7 +161,7 @@
 
   // Ronde 3.2: garagesales voorop, foto's en affiches, uitleg met Cedrik.
   Object.assign(T.nl, {
-    'nav.driveway': 'Garagesales', 'nav.markets': 'Rommelmarkten', 'type.driveway': 'Garagesale',
+    'nav.driveway': 'Garagesales', 'nav.markets': 'Rommelmarkten', 'nav.thrift': 'Kringloopwinkels', 'type.driveway': 'Garagesale',
     'home.title': 'Garagesales, rommelroutes en rommelmarkten bij jou in de buurt',
     'home.locBtn': 'Toon wat er bij mij in de buurt is', 'home.locBusy': 'Even kijken waar je bent…', 'det.loading': 'Verkoop laden…', 'nav.skip': 'Naar de inhoud', 'home.orType': 'of typ een plaats', 'home.layers': 'Lagen op de kaart',
     'home.howTitle': 'Zo werkt YardiGo',
@@ -176,7 +176,7 @@
     'home.photos': '{n} foto\'s', 'home.poster': 'Affiche van {t}', 'home.byType': 'Garagesales eerst'
   });
   Object.assign(T.en, {
-    'nav.driveway': 'Garage sales', 'nav.markets': 'Flea markets', 'type.driveway': 'Garage sale',
+    'nav.driveway': 'Garage sales', 'nav.markets': 'Flea markets', 'nav.thrift': 'Thrift stores', 'type.driveway': 'Garage sale',
     'home.title': 'Garage sales, yard sale routes and flea markets near you',
     'home.locBtn': 'Show what is near me', 'home.locBusy': 'Finding your location…', 'det.loading': 'Loading sale…', 'nav.skip': 'Skip to content', 'home.orType': 'or type a town', 'home.layers': 'Map layers',
     'home.howTitle': 'How YardiGo works',
@@ -191,7 +191,7 @@
     'home.photos': '{n} photos', 'home.poster': 'Poster for {t}', 'home.byType': 'Garage sales first'
   });
   Object.assign(T.fr, {
-    'nav.driveway': 'Ventes de garage', 'nav.markets': 'Brocantes', 'type.driveway': 'Vente de garage',
+    'nav.driveway': 'Ventes de garage', 'nav.markets': 'Brocantes', 'nav.thrift': 'Ressourceries', 'type.driveway': 'Vente de garage',
     'home.title': 'Ventes de garage, circuits brocante et brocantes près de chez vous',
     'home.locBtn': 'Voir ce qui est près de moi', 'home.locBusy': 'Recherche de votre position…', 'det.loading': 'Chargement de la vente…', 'nav.skip': 'Aller au contenu', 'home.orType': 'ou tapez une ville', 'home.layers': 'Couches de la carte',
     'home.howTitle': 'Comment fonctionne YardiGo',
@@ -206,7 +206,7 @@
     'home.photos': '{n} photos', 'home.poster': 'Affiche de {t}', 'home.byType': 'Ventes de garage d’abord'
   });
   Object.assign(T.de, {
-    'nav.driveway': 'Garagenverkäufe', 'nav.markets': 'Flohmärkte', 'type.driveway': 'Garagenverkauf',
+    'nav.driveway': 'Garagenverkäufe', 'nav.markets': 'Flohmärkte', 'nav.thrift': 'Gebrauchtwarenläden', 'type.driveway': 'Garagenverkauf',
     'home.title': 'Garagenverkäufe, Hofflohmärkte und Flohmärkte in deiner Nähe',
     'home.locBtn': 'Zeig, was in meiner Nähe ist', 'home.locBusy': 'Standort wird gesucht…', 'det.loading': 'Verkauf wird geladen…', 'nav.skip': 'Zum Inhalt', 'home.orType': 'oder gib einen Ort ein', 'home.layers': 'Kartenebenen',
     'home.howTitle': 'So funktioniert YardiGo',
