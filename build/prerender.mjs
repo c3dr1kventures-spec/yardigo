@@ -647,9 +647,171 @@ function renderWeekendHtml(template, t, listings) {
 }
 
 // ─── Sitemaps + robots ─────────────────────────────────────────────────
+// ─── Kringloop en tweedehands per plaats ───────────────────────────────
+// Bron: tabel winkels (OpenStreetMap), via get_winkels_publiek (alleen
+// openbare velden). Een pagina per plaats met minstens KRINGLOOP_MIN winkels;
+// daaronder winkels binnen KRINGLOOP_KM en wat er de komende twee weken aan
+// verkopen in de buurt is, om er een dag van te maken. Mislukt het ophalen,
+// dan slaat de build dit deel over (de rest van de site gaat gewoon door).
+const KRINGLOOP_MIN = 2;
+const KRINGLOOP_KM = 10;
+const WINKEL_SOORT = { kringloop: 'Kringloop', tweedehands: 'Tweedehands', antiek: 'Antiek en brocante', goede_doel: 'Goed doel' };
+const OSM_DAGEN = { Mo: 'ma', Tu: 'di', We: 'wo', Th: 'do', Fr: 'vr', Sa: 'za', Su: 'zo', PH: 'feestdagen' };
+
+async function fetchWinkels() {
+  try {
+    // De API geeft maximaal 1000 rijen per keer; daarom in porties.
+    const data = [];
+    for (let offset = 0; ; offset += 1000) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_winkels_publiek?order=id&limit=1000&offset=${offset}`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const deel = await res.json();
+      data.push(...deel);
+      if (deel.length < 1000) break;
+    }
+    return data.map(w => ({ ...w, lat: w.latitude, lng: w.longitude }));
+  } catch (e) {
+    console.warn('  winkels ophalen mislukt, kringlooppagina\'s overgeslagen:', e.message);
+    return null;
+  }
+}
+
+// OSM-openingstijden leesbaar maken: "Mo-Fr 09:00-17:00; Sa 10:00-16:00" → "ma-vr 09:00-17:00, za 10:00-16:00".
+function openingNL(t) {
+  if (!t) return '';
+  return String(t).replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH)\b/g, d => OSM_DAGEN[d]).replace(/\boff\b/g, 'gesloten').replace(/\s*;\s*/g, ', ');
+}
+
+// Zelfde plaats onder andere namen (OSM of GeoNames): samen onder de gangbare naam.
+const PLAATS_ALIAS = { 's-gravenhage': 'Den Haag', 'brussels': 'Brussel', 'bruxelles': 'Brussel', 'brussel': 'Brussel', 'antwerp': 'Antwerpen', 'anvers': 'Antwerpen', 'ghent': 'Gent', 'gand': 'Gent', 'bruges': 'Brugge', 'louvain': 'Leuven', 'the-hague': 'Den Haag' };
+
+function buildKringloopGroepen(winkels) {
+  const groepen = new Map();
+  for (const w of winkels) {
+    w.plaats = String(w.plaats || '').replace(/^(Gemeente|Commune de|Stad) /i, '');
+    if (PLAATS_ALIAS[slugify(w.plaats)]) w.plaats = PLAATS_ALIAS[slugify(w.plaats)];
+    const slug = slugify(w.plaats);
+    if (!slug || slug.length < 3 || SKIP_CITIES.has(slug)) continue;
+    if (!groepen.has(slug)) groepen.set(slug, { slug, plaats: w.plaats, eigen: [], tel: {} });
+    const g = groepen.get(slug);
+    g.eigen.push(w);
+    g.tel[w.land] = (g.tel[w.land] || 0) + 1;
+  }
+  for (const [slug, g] of groepen) {
+    if (g.eigen.length < KRINGLOOP_MIN) { groepen.delete(slug); continue; }
+    g.land = Object.keys(g.tel).sort((a, b) => g.tel[b] - g.tel[a])[0] === 'be' ? 'be' : 'nl';
+    g.base = baseFor(g.land);
+    g.center = { lat: g.eigen.reduce((t, w) => t + w.lat, 0) / g.eigen.length, lng: g.eigen.reduce((t, w) => t + w.lng, 0) / g.eigen.length };
+    const ids = new Set(g.eigen.map(w => w.id));
+    g.omgeving = winkels.filter(w => !ids.has(w.id) && distKm(g.center, w) <= KRINGLOOP_KM)
+      .map(w => ({ ...w, km: distKm(g.center, w) })).sort((a, b) => a.km - b.km).slice(0, 12);
+  }
+  return groepen;
+}
+
+function winkelKaartjesHtml(lijst, metKm) {
+  let html = '<div class="sales-list">';
+  for (const w of lijst) {
+    const adres = [[w.straat, w.huisnummer].filter(Boolean).join(' '), w.plaats].filter(Boolean).join(', ');
+    const tijden = openingNL(w.openingstijden);
+    html += `<div class="sale-card">
+        <div class="sc-date">${esc(WINKEL_SOORT[w.soort] || 'Tweedehands')}${metKm ? ` · ${w.km.toFixed(0)} km` : ''}</div>
+        <div class="sc-title">${esc(w.naam || 'Kringloopwinkel')}</div>
+        <div class="sc-loc">📍 ${esc(adres)}</div>
+        ${tijden ? `<div class="sc-loc">🕘 ${esc(tijden)}</div>` : ''}
+        ${w.website && /^https?:\/\//.test(w.website) ? `<div class="sc-loc"><a href="${esc(w.website)}" rel="nofollow noopener" target="_blank">Website</a></div>` : ''}
+      </div>`;
+  }
+  return html + '</div>';
+}
+
+function renderKringloopHtml(template, g, groepen, listings) {
+  const canonical = `${g.base}/kringloop/${g.slug}`;
+  const vandaag = dagNL(), tot = plusDagen(vandaag, 14);
+  const verkopen = listings.filter(l => l.date >= vandaag && l.date <= tot && l.lat && distKm(g.center, l) <= 15)
+    .sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const buren = [...groepen.values()].filter(o => o.slug !== g.slug && distKm(g.center, o.center) < 40)
+    .map(o => ({ o, d: distKm(g.center, o.center) })).sort((a, b) => a.d - b.d).slice(0, 12);
+  let extra = '';
+  if (g.omgeving.length) extra += `<section><h2>Ook binnen ${KRINGLOOP_KM} km van ${esc(g.plaats)}</h2>${winkelKaartjesHtml(g.omgeving, true)}</section>`;
+  if (verkopen.length) extra += `<section><h2>Maak er een dag van: verkopen in de buurt</h2><p>Garagesales, rommelroutes en rommelmarkten binnen 15 km in de komende twee weken.</p>${saleCardsHtml(verkopen, g.plaats)}</section>`;
+  extra += '<p style="font-size:13px;color:#55625A">Winkelgegevens: © OpenStreetMap-bijdragers (ODbL). Klopt er iets niet? Pas het aan op openstreetmap.org.</p>';
+  let nearbyHtml = '';
+  if (buren.length) {
+    nearbyHtml = '<section><h2>Kringloopwinkels in andere plaatsen in de buurt</h2><div class="nearby-grid">'
+      + buren.map(({ o, d }) => `<a class="nearby-link" href="/kringloop/${o.slug}">${esc(o.plaats)} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${d.toFixed(0)} km)</span></a>`).join('')
+      + '</div></section>';
+  }
+  const n = g.eigen.length;
+  return fillLanding(template, {
+    titleTag: `Kringloopwinkels in ${g.plaats}: adressen en openingstijden`,
+    indexeren: true,
+    ogLocale: ogLocaleFor(g.land),
+    breadcrumbHtml: `<a href="/">Home</a> › <a href="/kringloop/">Kringloopwinkels</a> › ${esc(g.plaats)}`,
+    statsHtml: statsHtml([
+      `🏪 <strong>${n}</strong> winkels in ${esc(g.plaats)}`,
+      `📍 <strong>${g.omgeving.length}</strong> binnen ${KRINGLOOP_KM} km`,
+      verkopen.length ? `📅 <strong>${verkopen.length}</strong> verkopen in de buurt` : '🆓 Gratis te bekijken',
+    ]),
+    listTitle: `Kringloop- en tweedehandswinkels in ${g.plaats}`,
+    listHtml: winkelKaartjesHtml(g.eigen.sort((a, b) => (a.naam || '').localeCompare(b.naam || '')), false),
+    extraHtml: extra, nearbyHtml, labelSingular: 'garagesale',
+    h1: `Kringloopwinkels in ${g.plaats}`,
+    intro: `Alle ${n} kringloop-, tweedehands-, antiek- en goede-doelenwinkels in ${g.plaats} met adres en openingstijden. Combineer ze met een garagesale of rommelmarkt in de buurt voor een dag snuffelen.`,
+    metaDesc: `${n} kringloop- en tweedehandswinkels in ${g.plaats} met adres en openingstijden, plus garagesales en rommelmarkten in de buurt.`,
+    canonical,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'BreadcrumbList', itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: g.base + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Kringloopwinkels', item: `${BASE_URL}/kringloop/` },
+          { '@type': 'ListItem', position: 3, name: g.plaats, item: canonical },
+        ] },
+        { '@type': 'ItemList', name: `Kringloopwinkels in ${g.plaats}`, itemListElement: g.eigen.slice(0, 20).map((w, i) => ({
+          '@type': 'ListItem', position: i + 1,
+          item: {
+            '@type': 'Store', name: w.naam || 'Kringloopwinkel',
+            address: { '@type': 'PostalAddress', streetAddress: [w.straat, w.huisnummer].filter(Boolean).join(' ') || undefined, postalCode: w.postcode || undefined, addressLocality: w.plaats, addressCountry: (w.land || 'nl').toUpperCase() },
+            geo: { '@type': 'GeoCoordinates', latitude: w.lat, longitude: w.lng },
+            ...(w.openingstijden ? { openingHours: w.openingstijden } : {}),
+            ...(w.website && /^https?:\/\//.test(w.website) ? { url: w.website } : {}),
+          },
+        })) },
+      ],
+    },
+  });
+}
+
+function renderKringloopIndexHtml(template, groepen, totaal) {
+  const lijst = [...groepen.values()].sort((a, b) => b.eigen.length - a.eigen.length);
+  const links = '<div class="nearby-grid">' + lijst.map(g => `<a class="nearby-link" href="/kringloop/${g.slug}">${esc(g.plaats)} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${g.eigen.length})</span></a>`).join('') + '</div>';
+  return fillLanding(template, {
+    titleTag: 'Kringloopwinkels per plaats in Nederland en België',
+    indexeren: true, ogLocale: 'nl_NL',
+    breadcrumbHtml: '<a href="/">Home</a> › Kringloopwinkels',
+    statsHtml: statsHtml([`🏪 <strong>${totaal}</strong> winkels`, `📍 <strong>${lijst.length}</strong> plaatsen`, '🆓 Gratis te bekijken']),
+    listTitle: 'Kies een plaats', listHtml: links,
+    extraHtml: '<p style="font-size:13px;color:#55625A">Winkelgegevens: © OpenStreetMap-bijdragers (ODbL).</p>',
+    nearbyHtml: '', labelSingular: 'garagesale',
+    h1: 'Kringloopwinkels per plaats',
+    intro: 'Kringloop-, tweedehands-, antiek- en goede-doelenwinkels in Nederland en België, met adres en openingstijden. Kies je plaats en zie ook welke garagesales en rommelmarkten er in de buurt zijn.',
+    metaDesc: `${totaal} kringloop- en tweedehandswinkels in ${lijst.length} plaatsen in Nederland en België, met adres en openingstijden.`,
+    canonical: `${BASE_URL}/kringloop/`,
+    jsonLd: { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Kringloopwinkels', item: `${BASE_URL}/kringloop/` },
+    ] },
+  });
+}
+
 // Eén sitemap per domein. Omdat dezelfde bestanden op elk domein staan, is
 // https://www.yardigo.be/sitemap-be.xml gewoon bereikbaar.
-function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
+function buildSitemaps(listings, landingGroups, types, provPaginas = [], kringloop = null) {
   const today = dagNL();
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
@@ -671,6 +833,10 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = []) {
     if (!p.indexeren) continue;
     const b = baseFor(BE_PROVINCIES.has(p.slug) ? 'be' : 'nl');
     per[b].push({ loc: `${b}/${p.t.path}/provincie/${p.slug}`, lastmod: today, changefreq: 'daily', priority: '0.8' });
+  }
+  if (kringloop) {
+    per[BASE_URL].push({ loc: `${BASE_URL}/kringloop/`, lastmod: today, changefreq: 'weekly', priority: '0.7' });
+    for (const [, g] of kringloop) per[g.base].push({ loc: `${g.base}/kringloop/${g.slug}`, lastmod: today, changefreq: 'weekly', priority: '0.6' });
   }
   const xml = urls => {
     let x = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -811,7 +977,17 @@ async function main() {
   }
   console.log(`  rendered ${provPaginas.length} provinciepagina's`);
 
-  const sm = buildSitemaps(listings, landingGroups, types, provPaginas);
+  // Kringloop per plaats.
+  const winkels = await fetchWinkels();
+  let kringloop = null;
+  if (winkels) {
+    kringloop = buildKringloopGroepen(winkels);
+    for (const [, g] of kringloop) schrijfPagina(`kringloop/${g.slug}`, renderKringloopHtml(landingTemplate, g, kringloop, listings));
+    schrijfPagina('kringloop', renderKringloopIndexHtml(landingTemplate, kringloop, winkels.length));
+    console.log(`  rendered ${kringloop.size} kringlooppagina's (${winkels.length} winkels)`);
+  }
+
+  const sm = buildSitemaps(listings, landingGroups, types, provPaginas, kringloop);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap.xml'), sm.nl);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap-be.xml'), sm.be);
   writeFileSync(resolve(PROJECT_ROOT, 'robots.txt'), buildRobotsTxt());
