@@ -17,6 +17,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="/site/site.js" defer></script>
 <script src="/site/kaart.js" defer></script>
+<script src="/site/route.js" defer></script>
 <script src="/nieuw/verkoop.js" defer></script>
 </head>
 <body>
@@ -99,6 +100,7 @@
           <p class="yg-meta" id="adres-info"></p>
         </div>
         <div class="yg-det__btns">
+          <span id="route-plek" style="display:contents"></span>
           <a class="yg-btn yg-btn--primary" id="route" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg><span data-i18n="det.route">Route</span></a>
           <button class="yg-btn yg-btn--outline" type="button" id="agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="det.cal">In agenda</span></button>
           <button class="yg-btn yg-btn--outline" type="button" id="delen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg><span id="delen-txt" data-i18n="det.share">Delen</span></button>

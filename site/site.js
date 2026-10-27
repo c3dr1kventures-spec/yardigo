@@ -6,7 +6,7 @@
 // bezoeker. Volgorde: ?lang= in de link, eerder gekozen taal, domein
 // (yardigo.de = Duits), taal van de browser, anders Nederlands.
 // Vertalen: data-i18n (tekst), data-i18n-aria (aria-label),
-// data-i18n-placeholder (placeholder). Zelfde sleutelstijl als index.html.
+// data-i18n-placeholder (placeholder), data-i18n-title (title). Zelfde sleutelstijl als index.html.
 // Geen em-dashes in teksten voor bezoekers.
 // ═══════════════════════════════════════════════════════════════════════
 (function () {
@@ -259,6 +259,52 @@
     'det.notFound': 'Diesen Verkauf gibt es nicht mehr oder er hat schon stattgefunden.', 'det.source': 'Quelle: {s}'
   });
 
+  // Route en kringloopwinkels op de kaart.
+  Object.assign(T.nl, {
+    'rt.add': '+ Route', 'rt.in': 'In je route ✓', 'rt.open': 'Jouw route ({n})', 'rt.title': 'Jouw route', 'rt.close': 'Sluiten',
+    'rt.empty': 'Nog niets in je route. Kies op de kaart een verkoop of winkel en tik op + Route.',
+    'rt.up': 'Eerder', 'rt.down': 'Later', 'rt.remove': 'Uit route halen', 'rt.how': 'Hoe ga je?', 'rt.car': 'Auto', 'rt.bike': 'Fiets', 'rt.walk': 'Lopen',
+    'rt.order': 'Zet in de kortste volgorde', 'rt.google': 'Open de route in Google Maps', 'rt.apple': 'Apple Maps', 'rt.waze': 'Waze',
+    'rt.firstOnly': 'Apple Maps en Waze sturen je naar de eerste stop. Google Maps neemt alle stops mee.', 'rt.max': 'Google Maps neemt de eerste {n} stops mee.',
+    'rt.approx': 'Garagesales en rommelroutes staan als gebied in je route. Het huisnummer zie je in de YardiGo-app vanaf de dag ervoor.',
+    'rt.clear': 'Route leegmaken', 'rt.added': '{t} staat in je route', 'rt.removed': '{t} is uit je route',
+    'map.shopsOn': '+ Kringloopwinkels', 'map.shopsHint': 'Zet kringloopwinkels aan om ze in je route te zetten', 'shop.holidays': 'feestdagen',
+    'shop.site': 'Website', 'shop.hours': 'Open', 'shop.osm': 'Uit OpenStreetMap'
+  });
+  Object.assign(T.en, {
+    'rt.add': '+ Route', 'rt.in': 'In your route ✓', 'rt.open': 'Your route ({n})', 'rt.title': 'Your route', 'rt.close': 'Close',
+    'rt.empty': 'Nothing in your route yet. Pick a sale or shop on the map and tap + Route.',
+    'rt.up': 'Earlier', 'rt.down': 'Later', 'rt.remove': 'Remove from route', 'rt.how': 'How are you going?', 'rt.car': 'Car', 'rt.bike': 'Bike', 'rt.walk': 'Walk',
+    'rt.order': 'Put in the shortest order', 'rt.google': 'Open the route in Google Maps', 'rt.apple': 'Apple Maps', 'rt.waze': 'Waze',
+    'rt.firstOnly': 'Apple Maps and Waze take you to the first stop. Google Maps includes every stop.', 'rt.max': 'Google Maps takes the first {n} stops.',
+    'rt.approx': 'Garage sales and yard sale routes are in your route as an area. You see the house number in the YardiGo app from the day before.',
+    'rt.clear': 'Clear route', 'rt.added': '{t} is in your route', 'rt.removed': '{t} is out of your route',
+    'map.shopsOn': '+ Thrift stores', 'map.shopsHint': 'Turn on thrift stores to add them to your route', 'shop.holidays': 'public holidays',
+    'shop.site': 'Website', 'shop.hours': 'Open', 'shop.osm': 'From OpenStreetMap'
+  });
+  Object.assign(T.fr, {
+    'rt.add': '+ Itinéraire', 'rt.in': 'Dans l’itinéraire ✓', 'rt.open': 'Votre itinéraire ({n})', 'rt.title': 'Votre itinéraire', 'rt.close': 'Fermer',
+    'rt.empty': 'Rien encore dans votre itinéraire. Choisissez une vente ou une boutique sur la carte et touchez + Itinéraire.',
+    'rt.up': 'Plus tôt', 'rt.down': 'Plus tard', 'rt.remove': 'Retirer de l’itinéraire', 'rt.how': 'Comment y allez-vous ?', 'rt.car': 'Voiture', 'rt.bike': 'Vélo', 'rt.walk': 'À pied',
+    'rt.order': 'Mettre dans l’ordre le plus court', 'rt.google': 'Ouvrir l’itinéraire dans Google Maps', 'rt.apple': 'Apple Plans', 'rt.waze': 'Waze',
+    'rt.firstOnly': 'Apple Plans et Waze vous guident vers le premier arrêt. Google Maps prend tous les arrêts.', 'rt.max': 'Google Maps prend les {n} premiers arrêts.',
+    'rt.approx': 'Les ventes de garage et circuits brocante figurent comme zone. Le numéro de maison est visible dans l’appli YardiGo dès la veille.',
+    'rt.clear': 'Vider l’itinéraire', 'rt.added': '{t} est dans votre itinéraire', 'rt.removed': '{t} est retiré de votre itinéraire',
+    'map.shopsOn': '+ Ressourceries', 'map.shopsHint': 'Affichez les ressourceries pour les ajouter à votre itinéraire', 'shop.holidays': 'jours fériés',
+    'shop.site': 'Site web', 'shop.hours': 'Ouvert', 'shop.osm': 'Depuis OpenStreetMap'
+  });
+  Object.assign(T.de, {
+    'rt.add': '+ Route', 'rt.in': 'In deiner Route ✓', 'rt.open': 'Deine Route ({n})', 'rt.title': 'Deine Route', 'rt.close': 'Schließen',
+    'rt.empty': 'Noch nichts in deiner Route. Wähl auf der Karte einen Verkauf oder Laden und tipp auf + Route.',
+    'rt.up': 'Früher', 'rt.down': 'Später', 'rt.remove': 'Aus der Route nehmen', 'rt.how': 'Wie bist du unterwegs?', 'rt.car': 'Auto', 'rt.bike': 'Rad', 'rt.walk': 'Zu Fuß',
+    'rt.order': 'In die kürzeste Reihenfolge bringen', 'rt.google': 'Route in Google Maps öffnen', 'rt.apple': 'Apple Karten', 'rt.waze': 'Waze',
+    'rt.firstOnly': 'Apple Karten und Waze führen dich zum ersten Stopp. Google Maps nimmt alle Stopps mit.', 'rt.max': 'Google Maps nimmt die ersten {n} Stopps mit.',
+    'rt.approx': 'Garagenverkäufe und Hofflohmärkte stehen als Gebiet in deiner Route. Die Hausnummer siehst du ab dem Vortag in der YardiGo-App.',
+    'rt.clear': 'Route leeren', 'rt.added': '{t} ist in deiner Route', 'rt.removed': '{t} ist aus deiner Route',
+    'map.shopsOn': '+ Gebrauchtwarenläden', 'map.shopsHint': 'Blende Gebrauchtwarenläden ein, um sie in deine Route aufzunehmen', 'shop.holidays': 'Feiertage',
+    'shop.site': 'Website', 'shop.hours': 'Geöffnet', 'shop.osm': 'Aus OpenStreetMap'
+  });
+
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
 
   function kiesTaal() {
@@ -284,6 +330,7 @@
     root.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n'), null, taal); });
     root.querySelectorAll('[data-i18n-aria]').forEach(function (el) { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'), null, taal)); });
     root.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder'), null, taal)); });
+    root.querySelectorAll('[data-i18n-title]').forEach(function (el) { el.setAttribute('title', t(el.getAttribute('data-i18n-title'), null, taal)); });
     root.querySelectorAll('[data-lang]').forEach(function (a) {
       var l = a.getAttribute('data-lang');
       a.setAttribute('aria-current', l === taal ? 'true' : 'false');

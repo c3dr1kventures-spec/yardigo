@@ -168,11 +168,14 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--yg-forest); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .3); }
 .yg-dot--route { background: var(--yg-terra); }
 .yg-dot--oprit { background: var(--yg-amber); }
+/* Garagesales en rommelroutes iets groter: die gaan voor. */
+.yg-dot--oprit, .yg-dot--route { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; }
 
 /* Groep (ver uitgezoomd): bolletje met aantal, kleur van de soort die het meest voorkomt. */
 .yg-groep { position: absolute; display: grid; place-items: center; border-radius: 50%; border: 2.5px solid #FFFFFF; color: #FFFFFF; font: 700 13px/1 var(--yg-font); font-variant-numeric: tabular-nums; cursor: pointer; background: var(--yg-forest); box-shadow: 0 0 0 5px rgba(58, 107, 74, .25), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--route { background: var(--yg-terra); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(224, 123, 57, .25), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--oprit { background: var(--yg-amber); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(242, 168, 48, .3), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep--winkel { background: var(--yg-wood); border-radius: 7px; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 5px rgba(138, 90, 43, .25), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep:hover { transform: scale(1.08); }
 .leaflet-marker-icon:focus-visible .yg-groep, .leaflet-marker-icon:focus-visible .yg-dot { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 
@@ -415,6 +418,39 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-det__btns .yg-btn--outline { flex: 1 1 0; }
 .yg-det__map { position: relative; height: 200px; border-radius: var(--yg-radius-m); overflow: hidden; background: var(--yg-land); }
 .yg-det__map .yg-kaart { position: absolute; inset: 0; }
+
+/* ── Route ────────────────────────────────────────────────────────────── */
+/* Knop rechtsonder zodra er iets in je route staat; paneel van rechts (telefoon: van onder). */
+.yg-routebalk { position: fixed; z-index: 900; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 12px 18px; border: 0; border-radius: 999px; background: var(--yg-ink); color: #FFFFFF; font: 600 15px/1.2 var(--yg-font); box-shadow: 0 8px 24px rgba(30, 41, 34, .3); cursor: pointer; }
+.yg-routebalk svg { width: 20px; height: 20px; }
+.yg-routebalk:hover { background: #000000; }
+.yg-route-open .yg-routebalk { display: none; }
+.yg-routepaneel { position: fixed; z-index: 950; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 599px) { .yg-routepaneel { top: auto; max-height: 85vh; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(30, 41, 34, .25); } }
+.yg-routepaneel__kop { display: flex; align-items: center; justify-content: space-between; }
+.yg-routepaneel__kop h2 { margin: 0; font-size: 22px; }
+.yg-routepaneel__kop h2:focus { outline: none; }
+.yg-routepaneel__dicht { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--yg-tint); font-size: 24px; line-height: 1; cursor: pointer; }
+.yg-routelijst { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.yg-routelijst li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--yg-line); }
+.yg-routelijst .yg-stop { width: 30px; height: 30px; border-width: 2px; font-size: 13px; box-shadow: none; }
+.yg-routelijst__txt { min-width: 0; display: grid; }
+.yg-routelijst__txt strong { font-size: 15px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.yg-routelijst__txt .yg-meta { font-size: 13px; }
+.yg-routelijst__btns { display: flex; gap: 2px; }
+.yg-routelijst__btns button { width: 36px; height: 36px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); font-size: 16px; cursor: pointer; }
+.yg-routelijst__btns button:disabled { opacity: .35; cursor: default; }
+.yg-routepaneel__let { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFF8E8; border: 1px dashed var(--yg-amber); font-size: 14px; }
+.yg-routepaneel__apps { display: flex; gap: 8px; }
+.yg-routepaneel__apps .yg-btn { flex: 1; }
+.yg-routepaneel .yg-btn--ghost { align-self: flex-start; }
+.yg-routeknop[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
+.yg-stop--markt { background: var(--yg-forest); }
+
+/* Kringloopwinkels aanzetten: duidelijk een keuze die nog uit staat. */
+.yg-chip--extra { border-style: dashed; border-color: var(--yg-wood); color: var(--yg-wood-text); }
+.yg-chip--extra[aria-pressed="true"] { border-style: solid; background: var(--yg-wood-tint); color: var(--yg-ink); }
+.yg-shop { cursor: pointer; }
 
 /* ── Kaartpagina ─────────────────────────────────────────────────────── */
 .yg-mappage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }

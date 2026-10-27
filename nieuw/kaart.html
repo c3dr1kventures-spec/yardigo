@@ -17,6 +17,7 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" defer></script>
 <script src="/site/site.js" defer></script>
 <script src="/site/kaart.js" defer></script>
+<script src="/site/route.js" defer></script>
 <script src="/nieuw/kaart.js" defer></script>
 </head>
 <body class="yg-mappage">
@@ -57,6 +58,8 @@
   <button class="yg-chip" type="button" data-soort="markt" aria-pressed="true"><span class="yg-mark yg-mark--markt"></span><span data-i18n="type.markets">Markten</span></button>
   <button class="yg-chip" type="button" data-soort="route" aria-pressed="true"><span class="yg-mark yg-mark--route"></span><span data-i18n="nav.routes">Rommelroutes</span></button>
   <button class="yg-chip" type="button" data-soort="oprit" aria-pressed="true"><span class="yg-mark yg-mark--oprit"></span><span data-i18n="nav.driveway">Opritverkoop</span></button>
+  <span class="yg-toolbar__sep" aria-hidden="true"></span>
+  <button class="yg-chip yg-chip--extra" type="button" id="winkels" aria-pressed="false" data-i18n-title="map.shopsHint" title="Zet kringloopwinkels aan om ze in je route te zetten"><span class="yg-mark yg-mark--winkel"></span><span data-i18n="map.shopsOn">+ Kringloopwinkels</span> <span class="yg-count yg-num" id="winkels-n"></span></button>
 </div>
 
 <div class="yg-split">
@@ -81,6 +84,7 @@
       <span><span class="yg-mark yg-mark--markt"></span><span data-i18n="type.market">Markt</span></span>
       <span><span class="yg-mark yg-mark--route"></span><span data-i18n="type.route">Rommelroute</span></span>
       <span><span class="yg-mark yg-mark--oprit"></span><span data-i18n="type.driveway">Opritverkoop</span></span>
+      <span><span class="yg-mark yg-mark--winkel"></span><span data-i18n="nav.thrift">Kringloopwinkels</span></span>
       <span><span style="width:10px;height:10px;border-radius:50%;background:#3A6B4A;border:2px solid #fff;box-shadow:0 0 0 1px #C5CFC2"></span><span data-i18n="map.legend">Kleiner of verder weg</span></span>
     </div>
   </section>

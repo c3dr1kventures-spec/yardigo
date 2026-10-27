@@ -143,7 +143,7 @@
       '<span class="yg-badge yg-badge--' + v.soort + '">' + K.esc(K.soortTekst(v)) + '</span>' +
       '<h3>' + K.esc(v.titel) + '</h3>' +
       '<p>' + K.esc([K.dagTekst(v), v.plaats].filter(Boolean).join(', ')) + '</p>' +
-      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a></div>' +
+      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a>' + K.routeKnop(K.stopVan(v)) + '</div>' +
       '</div></div>';
     popup = L.popup({ className: 'yg-popup', offset: [0, -30], maxWidth: 320, autoPanPadding: [20, 20] })
       .setLatLng([v.lat, v.lng]).setContent(html).openOn(kaart.map);

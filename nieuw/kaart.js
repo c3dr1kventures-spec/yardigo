@@ -90,8 +90,8 @@
     var route = 'https://www.google.com/maps/dir/?api=1&destination=' + v.lat.toFixed(5) + ',' + v.lng.toFixed(5);
     var html = '<h3>' + K.esc(v.titel) + '</h3><p>' + K.esc(dagen) + (v.begin ? ', ' + K.esc(K.tijden(v)) : '') + '<br>' + K.esc(v.plaats) +
       (v.benadering ? '<br>' + K.esc(YG.t('map.approx')) : '') + '</p>' +
-      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a>' +
-      (v.benadering ? '' : '<a class="yg-btn yg-btn--outline" href="' + route + '" target="_blank" rel="noopener">' + K.esc(YG.t('act.route')) + '</a>') + '</div>';
+      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a>' + K.routeKnop(K.stopVan(v)) +
+      '</div>';
     popup = L.popup({ className: 'yg-popup', offset: [0, -30], autoPanPaddingTopLeft: [20, 70], autoPanPaddingBottomRight: [20, 20], maxWidth: 300 }).setLatLng([v.lat, v.lng]).setContent(html).openOn(kaart.map);
     if (centreer) kaart.map.panTo([v.lat, v.lng]);
     document.querySelectorAll('.yg-row.is-hot').forEach(function (x) { x.classList.remove('is-hot'); });
@@ -119,7 +119,26 @@
       maxKaartjes: 50,
       opKlik: function (v) { open(v, false); },
       opWijs: function (id, aan) { var a = document.querySelector('.yg-row[data-id="' + id + '"]'); if (a) a.classList.toggle('is-hot', aan || state.gekozen === id); },
-      naTekenen: lijst
+      naTekenen: lijst,
+      opWinkel: function (w) {
+        sluitPopup();
+        popup = L.popup({ className: 'yg-popup', offset: [0, -8], autoPanPaddingTopLeft: [20, 70], autoPanPaddingBottomRight: [20, 20], maxWidth: 300 })
+          .setLatLng([w.lat, w.lng]).setContent(K.winkelPopupHtml(w)).openOn(kaart.map);
+      }
+    });
+
+    // Kringloopwinkels: standaard uit, laden pas bij aanzetten.
+    $('winkels').addEventListener('click', function () {
+      var b = $('winkels'), aan = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(aan));
+      if (!aan) { kaart.winkels([]); $('winkels-n').textContent = ''; return; }
+      b.setAttribute('aria-busy', 'true');
+      K.winkels().then(function (l) {
+        b.removeAttribute('aria-busy');
+        if (b.getAttribute('aria-pressed') !== 'true') return;
+        $('winkels-n').textContent = l.length;
+        kaart.winkels(l);
+      }).catch(function (e) { console.error(e); b.removeAttribute('aria-busy'); b.setAttribute('aria-pressed', 'false'); });
     });
     kaart.map.on('popupclose', function () { state.gekozen = null; kaart.kies(null); });
 

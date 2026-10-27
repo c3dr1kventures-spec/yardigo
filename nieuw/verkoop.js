@@ -100,6 +100,7 @@
     $('adres-info').hidden = !info;
 
     // Route alleen naar een echte plek; bij een gebied zou dat naar het verkeerde huis leiden.
+    $('route-plek').innerHTML = K.routeKnop(K.stopVan(v));
     $('route').hidden = v.benadering;
     $('route').href = 'https://www.google.com/maps/dir/?api=1&destination=' + v.lat.toFixed(5) + ',' + v.lng.toFixed(5);
     $('app').href = $('eigenaar-link').href = '/v/' + encodeURIComponent(v.id);
