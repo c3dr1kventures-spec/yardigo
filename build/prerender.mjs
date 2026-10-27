@@ -13,9 +13,9 @@
 //   <type>/provincie/<slug>/   per provincie (NL + BE)
 //   sitemap.xml / sitemap-be.xml  per domein (zelfde bestanden op elk domein)
 //   locale/be-nl.html          startpagina yardigo.be/ (via middleware.js)
+//   locale/be-fr.html          startpagina yardigo.be/fr (via middleware.js)
 //
-// Hydration: zodra een echte browser de pagina laadt, redirect het script
-// naar / met sessionStorage flag, waardoor de SPA direct het detail opent.
+// De pagina's zijn de nieuwe site zelf; site/*.js maakt ze daarna interactief.
 // ═══════════════════════════════════════════════════════════════════════
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -212,16 +212,13 @@ function buildJsonLd(sale) {
 }
 
 // ─── Verkooppagina in de 3.2-stijl (/v/{id}) ──────────────────────────
-// Basis is nieuw/verkoop.html (dezelfde pagina die bezoekers krijgen); de build
-// vult de inhoud alvast in, zodat Google alles leest. nieuw/verkoop.js maakt
+// Basis is site/verkoop.html (dezelfde pagina die bezoekers krijgen); de build
+// vult de inhoud alvast in, zodat Google alles leest. site/verkoop.js maakt
 // hem daarna interactief (kaartje, route, agenda, delen, maak er een dag van).
-// NIEUWE_SITE: zolang de nieuwe site nog niet op / staat, gaan bezoekers
-// (geen bots) door naar de app, zoals voorheen.
-const NIEUWE_SITE = false;
 const SOORT_LABEL = { oprit: 'Garagesale', route: 'Rommelroute', markt: 'Markt' };
 
 function vervangVerplicht(html, oud, nieuw, wat) {
-  if (!html.includes(oud)) throw new Error(`verkooppagina: ${wat} niet gevonden in nieuw/verkoop.html`);
+  if (!html.includes(oud)) throw new Error(`verkooppagina: ${wat} niet gevonden in site/verkoop.html`);
   return html.replace(oud, nieuw);
 }
 
@@ -265,8 +262,7 @@ function renderVerkoopHtml(shell, sale, listings) {
 <meta property="og:locale" content="${ogLocaleFor(sale.land)}">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">${JSON.stringify(buildJsonLd(sale)).replace(/</g, '\\u003c')}</script>
-<script>try{var h=(location.hostname||'').toLowerCase();if(h==='yardigo.app'||h==='www.yardigo.app'){var rb=document.createElement('meta');rb.name='robots';rb.content='noindex,follow';document.head.appendChild(rb);}}catch(e){}</script>
-${NIEUWE_SITE ? '' : `<script>if(!/bot|crawler|spider|crawling/i.test(navigator.userAgent)){try{sessionStorage.setItem('yg-open-sale',${JSON.stringify(String(sale.id))});}catch(e){}location.replace('/?v='+${JSON.stringify(encodeURIComponent(sale.id))});}</script>`}`;
+<script>try{var h=(location.hostname||'').toLowerCase();if(h==='yardigo.app'||h==='www.yardigo.app'){var rb=document.createElement('meta');rb.name='robots';rb.content='noindex,follow';document.head.appendChild(rb);}}catch(e){}</script>`;
 
   let h = shell;
   h = h.replace(/<!--[^>]*Testversie[^>]*-->\n?/, '');
@@ -297,7 +293,8 @@ ${NIEUWE_SITE ? '' : `<script>if(!/bot|crawler|spider|crawling/i.test(navigator.
   } else if (sale.lat && sale.lng) {
     h = vervangVerplicht(h, 'id="route" href="#"', `id="route" href="https://www.google.com/maps/dir/?api=1&amp;destination=${sale.lat.toFixed(5)},${sale.lng.toFixed(5)}"`, 'route-link');
   }
-  h = vervangVerplicht(h, 'id="app" href="/"', `id="app" href="/?v=${esc(sale.id)}"`, 'app-link');
+  h = vervangVerplicht(h, 'id="app" href="/app"', `id="app" href="/app?v=${esc(sale.id)}"`, 'app-link');
+  h = vervangVerplicht(h, 'id="eigenaar-link" href="/app"', `id="eigenaar-link" href="/app?v=${esc(sale.id)}"`, 'eigenaar-link');
   if (dag.length) {
     h = vervangVerplicht(h, '<section class="yg-section" id="dag" hidden', '<section class="yg-section" id="dag"', 'dag');
     h = vervangVerplicht(h, '<ul class="yg-grid" id="dag-lijst"></ul>', '<ul class="yg-grid" id="dag-lijst">' + dag.map(l => {
@@ -892,6 +889,7 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = [], kringlo
   const today = dagNL();
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
+  per[BASE_URL].push({ loc: BASE_URL + '/kaart', lastmod: today, changefreq: 'daily', priority: '0.9' });
   per[BASE_URL_BE].push({ loc: BASE_URL_BE + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
   per[BASE_URL_BE].push({ loc: BASE_URL_BE + '/fr', lastmod: today, changefreq: 'daily', priority: '0.9' });
   for (const l of listings) {
@@ -954,17 +952,24 @@ Sitemap: ${BASE_URL_BE}/sitemap-be.xml
 `;
 }
 
-// Nederlandstalige startpagina voor yardigo.be. index.html is één bestand voor alle domeinen
-// en had in de ruwe HTML canonical/lang/titel van .nl; JS zette dat pas later
-// goed. middleware.js serveert deze variant op yardigo.be/. Frans staat op
-// /fr (fr.html). Teksten gelijk aan I18N.nl in index.html.
+// Startpagina's voor yardigo.be/ (Nederlands) en yardigo.be/fr (Frans), gebouwd
+// uit de nieuwe startpagina (index.html). middleware.js serveert ze; zo ziet
+// Google in de ruwe HTML meteen de juiste taal, titel en canonical. De Franse
+// variant krijgt data-taal="fr", zodat site/site.js de teksten in het Frans zet.
 const BE_STARTPAGINAS = [
   {
     bestand: 'locale/be-nl.html', lang: 'nl-BE', url: BASE_URL_BE + '/', ogLocale: 'nl_BE',
-    titel: 'YardiGo: Ontdek garagesales bij jou in de buurt',
-    beschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.',
-    ogBeschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.',
-    twBeschrijving: 'Vind rommelmarkten, rommelroutes en garagesales op de kaart.',
+    titel: 'YardiGo: garagesales, rommelroutes en rommelmarkten bij jou in de buurt',
+    beschrijving: 'Vind garagesales, rommelroutes en rommelmarkten op de kaart. Zie vooraf wat er te koop is en plan je dag.',
+    ogBeschrijving: 'Vind garagesales, rommelroutes en rommelmarkten op de kaart. Zie vooraf wat er te koop is en plan je dag.',
+    twBeschrijving: 'Vind garagesales, rommelroutes en rommelmarkten op de kaart.',
+  },
+  {
+    bestand: 'locale/be-fr.html', lang: 'fr-BE', taal: 'fr', url: BASE_URL_BE + '/fr', ogLocale: 'fr_BE',
+    titel: 'YardiGo : ventes de garage, circuits brocante et brocantes près de chez vous',
+    beschrijving: 'Trouvez ventes de garage, circuits brocante et brocantes sur la carte. Voyez à l\'avance ce qui est à vendre et planifiez votre journée.',
+    ogBeschrijving: 'Trouvez ventes de garage, circuits brocante et brocantes sur la carte. Voyez à l\'avance ce qui est à vendre et planifiez votre journée.',
+    twBeschrijving: 'Ventes de garage, circuits brocante et brocantes sur la carte.',
   },
 ];
 
@@ -973,7 +978,7 @@ function renderBeStartpagina(html, p) {
     if (!re.test(html)) throw new Error(`startpagina ${p.bestand}: ${re} niet gevonden in index.html`);
     html = html.replace(re, nieuw);
   };
-  vervang(/<html lang="[^"]*">/, `<html lang="${p.lang}">`);
+  vervang(/<html lang="[^"]*">/, `<html lang="${p.lang}"${p.taal ? ` data-taal="${p.taal}"` : ''}>`);
   vervang(/<title>[^<]*<\/title>/, `<title>${esc(p.titel)}</title>`);
   vervang(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(p.beschrijving)}">`);
   vervang(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${p.url}">`);
@@ -983,6 +988,7 @@ function renderBeStartpagina(html, p) {
   vervang(/<meta property="og:locale" content="[^"]*">/, `<meta property="og:locale" content="${p.ogLocale}">`);
   vervang(/<meta name="twitter:title" content="[^"]*">/, `<meta name="twitter:title" content="${esc(p.titel)}">`);
   vervang(/<meta name="twitter:description" content="[^"]*">/, `<meta name="twitter:description" content="${esc(p.twBeschrijving)}">`);
+  vervang(/"inLanguage":"nl-NL"/, `"inLanguage":"${p.lang}"`);
   return html;
 }
 
@@ -990,7 +996,7 @@ function schrijfBeStartpaginas() {
   const index = readFileSync(resolve(PROJECT_ROOT, 'index.html'), 'utf-8');
   mkdirSync(resolve(PROJECT_ROOT, 'locale'), { recursive: true });
   for (const p of BE_STARTPAGINAS) writeFileSync(resolve(PROJECT_ROOT, p.bestand), renderBeStartpagina(index, p));
-  console.log(`  wrote Belgische startpagina → /locale/be-nl.html`);
+  console.log(`  wrote Belgische startpagina's → /locale/be-nl.html + /locale/be-fr.html`);
 }
 
 function schrijfPagina(relDir, html) {
@@ -1005,7 +1011,7 @@ async function main() {
   console.log('  base URL:', BASE_URL, '+', BASE_URL_BE);
   schrijfBeStartpaginas();
 
-  const shell = readFileSync(resolve(PROJECT_ROOT, 'nieuw/verkoop.html'), 'utf-8');
+  const shell = readFileSync(resolve(PROJECT_ROOT, 'site/verkoop.html'), 'utf-8');
   const listings = await fetchListings();
   console.log(`  fetched ${listings.length} listings`);
 

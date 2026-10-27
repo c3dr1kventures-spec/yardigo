@@ -3,10 +3,10 @@
 // Dynamische router voor /v/:id shares:
 //   - Crawler (Facebook/WhatsApp/Twitter/…): return kleine HTML met
 //     per-event OG-tags + JSON-LD. og:image wijst naar /api/og/[id].
-//   - Gewone bezoeker: fetch de SPA index.html van dezelfde deployment
-//     en stuur die door. Daarmee blijft de URL /v/:id staan en pakt de
-//     bestaande handleSaleDeepLink() in index.html het id op uit
-//     location.pathname (zoals we in commit a60fea0 hebben gebouwd).
+//   - Gewone bezoeker: fetch de verkooppagina site/verkoop.html van dezelfde
+//     deployment en stuur die door. Daarmee blijft de URL /v/:id staan en
+//     haalt site/verkoop.js het id uit location.pathname. Dit geldt alleen
+//     voor verkopen van na de laatste build; de rest staat als v/{id}/index.html.
 //
 // Waarom fetch-approach voor bezoekers (i.p.v. redirect of nog een
 // rewrite): een Vercel-rewrite kan niet éérst een filesystem-match
@@ -199,10 +199,10 @@ export default async function handler(req) {
   const ua  = req.headers.get('user-agent') || '';
   const isCrawler = CRAWLER_RE.test(ua);
 
-  // ── Gewone bezoeker: serveer SPA ─────────────────────────────
+  // ── Gewone bezoeker: serveer de verkooppagina ─────────────────────────────
   if (!isCrawler) {
     try {
-      const spaUrl = new URL('/index.html', url.origin);
+      const spaUrl = new URL('/site/verkoop', url.origin);
       const spaRes = await fetch(spaUrl.toString(), { headers: { accept: 'text/html' } });
       if (spaRes.ok) {
         const html = await spaRes.text();
@@ -210,17 +210,17 @@ export default async function handler(req) {
           status: 200,
           headers: {
             'content-type': 'text/html; charset=utf-8',
-            // Kortere cache voor bezoekers zodat SPA-updates snel doorkomen
+            // Kortere cache voor bezoekers zodat updates snel doorkomen
             'cache-control': 'public, s-maxage=60, stale-while-revalidate=3600',
           },
         });
       }
     } catch (_) { /* fallthrough naar redirect */ }
-    // Fallback als /index.html niet bereikbaar: 302 naar root met ?v=
-    // (SPA-handleSaleDeepLink pakt dat óók op).
+    // Fallback als de verkooppagina niet bereikbaar is: 302 naar de web-app,
+    // die ?v= opent.
     return new Response(null, {
       status: 302,
-      headers: { location: '/?v=' + encodeURIComponent(id) },
+      headers: { location: '/app?v=' + encodeURIComponent(id) },
     });
   }
 

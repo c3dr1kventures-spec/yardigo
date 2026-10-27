@@ -1,4 +1,4 @@
-// YardiGo verkooppagina (/nieuw/verkoop?id=… en /v/{id}): galerij met foto's of
+// YardiGo verkooppagina (/v/… en /v/{id}): galerij met foto's of
 // het affiche, wat er te koop is, wanneer en waar, en wat er die dag nog meer
 // in de buurt is. Adres en precieze plek volgen de privacyregels van de RPC:
 // zonder account geen adres, en bij garagesales alleen het gebied.
@@ -105,7 +105,7 @@
     $('route-plek').innerHTML = K.routeKnop(K.stopVan(v));
     $('route').hidden = v.benadering;
     $('route').href = 'https://www.google.com/maps/dir/?api=1&destination=' + v.lat.toFixed(5) + ',' + v.lng.toFixed(5);
-    $('app').href = $('eigenaar-link').href = '/v/' + encodeURIComponent(v.id);
+    $('app').href = $('eigenaar-link').href = '/app?v=' + encodeURIComponent(v.id);
     $('benadering').hidden = !v.benadering;
 
     var tags = v.tags.filter(Boolean);
@@ -127,7 +127,7 @@
     if (v.benadering) L.circle([v.lat, v.lng], { radius: 350, color: '#C5612A', weight: 2, fillColor: '#F2A830', fillOpacity: .25 }).addTo(kaart.map);
     else kaart.zet([v], null);
     $('minikaart').setAttribute('aria-label', YG.t('nav.map') + ': ' + v.plaats);
-    $('terug').href = $('dag-kaart').href = '/nieuw/kaart?lat=' + v.lat.toFixed(4) + '&lng=' + v.lng.toFixed(4) + '&p=' + encodeURIComponent(v.plaats);
+    $('terug').href = $('dag-kaart').href = '/kaart?lat=' + v.lat.toFixed(4) + '&lng=' + v.lng.toFixed(4) + '&p=' + encodeURIComponent(v.plaats);
   }
 
   // Wat er dezelfde dag dichtbij is: garagesales eerst, dan dichtstbij.
@@ -148,7 +148,7 @@
 
   function start() {
     K = window.YGKaart;
-    // /nieuw/verkoop?id=… of de vooraf gebouwde /v/{id} (build/prerender.mjs).
+    // /v/… of de vooraf gebouwde /v/{id} (build/prerender.mjs).
     var pad = /\/v\/([0-9a-f-]{36})/i.exec(location.pathname);
     var id = new URLSearchParams(location.search).get('id') || document.body.getAttribute('data-id') || (pad && pad[1]) || '';
     if (!/^[0-9a-f-]{36}$/i.test(id)) { fout(YG.t('det.notFound')); return; }

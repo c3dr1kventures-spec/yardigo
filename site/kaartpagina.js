@@ -1,4 +1,4 @@
-// YardiGo nieuwe kaartpagina (/nieuw/kaart): lijst links, kaart rechts
+// YardiGo nieuwe kaartpagina (/kaart): lijst links, kaart rechts
 // (op de telefoon kaart boven, lijst eronder). De lijst toont wat er op de
 // kaart te zien is en volgt de kaart als je schuift of zoomt; wijs je een
 // rij aan, dan licht het kaartje op en andersom. Data en kaart: /site/kaart.js.

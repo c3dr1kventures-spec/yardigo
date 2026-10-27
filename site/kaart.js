@@ -182,7 +182,7 @@
   // ── Kaartjes met beeld (startpagina, verkooppagina) ────────────────
   var SOORT_TEKST = { oprit: 'type.driveway', route: 'type.route', markt: 'type.market' };
   function soortTekst(v) { return YG.t(SOORT_TEKST[v.soort]); }
-  function link(v) { return '/nieuw/verkoop?id=' + encodeURIComponent(v.id); }
+  function link(v) { return '/v/' + encodeURIComponent(v.id); }
 
   function dagTekst(v) {
     var d = v.dagen.length > 1 ? label(Object.assign({}, v, { begin: null })) : dagLang(v.dagen[0]);

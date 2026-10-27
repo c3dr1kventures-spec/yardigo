@@ -221,7 +221,7 @@
     'home.photos': '{n} Fotos', 'home.poster': 'Plakat für {t}', 'home.byType': 'Garagenverkäufe zuerst'
   });
 
-  // Pagina van één verkoop (/nieuw/verkoop).
+  // Pagina van één verkoop (/v/{id}).
   Object.assign(T.nl, {
     'det.back': 'Terug naar de kaart', 'det.forSale': 'Wat er te koop is', 'det.about': 'Over deze verkoop', 'det.when': 'Wanneer', 'det.where': 'Waar',
     'det.addrLogin': 'Het huisnummer zie je met een gratis account in de app.', 'det.addrFrom': 'Het adres verschijnt op {d}.',
@@ -310,6 +310,9 @@
   function kiesTaal() {
     var uitLink = opslag(function () { return new URLSearchParams(location.search).get('lang'); });
     if (TALEN.indexOf(uitLink) > -1) { opslag(function () { localStorage.setItem('yg-lang', uitLink); }); return uitLink; }
+    // Vaste taal van de pagina zelf (yardigo.be/fr, gebouwd door build/prerender.mjs).
+    var vast = document.documentElement.getAttribute('data-taal');
+    if (TALEN.indexOf(vast) > -1) return vast;
     var bewaard = opslag(function () { return localStorage.getItem('yg-lang'); });
     if (TALEN.indexOf(bewaard) > -1) return bewaard;
     if (/\.de$/.test(location.hostname)) return 'de';

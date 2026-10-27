@@ -6,11 +6,15 @@
   "installCommand": "",
   "cleanUrls": true,
   "redirects": [
-    { "source": "/home", "destination": "/", "permanent": true }
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/nieuw", "destination": "/", "permanent": true },
+    { "source": "/nieuw/kaart", "destination": "/kaart", "permanent": true },
+    { "source": "/nieuw/verkoop", "has": [{ "type": "query", "key": "id", "value": "(?<id>[0-9a-fA-F-]{36})" }], "destination": "/v/:id", "permanent": true },
+    { "source": "/nieuw/:pad*", "destination": "/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/verkoop", "destination": "/" },
-    { "source": "/aanmelden", "destination": "/" },
+    { "source": "/verkoop", "destination": "/app.html" },
+    { "source": "/aanmelden", "destination": "/app.html" },
     { "source": "/v/:id", "destination": "/api/share/:id" },
     { "source": "/s/:code", "destination": "/api/s/:code" }
   ],
@@ -29,7 +33,7 @@
       ]
     },
     {
-      "source": "/(index\\.html|locale/.*)?",
+      "source": "/(index\\.html|app(\\.html)?|kaart|locale/.*)?",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" },
         { "key": "Pragma", "value": "no-cache" },

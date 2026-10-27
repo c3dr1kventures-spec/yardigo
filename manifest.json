@@ -2,7 +2,7 @@
   "name": "YardiGo",
   "short_name": "YardiGo",
   "description": "Ontdek garageverkopen, buurtverkopen en vlooienmarkten bij jou in de buurt.",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -45,14 +45,14 @@
       "name": "Kaart bekijken",
       "short_name": "Kaart",
       "description": "Open de kaart met verkopen",
-      "url": "/?tab=kaart",
+      "url": "/app?tab=kaart",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Verkoop plaatsen",
       "short_name": "Plaatsen",
       "description": "Plaats een nieuwe verkoop",
-      "url": "/?action=add",
+      "url": "/app?action=add",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ],

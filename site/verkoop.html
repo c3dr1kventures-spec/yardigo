@@ -18,19 +18,19 @@
 <script src="/site/site.js" defer></script>
 <script src="/site/kaart.js" defer></script>
 <script src="/site/route.js" defer></script>
-<script src="/nieuw/verkoop.js" defer></script>
+<script src="/site/verkoop.js" defer></script>
 </head>
 <body>
 
 <a class="yg-skip" href="#inhoud-start" data-i18n="nav.skip">Naar de inhoud</a>
 <header class="yg-header">
   <div class="yg-wrap yg-header__bar">
-    <a class="yg-logo" href="/nieuw" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina">
+    <a class="yg-logo" href="/" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina">
       <img src="/site/logo.svg" alt="" width="22" height="28">
       <span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span>
     </a>
     <nav class="yg-nav" aria-label="Hoofdmenu">
-      <a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a>
+      <a href="/kaart" data-i18n="nav.map">Kaart</a>
       <a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a>
       <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
       <a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a>
@@ -46,7 +46,7 @@
     </div>
   </div>
   <div class="yg-wrap yg-menu" id="yg-menu">
-    <a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a>
+    <a href="/kaart" data-i18n="nav.map">Kaart</a>
     <a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a>
     <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
     <a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a>
@@ -57,7 +57,7 @@
 </header>
 
 <main class="yg-wrap yg-det" id="inhoud-start">
-  <p class="yg-det__back"><a href="/nieuw/kaart" id="terug"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg> <span data-i18n="det.back">Terug naar de kaart</span></a></p>
+  <p class="yg-det__back"><a href="/kaart" id="terug"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg> <span data-i18n="det.back">Terug naar de kaart</span></a></p>
   <p class="yg-meta" id="laden" role="status" data-i18n="det.loading">Verkoop laden…</p>
   <div class="yg-det__grid" id="inhoud" hidden>
     <div class="yg-det__main">
@@ -83,7 +83,7 @@
       </section>
       <aside class="yg-post" id="eigenaar" hidden>
         <p data-i18n="det.owner">Is dit jouw verkoop? Zet er foto's van je spullen bij.</p>
-        <a class="yg-btn yg-btn--outline" id="eigenaar-link" href="/" data-i18n="det.ownerBtn">Foto's toevoegen in de app</a>
+        <a class="yg-btn yg-btn--outline" id="eigenaar-link" href="/app" data-i18n="det.ownerBtn">Foto's toevoegen in de app</a>
       </aside>
     </div>
 
@@ -106,7 +106,7 @@
           <button class="yg-btn yg-btn--outline" type="button" id="agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="det.cal">In agenda</span></button>
           <button class="yg-btn yg-btn--outline" type="button" id="delen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></svg><span id="delen-txt" data-i18n="det.share">Delen</span></button>
         </div>
-        <a class="yg-btn yg-btn--ghost" id="app" href="/" data-i18n="det.openApp">Bekijk in de app</a>
+        <a class="yg-btn yg-btn--ghost" id="app" href="/app" data-i18n="det.openApp">Bekijk in de app</a>
       </div>
       <div class="yg-det__map"><div class="yg-kaart" id="minikaart" role="img" aria-label=""></div></div>
       <p class="yg-meta" id="benadering" hidden data-i18n="det.approx">De kaart toont het gebied, niet het precieze huis.</p>
@@ -119,7 +119,7 @@
       <span class="yg-meta" id="dag-txt"></span>
     </div>
     <ul class="yg-grid" id="dag-lijst"></ul>
-    <p style="margin-top:16px"><a class="yg-btn yg-btn--outline" id="dag-kaart" href="/nieuw/kaart" data-i18n="act.openMap">Open de kaart</a></p>
+    <p style="margin-top:16px"><a class="yg-btn yg-btn--outline" id="dag-kaart" href="/kaart" data-i18n="act.openMap">Open de kaart</a></p>
   </section>
 </main>
 
@@ -127,17 +127,17 @@
   <div class="yg-wrap">
     <div class="yg-footer__grid">
       <div>
-        <a class="yg-logo" href="/nieuw" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina"><img src="/site/logo.svg" alt="" width="22" height="28"><span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span></a>
+        <a class="yg-logo" href="/" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina"><img src="/site/logo.svg" alt="" width="22" height="28"><span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span></a>
         <p data-i18n="foot.nocookies">Geen cookiemuur: YardiGo volgt je niet.</p>
       </div>
       <nav aria-labelledby="f-ontdek"><h2 id="f-ontdek" data-i18n="foot.discover">Ontdekken</h2>
-        <ul><li><a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a></li><li><a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a></li><li><a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a></li><li><a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a></li><li><a href="/kringloop/" data-i18n="nav.thrift">Kringloopwinkels</a></li><li><a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a></li></ul>
+        <ul><li><a href="/kaart" data-i18n="nav.map">Kaart</a></li><li><a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a></li><li><a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a></li><li><a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a></li><li><a href="/kringloop/" data-i18n="nav.thrift">Kringloopwinkels</a></li><li><a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a></li></ul>
       </nav>
       <nav aria-labelledby="f-org"><h2 id="f-org" data-i18n="foot.organise">Organiseren</h2>
-        <ul><li><a href="/aanmelden" data-i18n="home.garPost">Garagesale aanmelden</a></li><li><a href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a></li><li><a href="/organisatoren" data-i18n="act.startRoute">Rommelroute starten</a></li><li><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></li></ul>
+        <ul><li><a href="/verkoop" data-i18n="home.garPost">Garagesale aanmelden</a></li><li><a href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a></li><li><a href="/organisatoren" data-i18n="act.startRoute">Rommelroute starten</a></li><li><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></li></ul>
       </nav>
       <nav aria-labelledby="f-yg"><h2 id="f-yg" data-i18n="foot.about">YardiGo</h2>
-        <ul><li><a href="/" data-i18n="foot.app">De app</a></li><li><a href="/privacy" data-i18n="foot.privacy">Privacy</a></li><li><a href="/voorwaarden" data-i18n="foot.terms">Voorwaarden</a></li></ul>
+        <ul><li><a href="/app" data-i18n="foot.app">De app</a></li><li><a href="/privacy" data-i18n="foot.privacy">Privacy</a></li><li><a href="/voorwaarden" data-i18n="foot.terms">Voorwaarden</a></li></ul>
       </nav>
     </div>
     <div class="yg-footer__base">

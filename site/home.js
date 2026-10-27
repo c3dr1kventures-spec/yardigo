@@ -1,4 +1,4 @@
-// YardiGo nieuwe startpagina (/nieuw), ronde 3.2: kaart als voordeur met
+// YardiGo nieuwe startpagina (/), ronde 3.2: kaart als voordeur met
 // lagen, locatie delen, garagesales voorop met foto of affiche, lijst van
 // het weekend als kaartjes met beeld. Data en kaart: /site/kaart.js.
 (function () {
@@ -20,7 +20,7 @@
     if (state.plek) { q.set('lat', state.plek.lat.toFixed(4)); q.set('lng', state.plek.lng.toFixed(4)); q.set('p', state.plek.naam); }
     q.set('w', state.wanneer);
     var s = q.toString();
-    return '/nieuw/kaart' + (s ? '?' + s : '');
+    return '/kaart' + (s ? '?' + s : '');
   }
 
   // Dichtbij eerst als we de plek weten; anders garagesales eerst, dan op dag en tijd.
