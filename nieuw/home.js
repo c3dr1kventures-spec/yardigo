@@ -86,7 +86,7 @@
   function lagen(wk) {
     var per = { oprit: 0, route: 0, markt: 0 };
     wk.forEach(function (v) { per[v.soort]++; });
-    document.querySelectorAll('#lagen button').forEach(function (b) {
+    document.querySelectorAll('#lagen button[data-s]').forEach(function (b) {
       var s = b.getAttribute('data-s');
       b.setAttribute('aria-pressed', String(state.lagen[s]));
       b.querySelector('.yg-count').textContent = per[s];
@@ -192,6 +192,11 @@
     kaart = K.maakKaart($('heromap'), {
       maxKaartjes: 60, voorrang: true,
       opKlik: openPopup,
+      opWinkel: function (w) {
+        sluitPopup();
+        popup = L.popup({ className: 'yg-popup', offset: [0, -8], maxWidth: 300, autoPanPadding: [20, 20] })
+          .setLatLng([w.lat, w.lng]).setContent(K.winkelPopupHtml(w)).openOn(kaart.map);
+      },
       opWijs: function (id, aan) { document.querySelectorAll('.yg-item[data-id="' + id + '"]').forEach(function (a) { a.classList.toggle('is-hot', aan); }); }
     });
 
@@ -204,7 +209,16 @@
       });
     });
 
-    document.querySelectorAll('#lagen button').forEach(function (btn) {
+    // Kringloopwinkels: extra laag, standaard uit; laden pas bij aanzetten.
+    $('winkels').addEventListener('click', function () {
+      var b = $('winkels'), aan = b.getAttribute('aria-pressed') !== 'true';
+      b.setAttribute('aria-pressed', String(aan));
+      if (!aan) { kaart.winkels([]); return; }
+      K.winkels().then(function (l) { if (b.getAttribute('aria-pressed') === 'true') kaart.winkels(l); })
+        .catch(function (e) { console.error(e); b.setAttribute('aria-pressed', 'false'); });
+    });
+
+    document.querySelectorAll('#lagen button[data-s]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var s = btn.getAttribute('data-s');
         state.lagen[s] = !state.lagen[s];

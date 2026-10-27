@@ -454,6 +454,11 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-chip--extra { border-style: dashed; border-color: var(--yg-wood); color: var(--yg-wood-text); }
 .yg-chip--extra[aria-pressed="true"] { border-style: solid; background: var(--yg-wood-tint); color: var(--yg-ink); }
 .yg-shop { cursor: pointer; }
+/* Op de startpagina is de winkellaag een bijzaak: kleiner en rustiger. */
+.yg-chip--klein { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+.yg-layers .yg-chip--klein[aria-pressed="false"] { background: rgba(255, 255, 255, .85); }
+.yg-hero .yg-shop { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-width: 1.5px; opacity: .85; }
+.yg-hero .yg-groep--winkel { opacity: .8; }
 
 /* ── Kaartpagina ─────────────────────────────────────────────────────── */
 .yg-mappage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
