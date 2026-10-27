@@ -13,8 +13,9 @@
 // rommelroutes kent de site zonder account alleen het gebied (benadering).
 // Een route: { id, naam, datum, vertrek, vervoer, start, eind, stops, geweest,
 // bijgewerkt }. start/eind: null | { soort: 'plek'|'plaats'|'terug', naam, lat, lng }.
-// Opslag: localStorage (alleen in deze browser). Deellink /kaart?stops=…
-// bevat alleen de stops, nooit start of eind.
+// Opslag: localStorage; wie in /app is ingelogd, krijgt de routes ook in zijn
+// account (tabel opgeslagen_routes, opgeslagen-routes.sql). Deellinks
+// (/kaart?r=<code> met account, anders /kaart?stops=…) bevatten nooit start of eind.
 // Knoppen elders: YGRoute.knop(stop) geeft HTML; klikken gaat via één
 // luisteraar op het document. Kaart: YGRoute.opKaart(map) tekent de stops.
 // Vereist: site.js (window.YG); kaart.js (window.YGKaart) voor plaatsen zoeken
@@ -33,6 +34,7 @@
   var controle = {};   // id → 'weg' | 'gewijzigd' (na controle bij openen)
   var kaartLaag = null;
 
+  function opslaan() { schrijf(SLEUTEL, routes); synchroniseerLater(); }
   function lees(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function schrijf(k, w) { try { localStorage.setItem(k, JSON.stringify(w)); } catch (e) { /* privévenster: alleen deze pagina */ } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -56,7 +58,7 @@
   function bewaar() {
     actief.stops = stops;
     actief.bijgewerkt = Date.now();
-    schrijf(SLEUTEL, routes);
+    opslaan();
     schrijf(ACTIEF, actief.id);
     werkKnoppenBij(); tekenPaneel(); tekenKaart();
   }
@@ -283,7 +285,25 @@
     var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(rij)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return location.origin + '/kaart?stops=' + b64;
   }
+  function laadGedeeld(rij, naam) {
+    var r = stops.length ? legeRoute(naam || t('rt.sharedName')) : actief;
+    if (r !== actief) routes.unshift(r); else if (naam) r.naam = naam;
+    r.stops = rij;
+    kies(r);
+    meld(t('rt.loaded', { n: rij.length }));
+    open(true);
+  }
   function leesDeelLink() {
+    var code = new URLSearchParams(location.search).get('r');
+    if (code && /^[A-Za-z0-9]{8,16}$/.test(code)) {
+      try { var u0 = new URL(location.href); u0.searchParams.delete('r'); history.replaceState(history.state, '', u0.pathname + u0.search + u0.hash); } catch (e) { /* link blijft staan */ }
+      api('rpc/get_gedeelde_route', { method: 'POST', body: JSON.stringify({ p_code: code }) }, false).then(function (rij) {
+        var x = rij && rij[0];
+        if (!x || !Array.isArray(x.stops)) { meld(t('rt.shareGone')); return; }
+        laadGedeeld(x.stops.filter(function (s) { return s && SOORTEN.indexOf(s.soort) > -1 && isFinite(s.lat) && isFinite(s.lng); }).slice(0, 50), x.naam);
+      }).catch(function () { meld(t('rt.shareGone')); });
+      return;
+    }
     var ruw = new URLSearchParams(location.search).get('stops');
     if (!ruw) return;
     var rij;
@@ -296,17 +316,25 @@
       return { id: tekst(x[0]), titel: tekst(x[1]), soort: x[2], lat: +x[3], lng: +x[4], plaats: tekst(x[5]), sub: tekst(x[6]), benadering: !!x[7] };
     });
     try { var u = new URL(location.href); u.searchParams.delete('stops'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { /* oude browser: link blijft staan */ }
-    if (!nieuw.length) return;
     // Een gedeelde route wordt een eigen route in Mijn routes; je huidige blijft bewaard.
-    var r = stops.length ? legeRoute(t('rt.sharedName')) : actief;
-    if (r !== actief) routes.unshift(r);
-    r.stops = nieuw;
-    kies(r);
-    meld(t('rt.loaded', { n: nieuw.length }));
-    open(true);
+    if (nieuw.length) laadGedeeld(nieuw);
   }
   function deel(b) {
-    var url = deelLink();
+    if (sessie()) {
+      if (!actief.deelCode) { actief.deelCode = maakCode(); opslaan(); }
+      upsert(actief).then(function () { deelUrl(b, location.origin + '/kaart?r=' + actief.deelCode); })
+        .catch(function () { deelUrl(b, deelLink()); });
+      return;
+    }
+    deelUrl(b, deelLink());
+  }
+  function maakCode() {
+    var tekens = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789', a = new Uint8Array(10), uit = '';
+    crypto.getRandomValues(a);
+    for (var i = 0; i < a.length; i++) uit += tekens[a[i] % tekens.length];
+    return uit;
+  }
+  function deelUrl(b, url) {
     if (navigator.share) { navigator.share({ title: actief.naam || t('rt.shareTitle'), url: url }).catch(function () {}); return; }
     var klaar = function () { b.textContent = t('rt.copied'); meld(t('rt.copied')); setTimeout(function () { b.textContent = t('rt.share'); }, 2500); };
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(klaar, function () { toonLink(url); });
@@ -408,7 +436,7 @@
       else if (f.id === 'yg-rt-naam-form') {
         var r = routes.filter(function (x) { return x.id === hernoem; })[0];
         if (r) { r.naam = f.querySelector('input').value.trim().slice(0, 80); r.bijgewerkt = Date.now(); }
-        hernoem = null; schrijf(SLEUTEL, routes); tekenPaneel(); meld(t('rt.renamed'));
+        hernoem = null; opslaan(); tekenPaneel(); meld(t('rt.renamed'));
       }
     });
     paneel.addEventListener('pointerdown', function (e) {
@@ -419,6 +447,7 @@
     werkKnoppenBij();
     leesDeelLink();
     controleer();
+    haalAccount();
   }
 
   function klik(e) {
@@ -448,9 +477,9 @@
     else if (actie === 'hernoem' && r) { hernoem = r.id; wisVraag = null; tekenPaneel(); var inv = paneel.querySelector('#yg-rt-naam'); if (inv) inv.focus(); }
     else if (actie === 'dupliceer' && r) {
       var kopie = JSON.parse(JSON.stringify(r));
-      kopie.id = nieuwId(); kopie.naam = t('rt.copyOf', { t: naamVan(r) }); kopie.geweest = []; kopie.bijgewerkt = Date.now();
+      kopie.id = nieuwId(); kopie.naam = t('rt.copyOf', { t: naamVan(r) }); kopie.geweest = []; kopie.deelCode = null; kopie.bijgewerkt = Date.now();
       routes.splice(routes.indexOf(r) + 1, 0, kopie);
-      schrijf(SLEUTEL, routes); tekenPaneel(); meld(t('rt.duplicated'));
+      opslaan(); tekenPaneel(); meld(t('rt.duplicated'));
     }
     else if (actie === 'wis' && r) { wisVraag = r.id; hernoem = null; tekenPaneel(); }
     else if (actie === 'wisNee') { wisVraag = null; tekenPaneel(); }
@@ -458,7 +487,7 @@
       routes.splice(routes.indexOf(r), 1);
       if (!routes.length) routes.push(legeRoute());
       wisVraag = null;
-      if (r === actief) kies(routes[0]); else { schrijf(SLEUTEL, routes); tekenPaneel(); }
+      if (r === actief) kies(routes[0]); else { opslaan(); tekenPaneel(); }
       meld(t('rt.deleted'));
     }
     else if (b.hasAttribute('data-vervoer')) { actief.vervoer = b.getAttribute('data-vervoer'); bewaar(); }
@@ -538,6 +567,8 @@
       return regel + '</li>';
     }).join('') + '</ul>';
     html += '<button type="button" class="yg-btn yg-btn--primary yg-btn--block" data-actie="nieuw">+ ' + esc(t('rt.newRoute')) + '</button>';
+    html += sessie() ? '<p class="yg-meta">' + esc(t('rt.inAccount')) + '</p>'
+      : '<p class="yg-meta">' + esc(t('rt.localOnly')) + ' <a href="/app">' + esc(t('rt.login')) + '</a></p>';
     paneel.innerHTML = html;
   }
 
@@ -646,6 +677,81 @@
         keyboard: false, interactive: false
       }).addTo(kaartLaag);
     }
+  }
+
+  // ── Account: dezelfde sessie als /app (Supabase Auth in localStorage) ──
+  // Verlopen sessie: we verversen hier niet (dat doet /app); dan bewaren we
+  // alleen lokaal en wijzen de weg naar inloggen.
+  var SESSIE = 'sb-fwehqudhwzcnkcuypuqw-auth-token';
+  var gesynct = {};   // route-id → JSON zoals laatst in het account bewaard
+  var syncTimer = null, accountBekend = false;
+  function sessie() {
+    var s = lees(SESSIE);
+    if (!s || !s.access_token || !s.user || !s.user.id) return null;
+    if (s.expires_at && s.expires_at * 1000 < Date.now() + 60000) return null;
+    return s;
+  }
+  function api(pad, opties, metSessie) {
+    var K = window.YGKaart, s = metSessie === false ? null : sessie();
+    if (!K) return Promise.reject(new Error('geen kaart.js'));
+    opties = opties || {};
+    opties.headers = Object.assign({ apikey: K.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + (s ? s.access_token : K.SUPABASE_ANON_KEY), 'Content-Type': 'application/json' }, opties.headers || {});
+    return fetch(K.SUPABASE_URL + '/rest/v1/' + pad, opties).then(function (r) {
+      if (!r.ok) throw new Error(pad + ' ' + r.status);
+      return r.status === 204 ? null : r.text().then(function (x) { return x ? JSON.parse(x) : null; });
+    });
+  }
+  function naarRij(r) {
+    return { client_id: r.id, naam: (r.naam || '').slice(0, 80), datum: r.datum || null, vertrek: r.vertrek || null, vervoer: r.vervoer || 'auto',
+      start: r.start || null, eind: r.eind || null, stops: r.stops.slice(0, 50), deel_code: r.deelCode || null };
+  }
+  function upsert(r) {
+    var rij = naarRij(r);
+    return api('opgeslagen_routes?on_conflict=user_id,client_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rij) })
+      .then(function () { gesynct[r.id] = JSON.stringify(rij); });
+  }
+  function synchroniseerLater() {
+    if (!accountBekend || !sessie()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(synchroniseer, 1500);
+  }
+  function synchroniseer() {
+    if (!sessie()) return;
+    var nu = {};
+    routes.forEach(function (r) {
+      nu[r.id] = true;
+      if (!r.stops.length && !r.naam) return;   // lege route niet bewaren
+      if (gesynct[r.id] !== JSON.stringify(naarRij(r))) upsert(r).catch(function () { /* volgende keer opnieuw */ });
+    });
+    Object.keys(gesynct).forEach(function (id) {
+      if (nu[id]) return;
+      api('opgeslagen_routes?client_id=eq.' + encodeURIComponent(id), { method: 'DELETE' }).then(function () { delete gesynct[id]; }).catch(function () {});
+    });
+  }
+  // Bij openen: routes uit het account erbij halen; de nieuwste versie wint.
+  function haalAccount() {
+    if (!sessie()) return;
+    api('opgeslagen_routes?select=client_id,naam,datum,vertrek,vervoer,start,eind,stops,deel_code,updated_at&order=updated_at.desc').then(function (rijen) {
+      accountBekend = true;
+      (rijen || []).forEach(function (x) {
+        var r = routes.filter(function (y) { return y.id === x.client_id; })[0];
+        var server = Date.parse(x.updated_at) || 0;
+        if (r && (r.bijgewerkt || 0) > server) return;
+        if (!r) { r = legeRoute(); r.id = x.client_id; routes.push(r); }
+        r.naam = x.naam || ''; r.datum = x.datum || ''; r.vertrek = (x.vertrek || '09:00').slice(0, 5); r.vervoer = x.vervoer || 'auto';
+        r.start = x.start || null; r.eind = x.eind || null; r.stops = Array.isArray(x.stops) ? x.stops : []; r.deelCode = x.deel_code || null;
+        r.bijgewerkt = server;
+        gesynct[r.id] = JSON.stringify(naarRij(r));
+      });
+      // De lege beginroute weg als het account al routes heeft.
+      routes = routes.filter(function (r) { return r.stops.length || r.naam || r === actief && routes.length === 1; });
+      if (!routes.length) routes.push(legeRoute());
+      if (routes.indexOf(actief) < 0) actief = routes[0];
+      stops = actief.stops;
+      schrijf(SLEUTEL, routes);
+      werkKnoppenBij(); tekenPaneel(); tekenKaart();
+      synchroniseer();
+    }).catch(function () { /* geen verbinding of verlopen: alleen lokaal */ });
   }
 
   function meld(tekst) { var p = document.getElementById('yg-route-live'); if (p) p.textContent = tekst; }

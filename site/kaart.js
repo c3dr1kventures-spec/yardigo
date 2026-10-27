@@ -451,6 +451,6 @@
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
     detail: detail, winkels: winkels, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
-    NL_MIDDEN: NL_MIDDEN
+    NL_MIDDEN: NL_MIDDEN, SUPABASE_URL: SUPABASE_URL, SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
   };
 })();
