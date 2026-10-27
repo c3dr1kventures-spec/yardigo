@@ -6,7 +6,7 @@
   'use strict';
 
   var K, kaart, alles = [], popup;
-  var state = { plek: null, wanneer: 'weekend', soorten: { markt: true, route: true, oprit: true }, gekozen: null };
+  var state = { plek: null, wanneer: 'alles', soorten: { markt: true, route: true, oprit: true }, gekozen: null };
   var MAX_RIJEN = 60;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -15,17 +15,21 @@
     return lijst.filter(function (v) { return state.soorten[v.soort]; });
   }
 
+  // Bij een periode van meer dan één weekend krijgen kaartjes een datum.
+  function metDatum() { return state.wanneer === 'alles' || state.wanneer === 'volgend'; }
+  function zet() { kaart.zet(huidig(), state.plek, { metDatum: metDatum() }); }
+
   function bewaarInLink() {
     var q = new URLSearchParams(location.search);
     ['lat', 'lng', 'p', 'w'].forEach(function (k) { q.delete(k); });
     if (state.plek) { q.set('lat', state.plek.lat.toFixed(4)); q.set('lng', state.plek.lng.toFixed(4)); q.set('p', state.plek.naam); }
-    if (state.wanneer !== 'weekend') q.set('w', state.wanneer);
+    if (state.wanneer !== 'alles') q.set('w', state.wanneer);
     var s = q.toString();
     history.replaceState(null, '', location.pathname + (s ? '?' + s : ''));
   }
 
   function dagknoppen() {
-    var opties = [['weekend', YG.t('when.weekend')]];
+    var opties = [['alles', YG.t('when.all')], ['weekend', YG.t('when.weekend')]];
     var w = K.periode('weekend');
     if (w[0] !== w[1]) { opties.push(['za', K.dagKort(w[0]) + ' ' + Number(w[0].slice(8))]); opties.push(['zo', K.dagKort(w[1]) + ' ' + Number(w[1].slice(8))]); }
     opties.push(['vandaag', YG.t('when.today')], ['volgend', YG.t('home.next')]);
@@ -35,7 +39,7 @@
         K.esc(o[1]) + ' <span class="yg-count yg-num">' + n + '</span></button>';
     }).join('');
     $('dagen').querySelectorAll('button').forEach(function (b) {
-      b.addEventListener('click', function () { state.wanneer = b.getAttribute('data-w'); sluitPopup(); dagknoppen(); kaart.zet(huidig(), state.plek); bewaarInLink(); });
+      b.addEventListener('click', function () { state.wanneer = b.getAttribute('data-w'); sluitPopup(); dagknoppen(); zet(); bewaarInLink(); });
     });
   }
 
@@ -59,7 +63,7 @@
       var li = document.createElement('li');
       var cls = 'yg-tag yg-tag--inline' + (v.soort === 'route' ? ' yg-tag--route' : v.soort === 'oprit' ? ' yg-tag--oprit' : '');
       li.innerHTML = '<a class="yg-row' + (state.gekozen === v.id ? ' is-hot' : '') + '" href="' + K.link(v) + '" data-id="' + K.esc(v.id) + '">' +
-        '<span class="' + cls + '">' + K.esc(v.dagen.map(K.dagKort).join(' + ')) + '</span>' +
+        '<span class="' + cls + '">' + K.esc(metDatum() ? K.label(v, true) : v.dagen.map(K.dagKort).join(' + ')) + '</span>' +
         '<span style="min-width:0"><strong>' + K.esc(v.titel) + '</strong><span class="yg-meta">' + K.esc([v.plaats, K.tijden(v)].filter(Boolean).join(', ')) + '</span></span>' +
         '<span class="yg-km yg-num">' + Math.round(v.km) + ' ' + YG.t('unit.km') + '</span></a>';
       var a = li.firstChild;
@@ -98,7 +102,7 @@
   function zetPlek(p, zoom) {
     state.plek = p;
     if (p) { K.bewaarPlek(p); $('plaats').value = p.naam === YG.t('loc.mine') ? '' : p.naam; kaart.map.setView([p.lat, p.lng], zoom || 10); }
-    kaart.zet(huidig(), state.plek);
+    zet();
     bewaarInLink();
   }
 
@@ -107,7 +111,7 @@
   function start() {
     K = window.YGKaart;
     var q = new URLSearchParams(location.search);
-    if (['vandaag', 'volgend', 'za', 'zo'].indexOf(q.get('w')) > -1) state.wanneer = q.get('w');
+    if (['weekend', 'vandaag', 'volgend', 'za', 'zo'].indexOf(q.get('w')) > -1) state.wanneer = q.get('w');
     var lat = parseFloat(q.get('lat')), lng = parseFloat(q.get('lng'));
     var plek = isFinite(lat) && isFinite(lng) ? { naam: q.get('p') || '', lat: lat, lng: lng } : K.bewaardePlek();
 
@@ -136,7 +140,7 @@
         var s = b.getAttribute('data-soort');
         state.soorten[s] = !state.soorten[s];
         b.setAttribute('aria-pressed', String(state.soorten[s]));
-        sluitPopup(); dagknoppen(); kaart.zet(huidig(), state.plek);
+        sluitPopup(); dagknoppen(); zet();
       });
     });
 
@@ -148,7 +152,7 @@
       });
     });
 
-    K.laad().then(function (l) { alles = l; dagknoppen(); kaart.zet(huidig(), state.plek); })
+    K.laad().then(function (l) { alles = l; dagknoppen(); zet(); })
       .catch(function (e) { console.error(e); fout(YG.t('home.none')); });
   }
 

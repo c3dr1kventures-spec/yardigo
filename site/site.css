@@ -169,6 +169,13 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-dot--route { background: var(--yg-terra); }
 .yg-dot--oprit { background: var(--yg-amber); }
 
+/* Groep (ver uitgezoomd): bolletje met aantal, kleur van de soort die het meest voorkomt. */
+.yg-groep { position: absolute; display: grid; place-items: center; border-radius: 50%; border: 2.5px solid #FFFFFF; color: #FFFFFF; font: 700 13px/1 var(--yg-font); font-variant-numeric: tabular-nums; cursor: pointer; background: var(--yg-forest); box-shadow: 0 0 0 5px rgba(58, 107, 74, .25), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep--route { background: var(--yg-terra); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(224, 123, 57, .25), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep--oprit { background: var(--yg-amber); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(242, 168, 48, .3), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep:hover { transform: scale(1.08); }
+.leaflet-marker-icon:focus-visible .yg-groep, .leaflet-marker-icon:focus-visible .yg-dot { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
+
 /* Winkel: vierkante pin. */
 .yg-shop { text-decoration: none; position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 3px; background: var(--yg-wood); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .35); }
 .yg-shop--label { width: auto; height: auto; margin: 0; transform: translate(-50%, calc(-100% - 6px)); padding: 4px 9px; border: 0; border-radius: 6px; color: #FFFFFF; font: 600 13px/1.2 var(--yg-font); white-space: nowrap; }
@@ -285,6 +292,10 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 @media (min-width: 960px) {
   .yg-layers { left: auto; right: 24px; top: auto; bottom: 28px; }
 }
+
+/* Zoomknoppen op de kaart van de startpagina (op de telefoon knijp je). */
+.yg-hero__map .yg-mapctl { display: none; }
+@media (min-width: 960px) { .yg-hero__map .yg-mapctl { display: grid; top: 24px; right: 24px; } }
 
 /* Popup op de kaart van de startpagina: beeld links, tekst rechts. */
 .yg-pop { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: start; }

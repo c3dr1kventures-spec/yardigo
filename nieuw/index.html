@@ -13,8 +13,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@300..800&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="/site/site.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" defer></script>
 <script src="/site/site.js" defer></script>
 <script src="/site/kaart.js" defer></script>
 <script src="/nieuw/home.js" defer></script>
@@ -79,7 +81,8 @@
         <div class="yg-field">
           <span class="yg-label" id="wanneer-lbl" data-i18n="home.when">Wanneer?</span>
           <div class="yg-seg" role="group" aria-labelledby="wanneer-lbl" id="wanneer">
-            <button type="button" data-w="weekend" aria-pressed="true" data-i18n="when.weekend">Dit weekend</button>
+            <button type="button" data-w="alles" aria-pressed="true" data-i18n="when.all">Alles</button>
+            <button type="button" data-w="weekend" aria-pressed="false" data-i18n="when.weekend">Dit weekend</button>
             <button type="button" data-w="vandaag" aria-pressed="false" data-i18n="when.today">Vandaag</button>
             <button type="button" data-w="volgend" aria-pressed="false" data-i18n="home.next">Volgend weekend</button>
           </div>
@@ -89,6 +92,10 @@
     </div>
     <div class="yg-hero__map">
       <div class="yg-kaart" id="heromap" role="region" aria-label="Kaart met verkopen"></div>
+      <div class="yg-mapctl">
+        <button type="button" id="in" data-i18n-aria="map.zoomIn" aria-label="Inzoomen">+</button>
+        <button type="button" id="uit" data-i18n-aria="map.zoomOut" aria-label="Uitzoomen">&minus;</button>
+      </div>
       <div class="yg-layers" role="group" id="lagen" data-i18n-aria="home.layers" aria-label="Lagen op de kaart">
         <button class="yg-chip" type="button" data-s="oprit" aria-pressed="true"><span class="yg-mark yg-mark--oprit"></span><span data-i18n="nav.driveway">Garagesales</span> <span class="yg-count yg-num"></span></button>
         <button class="yg-chip" type="button" data-s="route" aria-pressed="true"><span class="yg-mark yg-mark--route"></span><span data-i18n="nav.routes">Rommelroutes</span> <span class="yg-count yg-num"></span></button>

@@ -5,7 +5,7 @@
   'use strict';
 
   var K, kaart, popup, alles = [];
-  var state = { plek: null, wanneer: 'weekend', lagen: { oprit: true, route: true, markt: true } };
+  var state = { plek: null, wanneer: 'alles', lagen: { oprit: true, route: true, markt: true } };
   var STRAAL_KM = 50;
   var GARAGE_DAGEN = 90;
   var $ = function (id) { return document.getElementById(id); };
@@ -18,7 +18,7 @@
   function kaartLink() {
     var q = new URLSearchParams();
     if (state.plek) { q.set('lat', state.plek.lat.toFixed(4)); q.set('lng', state.plek.lng.toFixed(4)); q.set('p', state.plek.naam); }
-    if (state.wanneer !== 'weekend') q.set('w', state.wanneer);
+    q.set('w', state.wanneer);
     var s = q.toString();
     return '/nieuw/kaart' + (s ? '?' + s : '');
   }
@@ -77,6 +77,7 @@
   }
 
   function kop() {
+    if (state.wanneer === 'alles') return state.plek ? YG.t('home.listSoonNear', { p: state.plek.naam }) : YG.t('home.listSoon');
     var k = state.wanneer === 'vandaag' ? 'home.listToday' : state.wanneer === 'volgend' ? 'home.listNext' : (state.plek ? 'home.listNear' : 'home.listAll');
     if (state.wanneer !== 'weekend' && state.plek) return YG.t(k) + ', ' + state.plek.naam;
     return YG.t(k, { p: state.plek ? state.plek.naam : '' });
@@ -92,7 +93,8 @@
     });
   }
 
-  function toon() {
+  // herplaats: kaart opnieuw op de plek zetten (laden, nieuwe plek); niet bij lagen of periode.
+  function toon(herplaats) {
     var wk = weekend();
     var lijst = sorteer(wk.filter(function (v) { return state.lagen[v.soort]; }));
     var n = lijst.length;
@@ -124,11 +126,13 @@
     $('gar-kop').textContent = state.plek ? YG.t('home.garNear', { p: state.plek.naam }) : YG.t('home.garTitle');
 
     // Eerst de uitsnede, dan de pins (Leaflet kent zonder uitsnede geen grenzen).
-    if (state.plek) kaart.map.setView([state.plek.lat, state.plek.lng], 10, { animate: false });
-    else kaart.map.setView([K.NL_MIDDEN.lat, K.NL_MIDDEN.lng], breed() ? 8 : 7, { animate: false });
-    // Op desktop ligt de zoekkaart links over de kaart: schuif het midden naar rechts.
-    if (breed()) kaart.map.panBy([-240, 0], { animate: false });
-    kaart.zet(lijst, state.plek);
+    if (herplaats || !kaart.map._loaded) {
+      if (state.plek) kaart.map.setView([state.plek.lat, state.plek.lng], 11, { animate: false });
+      else kaart.map.setView([K.NL_MIDDEN.lat, K.NL_MIDDEN.lng], breed() ? 8 : 7, { animate: false });
+      // Op desktop ligt de zoekkaart links over de kaart: schuif het midden naar rechts.
+      if (breed()) kaart.map.panBy([-240, 0], { animate: false });
+    }
+    kaart.zet(lijst, state.plek, { metDatum: state.wanneer === 'alles' || state.wanneer === 'volgend' });
   }
 
   function sluitPopup() { if (popup) { kaart.map.closePopup(popup); popup = null; } }
@@ -163,7 +167,7 @@
   function kiesPlek(p) {
     state.plek = p; K.bewaarPlek(p); fout('');
     $('plaats').value = p.naam === YG.t('loc.mine') ? '' : p.naam;
-    toon();
+    toon(true);
   }
 
   function locatie() {
@@ -181,12 +185,12 @@
   function start() {
     K = window.YGKaart;
     var q = new URLSearchParams(location.search);
-    if (['vandaag', 'volgend'].indexOf(q.get('w')) > -1) state.wanneer = q.get('w');
+    if (['weekend', 'vandaag', 'volgend'].indexOf(q.get('w')) > -1) state.wanneer = q.get('w');
     var b = K.bewaardePlek();
     if (b && typeof b.lat === 'number') { state.plek = b; $('plaats').value = b.naam === YG.t('loc.mine') ? '' : b.naam; }
 
     kaart = K.maakKaart($('heromap'), {
-      stil: true, maxKaartjes: 24, voorrang: true,
+      maxKaartjes: 60, voorrang: true,
       opKlik: openPopup,
       opWijs: function (id, aan) { document.querySelectorAll('.yg-item[data-id="' + id + '"]').forEach(function (a) { a.classList.toggle('is-hot', aan); }); }
     });
@@ -209,6 +213,8 @@
     });
 
     $('locatie').addEventListener('click', locatie);
+    $('in').addEventListener('click', function () { kaart.map.zoomIn(); });
+    $('uit').addEventListener('click', function () { kaart.map.zoomOut(); });
 
     // Zoeken: plaats opzoeken en de startpagina daarop zetten; de knop eronder gaat naar de kaart.
     $('zoek').addEventListener('submit', function (e) {
@@ -221,7 +227,7 @@
       });
     });
 
-    K.laad().then(function (lijst) { alles = lijst; telling(); toon(); })
+    K.laad().then(function (lijst) { alles = lijst; telling(); toon(true); })
       .catch(function (e) { console.error(e); fout(YG.t('home.none')); });
   }
 
