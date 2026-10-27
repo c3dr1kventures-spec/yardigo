@@ -13,8 +13,8 @@
     { "source": "/nieuw/:pad*", "destination": "/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/verkoop", "destination": "/app.html" },
-    { "source": "/aanmelden", "destination": "/app.html" },
+    { "source": "/verkoop", "destination": "/app" },
+    { "source": "/aanmelden", "destination": "/app" },
     { "source": "/v/:id", "destination": "/api/share/:id" },
     { "source": "/s/:code", "destination": "/api/s/:code" }
   ],
