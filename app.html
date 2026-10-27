@@ -3252,6 +3252,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <span style="margin-left:auto;color:var(--muted);font-size:16px">›</span>
         </button>
       </div>
+      <!-- Waze neemt via een link maar één bestemming: bij meer stops kies je hier de volgende. -->
+      <div id="nav-waze-stops" style="display:none;margin-top:12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px" data-i18n="nav.waze.each">Waze neemt één stop per keer. Kies je volgende stop:</div>
+        <div id="nav-waze-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -5601,6 +5606,7 @@ var I18N = {
     'nav.app.google.sub': 'Altijd beschikbaar',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'Met live verkeer',
+    'nav.waze.each': 'Waze neemt één stop per keer. Kies je volgende stop:',
     'toast.route_optimized': '✨ Route geoptimaliseerd!',
     'toast.removed_from_route': '🗑️ Verwijderd uit route',
     // Mijn / Profile
@@ -6402,6 +6408,7 @@ var I18N = {
     'nav.app.google.sub': 'Always available',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'With live traffic',
+    'nav.waze.each': 'Waze takes one stop at a time. Choose your next stop:',
     'toast.route_optimized': '✨ Route optimized!',
     'toast.removed_from_route': '🗑️ Removed from route',
     // Profile / My
@@ -7203,6 +7210,7 @@ var I18N = {
     'nav.app.google.sub': 'Toujours disponible',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'Avec trafic en direct',
+    'nav.waze.each': 'Waze prend un arrêt à la fois. Choisissez votre prochain arrêt :',
     'toast.route_optimized': '✨ Itinéraire optimisé !',
     'toast.removed_from_route': '🗑️ Retiré de l\'itinéraire',
     // Profil / Mes ventes
@@ -7877,6 +7885,7 @@ var I18N = {
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.google.sub': 'Immer verfügbar',
     'nav.app.waze.sub': 'Mit Live-Verkehr',
+    'nav.waze.each': 'Waze nimmt einen Stopp nach dem anderen. Wähl deinen nächsten Stopp:',
     'nav.sheet.cedrik': 'Super! Wähle dein Verkehrsmittel und deine Navigations-App, dann mache ich alles bereit! 🗺️',
     'nav.sheet.choose_app': 'Navigations-App',
     'nav.sheet.transport': 'Verkehrsmittel',
@@ -11503,6 +11512,8 @@ function openNavSheet() {
     var el = document.getElementById('tp-' + m);
     if (el) el.classList.toggle('active', m === transportMode);
   });
+  var wazeStops = document.getElementById('nav-waze-stops');
+  if (wazeStops) wazeStops.style.display = 'none';
   // Apple Maps: toon alleen op iOS/macOS
   var appleBtn = document.getElementById('nav-apple-btn');
   if (appleBtn) appleBtn.style.display = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) ? 'flex' : 'none';
@@ -11526,20 +11537,46 @@ function startNavWithApp(app) {
   var wazeTypes = { auto: 'car', fiets: 'walk', lopen: 'walk' };
   var tMode = travelModes[transportMode] || 'driving';
   var country = ygCountryName();
-  var addrs = ordered.map(function(s) { return encodeURIComponent(s.address + ', ' + country); });
+  // Met huisnummer het adres; anders (gast, of adres nog verborgen) staat er
+  // alleen een plaats en is "<plaats>, Nederland" fout bij Belgische verkopen:
+  // dan de coördinaten.
+  var punt = function(s) { return s.address && /\d/.test(s.address) ? encodeURIComponent(s.address + ', ' + country) : s.lat + ',' + s.lng; };
+  var addrs = ordered.map(punt);
   var url;
   if (app === 'google') {
     url = 'https://www.google.com/maps/dir/' + addrs.join('/') + '?travelmode=' + tMode;
   } else if (app === 'apple') {
-    var waypoints = ordered.map(function(s) { return encodeURIComponent(s.address + ', ' + country); });
-    url = 'maps://?daddr=' + waypoints[waypoints.length - 1];
-    if (waypoints.length > 1) url += '&saddr=' + waypoints[0];
+    // Apple's 'unified Maps URL' (iOS 18.4 / macOS 15.4): alle stops als waypoint.
+    // Het oude maps://?daddr= nam alleen de laatste stop mee.
+    var appleModes = { auto: 'driving', fiets: 'cycling', lopen: 'walking' };
+    url = 'https://maps.apple.com/directions?destination=' + punt(ordered[ordered.length - 1]) +
+      ordered.slice(0, -1).map(function(s) { return '&waypoint=' + punt(s); }).join('') +
+      '&mode=' + (appleModes[transportMode] || 'driving');
   } else if (app === 'waze') {
-    var last = ordered[ordered.length - 1];
-    url = 'https://waze.com/ul?ll=' + last.lat + '%2C' + last.lng + '&navigate=yes&zoom=17';
+    // Waze neemt één bestemming per link: bij meer stops kies je de volgende.
+    if (ordered.length > 1) { toonWazeStops(ordered); return; }
+    url = wazeUrl(ordered[0]);
   }
   closeNavSheet();
   if (url) window.open(url);
+}
+function wazeUrl(s) { return 'https://waze.com/ul?ll=' + s.lat + '%2C' + s.lng + '&navigate=yes&zoom=17'; }
+function toonWazeStops(ordered) {
+  var lijst = document.getElementById('nav-waze-list');
+  if (!lijst) return;
+  lijst.innerHTML = '';
+  ordered.forEach(function(s, i) {
+    var b = document.createElement('button');
+    b.className = 'nav-transport-pill';
+    b.style.flex = '0 0 auto';
+    b.style.minWidth = '48px';
+    b.textContent = String(i + 1);
+    b.setAttribute('aria-label', 'Waze: ' + (s.title || ''));
+    b.title = s.title || '';
+    b.onclick = function() { closeNavSheet(); window.open(wazeUrl(s)); };
+    lijst.appendChild(b);
+  });
+  document.getElementById('nav-waze-stops').style.display = 'block';
 }
 function startNavigation() { openNavSheet(); }
 
