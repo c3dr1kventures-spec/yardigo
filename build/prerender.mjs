@@ -340,21 +340,36 @@ function buildLandingGroupsByCategory(listingsWithCat) {
   return groups;
 }
 
+// Soort voor de kleur van het kaartje (zelfde indeling als de kaart: site/kaart.js).
+function soortVan(s) {
+  const sub = String(s.event_subtype || '').toLowerCase();
+  if (sub === 'rommelroute' || s.type === 'buurt') return 'route';
+  return s.type === 'particulier' ? 'oprit' : 'markt';
+}
+// "zaterdag 31 oktober, 10:00 tot 15:00"
+function dagEnTijd(s) {
+  if (!s.date) return '';
+  const dag = new Date(s.date + 'T12:00:00Z').toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  const uur = t => t ? String(Number(t.slice(0, 2))) + t.slice(2, 5) : '';
+  return dag + (s.from ? ', ' + uur(s.from) + (s.till ? ' tot ' + uur(s.till) : '') : '');
+}
+
 function saleCardsHtml(sales, fallbackCity, { verleden = false } = {}) {
   let html = '<div class="sales-list">';
   for (const s of sales) {
     const loc = s.address_hidden ? (s.city || fallbackCity) : (s.address || s.city || fallbackCity);
-    html += `<a class="sale-card" href="/v/${s.id}" data-date="${esc(s.date)}"${verleden ? ' data-past' : ''}>
-        <div class="sc-date">📅 ${esc(fmtDate(s.date))}</div>
-        <div class="sc-title">${esc(s.title)}</div>
-        <div class="sc-loc">📍 ${esc(loc)}</div>
+    html += `<a class="sale-card" href="/v/${s.id}" data-date="${esc(s.date)}" data-soort="${soortVan(s)}"${verleden ? ' data-past' : ''}>
+        <span class="sc-date">${esc(dagEnTijd(s))}</span>
+        <span class="sc-title">${esc(s.title)}</span>
+        <span class="sc-loc">${esc(loc)}</span>
       </a>`;
   }
   return html + '</div>';
 }
 
+// Cijfers bovenaan, zonder emoji (3.2-stijl).
 function statsHtml(items) {
-  return items.map(t => `<div class="stat">${t}</div>`).join('');
+  return items.map(t => `<div class="stat">${String(t).replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, '')}</div>`).join('');
 }
 
 function fillLanding(template, v) {
@@ -419,7 +434,7 @@ function renderLandingHtml(template, group, allGroups) {
       + (group.provincie && PROVINCIES[group.provincie] ? `<a href="/${group.path}/provincie/${group.provincie}">${esc(PROVINCIES[group.provincie])}</a> › ` : '')
       + esc(cityHuman),
     statsHtml: statsHtml([
-      `📅 <strong>${group.upcoming.length}</strong> komende verkopen`,
+      `<strong>${group.upcoming.length}</strong> komende ${group.upcoming.length === 1 ? 'verkoop' : 'verkopen'}`,
       `📍 <strong>${esc(cityHuman)}</strong> en omgeving`,
       '🆓 Gratis te bekijken',
     ]),
@@ -718,12 +733,12 @@ function winkelKaartjesHtml(lijst, metKm) {
   for (const w of lijst) {
     const adres = [[w.straat, w.huisnummer].filter(Boolean).join(' '), w.plaats].filter(Boolean).join(', ');
     const tijden = openingNL(w.openingstijden);
-    html += `<div class="sale-card">
-        <div class="sc-date">${esc(WINKEL_SOORT[w.soort] || 'Tweedehands')}${metKm ? ` · ${w.km.toFixed(0)} km` : ''}</div>
-        <div class="sc-title">${esc(w.naam || 'Kringloopwinkel')}</div>
-        <div class="sc-loc">📍 ${esc(adres)}</div>
-        ${tijden ? `<div class="sc-loc">🕘 ${esc(tijden)}</div>` : ''}
-        ${w.website && /^https?:\/\//.test(w.website) ? `<div class="sc-loc"><a href="${esc(w.website)}" rel="nofollow noopener" target="_blank">Website</a></div>` : ''}
+    html += `<div class="sale-card" data-soort="winkel">
+        <span class="sc-date">${esc(WINKEL_SOORT[w.soort] || 'Tweedehands')}${metKm ? `, ${w.km.toFixed(0)} km` : ''}</span>
+        <span class="sc-title">${esc(w.naam || 'Kringloopwinkel')}</span>
+        <span class="sc-loc">${esc(adres)}</span>
+        ${tijden ? `<span class="sc-loc">Open: ${esc(tijden)}</span>` : ''}
+        ${w.website && /^https?:\/\//.test(w.website) ? `<span class="sc-loc"><a href="${esc(w.website)}" rel="nofollow noopener" target="_blank">Website</a></span>` : ''}
       </div>`;
   }
   return html + '</div>';

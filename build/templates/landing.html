@@ -2,7 +2,9 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3A6B4A">
+<link rel="icon" href="/icon-192.png">
 
 <!-- SEO meta (uniek per plaats+type combinatie) -->
 <title>{{TITLE_TAG}} | YardiGo</title>
@@ -38,54 +40,88 @@
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@300..800&display=swap">
+<link rel="stylesheet" href="/site/site.css">
+<script src="/site/site.js" defer></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Poppins',sans-serif;background:#FAF7F2;color:#2C2416;line-height:1.5;}
-.landing-wrap{max-width:920px;margin:0 auto;padding:24px 20px 60px;}
-header.landing-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1.5px solid #E8E0D4;margin-bottom:24px;}
-.logo{font-size:22px;font-weight:800;color:#E07B39;text-decoration:none;}
-.tagline{font-size:11px;color:#7A6E62;}
-.head-cta{display:inline-block;background:#3A6B4A;color:#fff;border-radius:10px;padding:10px 18px;font-weight:700;font-size:13px;text-decoration:none;}
-.breadcrumb{font-size:12px;color:#7A6E62;margin-bottom:18px;}
-.breadcrumb a{color:#E07B39;text-decoration:none;}
-.breadcrumb a:hover{text-decoration:underline;}
-h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:10px;color:#2C2416;}
-.intro{font-size:15px;color:#3A332B;margin-bottom:30px;max-width:620px;}
-.stats-row{display:flex;flex-wrap:wrap;gap:14px;background:#fff;border-radius:14px;padding:16px 20px;margin-bottom:24px;border:1.5px solid #E8E0D4;}
-.stat{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#4A3E32;}
-.stat strong{font-size:18px;color:#E07B39;}
-section{margin-bottom:36px;}
-section h2{font-size:20px;font-weight:800;margin-bottom:14px;}
-.sales-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.sale-card{background:#fff;border:1.5px solid #E8E0D4;border-radius:14px;padding:14px 16px;text-decoration:none;color:inherit;display:block;transition:transform .15s,box-shadow .15s;}
-.sale-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(44,36,22,.10);}
-.sc-date{font-size:11px;font-weight:700;color:#E07B39;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;}
-.sc-title{font-size:15px;font-weight:700;line-height:1.3;margin-bottom:4px;}
-.sc-loc{font-size:12px;color:#7A6E62;}
-.empty-box{background:#fff;border:1.5px dashed #E8E0D4;border-radius:14px;padding:24px;text-align:center;color:#7A6E62;font-size:13px;}
-.nearby-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
-.nearby-link{background:#fff;border:1.5px solid #E8E0D4;border-radius:10px;padding:10px 14px;text-decoration:none;color:#3A332B;font-weight:600;font-size:13px;transition:border-color .15s,color .15s;}
-.nearby-link:hover{border-color:#E07B39;color:#E07B39;}
-.cta-block{background:linear-gradient(135deg,#E07B39,#D26A2E);color:#fff;border-radius:18px;padding:28px;text-align:center;margin:32px 0;}
-.cta-block h2{margin-bottom:8px;}
-.cta-block p{margin-bottom:18px;opacity:.92;}
-.cta-block .cta-btn{display:inline-block;background:#fff;color:#E07B39;padding:14px 28px;border-radius:12px;font-weight:800;text-decoration:none;}
-footer.landing-foot{margin-top:48px;padding-top:18px;border-top:1.5px solid #E8E0D4;font-size:11.5px;color:#9A8E82;text-align:center;}
-footer.landing-foot a{color:#E07B39;text-decoration:none;}
+/* Overzichtspagina's (per plaats, provincie, weekend, kringloop): 3.2-stijl.
+   Groen is de hoofdkleur, oranje en geel volgen de soort (zoals de pins). */
+.lp { padding-block: 20px 8px; }
+.breadcrumb { font-size: 14px; color: var(--yg-muted); margin: 0 0 14px; }
+.breadcrumb a { color: var(--yg-forest); }
+.lp h1 { font-size: clamp(30px, 4vw, 44px); margin-bottom: 10px; }
+.lp .intro { margin: 0 0 22px; }
+.stats-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 999px; background: var(--yg-land); font-size: 14px; color: var(--yg-forest-dark); }
+.stat strong { font-size: 17px; color: var(--yg-ink); font-variant-numeric: tabular-nums; }
+.lp section { margin-bottom: 36px; }
+.lp section h2 { margin: 0 0 14px; font-size: clamp(22px, 2.6vw, 28px); font-weight: 700; letter-spacing: -0.02em; }
+.lp section > p { margin: -6px 0 14px; color: var(--yg-muted); }
+.sales-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.sale-card { display: grid; align-content: start; gap: 3px; padding: 14px 16px 14px 18px; border: 1px solid var(--yg-line); border-left: 5px solid var(--yg-forest); border-radius: var(--yg-radius-m); background: var(--yg-paper); color: var(--yg-ink); text-decoration: none; }
+a.sale-card:hover { border-color: var(--yg-line-strong); border-left-color: var(--yg-forest-dark); background: var(--yg-tint); color: var(--yg-ink); }
+.sale-card[data-soort="oprit"] { border-left-color: var(--yg-amber); }
+.sale-card[data-soort="route"] { border-left-color: var(--yg-terra); }
+.sale-card[data-soort="winkel"] { border-left-color: var(--yg-wood); }
+.sc-date { font-size: 13px; font-weight: 600; color: var(--yg-forest-dark); }
+.sale-card[data-soort="oprit"] .sc-date { color: var(--yg-amber-text); }
+.sale-card[data-soort="route"] .sc-date { color: var(--yg-terra-dark); }
+.sale-card[data-soort="winkel"] .sc-date { color: var(--yg-wood-text); }
+.sc-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+.sc-loc { font-size: 14px; color: var(--yg-muted); }
+.sc-loc a { color: var(--yg-forest); }
+.empty-box { padding: 22px; border: 1px dashed var(--yg-line-strong); border-radius: var(--yg-radius-m); background: var(--yg-tint); color: var(--yg-muted); }
+.nearby-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.nearby-link { display: inline-flex; gap: 6px; padding: 8px 12px; border: 1px solid var(--yg-line-strong); border-radius: 999px; color: var(--yg-ink); text-decoration: none; font-size: 15px; }
+.nearby-link:hover { border-color: var(--yg-ink); color: var(--yg-ink); }
+.nearby-link span { color: var(--yg-muted) !important; font-size: 13px !important; font-weight: 400 !important; }
+.lp-cta { margin: 8px 0 40px; border-radius: var(--yg-radius-l); overflow: hidden; }
+.lp-cta .yg-org__in { padding-top: 28px; }
+.lp-cta .yg-org__txt { padding-bottom: 28px; }
 </style>
 </head>
 <body>
-<div class="landing-wrap">
-  <header class="landing-head">
-    <a class="logo" href="/">YardiGo</a>
-    <a class="head-cta" href="/">Open de kaart →</a>
-  </header>
 
-  <div class="breadcrumb">{{BREADCRUMB_HTML}}</div>
+<a class="yg-skip" href="#inhoud-start" data-i18n="nav.skip">Naar de inhoud</a>
+<header class="yg-header">
+  <div class="yg-wrap yg-header__bar">
+    <a class="yg-logo" href="/nieuw" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina">
+      <img src="/site/logo.svg" alt="" width="22" height="28">
+      <span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span>
+    </a>
+    <nav class="yg-nav" aria-label="Hoofdmenu">
+      <a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a>
+      <a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a>
+      <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
+      <a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a>
+      <a href="/kringloop/" data-i18n="nav.thrift">Kringloopwinkels</a>
+      <a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a>
+    </nav>
+    <div class="yg-header__end">
+      <nav class="yg-nav" aria-label="Organiseren"><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></nav>
+      <a class="yg-btn yg-btn--primary" href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a>
+      <button class="yg-menu-btn" type="button" aria-expanded="false" aria-controls="yg-menu" data-i18n-aria="nav.menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="yg-wrap yg-menu" id="yg-menu">
+    <a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a>
+    <a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a>
+    <a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a>
+    <a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a>
+      <a href="/kringloop/" data-i18n="nav.thrift">Kringloopwinkels</a>
+    <a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a>
+    <a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a>
+  </div>
+</header>
 
-  <h1>{{H1}}</h1>
-  <p class="intro">{{INTRO}}</p>
+<main class="yg-wrap lp" id="inhoud-start">
+  <p class="breadcrumb">{{BREADCRUMB_HTML}}</p>
+
+  <h1 class="yg-h1">{{H1}}</h1>
+  <p class="yg-lead intro">{{INTRO}}</p>
 
   <div class="stats-row">{{STATS_HTML}}</div>
 
@@ -96,18 +132,45 @@ footer.landing-foot a{color:#E07B39;text-decoration:none;}
 
   {{EXTRA_BLOCK}}
 
-  <div class="cta-block">
-    <h2>Zelf een {{TYPE_LABEL_LOWER_SINGULAR}} organiseren?</h2>
-    <p>Plaats hem gratis op YardiGo. Dan staat hij op de kaart voor iedereen in de buurt die op zoek is.</p>
-    <a class="cta-btn" href="/">Plaats jouw verkoop →</a>
-  </div>
+  <aside class="yg-band yg-org lp-cta" aria-labelledby="cta-kop">
+    <div class="yg-org__in" style="padding-inline:24px">
+      <div class="yg-org__txt">
+        <h2 class="yg-h2" id="cta-kop">Zelf een {{TYPE_LABEL_LOWER_SINGULAR}} organiseren?</h2>
+        <p class="yg-lead">Zet hem gratis op YardiGo, met foto's van wat er te koop is. Dan staat hij op de kaart voor iedereen in de buurt.</p>
+        <div class="yg-org__btns"><a class="yg-btn yg-btn--light" href="/aanmelden">Verkoop aanmelden</a><a class="yg-btn yg-btn--onband" href="/nieuw/kaart">Bekijk de kaart</a></div>
+      </div>
+      <img class="yg-org__cedrik" src="/site/img/cedrik-zwaai.png" alt="" width="270" height="339" loading="lazy" style="width:170px">
+    </div>
+  </aside>
 
   {{NEARBY_BLOCK}}
+</main>
 
-  <footer class="landing-foot">
-    YardiGo · <a href="/">Bekijk alle verkopen op de kaart</a> · Find · Sell · Go
-  </footer>
-</div>
+<footer class="yg-footer">
+  <div class="yg-wrap">
+    <div class="yg-footer__grid">
+      <div>
+        <a class="yg-logo" href="/nieuw" data-i18n-aria="nav.home" aria-label="YardiGo, naar de startpagina"><img src="/site/logo.svg" alt="" width="22" height="28"><span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span></a>
+        <p data-i18n="foot.nocookies">Geen cookiemuur: YardiGo volgt je niet.</p>
+      </div>
+      <nav aria-labelledby="f-ontdek"><h2 id="f-ontdek" data-i18n="foot.discover">Ontdekken</h2>
+        <ul><li><a href="/nieuw/kaart" data-i18n="nav.map">Kaart</a></li><li><a href="/opritverkoop" data-i18n="nav.driveway">Garagesales</a></li><li><a href="/rommelroute" data-i18n="nav.routes">Rommelroutes</a></li><li><a href="/rommelmarkt" data-i18n="nav.markets">Rommelmarkten</a></li><li><a href="/kringloop/" data-i18n="nav.thrift">Kringloopwinkels</a></li><li><a href="/rommelmarkt/dit-weekend" data-i18n="nav.agenda">Agenda</a></li></ul>
+      </nav>
+      <nav aria-labelledby="f-org"><h2 id="f-org" data-i18n="foot.organise">Organiseren</h2>
+        <ul><li><a href="/aanmelden" data-i18n="home.garPost">Garagesale aanmelden</a></li><li><a href="/aanmelden" data-i18n="nav.post">Verkoop aanmelden</a></li><li><a href="/organisatoren" data-i18n="act.startRoute">Rommelroute starten</a></li><li><a href="/organisatoren" data-i18n="nav.organisers">Voor organisatoren</a></li></ul>
+      </nav>
+      <nav aria-labelledby="f-yg"><h2 id="f-yg" data-i18n="foot.about">YardiGo</h2>
+        <ul><li><a href="/" data-i18n="foot.app">De app</a></li><li><a href="/privacy" data-i18n="foot.privacy">Privacy</a></li><li><a href="/voorwaarden" data-i18n="foot.terms">Voorwaarden</a></li></ul>
+      </nav>
+    </div>
+    <div class="yg-footer__base">
+      <span data-i18n="foot.domains">yardigo.nl, yardigo.be en yardigo.de</span>
+      <nav class="yg-lang" aria-label="Taal" data-i18n-aria="foot.lang">
+        <a data-lang="nl" href="?lang=nl">NL</a><a data-lang="en" href="?lang=en">EN</a><a data-lang="fr" href="?lang=fr">FR</a><a data-lang="de" href="?lang=de">DE</a>
+      </nav>
+    </div>
+  </div>
+</footer>
 
 <script>
 // De lijst wordt bij elke build gemaakt; verkopen die inmiddels voorbij zijn
