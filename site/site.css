@@ -464,7 +464,7 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-chip--extra { position: relative; }
 .yg-chip--extra[aria-pressed="false"]::before {
   content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0;
-  box-shadow: 0 0 0 2px rgba(242, 168, 48, .9), 0 0 14px 5px rgba(242, 168, 48, .65), 0 0 28px 10px rgba(224, 123, 57, .3);
+  box-shadow: 0 0 0 1.5px rgba(242, 168, 48, .6), 0 0 10px 3px rgba(242, 168, 48, .35);
   animation: yg-gloed 2.4s ease-in-out 1s 5;
 }
 @keyframes yg-gloed {
