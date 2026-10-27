@@ -9,7 +9,6 @@
   var STRAAL_KM = 50;
   var GARAGE_DAGEN = 90;
   var $ = function (id) { return document.getElementById(id); };
-  var SOORT_TEKST = { oprit: 'type.driveway', route: 'type.route', markt: 'type.market' };
 
   function slug(s) {
     return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -52,30 +51,8 @@
     return lijst.sort(function (a, b) { return (!a.foto - !b.foto) || (a.dagen[0] + (a.begin || '')).localeCompare(b.dagen[0] + (b.begin || '')); });
   }
 
-  function dagTekst(v) {
-    var d = v.dagen.length > 1 ? K.label(Object.assign({}, v, { begin: null })) : K.dagLang(v.dagen[0]);
-    return d + (v.begin ? ', ' + K.tijden(v) : '');
-  }
-
-  function beeldHtml(v, klein) {
-    var src = K.beeld(v);
-    var alt = v.foto ? YG.t('home.poster', { t: v.titel }) : '';
-    var html = '<img src="' + K.esc(src) + '" alt="' + K.esc(alt) + '" loading="lazy" decoding="async">';
-    if (klein) return html;
-    html += '<span class="yg-badge yg-badge--' + v.soort + '">' + K.esc(YG.t(SOORT_TEKST[v.soort])) + '</span>';
-    if (v.fotos > 1) html += '<span class="yg-item__n yg-num">' + K.esc(YG.t('home.photos', { n: v.fotos })) + '</span>';
-    return html;
-  }
-
   function kaartje(v) {
-    var li = document.createElement('li');
-    li.innerHTML = '<a class="yg-item" href="/v/' + K.esc(v.id) + '" data-id="' + K.esc(v.id) + '">' +
-      '<span class="yg-item__img">' + beeldHtml(v) + '</span>' +
-      '<span class="yg-item__txt">' +
-        '<span class="yg-item__day yg-item__day--' + v.soort + '">' + K.esc(dagTekst(v)) + '</span>' +
-        '<strong>' + K.esc(v.titel) + '</strong>' +
-        '<span class="yg-meta">' + K.esc([v.plaats, v.km != null ? Math.round(v.km) + ' ' + YG.t('unit.km') : ''].filter(Boolean).join(', ')) + '</span>' +
-      '</span></a>';
+    var li = K.kaartje(v);
     var a = li.firstChild;
     a.addEventListener('mouseenter', function () { kaart.licht(v.id, true); });
     a.addEventListener('mouseleave', function () { kaart.licht(v.id, false); });
@@ -139,11 +116,11 @@
 
   function openPopup(v) {
     sluitPopup();
-    var html = '<div class="yg-pop">' + beeldHtml(v, true) + '<div>' +
-      '<span class="yg-badge yg-badge--' + v.soort + '">' + K.esc(YG.t(SOORT_TEKST[v.soort])) + '</span>' +
+    var html = '<div class="yg-pop">' + K.beeldHtml(v, true) + '<div>' +
+      '<span class="yg-badge yg-badge--' + v.soort + '">' + K.esc(K.soortTekst(v)) + '</span>' +
       '<h3>' + K.esc(v.titel) + '</h3>' +
-      '<p>' + K.esc([dagTekst(v), v.plaats].filter(Boolean).join(', ')) + '</p>' +
-      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="/v/' + K.esc(v.id) + '">' + K.esc(YG.t('map.view')) + '</a></div>' +
+      '<p>' + K.esc([K.dagTekst(v), v.plaats].filter(Boolean).join(', ')) + '</p>' +
+      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a></div>' +
       '</div></div>';
     popup = L.popup({ className: 'yg-popup', offset: [0, -30], maxWidth: 320, autoPanPadding: [20, 20] })
       .setLatLng([v.lat, v.lng]).setContent(html).openOn(kaart.map);

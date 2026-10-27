@@ -58,7 +58,7 @@
     rijen.slice(0, MAX_RIJEN).forEach(function (v) {
       var li = document.createElement('li');
       var cls = 'yg-tag yg-tag--inline' + (v.soort === 'route' ? ' yg-tag--route' : v.soort === 'oprit' ? ' yg-tag--oprit' : '');
-      li.innerHTML = '<a class="yg-row' + (state.gekozen === v.id ? ' is-hot' : '') + '" href="/v/' + K.esc(v.id) + '" data-id="' + K.esc(v.id) + '">' +
+      li.innerHTML = '<a class="yg-row' + (state.gekozen === v.id ? ' is-hot' : '') + '" href="' + K.link(v) + '" data-id="' + K.esc(v.id) + '">' +
         '<span class="' + cls + '">' + K.esc(v.dagen.map(K.dagKort).join(' + ')) + '</span>' +
         '<span style="min-width:0"><strong>' + K.esc(v.titel) + '</strong><span class="yg-meta">' + K.esc([v.plaats, K.tijden(v)].filter(Boolean).join(', ')) + '</span></span>' +
         '<span class="yg-km yg-num">' + Math.round(v.km) + ' ' + YG.t('unit.km') + '</span></a>';
@@ -86,7 +86,7 @@
     var route = 'https://www.google.com/maps/dir/?api=1&destination=' + v.lat.toFixed(5) + ',' + v.lng.toFixed(5);
     var html = '<h3>' + K.esc(v.titel) + '</h3><p>' + K.esc(dagen) + (v.begin ? ', ' + K.esc(K.tijden(v)) : '') + '<br>' + K.esc(v.plaats) +
       (v.benadering ? '<br>' + K.esc(YG.t('map.approx')) : '') + '</p>' +
-      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="/v/' + K.esc(v.id) + '">' + K.esc(YG.t('map.view')) + '</a>' +
+      '<div class="yg-btns"><a class="yg-btn yg-btn--primary" href="' + K.link(v) + '">' + K.esc(YG.t('map.view')) + '</a>' +
       (v.benadering ? '' : '<a class="yg-btn yg-btn--outline" href="' + route + '" target="_blank" rel="noopener">' + K.esc(YG.t('act.route')) + '</a>') + '</div>';
     popup = L.popup({ className: 'yg-popup', offset: [0, -30], autoPanPaddingTopLeft: [20, 70], autoPanPaddingBottomRight: [20, 20], maxWidth: 300 }).setLatLng([v.lat, v.lng]).setContent(html).openOn(kaart.map);
     if (centreer) kaart.map.panTo([v.lat, v.lng]);

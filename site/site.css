@@ -59,6 +59,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 a { color: var(--yg-forest); }
 a:hover { color: var(--yg-forest-dark); }
 :focus-visible { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
 .yg-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .yg-wrap {
@@ -344,6 +345,56 @@ a:hover { color: var(--yg-forest-dark); }
 .yg-org__btns { display: flex; gap: 10px; flex-wrap: wrap; }
 .yg-org__cedrik { display: none; width: 220px; height: auto; margin-left: auto; margin-bottom: -4px; }
 @media (min-width: 760px) { .yg-org__cedrik { display: block; } }
+
+/* ── Verkooppagina ───────────────────────────────────────────────────── */
+.yg-det { padding-top: 12px; }
+.yg-det__back { margin: 0 0 12px; font-size: 15px; }
+.yg-det__back a { display: inline-flex; align-items: center; gap: 4px; color: var(--yg-ink); text-decoration: none; font-weight: 500; }
+.yg-det__back a:hover { text-decoration: underline; }
+.yg-det__grid { display: grid; gap: 24px; }
+.yg-det__main { min-width: 0; display: grid; gap: 24px; align-content: start; }
+@media (min-width: 960px) { .yg-det__grid { grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; } }
+/* Telefoon: eerst de foto, dan titel en datum, dan de rest. */
+@media (max-width: 959px) {
+  .yg-det__main { display: contents; }
+  .yg-gal { order: -2; }
+  .yg-det__side { order: -1; }
+}
+
+.yg-gal { display: grid; gap: 10px; }
+.yg-gal__big { position: relative; aspect-ratio: 4 / 3; border-radius: var(--yg-radius-l); overflow: hidden; background: var(--yg-tint); }
+.yg-gal__big img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.yg-gal--tekening .yg-gal__big img { object-fit: cover; }
+.yg-gal__nav { position: absolute; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .94); box-shadow: 0 2px 10px rgba(30, 41, 34, .2); display: grid; place-items: center; cursor: pointer; color: var(--yg-ink); }
+.yg-gal__nav svg { width: 20px; height: 20px; }
+.yg-gal__nav--prev { left: 12px; }
+.yg-gal__nav--next { right: 12px; }
+.yg-gal__big .yg-item__n { right: 12px; bottom: 12px; font-size: 13px; }
+.yg-gal__thumbs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.yg-gal__thumbs button { flex: none; width: 76px; height: 76px; padding: 0; border: 2px solid transparent; border-radius: 10px; overflow: hidden; background: var(--yg-tint); cursor: pointer; }
+.yg-gal__thumbs button[aria-current="true"] { border-color: var(--yg-ink); }
+.yg-gal__thumbs img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+
+.yg-det__block { display: grid; gap: 10px; }
+.yg-det__txt { margin: 0; white-space: pre-line; max-width: 42em; }
+.yg-chip--static { cursor: default; }
+
+.yg-det__side { display: grid; gap: 12px; align-content: start; }
+@media (min-width: 960px) { .yg-det__side { position: sticky; top: 84px; } }
+.yg-det__card { display: grid; gap: 14px; justify-items: start; padding: 20px; border: 1px solid var(--yg-line); border-radius: var(--yg-radius-l); background: var(--yg-paper); }
+@media (min-width: 960px) { .yg-det__card { box-shadow: 0 10px 30px rgba(30, 41, 34, .08); } }
+.yg-det__h1 { margin: 0; font-size: clamp(26px, 3vw, 32px); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
+.yg-det__when { display: flex; gap: 14px; align-items: center; }
+.yg-det__when p, .yg-det__where p { margin: 0; }
+.yg-det__date { flex: none; display: grid; justify-items: center; width: 58px; padding: 6px 0 8px; border-radius: 12px; background: var(--yg-land); font-size: 13px; font-weight: 600; color: var(--yg-forest-dark); line-height: 1.1; }
+.yg-det__date strong { font-size: 26px; color: var(--yg-ink); }
+.yg-det .yg-label { display: block; font-size: 13px; font-weight: 600; color: var(--yg-muted); }
+.yg-det__where { display: grid; gap: 2px; }
+.yg-det__btns { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.yg-det__btns .yg-btn--primary { flex: 1 1 100%; }
+.yg-det__btns .yg-btn--outline { flex: 1 1 0; }
+.yg-det__map { position: relative; height: 200px; border-radius: var(--yg-radius-m); overflow: hidden; background: var(--yg-land); }
+.yg-det__map .yg-kaart { position: absolute; inset: 0; }
 
 /* ── Kaartpagina ─────────────────────────────────────────────────────── */
 .yg-mappage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
