@@ -246,7 +246,8 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
   .yg-hero__map { position: absolute; inset: 0; margin: 0; border-radius: 0; height: auto; }
   .yg-hero__open { display: none; }
   .yg-hero .yg-wrap { position: relative; height: 100%; pointer-events: none; }
-  .yg-card { position: absolute; z-index: 600; top: 40px; left: 24px; width: 470px; padding: 26px; background: var(--yg-paper); border-radius: var(--yg-radius-l); box-shadow: 0 18px 50px rgba(30, 41, 34, .22); pointer-events: auto; }
+  .yg-card .yg-h1 { font-size: 34px; }
+  .yg-card { position: absolute; z-index: 600; top: 40px; left: 24px; width: 400px; padding: 24px; background: var(--yg-paper); border-radius: var(--yg-radius-l); box-shadow: 0 18px 50px rgba(30, 41, 34, .22); pointer-events: auto; }
 }
 
 .yg-section { padding-block: 40px 8px; }
@@ -286,12 +287,14 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-layers .yg-chip { flex: none; min-height: 36px; padding: 6px 11px; box-shadow: 0 2px 8px rgba(30, 41, 34, .16); border-color: var(--yg-paper); }
 .yg-layers .yg-chip[aria-pressed="false"] { background: rgba(255, 255, 255, .92); color: var(--yg-muted); }
 .yg-layers .yg-chip[aria-pressed="false"] .yg-mark { opacity: .35; }
-/* Op de telefoon staat de kaart boven de zoekkaart: de pins zie je meteen. */
+/* Op de telefoon staat de kaart boven de zoekkaart: de pins zie je meteen,
+   met de locatieknop er direct onder. */
 @media (max-width: 959px) {
   .yg-hero { display: flex; flex-direction: column; }
   .yg-hero > .yg-wrap { width: 100%; }
-  .yg-hero__map { order: -1; margin-top: 12px; height: 300px; }
-  .yg-card { padding-top: 16px; }
+  .yg-hero__map { order: -1; margin-top: 12px; height: max(300px, 55vh); height: max(300px, 55svh); }
+  .yg-card { padding-top: 14px; }
+  .yg-card #locatie { order: -1; }
 }
 @media (min-width: 960px) {
   .yg-layers { left: auto; right: 6px; top: auto; bottom: 10px; }
