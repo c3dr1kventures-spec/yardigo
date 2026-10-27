@@ -17,7 +17,7 @@
   var SUPABASE_URL = 'https://fwehqudhwzcnkcuypuqw.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
   var CARTO_KEY = 'cb1_2pvc_1_3258ad842f08e23ffc14ee4e';
-  var CACHE = 'yg-site-listings';
+  var CACHE = 'yg-site-listings-2';
   var NL_MIDDEN = { lat: 52.2, lng: 5.3 };
 
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
@@ -66,7 +66,8 @@
       id: item.id, soort: soort(item), titel: item.title || '', plaats: item.city || '',
       lat: item.latitude, lng: item.longitude, van: item.date_start, tot: item.date_end || item.date_start,
       begin: item.time_start, eind: item.time_end, benadering: !!item.location_approx,
-      bevestigd: item.placed_by === 'user' || !!item.claimed_by_user_id
+      bevestigd: item.placed_by === 'user' || !!item.claimed_by_user_id,
+      foto: (item.images && item.images[0]) || null, fotos: item.photo_count || 0
     };
   }
 
@@ -106,6 +107,12 @@
     });
     return uit;
   }
+
+  // Volgorde van belang: garagesales eerst, dan rommelroutes, dan markten.
+  var VOLGORDE = { oprit: 0, route: 1, markt: 2 };
+
+  // Beeld bij een verkoop: de eigen foto of het affiche, anders de tekening van de soort.
+  function beeld(v) { return v.foto || '/site/img/' + v.soort + '.svg'; }
 
   function afstand(a, b) {
     var r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
@@ -173,6 +180,7 @@
     function prioriteit(a, b) {
       if (state.gekozen === a.id) return -1;
       if (state.gekozen === b.id) return 1;
+      if (opties.voorrang && a.soort !== b.soort) return VOLGORDE[a.soort] - VOLGORDE[b.soort];
       if (state.midden) return afstand(state.midden, a) - afstand(state.midden, b);
       return (a.dagen[0] + (a.begin || '')).localeCompare(b.dagen[0] + (b.begin || ''));
     }
@@ -239,7 +247,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
+    beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN
   };
 })();
