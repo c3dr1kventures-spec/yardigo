@@ -267,6 +267,7 @@
     'rt.order': 'Zet in de kortste volgorde', 'rt.google': 'Open de route in Google Maps', 'rt.apple': 'Open de route in Apple Maps', 'rt.waze': 'Waze',
     'rt.wazeEach': 'Waze neemt één stop per keer. Kies je volgende stop:', 'rt.wazeTo': 'Navigeer met Waze naar {t}', 'rt.max': 'Google Maps neemt de eerste {n} stops mee.',
     'rt.approx': 'Garagesales en rommelroutes staan als gebied in je route. Het huisnummer zie je in de YardiGo-app vanaf de dag ervoor.',
+    'rt.share': 'Deel je route', 'rt.shareTitle': 'Mijn snuffelroute op YardiGo', 'rt.copied': 'Link naar je route gekopieerd', 'rt.loaded': 'Gedeelde route geladen: {n} stops',
     'rt.clear': 'Route leegmaken', 'rt.added': '{t} staat in je route', 'rt.removed': '{t} is uit je route',
     'map.shopsOn': '+ Kringloopwinkels', 'map.shopsHint': 'Zet kringloopwinkels aan om ze in je route te zetten', 'shop.holidays': 'feestdagen',
     'shop.site': 'Website', 'shop.hours': 'Open', 'shop.osm': 'Uit OpenStreetMap'
@@ -278,6 +279,7 @@
     'rt.order': 'Put in the shortest order', 'rt.google': 'Open the route in Google Maps', 'rt.apple': 'Open the route in Apple Maps', 'rt.waze': 'Waze',
     'rt.wazeEach': 'Waze takes one stop at a time. Pick your next stop:', 'rt.wazeTo': 'Navigate with Waze to {t}', 'rt.max': 'Google Maps takes the first {n} stops.',
     'rt.approx': 'Garage sales and yard sale routes are in your route as an area. You see the house number in the YardiGo app from the day before.',
+    'rt.share': 'Share your route', 'rt.shareTitle': 'My bargain-hunting route on YardiGo', 'rt.copied': 'Link to your route copied', 'rt.loaded': 'Shared route loaded: {n} stops',
     'rt.clear': 'Clear route', 'rt.added': '{t} is in your route', 'rt.removed': '{t} is out of your route',
     'map.shopsOn': '+ Thrift stores', 'map.shopsHint': 'Turn on thrift stores to add them to your route', 'shop.holidays': 'public holidays',
     'shop.site': 'Website', 'shop.hours': 'Open', 'shop.osm': 'From OpenStreetMap'
@@ -289,6 +291,7 @@
     'rt.order': 'Mettre dans l’ordre le plus court', 'rt.google': 'Ouvrir l’itinéraire dans Google Maps', 'rt.apple': 'Ouvrir l’itinéraire dans Plans', 'rt.waze': 'Waze',
     'rt.wazeEach': 'Waze prend un arrêt à la fois. Choisissez le prochain :', 'rt.wazeTo': 'Naviguer avec Waze vers {t}', 'rt.max': 'Google Maps prend les {n} premiers arrêts.',
     'rt.approx': 'Les ventes de garage et circuits brocante figurent comme zone. Le numéro de maison est visible dans l’appli YardiGo dès la veille.',
+    'rt.share': 'Partager votre itinéraire', 'rt.shareTitle': 'Mon itinéraire chine sur YardiGo', 'rt.copied': 'Lien vers votre itinéraire copié', 'rt.loaded': 'Itinéraire partagé chargé : {n} arrêts',
     'rt.clear': 'Vider l’itinéraire', 'rt.added': '{t} est dans votre itinéraire', 'rt.removed': '{t} est retiré de votre itinéraire',
     'map.shopsOn': '+ Ressourceries', 'map.shopsHint': 'Affichez les ressourceries pour les ajouter à votre itinéraire', 'shop.holidays': 'jours fériés',
     'shop.site': 'Site web', 'shop.hours': 'Ouvert', 'shop.osm': 'Depuis OpenStreetMap'
@@ -300,6 +303,7 @@
     'rt.order': 'In die kürzeste Reihenfolge bringen', 'rt.google': 'Route in Google Maps öffnen', 'rt.apple': 'Route in Apple Karten öffnen', 'rt.waze': 'Waze',
     'rt.wazeEach': 'Waze nimmt einen Stopp nach dem anderen. Wähl deinen nächsten Stopp:', 'rt.wazeTo': 'Mit Waze zu {t} navigieren', 'rt.max': 'Google Maps nimmt die ersten {n} Stopps mit.',
     'rt.approx': 'Garagenverkäufe und Hofflohmärkte stehen als Gebiet in deiner Route. Die Hausnummer siehst du ab dem Vortag in der YardiGo-App.',
+    'rt.share': 'Route teilen', 'rt.shareTitle': 'Meine Stöberroute auf YardiGo', 'rt.copied': 'Link zu deiner Route kopiert', 'rt.loaded': 'Geteilte Route geladen: {n} Stopps',
     'rt.clear': 'Route leeren', 'rt.added': '{t} ist in deiner Route', 'rt.removed': '{t} ist aus deiner Route',
     'map.shopsOn': '+ Gebrauchtwarenläden', 'map.shopsHint': 'Blende Gebrauchtwarenläden ein, um sie in deine Route aufzunehmen', 'shop.holidays': 'Feiertage',
     'shop.site': 'Website', 'shop.hours': 'Geöffnet', 'shop.osm': 'Aus OpenStreetMap'

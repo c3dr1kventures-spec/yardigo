@@ -9,7 +9,8 @@
 // Een stop: { id, titel, soort (oprit|route|markt|winkel), lat, lng,
 // plaats, sub, benadering }. Bij garagesales en rommelroutes kent de site
 // zonder account alleen het gebied (benadering): dat staat erbij.
-// Opslag: localStorage (alleen in deze browser).
+// Opslag: localStorage (alleen in deze browser). Delen gaat via een link
+// /kaart?stops=… met de stops erin; wie hem opent krijgt ze in zijn route.
 // Knoppen elders: YGRoute.knop(stop) geeft HTML; klikken gaat via één
 // luisteraar op het document. Vereist: site.js (window.YG).
 // ═══════════════════════════════════════════════════════════════════════
@@ -140,10 +141,12 @@
       else if (actie === 'weg') { stops.splice(i, 1); bewaar(); if (!stops.length) open(false); }
       else if (actie === 'leeg') { stops = []; bewaar(); open(false); }
       else if (actie === 'kortste') kortste();
+      else if (actie === 'deel') deel(b);
       else if (b.hasAttribute('data-vervoer')) { vervoer = b.getAttribute('data-vervoer'); schrijf(VERVOER, vervoer); tekenPaneel(); }
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !paneel.hidden) open(false); });
     werkKnoppenBij();
+    leesDeelLink();
   }
 
   function focusOp(actie, i) {
@@ -191,8 +194,47 @@
         return '<a class="yg-btn yg-btn--outline" href="' + esc(wazeLink(s)) + '" target="_blank" rel="noopener" aria-label="' + esc(YG.t('rt.wazeTo', { t: s.titel })) + '">' +
           (stops.length > 1 ? '<span class="yg-stop yg-stop--' + s.soort + '" aria-hidden="true">' + (i + 1) + '</span>' : esc(YG.t('rt.waze'))) + '</a>';
       }).join('') + '</div></div>';
+    html += '<button type="button" class="yg-btn yg-btn--outline yg-btn--block" data-actie="deel">' + esc(YG.t('rt.share')) + '</button>';
     html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="leeg">' + esc(YG.t('rt.clear')) + '</button>';
     paneel.innerHTML = html;
+  }
+
+  // ── Delen: de stops gaan mee in de link (base64url van compacte JSON) ──
+  // Alleen wat de site toch al toont: titel, soort, plek (bij garagesales het
+  // gebied) en plaats. Geen account nodig, niets op de server.
+  var SOORTEN = ['oprit', 'route', 'markt', 'winkel'];
+  function deelLink() {
+    var rij = stops.map(function (s) {
+      return [s.id, s.titel, s.soort, +s.lat.toFixed(5), +s.lng.toFixed(5), s.plaats || '', s.sub || '', s.benadering ? 1 : 0];
+    });
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(rij)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return location.origin + '/kaart?stops=' + b64;
+  }
+  function leesDeelLink() {
+    var ruw = new URLSearchParams(location.search).get('stops');
+    if (!ruw) return;
+    var rij;
+    try { rij = JSON.parse(decodeURIComponent(escape(atob(ruw.replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return; }
+    if (!Array.isArray(rij)) return;
+    var tekst = function (x) { return typeof x === 'string' ? x.slice(0, 120) : ''; };
+    var nieuw = rij.slice(0, 25).filter(function (x) {
+      return Array.isArray(x) && typeof x[0] === 'string' && SOORTEN.indexOf(x[2]) > -1 && isFinite(x[3]) && isFinite(x[4]) && Math.abs(x[3]) <= 90 && Math.abs(x[4]) <= 180;
+    }).map(function (x) {
+      return { id: tekst(x[0]), titel: tekst(x[1]), soort: x[2], lat: +x[3], lng: +x[4], plaats: tekst(x[5]), sub: tekst(x[6]), benadering: !!x[7] };
+    });
+    try { var u = new URL(location.href); u.searchParams.delete('stops'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { /* oude browser: link blijft staan */ }
+    if (!nieuw.length) return;
+    nieuw.forEach(function (s) { if (!heeft(s.id)) stops.push(s); });
+    bewaar();
+    meld(YG.t('rt.loaded', { n: nieuw.length }));
+    open(true);
+  }
+  function deel(b) {
+    var url = deelLink();
+    if (navigator.share) { navigator.share({ title: YG.t('rt.shareTitle'), url: url }).catch(function () {}); return; }
+    var klaar = function () { b.textContent = YG.t('rt.copied'); meld(YG.t('rt.copied')); setTimeout(function () { b.textContent = YG.t('rt.share'); }, 2500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(klaar, function () { window.prompt(YG.t('rt.share'), url); });
+    else window.prompt(YG.t('rt.share'), url);
   }
 
   function meld(t) { var p = document.getElementById('yg-route-live'); if (p) p.textContent = t; }
