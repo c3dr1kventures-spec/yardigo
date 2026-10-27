@@ -1,9 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════════
 // YardiGo website: je route (garagesales, rommelroutes, markten en
 // kringloopwinkels op een rij) en die openen in Google Maps, Apple Maps of
-// Waze. Zelfde idee als de route in de app (startNavWithApp in index.html):
-// Google Maps krijgt alle stops met het vervoer erbij; Apple Maps en Waze
-// nemen via een link maar één bestemming, dus die gaan naar de eerste stop.
+// Waze. Google Maps en Apple Maps krijgen alle stops met het vervoer erbij
+// (Apple: het 'unified Maps URL'-formaat met waypoint, iOS 18.4 / macOS 15.4;
+// het oude daddr-formaat werkt niet meer met coördinaten). Waze neemt via een
+// link maar één bestemming: daar kies je per stop.
 //
 // Een stop: { id, titel, soort (oprit|route|markt|winkel), lat, lng,
 // plaats, sub, benadering }. Bij garagesales en rommelroutes kent de site
@@ -75,8 +76,12 @@
     if (rij.length > 1) url += '&waypoints=' + rij.slice(0, -1).map(punt).join('%7C');
     return url;
   }
-  function appleLink() { return 'https://maps.apple.com/?daddr=' + punt(stops[0]) + '&dirflg=' + (vervoer === 'lopen' ? 'w' : 'd'); }
-  function wazeLink() { return 'https://waze.com/ul?ll=' + punt(stops[0]).replace(',', '%2C') + '&navigate=yes'; }
+  function appleLink() {
+    var modus = { auto: 'driving', fiets: 'cycling', lopen: 'walking' }[vervoer] || 'driving';
+    return 'https://maps.apple.com/directions?destination=' + punt(stops[stops.length - 1]) +
+      stops.slice(0, -1).map(function (s) { return '&waypoint=' + punt(s); }).join('') + '&mode=' + modus;
+  }
+  function wazeLink(s) { return 'https://waze.com/ul?ll=' + punt(s).replace(',', '%2C') + '&navigate=yes'; }
 
   // Kortste volgorde (dichtstbijzijnde eerst), vanaf je plek als die bekend is.
   function afstand(a, b) {
@@ -178,9 +183,13 @@
     if (gebied) html += '<p class="yg-routepaneel__let">' + esc(YG.t('rt.approx')) + '</p>';
     html += '<a class="yg-btn yg-btn--primary yg-btn--block" href="' + esc(googleLink()) + '" target="_blank" rel="noopener">' + esc(YG.t('rt.google')) + '</a>';
     if (stops.length > MAX_GOOGLE) html += '<p class="yg-meta">' + esc(YG.t('rt.max', { n: MAX_GOOGLE })) + '</p>';
-    html += '<div class="yg-routepaneel__apps"><a class="yg-btn yg-btn--outline" href="' + esc(appleLink()) + '" target="_blank" rel="noopener">' + esc(YG.t('rt.apple')) + '</a>' +
-      '<a class="yg-btn yg-btn--outline" href="' + esc(wazeLink()) + '" target="_blank" rel="noopener">' + esc(YG.t('rt.waze')) + '</a></div>';
-    if (stops.length > 1) html += '<p class="yg-meta">' + esc(YG.t('rt.firstOnly')) + '</p>';
+    html += '<a class="yg-btn yg-btn--outline yg-btn--block" href="' + esc(appleLink()) + '" target="_blank" rel="noopener">' + esc(YG.t('rt.apple')) + '</a>';
+    // Waze: één bestemming per link, dus een knop per stop.
+    html += '<div class="yg-routepaneel__waze"><span class="yg-label">' + esc(YG.t(stops.length > 1 ? 'rt.wazeEach' : 'rt.waze')) + '</span><div class="yg-routepaneel__apps">' +
+      stops.map(function (s, i) {
+        return '<a class="yg-btn yg-btn--outline" href="' + esc(wazeLink(s)) + '" target="_blank" rel="noopener" aria-label="' + esc(YG.t('rt.wazeTo', { t: s.titel })) + '">' +
+          (stops.length > 1 ? '<span class="yg-stop yg-stop--' + s.soort + '" aria-hidden="true">' + (i + 1) + '</span>' : esc(YG.t('rt.waze'))) + '</a>';
+      }).join('') + '</div></div>';
     html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="leeg">' + esc(YG.t('rt.clear')) + '</button>';
     paneel.innerHTML = html;
   }

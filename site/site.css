@@ -441,8 +441,11 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-routelijst__btns button { width: 36px; height: 36px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); font-size: 16px; cursor: pointer; }
 .yg-routelijst__btns button:disabled { opacity: .35; cursor: default; }
 .yg-routepaneel__let { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFF8E8; border: 1px dashed var(--yg-amber); font-size: 14px; }
-.yg-routepaneel__apps { display: flex; gap: 8px; }
-.yg-routepaneel__apps .yg-btn { flex: 1; }
+.yg-routepaneel__apps { display: flex; flex-wrap: wrap; gap: 8px; }
+.yg-routepaneel__apps .yg-btn { flex: 1 0 auto; min-width: 52px; }
+.yg-routepaneel__apps .yg-stop { width: 26px; height: 26px; font-size: 12px; border-width: 2px; box-shadow: none; }
+.yg-routepaneel__waze { display: grid; gap: 6px; }
+.yg-routepaneel__waze .yg-label { font-size: 14px; font-weight: 600; }
 .yg-routepaneel .yg-btn--ghost { align-self: flex-start; }
 .yg-routeknop[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
 .yg-stop--markt { background: var(--yg-forest); }
