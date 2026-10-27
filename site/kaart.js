@@ -19,6 +19,7 @@
   var CARTO_KEY = 'cb1_2pvc_1_3258ad842f08e23ffc14ee4e';
   var CACHE = 'yg-site-listings-2';
   var NL_MIDDEN = { lat: 52.2, lng: 5.3 };
+  var GROEP_TOT_ZOOM = 10;
 
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
 
@@ -34,6 +35,7 @@
   function periode(wanneer) {
     var v = vandaagISO(), wd = weekdag(v);
     if (wanneer === 'vandaag') return [v, v];
+    if (wanneer === 'alles') return [v, plus(v, 365)];
     var za = wd === 6 ? v : wd === 0 ? plus(v, -1) : plus(v, 6 - wd);
     if (wanneer === 'volgend') return [plus(za, 7), plus(za, 8)];
     if (wanneer === 'za') return [za, za];
@@ -104,21 +106,26 @@
       });
   }
 
-  // Verkopen in een periode; dagen = welke dagen van de periode hij open is.
+  // Verkopen in een periode; dagen = welke dagen van de periode hij open is
+  // (hooguit een maand, voor langlopende listings).
   function inPeriode(lijst, p) {
     return lijst.map(function (v) {
+      var van = v.van > p[0] ? v.van : p[0], tot = v.tot < p[1] ? v.tot : p[1];
+      if (van > tot) return null;
       var dagen = [];
-      for (var d = p[0]; d <= p[1]; d = plus(d, 1)) if (v.van <= d && v.tot >= d) dagen.push(d);
-      return dagen.length ? Object.assign({}, v, { dagen: dagen }) : null;
+      for (var d = van; d <= tot && dagen.length < 31; d = plus(d, 1)) dagen.push(d);
+      return Object.assign({}, v, { dagen: dagen });
     }).filter(Boolean);
   }
 
   // Zelfde markt op za én zo als twee listings (komt voor): samenvoegen.
+  // Alleen bij aansluitende dagen; dezelfde markt een maand later blijft apart.
   function voegSamen(lijst) {
     var uit = [];
     lijst.forEach(function (v) {
       var dub = uit.find(function (u) {
-        return u.titel.toLowerCase() === v.titel.toLowerCase() && Math.abs(u.lat - v.lat) < 0.003 && Math.abs(u.lng - v.lng) < 0.003;
+        return u.titel.toLowerCase() === v.titel.toLowerCase() && Math.abs(u.lat - v.lat) < 0.003 && Math.abs(u.lng - v.lng) < 0.003 &&
+          plus(u.dagen[u.dagen.length - 1], 1) >= v.dagen[0] && plus(v.dagen[v.dagen.length - 1], 1) >= u.dagen[0];
       });
       if (dub) { v.dagen.forEach(function (d) { if (dub.dagen.indexOf(d) < 0) dub.dagen.push(d); }); dub.dagen.sort(); }
       else uit.push(v);
@@ -184,8 +191,9 @@
     return 12742 * Math.asin(Math.sqrt(h));
   }
 
-  // Kaartje: "za 9:00", "za en zo 9:00", "zo 10:00".
-  function label(v) {
+  // Kaartje: "za 9:00", "za en zo 9:00", "zo 10:00". Met datum (periode "alles"): "za 31 okt".
+  function label(v, metDatum) {
+    if (metDatum) return new Date(v.dagen[0] + 'T12:00:00Z').toLocaleDateString(taal() === 'nl' ? 'nl-NL' : taal(), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(/\./g, '');
     var d = v.dagen.length === 2 && plus(v.dagen[0], 1) === v.dagen[1]
       ? dagKort(v.dagen[0]) + ' ' + YG.t('time.and') + ' ' + dagKort(v.dagen[1])
       : v.dagen.length > 2 ? dagKort(v.dagen[0]) + '–' + dagKort(v.dagen[v.dagen.length - 1]) : dagKort(v.dagen[0]);
@@ -239,7 +247,41 @@
 
     var laag = L.layerGroup().addTo(map);
     var markers = {};
-    var state = { lijst: [], midden: null, gekozen: null };
+    var state = { lijst: [], midden: null, gekozen: null, metDatum: false };
+    var groep = null, groepVan = null;
+
+    // Ver uitgezoomd (zoals de app): markten dicht bij elkaar worden één bolletje
+    // met het aantal; een losse markt is een stip. Klik op een bolletje zoomt in;
+    // vanaf GROEP_TOT_ZOOM staan de prijskaartjes. Garagesales en rommelroutes
+    // groeperen nooit: het zijn er weinig en ze gaan voor.
+    function groepIcoon(cluster) {
+      var tel = { oprit: 0, route: 0, markt: 0 }, top = 'markt';
+      cluster.getAllChildMarkers().forEach(function (m) { tel[m.ygSoort]++; if (tel[m.ygSoort] > tel[top]) top = m.ygSoort; });
+      var n = cluster.getChildCount(), d = n < 10 ? 34 : n < 50 ? 40 : 48;
+      return L.divIcon({ className: 'yg-pin', iconSize: [0, 0],
+        html: '<span class="yg-groep yg-groep--' + top + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
+    }
+    function tekenGroepen() {
+      if (groep && groepVan === state.lijst) return;
+      if (groep) map.removeLayer(groep);
+      groep = L.markerClusterGroup({
+        disableClusteringAtZoom: GROEP_TOT_ZOOM, maxClusterRadius: 55, chunkedLoading: true, showCoverageOnHover: false,
+        spiderfyOnMaxZoom: false, zoomToBoundsOnClick: true, removeOutsideVisibleBounds: true, iconCreateFunction: groepIcoon
+      });
+      state.lijst.forEach(function (v) {
+        if (v.soort !== 'markt') return;
+        var m = L.marker([v.lat, v.lng], {
+          icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-dot yg-dot--' + v.soort + '"></span>', iconSize: [0, 0] }),
+          title: v.titel, keyboard: true
+        });
+        m.ygSoort = v.soort;
+        m.on('click', function () { if (opties.opKlik) opties.opKlik(v); });
+        groep.addLayer(m);
+      });
+      groepVan = state.lijst;
+      map.addLayer(groep);
+    }
+    function weg() { if (groep) { map.removeLayer(groep); groep = null; groepVan = null; } }
 
     function prioriteit(a, b) {
       if (state.gekozen === a.id) return -1;
@@ -251,13 +293,15 @@
 
     function teken() {
       laag.clearLayers(); markers = {};
+      var groeperen = window.L.markerClusterGroup && !opties.stil && map.getZoom() < GROEP_TOT_ZOOM;
+      if (groeperen) tekenGroepen(); else weg();
       var grens = map.getBounds().pad(0.15);
       var bezet = [];
-      var zichtbaar = state.lijst.filter(function (v) { return grens.contains([v.lat, v.lng]); }).sort(prioriteit);
+      var zichtbaar = state.lijst.filter(function (v) { return grens.contains([v.lat, v.lng]) && !(groeperen && v.soort === 'markt'); }).sort(prioriteit);
       var maxKaartjes = opties.maxKaartjes || 40;
       zichtbaar.forEach(function (v, i) {
         var p = map.latLngToContainerPoint([v.lat, v.lng]);
-        var tekst = label(v);
+        var tekst = label(v, state.metDatum);
         var w = tekst.length * 7.4 + 30;
         var box = { x1: p.x - w / 2 - 4, x2: p.x + w / 2 + 4, y1: p.y - 38, y2: p.y + 2 };
         var vrij = i < maxKaartjes && !bezet.some(function (b) { return box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1; });
@@ -282,20 +326,29 @@
         m.addTo(laag);
         markers[v.id] = m;
       });
-      if (state.midden && opties.toonMidden !== false) {
-        L.marker([state.midden.lat, state.midden.lng], {
-          icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-me" aria-hidden="true"></span>', iconSize: [0, 0] }),
-          interactive: false, zIndexOffset: 2000
-        }).addTo(laag);
+      tekenMidden();
+      if (opties.naTekenen) {
+        var b = map.getBounds();
+        opties.naTekenen(groeperen ? state.lijst.filter(function (v) { return b.contains([v.lat, v.lng]); }) : zichtbaar);
       }
-      if (opties.naTekenen) opties.naTekenen(zichtbaar);
+    }
+
+    function tekenMidden() {
+      if (!state.midden || opties.toonMidden === false) return;
+      L.marker([state.midden.lat, state.midden.lng], {
+        icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-me" aria-hidden="true"></span>', iconSize: [0, 0] }),
+        interactive: false, zIndexOffset: 2000
+      }).addTo(laag);
     }
 
     map.on('moveend', function () { if (state.lijst.length) teken(); });
 
     return {
       map: map,
-      zet: function (lijst, midden) { state.lijst = lijst; state.midden = midden || null; if (map._loaded) teken(); },
+      zet: function (lijst, midden, extra) {
+        state.lijst = lijst; state.midden = midden || null; state.metDatum = !!(extra && extra.metDatum);
+        if (map._loaded) teken();
+      },
       kies: function (id) { state.gekozen = id; teken(); },
       licht: function (id, aan) {
         var m = markers[id]; if (!m) return;
