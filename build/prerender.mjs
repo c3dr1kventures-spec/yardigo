@@ -225,6 +225,13 @@ function vervangVerplicht(html, oud, nieuw, wat) {
   return html.replace(oud, nieuw);
 }
 
+// Sfeerbeeld voor verkopen zonder eigen foto (zelfde keuze als sfeer() in site/kaart.js).
+function sfeerbeeld(id, soort) {
+  let n = 0;
+  for (const c of String(id)) n = (n + c.charCodeAt(0)) % 997;
+  return `/site/img/sfeer/${soort}-${n % 3 + 1}.jpg`;
+}
+
 function renderVerkoopHtml(shell, sale, listings) {
   const soort = soortVan(sale);
   const prive = soort !== 'markt';
@@ -236,7 +243,7 @@ function renderVerkoopHtml(shell, sale, listings) {
   const wanneer = dagEnTijd(sale);
   const waar = prive || sale.address_hidden || !sale.address ? city : sale.address + (city && !sale.address.includes(city) ? ', ' + city : '');
   const fotos = (sale.photos || []).filter(Boolean);
-  const beeld = fotos[0] || `/site/img/${soort}.svg`;
+  const beeld = fotos[0] || sfeerbeeld(sale.id, soort);
   const titel = `${sale.title}, ${fmtDateShort(sale.date)} in ${city}`;
   const metaDesc = (sale.description || `${SOORT_LABEL[soort]} in ${city} op ${wanneer}. Bekijk wat er te koop is, de route en wat er die dag nog meer in de buurt is.`).slice(0, 200);
   const ogImage = fotos[0] || DEFAULT_OG_IMAGE;
@@ -270,6 +277,7 @@ ${NIEUWE_SITE ? '' : `<script>if(!/bot|crawler|spider|crawling/i.test(navigator.
   h = vervangVerplicht(h, '<div class="yg-det__grid" id="inhoud" hidden>', '<div class="yg-det__grid" id="inhoud">', 'inhoud');
   h = vervangVerplicht(h, 'id="galerij" aria-label=""', `id="galerij" aria-label="${esc(sale.title)}"`, 'galerij');
   h = vervangVerplicht(h, '<img id="groot" src="" alt=""', `<img id="groot" src="${esc(beeld)}" alt="${fotos.length ? esc('Foto 1 van ' + fotos.length + ', ' + sale.title) : ''}"`, 'foto');
+  if (!fotos.length) h = vervangVerplicht(h, '<span class="yg-sfeer" id="sfeer" hidden', '<span class="yg-sfeer" id="sfeer"', 'sfeer');
   if (fotos.length < 2) {
     h = h.replace('id="vorige"', 'id="vorige" hidden').replace('id="volgende"', 'id="volgende" hidden').replace('<span class="yg-item__n yg-num" id="teller"></span>', '<span class="yg-item__n yg-num" id="teller" hidden></span>');
   }
@@ -294,7 +302,7 @@ ${NIEUWE_SITE ? '' : `<script>if(!/bot|crawler|spider|crawling/i.test(navigator.
     h = vervangVerplicht(h, '<section class="yg-section" id="dag" hidden', '<section class="yg-section" id="dag"', 'dag');
     h = vervangVerplicht(h, '<ul class="yg-grid" id="dag-lijst"></ul>', '<ul class="yg-grid" id="dag-lijst">' + dag.map(l => {
       const s2 = soortVan(l), f = (l.photos || [])[0];
-      return `<li><a class="yg-item" href="/v/${esc(l.id)}"><span class="yg-item__img"><img src="${esc(f || `/site/img/${s2}.svg`)}" alt="" width="320" height="240" loading="lazy"><span class="yg-badge yg-badge--${s2}">${SOORT_LABEL[s2]}</span></span>` +
+      return `<li><a class="yg-item" href="/v/${esc(l.id)}"><span class="yg-item__img"><img src="${esc(f || sfeerbeeld(l.id, s2))}" alt="" width="320" height="240" loading="lazy"><span class="yg-badge yg-badge--${s2}">${SOORT_LABEL[s2]}</span>${f ? '' : '<span class="yg-sfeer">Sfeerbeeld</span>'}</span>` +
         `<span class="yg-item__txt"><span class="yg-item__day yg-item__day--${s2}">${esc(dagEnTijd(l))}</span><strong>${esc(l.title)}</strong><span class="yg-meta">${esc(cityFromAddress(l.address, l.city))}, ${Math.round(distKm(sale, l))} km</span></span></a></li>`;
     }).join('') + '</ul>', 'dag-lijst');
   }

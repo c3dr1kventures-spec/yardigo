@@ -55,6 +55,7 @@
     });
     if (!knopEl) return;
     knopEl.hidden = !stops.length;
+    document.body.classList.toggle('yg-route-actief', stops.length > 0);
     knopEl.querySelector('span').textContent = YG.t('rt.open', { n: stops.length });
   }
 

@@ -335,6 +335,9 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-item__img .yg-badge { position: absolute; left: 8px; top: 8px; display: none; }
 .yg-item__n { position: absolute; right: 6px; bottom: 6px; padding: 2px 7px; border-radius: 6px; background: rgba(30, 41, 34, .82); color: #FFFFFF; font-size: 12px; font-weight: 600; }
 .yg-item__txt { min-width: 0; display: grid; gap: 2px; }
+/* Sfeerbeeld: geen foto van deze verkoop zelf, dat zeggen we erbij. */
+.yg-sfeer { position: absolute; left: 6px; bottom: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(30, 41, 34, .7); color: #FFFFFF; font-size: 11px; font-weight: 500; }
+.yg-gal__big .yg-sfeer { left: 12px; bottom: 12px; font-size: 13px; padding: 2px 8px; }
 .yg-item__day { font-size: 13px; font-weight: 600; color: var(--yg-forest-dark); }
 .yg-item__day--oprit { color: var(--yg-amber-text); }
 .yg-item__day--route { color: var(--yg-terra-dark); }
@@ -431,6 +434,9 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-routebalk svg { width: 20px; height: 20px; }
 .yg-routebalk:hover { background: #000000; }
 .yg-route-open .yg-routebalk { display: none; }
+/* Ruimte onderaan zodat de routeknop niets van de pagina afdekt. */
+.yg-route-actief { padding-bottom: 76px; }
+.yg-mappage.yg-route-actief { padding-bottom: 0; }
 .yg-routepaneel { position: fixed; z-index: 950; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 599px) { .yg-routepaneel { top: auto; max-height: 85vh; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(30, 41, 34, .25); } }
 .yg-routepaneel__kop { display: flex; align-items: center; justify-content: space-between; }

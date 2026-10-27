@@ -169,8 +169,15 @@
   // Volgorde van belang: garagesales eerst, dan rommelroutes, dan markten.
   var VOLGORDE = { oprit: 0, route: 1, markt: 2 };
 
-  // Beeld bij een verkoop: de eigen foto of het affiche, anders de tekening van de soort.
-  function beeld(v) { return v.foto || '/site/img/' + v.soort + '.svg'; }
+  // Beeld bij een verkoop: de eigen foto of het affiche, anders een sfeerbeeld van
+  // de soort (3 per soort; vast per verkoop, zodat buren afwisselen). Zelfde keuze
+  // als sfeerbeeld() in build/prerender.mjs.
+  function sfeer(v) {
+    var n = 0, id = String(v.id);
+    for (var i = 0; i < id.length; i++) n = (n + id.charCodeAt(i)) % 997;
+    return '/site/img/sfeer/' + v.soort + '-' + (n % 3 + 1) + '.jpg';
+  }
+  function beeld(v) { return v.foto || sfeer(v); }
 
   // ── Kaartjes met beeld (startpagina, verkooppagina) ────────────────
   var SOORT_TEKST = { oprit: 'type.driveway', route: 'type.route', markt: 'type.market' };
@@ -187,6 +194,7 @@
     var html = '<img src="' + esc(beeld(v)) + '" alt="' + esc(alt) + '" width="320" height="240" loading="lazy" decoding="async">';
     if (klein) return html;
     html += '<span class="yg-badge yg-badge--' + v.soort + '">' + esc(soortTekst(v)) + '</span>';
+    if (!v.foto) html += '<span class="yg-sfeer">' + esc(YG.t('img.stock')) + '</span>';
     if (v.fotos > 1) html += '<span class="yg-item__n yg-num">' + esc(YG.t('home.photos', { n: v.fotos })) + '</span>';
     return html;
   }

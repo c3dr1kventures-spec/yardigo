@@ -33,6 +33,7 @@
     fotos = v.fotosAlle.length ? v.fotosAlle : [K.beeld(v)];
     var meer = fotos.length > 1;
     $('galerij').classList.toggle('yg-gal--tekening', !v.fotosAlle.length);
+    $('sfeer').hidden = v.fotosAlle.length > 0;
     ['vorige', 'volgende', 'teller', 'duimen'].forEach(function (id) { $(id).hidden = !meer; });
     $('duimen').innerHTML = meer ? fotos.map(function (src, i) {
       return '<button type="button" aria-label="' + K.esc(YG.t('det.photoOf', { i: i + 1, n: fotos.length })) + '"><img src="' + K.esc(src) + '" alt="" loading="lazy"></button>';
