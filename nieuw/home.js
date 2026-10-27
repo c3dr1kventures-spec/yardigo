@@ -36,19 +36,36 @@
   }
 
   // Zonder plek tonen de lijsten Nederland en België; Duitse verkopen alleen in het Duits.
-  // De kaart zelf toont alles. Oostgrens van Nederland ligt op 7,23 graden.
-  function inGebied(v) { return !!state.plek || YG.taal === 'de' || v.lng <= 7.25; }
+  // De kaart zelf toont alles.
+  function inGebied(v) { return !!state.plek || YG.taal === 'de' || !K.inDuitsland(v); }
 
   function weekend() { return K.voegSamen(K.inPeriode(alles, K.periode(state.wanneer))); }
-  function selectie() { return sorteer(weekend().filter(function (v) { return state.lagen[v.soort]; })); }
 
   // Komende garagesales en rommelroutes, ook na dit weekend: ze zijn zeldzaam.
+  // Elke verkoop telt met zijn eerste dag; twee listings van dezelfde verkoop op
+  // opeenvolgende dagen (za en zo) worden er één, losse data blijven los.
+  var garageCache = { sleutel: null, lijst: [] };
   function garages() {
+    var sleutel = state.plek ? state.plek.lat + ',' + state.plek.lng : '-';
+    if (garageCache.sleutel === sleutel) return garageCache.lijst;
     var v = K.vandaagISO(), tot = new Date(Date.now() + GARAGE_DAGEN * 864e5).toISOString().slice(0, 10);
-    var lijst = K.voegSamen(K.inPeriode(alles, [v, tot])).filter(function (x) { return x.soort !== 'markt' && inGebied(x); });
-    if (state.plek) return sorteer(lijst);
+    var lijst = [];
+    alles.forEach(function (x) {
+      if (x.soort === 'markt' || x.tot < v || x.van > tot || !inGebied(x)) return;
+      var eerste = x.van < v ? v : x.van;
+      var dagen = x.tot > eerste ? [eerste, K.plus(eerste, 1)] : [eerste];
+      var dub = lijst.find(function (u) {
+        return u.titel.toLowerCase() === x.titel.toLowerCase() && Math.abs(u.lat - x.lat) < 0.003 && Math.abs(u.lng - x.lng) < 0.003 &&
+          (u.dagen[u.dagen.length - 1] === K.plus(eerste, -1) || K.plus(u.dagen[0], -1) === eerste);
+      });
+      if (dub) { if (dub.dagen.indexOf(eerste) < 0) dub.dagen.push(eerste); dub.dagen.sort(); }
+      else lijst.push(Object.assign({}, x, { dagen: dagen }));
+    });
+    if (state.plek) lijst = sorteer(lijst);
     // Met foto of affiche eerst: daar is dit blok voor.
-    return lijst.sort(function (a, b) { return (!a.foto - !b.foto) || (a.dagen[0] + (a.begin || '')).localeCompare(b.dagen[0] + (b.begin || '')); });
+    else lijst.sort(function (a, b) { return (!a.foto - !b.foto) || (a.dagen[0] + (a.begin || '')).localeCompare(b.dagen[0] + (b.begin || '')); });
+    garageCache = { sleutel: sleutel, lijst: lijst };
+    return lijst;
   }
 
   function kaartje(v) {
@@ -65,9 +82,9 @@
     return YG.t(k, { p: state.plek ? state.plek.naam : '' });
   }
 
-  function lagen() {
+  function lagen(wk) {
     var per = { oprit: 0, route: 0, markt: 0 };
-    weekend().forEach(function (v) { per[v.soort]++; });
+    wk.forEach(function (v) { per[v.soort]++; });
     document.querySelectorAll('#lagen button').forEach(function (b) {
       var s = b.getAttribute('data-s');
       b.setAttribute('aria-pressed', String(state.lagen[s]));
@@ -76,10 +93,11 @@
   }
 
   function toon() {
-    var lijst = selectie();
+    var wk = weekend();
+    var lijst = sorteer(wk.filter(function (v) { return state.lagen[v.soort]; }));
     var n = lijst.length;
     sluitPopup();
-    lagen();
+    lagen(wk);
 
     $('cta').textContent = state.plek ? YG.t('home.ctaNear', { n: n, p: state.plek.naam }) : YG.t('home.ctaAll', { n: n });
     $('alle').textContent = YG.t('home.allN', { n: n });
@@ -94,8 +112,9 @@
     // Wat al bij de garagesales staat, komt hier niet nog een keer.
     var ul = $('lijst');
     ul.innerHTML = '';
-    lijst.filter(function (v) { return !alGetoond[v.id] && inGebied(v); }).slice(0, 8).forEach(function (v) { ul.appendChild(kaartje(v)); });
-    $('leeg').hidden = n > 0;
+    var rest = lijst.filter(function (v) { return !alGetoond[v.id] && inGebied(v); });
+    rest.slice(0, 8).forEach(function (v) { ul.appendChild(kaartje(v)); });
+    $('leeg').hidden = rest.length > 0;
 
     var gu = $('garages');
     gu.innerHTML = '';

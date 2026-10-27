@@ -50,18 +50,23 @@
 
   // ── Knoppen ──────────────────────────────────────────────────────────
   function agenda() {
-    var d = v.dagen[0].replace(/-/g, ''), e = v.dagen[v.dagen.length - 1].replace(/-/g, '');
+    var d = v.dagen[0].replace(/-/g, '');
     var t = function (x) { return x ? x.slice(0, 5).replace(':', '') + '00' : ''; };
     var regels = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//YardiGo//NL', 'BEGIN:VEVENT',
       'UID:' + v.id + '@yardigo.nl', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z'];
-    if (v.begin) regels.push('DTSTART:' + d + 'T' + t(v.begin), 'DTEND:' + (v.dagen.length > 1 ? e : d) + 'T' + t(v.eind || v.begin));
-    else regels.push('DTSTART;VALUE=DATE:' + d, 'DTEND;VALUE=DATE:' + K.plus(v.dagen[v.dagen.length - 1], 1).replace(/-/g, ''));
+    // Meerdere dagen met tijden: elke dag hetzelfde tijdvak. Zonder eindtijd drie uur.
+    var eind = v.eind || (v.begin && ('0' + Math.min(23, parseInt(v.begin, 10) + 3)).slice(-2) + v.begin.slice(2, 5));
+    if (v.begin) {
+      regels.push('DTSTART:' + d + 'T' + t(v.begin), 'DTEND:' + d + 'T' + t(eind));
+      if (v.dagen.length > 1) regels.push('RRULE:FREQ=DAILY;COUNT=' + v.dagen.length);
+    } else regels.push('DTSTART;VALUE=DATE:' + d, 'DTEND;VALUE=DATE:' + K.plus(v.dagen[v.dagen.length - 1], 1).replace(/-/g, ''));
     regels.push('SUMMARY:' + v.titel.replace(/[,;\n]/g, ' '), 'LOCATION:' + (v.adres || v.plaats).replace(/[,;\n]/g, ' '),
       'URL:' + location.href, 'END:VEVENT', 'END:VCALENDAR');
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([regels.join('\r\n')], { type: 'text/calendar' }));
     a.download = 'yardigo-' + v.id.slice(0, 8) + '.ics';
     document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
 
   function delen() {
@@ -109,6 +114,7 @@
     $('bron').textContent = v.bron ? YG.t('det.source', { s: v.bron }) : '';
     $('eigenaar').hidden = !(prive && v.fotosAlle.length <= 1);
 
+    $('galerij').setAttribute('aria-label', v.titel);
     galerij();
     $('laden').hidden = true;
     $('inhoud').hidden = false;
@@ -125,7 +131,7 @@
   function dag(alles) {
     var d = v.dagen[0];
     var lijst = K.voegSamen(K.inPeriode(alles, [d, d]))
-      .filter(function (x) { return x.id !== v.id; })
+      .filter(function (x) { return x.id !== v.id && !(x.titel.toLowerCase() === v.titel.toLowerCase() && K.afstand(v, x) < 0.5); })
       .map(function (x) { return Object.assign(x, { km: K.afstand(v, x) }); })
       .filter(function (x) { return x.km <= DAG_KM; })
       .sort(function (a, b) { return (K.VOLGORDE[a.soort] - K.VOLGORDE[b.soort]) || a.km - b.km; })
@@ -147,7 +153,8 @@
       if (!x) { fout(YG.t('det.notFound')); return; }
       v = x;
       vulIn();
-      return K.laad().then(dag);
+      // Lukt de lijst niet, dan blijft de verkoop staan; alleen het dagblok valt weg.
+      K.laad().then(dag).catch(function (e) { console.error(e); $('dag').hidden = true; });
     }).catch(function (e) { console.error(e); fout(YG.t('det.notFound')); });
   }
 

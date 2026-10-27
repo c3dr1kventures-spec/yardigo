@@ -144,7 +144,7 @@
 
   function beeldHtml(v, klein) {
     var alt = v.foto ? YG.t('home.poster', { t: v.titel }) : '';
-    var html = '<img src="' + esc(beeld(v)) + '" alt="' + esc(alt) + '" loading="lazy" decoding="async">';
+    var html = '<img src="' + esc(beeld(v)) + '" alt="' + esc(alt) + '" width="320" height="240" loading="lazy" decoding="async">';
     if (klein) return html;
     html += '<span class="yg-badge yg-badge--' + v.soort + '">' + esc(soortTekst(v)) + '</span>';
     if (v.fotos > 1) html += '<span class="yg-item__n yg-num">' + esc(YG.t('home.photos', { n: v.fotos })) + '</span>';
@@ -161,6 +161,21 @@
         '<span class="yg-meta">' + esc([v.plaats, v.km != null ? Math.round(v.km) + ' ' + YG.t('unit.km') : ''].filter(Boolean).join(', ')) + '</span>' +
       '</span></a>';
     return li;
+  }
+
+  // Ligt een punt duidelijk in Duitsland? Per breedtegraad het oostelijkste
+  // stuk Nederland of België (Vaals, Kerkrade, Venlo, Dinxperlo, Losser, Ter
+  // Apel). Twijfel telt als Nederland: liever een Duitse verkoop te veel in de
+  // lijst dan een Nederlandse kwijt. Keulen, Düsseldorf en Münster vallen eruit.
+  var GRENS = [[50.3, 6.42], [50.75, 6.05], [50.9, 6.1], [51.0, 6.02], [51.2, 6.17], [51.35, 6.23], [51.5, 6.24], [51.7, 6.1],
+    [51.8, 6.3], [51.86, 6.52], [51.97, 6.84], [52.2, 7.08], [52.45, 7.08], [52.7, 7.1], [53.0, 7.22], [53.6, 7.25]];
+  function inDuitsland(v) {
+    if (v.lat < GRENS[0][0] || v.lat > 53.8) return false;
+    for (var i = 1; i < GRENS.length; i++) {
+      var a = GRENS[i - 1], b = GRENS[i];
+      if (v.lat <= b[0]) return v.lng > Math.max(a[1], b[1]) + 0.03;
+    }
+    return v.lng > GRENS[GRENS.length - 1][1] + 0.03;
   }
 
   function afstand(a, b) {
@@ -296,7 +311,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    detail: detail, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
+    detail: detail, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN
   };
 })();
