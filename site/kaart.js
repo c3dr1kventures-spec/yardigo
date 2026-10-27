@@ -88,6 +88,39 @@
       });
   }
 
+  // Kringloop- en tweedehandswinkels (OpenStreetMap) via get_winkels_publiek, in porties van 1000.
+  var WINKEL_CACHE = 'yg-site-winkels-1';
+  function winkels() {
+    var c = opslag(function () { return JSON.parse(sessionStorage.getItem(WINKEL_CACHE)); });
+    if (c && c.t > Date.now() - 60 * 60 * 1000 && Array.isArray(c.d)) return Promise.resolve(c.d);
+    var alle = [];
+    function deel(offset) {
+      return fetch(SUPABASE_URL + '/rest/v1/rpc/get_winkels_publiek?order=id&limit=1000&offset=' + offset, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: '{}'
+      }).then(function (r) { if (!r.ok) throw new Error('winkels ' + r.status); return r.json(); })
+        .then(function (rij) { alle = alle.concat(rij); return rij.length < 1000 ? alle : deel(offset + 1000); });
+    }
+    return deel(0).then(function (rij) {
+      var lijst = rij.map(function (w) {
+        return { id: 'w' + w.id, naam: w.naam || '', soort: w.soort, lat: w.latitude, lng: w.longitude, plaats: w.plaats || '',
+          adres: [w.straat, w.huisnummer].filter(Boolean).join(' '), tijden: w.openingstijden || '', website: w.website || '' };
+      });
+      opslag(function () { sessionStorage.setItem(WINKEL_CACHE, JSON.stringify({ t: Date.now(), d: lijst })); });
+      return lijst;
+    });
+  }
+
+  // OSM-openingstijden leesbaar: "Mo-Fr 09:00-17:00; Sa 10:00-16:00" → "ma-vr 09:00-17:00, za 10:00-16:00".
+  function openingstijden(t) {
+    if (!t) return '';
+    var dagen = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    return String(t).replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su)\b/g, function (d) {
+      return new Date(Date.UTC(2024, 0, 7 + dagen.indexOf(d))).toLocaleDateString(taal() === 'nl' ? 'nl-NL' : taal(), { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+    }).replace(/\bPH\b/g, YG.t('shop.holidays')).replace(/\boff\b/g, YG.t('state.closed').toLowerCase()).replace(/\s*;\s*/g, ', ');
+  }
+
   // Eén verkoop met alle foto's en de beschrijving; zelfde privacyregels als de lijst.
   function detail(id) {
     return fetch(SUPABASE_URL + '/rest/v1/rpc/get_listing_detail', {
@@ -185,6 +218,28 @@
     return v.lng > GRENS[GRENS.length - 1][1] + 0.03;
   }
 
+  // ── Route (site/route.js) en kringloopwinkels ─────────────────────────
+  var WINKEL_TEKST = { kringloop: 'shop.thrift', tweedehands: 'shop.secondhand', antiek: 'shop.antique', goede_doel: 'shop.charity' };
+  function winkelSoort(w) { return YG.t(WINKEL_TEKST[w.soort] || 'shop.secondhand'); }
+  function stopVan(v) {
+    return { id: v.id, titel: v.titel, soort: v.soort, lat: v.lat, lng: v.lng, plaats: v.plaats, sub: dagTekst(v), benadering: !!v.benadering };
+  }
+  function stopWinkel(w) {
+    return { id: w.id, titel: w.naam || winkelSoort(w), soort: 'winkel', lat: w.lat, lng: w.lng, plaats: w.plaats, sub: winkelSoort(w), benadering: false };
+  }
+  function routeKnop(stop) { return window.YGRoute ? window.YGRoute.knop(stop) : ''; }
+  function winkelPopupHtml(w) {
+    var tijden = openingstijden(w.tijden);
+    var route = 'https://www.google.com/maps/dir/?api=1&destination=' + w.lat.toFixed(5) + ',' + w.lng.toFixed(5);
+    return '<span class="yg-badge yg-badge--shop">' + esc(winkelSoort(w)) + '</span>' +
+      '<h3>' + esc(w.naam || winkelSoort(w)) + '</h3>' +
+      '<p>' + esc([w.adres, w.plaats].filter(Boolean).join(', ')) + (tijden ? '<br>' + esc(YG.t('shop.hours')) + ': ' + esc(tijden) : '') +
+      (w.website && /^https?:\/\//.test(w.website) ? '<br><a href="' + esc(w.website) + '" target="_blank" rel="noopener nofollow">' + esc(YG.t('shop.site')) + '</a>' : '') + '</p>' +
+      '<div class="yg-btns">' + routeKnop(stopWinkel(w)) +
+      '<a class="yg-btn yg-btn--outline" href="' + route + '" target="_blank" rel="noopener">' + esc(YG.t('act.route')) + '</a></div>' +
+      '<p class="yg-meta" style="margin:8px 0 0;font-size:12px">' + esc(YG.t('shop.osm')) + '</p>';
+  }
+
   function afstand(a, b) {
     var r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
     var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
@@ -247,41 +302,57 @@
 
     var laag = L.layerGroup().addTo(map);
     var markers = {};
-    var state = { lijst: [], midden: null, gekozen: null, metDatum: false };
-    var groep = null, groepVan = null;
+    var state = { lijst: [], winkels: [], midden: null, gekozen: null, metDatum: false };
+    var groepen = null, groepenVan = null, versie = 0;
 
-    // Ver uitgezoomd (zoals de app): markten dicht bij elkaar worden één bolletje
-    // met het aantal; een losse markt is een stip. Klik op een bolletje zoomt in;
-    // vanaf GROEP_TOT_ZOOM staan de prijskaartjes. Garagesales en rommelroutes
-    // groeperen nooit: het zijn er weinig en ze gaan voor.
-    function groepIcoon(cluster) {
-      var tel = { oprit: 0, route: 0, markt: 0 }, top = 'markt';
-      cluster.getAllChildMarkers().forEach(function (m) { tel[m.ygSoort]++; if (tel[m.ygSoort] > tel[top]) top = m.ygSoort; });
-      var n = cluster.getChildCount(), d = n < 10 ? 34 : n < 50 ? 40 : 48;
-      return L.divIcon({ className: 'yg-pin', iconSize: [0, 0],
-        html: '<span class="yg-groep yg-groep--' + top + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
+    // Ver uitgezoomd (zoals de app): verkopen dicht bij elkaar worden één
+    // bolletje met het aantal; een losse verkoop is een stip. Elke soort heeft
+    // eigen bolletjes in eigen kleur, zodat garagesales niet in het groen van de
+    // markten verdwijnen. Klik op een bolletje zoomt in; vanaf GROEP_TOT_ZOOM
+    // staan de prijskaartjes.
+    function groepIcoon(soort) {
+      return function (cluster) {
+        // Winkels kleiner: verkopen blijven het opvallendst.
+        var n = cluster.getChildCount(), d = soort === 'winkel' ? (n < 10 ? 24 : n < 50 ? 28 : 32) : n < 10 ? 34 : n < 50 ? 40 : 48;
+        return L.divIcon({ className: 'yg-pin', iconSize: [0, 0],
+          html: '<span class="yg-groep yg-groep--' + soort + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
+      };
+    }
+    function nieuweGroep(soort) {
+      return L.markerClusterGroup({
+        disableClusteringAtZoom: GROEP_TOT_ZOOM, maxClusterRadius: soort === 'markt' ? 55 : 45, chunkedLoading: true,
+        showCoverageOnHover: false, spiderfyOnMaxZoom: false, zoomToBoundsOnClick: true, removeOutsideVisibleBounds: true,
+        iconCreateFunction: groepIcoon(soort)
+      });
     }
     function tekenGroepen() {
-      if (groep && groepVan === state.lijst) return;
-      if (groep) map.removeLayer(groep);
-      groep = L.markerClusterGroup({
-        disableClusteringAtZoom: GROEP_TOT_ZOOM, maxClusterRadius: 55, chunkedLoading: true, showCoverageOnHover: false,
-        spiderfyOnMaxZoom: false, zoomToBoundsOnClick: true, removeOutsideVisibleBounds: true, iconCreateFunction: groepIcoon
-      });
+      if (groepen && groepenVan === versie) return;
+      weg();
+      groepen = { winkel: nieuweGroep('winkel'), markt: nieuweGroep('markt'), route: nieuweGroep('route'), oprit: nieuweGroep('oprit') };
       state.lijst.forEach(function (v) {
-        if (v.soort !== 'markt') return;
         var m = L.marker([v.lat, v.lng], {
           icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-dot yg-dot--' + v.soort + '"></span>', iconSize: [0, 0] }),
           title: v.titel, keyboard: true
         });
-        m.ygSoort = v.soort;
         m.on('click', function () { if (opties.opKlik) opties.opKlik(v); });
-        groep.addLayer(m);
+        groepen[v.soort].addLayer(m);
       });
-      groepVan = state.lijst;
-      map.addLayer(groep);
+      state.winkels.forEach(function (w) { groepen.winkel.addLayer(winkelPin(w)); });
+      // Volgorde = welke bovenop ligt: garagesales boven, winkels onder.
+      ['winkel', 'markt', 'route', 'oprit'].forEach(function (k) { map.addLayer(groepen[k]); });
+      groepenVan = versie;
     }
-    function weg() { if (groep) { map.removeLayer(groep); groep = null; groepVan = null; } }
+    function weg() { if (groepen) { Object.keys(groepen).forEach(function (k) { map.removeLayer(groepen[k]); }); groepen = null; groepenVan = null; } }
+
+    // Kringloopwinkel: vierkante bruine pin.
+    function winkelPin(w) {
+      var m = L.marker([w.lat, w.lng], {
+        icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-shop"></span>', iconSize: [0, 0] }),
+        title: w.naam || '', keyboard: true, zIndexOffset: -100
+      });
+      m.on('click', function () { if (opties.opWinkel) opties.opWinkel(w); });
+      return m;
+    }
 
     function prioriteit(a, b) {
       if (state.gekozen === a.id) return -1;
@@ -297,7 +368,8 @@
       if (groeperen) tekenGroepen(); else weg();
       var grens = map.getBounds().pad(0.15);
       var bezet = [];
-      var zichtbaar = state.lijst.filter(function (v) { return grens.contains([v.lat, v.lng]) && !(groeperen && v.soort === 'markt'); }).sort(prioriteit);
+      var zichtbaar = groeperen ? [] : state.lijst.filter(function (v) { return grens.contains([v.lat, v.lng]); }).sort(prioriteit);
+      if (!groeperen) state.winkels.forEach(function (w) { if (grens.contains([w.lat, w.lng])) winkelPin(w).addTo(laag); });
       var maxKaartjes = opties.maxKaartjes || 40;
       zichtbaar.forEach(function (v, i) {
         var p = map.latLngToContainerPoint([v.lat, v.lng]);
@@ -341,15 +413,16 @@
       }).addTo(laag);
     }
 
-    map.on('moveend', function () { if (state.lijst.length) teken(); });
+    map.on('moveend', function () { if (state.lijst.length || state.winkels.length) teken(); });
 
     return {
       map: map,
       zet: function (lijst, midden, extra) {
-        state.lijst = lijst; state.midden = midden || null; state.metDatum = !!(extra && extra.metDatum);
+        state.lijst = lijst; state.midden = midden || null; state.metDatum = !!(extra && extra.metDatum); versie++;
         if (map._loaded) teken();
       },
       kies: function (id) { state.gekozen = id; teken(); },
+      winkels: function (lijst) { state.winkels = lijst || []; versie++; if (map._loaded) teken(); },
       licht: function (id, aan) {
         var m = markers[id]; if (!m) return;
         if (m.getElement) { var e = m.getElement(); if (e && e.firstChild) e.firstChild.classList.toggle('is-selected', aan || state.gekozen === id); }
@@ -364,7 +437,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    detail: detail, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
+    detail: detail, winkels: winkels, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN
   };
 })();
