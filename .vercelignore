@@ -5,3 +5,19 @@ android
 *.backup
 macos/
 supabase/data/
+
+# Niet nodig voor de site: houdt elke deploy klein (opslaglimiet Vercel)
+# en zet interne stukken (plannen, SQL, functiecode) niet online.
+*.md
+*.sql
+*.sh
+supabase/
+www/
+appstore-screenshots/
+ipad_screenshots/
+screenshots/
+screenshots_resized/
+ios_icons/
+ios_icons_OLD_2026-04-05/
+play-store-assets/
+test_uploads/
