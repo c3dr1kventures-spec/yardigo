@@ -248,6 +248,124 @@
     meld(t('rt.ordered'));
   }
 
+  // ── Reistijden over de weg (Edge Function route-plan → OpenRouteService) ──
+  // Alleen opnieuw rekenen als de punten of het vervoer veranderen; datum,
+  // vertrektijd en bezoekduur rekenen we hier zelf door. Lukt het niet, dan
+  // blijft de vogelvlucht-schatting staan, zonder aankomsttijden.
+  var BEZOEK = { oprit: 20, route: 90, markt: 60, winkel: 30 };
+  var BEZOEK_KEUZE = [10, 15, 20, 30, 45, 60, 90, 120, 180];
+  var reis = null, reisTimer = null, reisBezig = false;
+  var omweg = {}, omwegSleutel = '';
+  function bezoekVan(s) { return s.bezoek || BEZOEK[s.soort] || 30; }
+  function routedienst(body) {
+    var K = window.YGKaart;
+    if (!K) return Promise.reject(new Error('geen kaart.js'));
+    return fetch(K.SUPABASE_URL + '/functions/v1/route-plan', {
+      method: 'POST',
+      headers: { apikey: K.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + K.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json().then(function (j) { if (!r.ok || j.fout) throw new Error(j.fout || r.status); return j; }); });
+  }
+  function lngLat(p) { return [+p.lng.toFixed(4), +p.lat.toFixed(4)]; }
+  // De punten waar de reis langs gaat: start, de stops die nog komen, einde.
+  function reisPunten() {
+    var p = teBezoeken().slice();
+    if (actief.start) p.unshift(actief.start);
+    var e = eindPunt();
+    if (e && p.length) p.push(e);
+    return p;
+  }
+  function reisSleutel() { return actief.vervoer + '|' + reisPunten().map(function (p) { return lngLat(p).join(','); }).join(';'); }
+  function planReis() {
+    var sleutel = reisSleutel(), p = reisPunten();
+    if (p.length < 2) { reis = null; return; }
+    if (reis && reis.sleutel === sleutel) return;
+    clearTimeout(reisTimer);
+    reisTimer = setTimeout(function () {
+      reisBezig = true;
+      routedienst({ actie: 'lijn', vervoer: actief.vervoer, punten: p.map(lngLat) }).then(function (j) {
+        reis = { sleutel: sleutel, afstand: j.afstand, duur: j.duur, delen: j.delen || [], lijn: j.lijn || [] };
+      }).catch(function () {
+        reis = { sleutel: sleutel, fout: true };
+      }).then(function () { reisBezig = false; if (reisSleutel() === sleutel) { tekenPaneel(); tekenKaart(); } });
+    }, 700);
+  }
+  function minNaarTijd(m) { m = Math.round(m); return Math.floor(m / 60 % 24) + ':' + ('0' + m % 60).slice(-2); }
+  function tijdNaarMin(s) { var m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  // Openingsvensters (minuten) van een stop op de dag van de route; null = onbekend.
+  function vensters(s) {
+    if (s.soort === 'winkel') return openOp(s.tijden, routeDatum());
+    var b = tijdNaarMin(s.begin), e = tijdNaarMin(s.eind);
+    return b != null ? [[b, e != null && e > b ? e : 24 * 60]] : null;
+  }
+  // Aankomst, wachttijd en melding per stop, uit de reistijden en de bezoekduur.
+  function planning() {
+    if (!reis || reis.fout || reis.sleutel !== reisSleutel()) return null;
+    var rij = teBezoeken(), uit = {}, t = tijdNaarMin(actief.vertrek) || 540, deel = 0;
+    rij.forEach(function (s, i) {
+      if (actief.start || i > 0) t += (reis.delen[deel++] || { duur: 0 }).duur / 60;
+      var aankomst = t, v = vensters(s), wacht = 0, laat = false;
+      if (v && v.length) {
+        var blok = v.filter(function (x) { return x[1] > aankomst; })[0];
+        if (!blok) laat = true;
+        else if (blok[0] > aankomst) wacht = blok[0] - aankomst;
+      }
+      uit[s.id] = { aankomst: aankomst, wacht: wacht, laat: laat };
+      t = aankomst + wacht + bezoekVan(s);
+    });
+    if (eindPunt() && rij.length) t += (reis.delen[deel] || { duur: 0 }).duur / 60;
+    return { stops: uit, klaar: t, km: reis.afstand / 1000, reistijd: reis.duur / 60 };
+  }
+  function duurTekst(min) { min = Math.round(min); return min < 60 ? t('rt.min', { n: min }) : min % 60 ? t('rt.hmin', { u: Math.floor(min / 60), m: ('0' + min % 60).slice(-2) }) : t('rt.h', { u: min / 60 }); }
+
+  // Slimme volgorde via de routedienst: past in de openingstijden, met bezoekduur.
+  function slimOverDeWeg() {
+    var rij = teBezoeken(), rest = stops.filter(function (s) { return rij.indexOf(s) < 0; });
+    if (rij.length < 2) { slimmeVolgorde(); return; }
+    var start = actief.start || lees('yg-plek');
+    if (!start || typeof start.lat !== 'number') start = rij[0];
+    var knop = paneel && paneel.querySelector('[data-actie="kortste"]');
+    if (knop) { knop.disabled = true; knop.textContent = t('rt.ordering'); }
+    routedienst({
+      actie: 'optimaliseer', vervoer: actief.vervoer, start: lngLat(start), eind: eindPunt() ? lngLat(eindPunt()) : null,
+      vertrek: (tijdNaarMin(actief.vertrek) || 540) * 60,
+      stops: rij.map(function (s) {
+        var v = vensters(s) || [];
+        return { id: s.id, plek: lngLat(s), bezoek: bezoekVan(s) * 60, vensters: v.map(function (x) { return [x[0] * 60, x[1] * 60]; }) };
+      })
+    }).then(function (j) {
+      var per = {};
+      rij.forEach(function (s) { per[s.id] = s; });
+      var nieuw = j.volgorde.map(function (id) { return per[id]; }).filter(Boolean);
+      var past = j.niet.map(function (id) { return per[id]; }).filter(Boolean);
+      stops.splice.apply(stops, [0, stops.length].concat(nieuw, past, rest));
+      bewaar();
+      meld(past.length ? t('rt.orderedNot', { n: past.length }) : t('rt.orderedRoad'));
+      if (past.length) { var p = paneel && paneel.querySelector('.yg-rt-som'); if (p) p.insertAdjacentHTML('afterend', '<p class="yg-routepaneel__let" role="status">' + esc(t('rt.orderedNot', { n: past.length })) + '</p>'); }
+    }).catch(function () { slimmeVolgorde(); });
+  }
+
+  // Omrijtijd voor de suggesties: één afstandstabel voor route + kandidaten.
+  function planOmweg(lijst) {
+    var p = punten();
+    if (!lijst.length || p.length < 2 || p.length + lijst.length > 27) return;
+    var sleutel = actief.vervoer + '|' + p.map(function (x) { return lngLat(x).join(','); }).join(';') + '|' + lijst.map(function (x) { return x.stop.id; }).sort().join(',');
+    if (sleutel === omwegSleutel) return;
+    omwegSleutel = sleutel;
+    var alle = p.concat(lijst.map(function (x) { return x.stop; }));
+    routedienst({ actie: 'matrix', vervoer: actief.vervoer, punten: alle.map(lngLat) }).then(function (j) {
+      if (omwegSleutel !== sleutel) return;
+      omweg = {};
+      lijst.forEach(function (x, k) {
+        var c = p.length + k, a = Math.max(0, x.na - 1), b = Math.min(p.length - 1, x.na), d = j.duur;
+        if (p.length === 1 || a === b) return;
+        if (d[a][c] == null || d[c][b] == null || d[a][b] == null) return;
+        omweg[x.stop.id] = Math.max(0, (d[a][c] + d[c][b] - d[a][b]) / 60);
+      });
+      tekenPaneel();
+    }).catch(function () { /* dan blijft de afstand in vogelvlucht staan */ });
+  }
+
   // ── Suggesties langs de route ────────────────────────────────────────
   // Verkopen en winkels die op de dag van de route open zijn en dicht bij de
   // lijn tussen je stops liggen. Nooit automatisch toegevoegd. 'bron' laat
@@ -296,7 +414,11 @@
       if (best <= marge) uit.push({ stop: c, km: best, na: na, bron: 'nabij' });
     });
     var volg = { oprit: 0, route: 1, markt: 2, winkel: 3 };
-    return uit.sort(function (a, b) { return (volg[a.stop.soort] - volg[b.stop.soort]) || a.km - b.km; }).slice(0, 5);
+    // Eerst de beste vijf op vogelvlucht kiezen; zodra de omrijtijd bekend is, die volgorde.
+    var top = uit.sort(function (a, b) { return (volg[a.stop.soort] - volg[b.stop.soort]) || a.km - b.km; }).slice(0, 5);
+    var bekend = function (x) { return omweg[x.stop.id] != null; };
+    if (top.every(bekend)) top.sort(function (a, b) { return (volg[a.stop.soort] - volg[b.stop.soort]) || omweg[a.stop.id] - omweg[b.stop.id]; });
+    return top;
   }
   // Toevoegen op de plek waar hij het minst omrijdt: na de stop waar hij het dichtst bij ligt.
   function voegSuggestieToe(id) {
@@ -310,6 +432,7 @@
   function suggestieHtml() {
     laadKandidaten();
     var lijst = suggesties();
+    planOmweg(lijst);
     var html = '<section class="yg-rt-sugg" aria-labelledby="yg-rt-sugg-kop"><h3 id="yg-rt-sugg-kop">' + esc(t('rt.suggTitle')) + '</h3>';
     if (lijst.length) {
       var winkels = lijst.filter(function (x) { return x.stop.soort === 'winkel'; }).length;
@@ -317,7 +440,7 @@
       html += lijst.map(function (x) {
         var s = x.stop, info = s.soort === 'winkel' ? stopInfo(s).tijd : [s.begin ? hhmm(s.begin) + (s.eind ? '-' + hhmm(s.eind) : '') : ''].join('');
         return '<li><span class="yg-stop yg-stop--' + s.soort + '" aria-hidden="true"></span><span class="yg-routelijst__txt"><strong>' + esc(s.titel) + '</strong>' +
-          '<span class="yg-meta">' + esc([s.soort === 'winkel' ? s.sub : '', s.plaats, info, t('rt.suggKm', { km: x.km < 1 ? x.km.toFixed(1).replace('.', ',') : Math.round(x.km) })].filter(Boolean).join(' · ')) + '</span></span>' +
+          '<span class="yg-meta">' + esc([s.soort === 'winkel' ? s.sub : '', s.plaats, info, (omweg[s.id] != null ? t('rt.detour', { n: Math.max(1, Math.round(omweg[s.id])) }) : t('rt.suggKm', { km: x.km < 1 ? x.km.toFixed(1).replace('.', ',') : Math.round(x.km) }))].filter(Boolean).join(' · ')) + '</span></span>' +
           '<button type="button" class="yg-btn yg-btn--outline" data-actie="sugg" data-sid="' + esc(s.id) + '" aria-label="' + esc(t('rt.add') + ': ' + s.titel) + '">' + esc(t('rt.add')) + '</button></li>';
       }).join('') + '</ul>';
     } else html += '<p class="yg-meta">' + esc(t(kandidaten && kandidaten.length ? 'rt.suggNone' : 'rt.suggLoading')) + '</p>';
@@ -551,7 +674,7 @@
       stops.splice.apply(stops, [0, stops.length].concat(terug.stops)); actief.geweest = terug.geweest; terug = null;
       bewaar(); meld(t('rt.undone')); focusKop();
     }
-    else if (actie === 'kortste') slimmeVolgorde();
+    else if (actie === 'kortste') slimOverDeWeg();
     else if (actie === 'sugg') voegSuggestieToe(b.getAttribute('data-sid'));
     else if (actie === 'suggWinkels') { laadWinkels(); b.disabled = true; }
     else if (actie === 'deel') deel(b);
@@ -587,6 +710,10 @@
     var el = e.target;
     if (el.id === 'yg-rt-datum') { actief.datum = el.value || ''; bewaar(); }
     else if (el.id === 'yg-rt-vertrek') { actief.vertrek = el.value || '09:00'; bewaar(); }
+    else if (el.getAttribute('data-bezoek') != null) {
+      var s = stops[+el.getAttribute('data-bezoek')];
+      if (s) { s.bezoek = +el.value; bewaar(); var terugFocus = paneel.querySelector('[data-bezoek="' + el.getAttribute('data-bezoek') + '"]'); if (terugFocus) terugFocus.focus(); }
+    }
     else if (el.getAttribute('data-punt-keuze')) {
       var welk = el.getAttribute('data-punt-keuze');
       var form = paneel.querySelector('form[data-punt="' + welk + '"]');
@@ -695,13 +822,22 @@
         '<a class="yg-btn yg-btn--primary" href="' + esc(googleLink({ p: [volgende] }, false)) + '" target="_blank" rel="noopener">' + esc(t('rt.navigate')) + '</a></div>';
     }
 
+    planReis();
+    var plan = planning();
     html += '<ol class="yg-routelijst">' + stops.map(function (s, i) {
-      var info = stopInfo(s), gehad = actief.geweest.indexOf(s.id) > -1;
+      var info = stopInfo(s), gehad = actief.geweest.indexOf(s.id) > -1, pl = plan && plan.stops[s.id];
       var regel = [s.soort === 'winkel' ? s.sub : '', s.plaats, info.tijd].filter(Boolean).join(' · ');
+      if (pl && pl.laat && !info.let) info.let = t('rt.late', { t: minNaarTijd(pl.aankomst) });
+      var tijdregel = gehad || info.let ? '' : '<span class="yg-rt-tijd">' +
+        (pl ? '<span>' + esc(t('rt.arrive', { t: minNaarTijd(pl.aankomst) })) + (pl.wacht >= 5 ? ' · ' + esc(t('rt.wait', { n: Math.round(pl.wacht) })) : '') + '</span>' : '') +
+        '<label><span class="yg-sr">' + esc(t('rt.visit') + ': ' + s.titel) + '</span><select data-bezoek="' + i + '">' +
+        BEZOEK_KEUZE.concat(BEZOEK_KEUZE.indexOf(bezoekVan(s)) < 0 ? [bezoekVan(s)] : []).sort(function (a, b) { return a - b; }).map(function (m) {
+          return '<option value="' + m + '"' + (m === bezoekVan(s) ? ' selected' : '') + '>' + esc(t('rt.stay', { d: duurTekst(m) })) + '</option>';
+        }).join('') + '</select></label></span>';
       return '<li data-i="' + i + '"' + (gehad ? ' class="is-geweest"' : '') + '>' +
         '<span class="yg-routelijst__greep" aria-hidden="true" title="' + esc(t('rt.drag')) + '">⋮⋮</span>' +
         '<span class="yg-stop yg-stop--' + s.soort + '" aria-hidden="true">' + (i + 1) + '</span>' +
-        '<span class="yg-routelijst__txt"><strong>' + esc(s.titel) + '</strong><span class="yg-meta">' + esc(regel) + '</span>' +
+        '<span class="yg-routelijst__txt"><strong>' + esc(s.titel) + '</strong><span class="yg-meta">' + esc(regel) + '</span>' + tijdregel +
         (info.let ? '<span class="yg-routelijst__let">' + esc(info.let) + '</span>' : '') + '</span>' +
         '<span class="yg-routelijst__btns">' +
           '<button type="button" data-actie="geweest" data-i="' + i + '" aria-pressed="' + gehad + '" aria-label="' + esc(t('rt.done') + ': ' + s.titel) + '" title="' + esc(t('rt.done')) + '">✓</button>' +
@@ -710,7 +846,10 @@
           '<button type="button" data-actie="weg" data-i="' + i + '" aria-label="' + esc(t('rt.remove') + ': ' + s.titel) + '">×</button>' +
         '</span></li>';
     }).join('') + '</ol>';
-    html += '<p class="yg-meta yg-rt-som">' + esc(t('rt.sum', { n: stops.length, km: Math.round(totaalKm()) })) + '</p>';
+    if (plan) html += '<p class="yg-rt-som yg-rt-som--echt"><strong>' + esc(t('rt.sumRoad', { km: Math.round(plan.km), reis: duurTekst(plan.reistijd), klaar: minNaarTijd(plan.klaar) })) + '</strong>' +
+      (gebied ? '<span class="yg-meta">' + esc(t('rt.sumApprox')) + '</span>' : '') + '</p>';
+    else html += '<p class="yg-meta yg-rt-som">' + esc(t('rt.sum', { n: stops.length, km: Math.round(totaalKm()) })) +
+      (reisBezig ? ' ' + esc(t('rt.roadLoading')) : reis && reis.fout ? ' ' + esc(t('rt.roadFail')) : '') + '</p>';
     if (stops.length > 2) html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="kortste">' + esc(t('rt.order')) + '</button>';
     if (gebied) html += '<p class="yg-routepaneel__let">' + esc(t('rt.approx')) + '</p>';
     html += suggestieHtml();
@@ -745,8 +884,9 @@
     }).join('') + '</div></div>';
   }
 
-  // ── Kaart: genummerde stops en een stippellijn in de volgorde ────────
-  // De lijn is de volgorde, niet de weg: daarom gestippeld en zonder afstand.
+  // ── Kaart: genummerde stops en de route ──────────────────────────────
+  // Met reistijden: de route over de weg (doorgetrokken). Zonder: alleen de
+  // volgorde als stippellijn, want dat is niet de weg.
   function opKaart(map) {
     if (!window.L || !map) return;
     kaartLaag = L.layerGroup().addTo(map);
@@ -756,7 +896,11 @@
     if (!kaartLaag) return;
     kaartLaag.clearLayers();
     var p = punten();
-    if (p.length > 1) L.polyline(p.map(function (s) { return [s.lat, s.lng]; }), { color: '#1E2922', weight: 3, opacity: .55, dashArray: '2 8', lineCap: 'round', interactive: false }).addTo(kaartLaag);
+    planReis();
+    if (reis && !reis.fout && reis.sleutel === reisSleutel() && reis.lijn.length > 1) {
+      L.polyline(reis.lijn, { color: '#FFFFFF', weight: 8, opacity: .9, interactive: false }).addTo(kaartLaag);
+      L.polyline(reis.lijn, { color: '#2A5038', weight: 4, opacity: .9, interactive: false }).addTo(kaartLaag);
+    } else if (p.length > 1) L.polyline(p.map(function (s) { return [s.lat, s.lng]; }), { color: '#1E2922', weight: 3, opacity: .55, dashArray: '2 8', lineCap: 'round', interactive: false }).addTo(kaartLaag);
     stops.forEach(function (s, i) {
       L.marker([s.lat, s.lng], {
         icon: L.divIcon({ className: 'yg-rt-pin', html: '<span class="yg-stop yg-stop--' + s.soort + '">' + (i + 1) + '</span>', iconSize: [30, 30], iconAnchor: [15, 15] }),

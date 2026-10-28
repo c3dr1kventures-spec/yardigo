@@ -1,6 +1,6 @@
 # Slimme dagplanner (28 okt 2026)
 
-**Stand 28 okt (lokaal gecommit, niet gepusht):** fase 1 klaar, fase 1b klaar (tabel `opgeslagen_routes` staat al in de database), uit fase 3 de suggesties langs de route en de openbare deellink klaar. Fase 2 wacht op de ORS-sleutel.
+**Stand 28 okt (lokaal gecommit, niet gepusht):** fase 1, 1b en 2 klaar; uit fase 3 de suggesties (met omrijtijd) en de openbare deellink. Edge Function `route-plan` (versie 3) en tabellen `opgeslagen_routes` en `route_cache` staan al op Supabase. Nog open: RouteMakers/populaire routes/favorieten/statistieken (bewust niet gebouwd).
 
 Keuzes van Christian: **website** (`site/route.js`, `/kaart`) wordt de dagplanner, met opslaan in het account van `/app`; routedienst **OpenRouteService** (ORS).
 
