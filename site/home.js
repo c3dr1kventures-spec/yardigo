@@ -241,6 +241,13 @@
       });
     });
 
+    // Pijltjes onder de kaart: soepel naar de uitleg (zonder JS een gewone ankerlink).
+    $('verder').addEventListener('click', function (e) {
+      e.preventDefault();
+      var rustig = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      $('zo-werkt').scrollIntoView({ behavior: rustig ? 'auto' : 'smooth', block: 'start' });
+    });
+
     K.laad().then(function (lijst) { alles = lijst; telling(); toon(true); })
       .catch(function (e) { console.error(e); fout(YG.t('home.none')); });
   }
