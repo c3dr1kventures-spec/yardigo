@@ -55,7 +55,7 @@ const ALGEMEEN = new Set([
   'et', 'am', 'im', 'der', 'die', 'das', 'und', 'belgie', 'nederland',
 ]);
 function woorden(s: string | null, plaats: string | null): Set<string> {
-  const norm = (x: string) => x.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const norm = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const weg = new Set(norm(plaats || '').split(/[^a-z0-9]+/));
   return new Set(norm(s || '').split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !weg.has(w)));
 }
