@@ -191,6 +191,14 @@ function buildJsonLd(sale) {
         address: { '@type': 'PostalAddress', streetAddress: sale.address || '', addressLocality: city || '', addressCountry: country },
         geo: sale.lat && sale.lng ? { '@type': 'GeoCoordinates', latitude: sale.lat, longitude: sale.lng } : undefined,
       };
+  const wie = sale.organizer_name
+    ? { '@type': 'Organization', name: sale.organizer_name, url: sale.organizer_url || undefined }
+    : sale.type === 'particulier'
+      ? { '@type': 'Person', name: 'Particuliere verkoper' }
+      : { '@type': 'Organization', name: sale.title || typeLabel };
+  // Sinds wanneer de verkoop op YardiGo staat (laatste wijziging), nooit na de dag zelf.
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const validFrom = [sale.updated || vandaag, date || vandaag].sort()[0];
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -203,11 +211,12 @@ function buildJsonLd(sale) {
     location,
     image: Array.isArray(sale.photos) && sale.photos.length ? sale.photos.slice(0, 4) : [DEFAULT_OG_IMAGE],
     description: (sale.description || `${typeLabel} in ${city} op ${fmtDate(date)}.`).slice(0, 500),
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', availability: 'https://schema.org/InStock', url: `${base}/v/${sale.id}` },
-    // Alleen de echte organisator; YardiGo is dat niet. Zonder organisator weglaten.
-    organizer: sale.organizer_name
-      ? { '@type': 'Organization', name: sale.organizer_name, url: sale.organizer_url || undefined }
-      : undefined,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', availability: 'https://schema.org/InStock', url: `${base}/v/${sale.id}`, validFrom },
+    // Nooit YardiGo zelf: de opgegeven organisator, anders de particuliere
+    // verkoper (zonder naam, privacy) of de organisatie achter het evenement.
+    // Google wil ook een performer; bij een verkoop is dat dezelfde partij.
+    organizer: wie,
+    performer: wie,
   };
 }
 
