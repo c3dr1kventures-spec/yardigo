@@ -28,6 +28,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
 import { borgPlek, toetsPlek, veiligeGeocode } from '../_shared/locatie.ts';
 import { bepaalSubtype } from '../_shared/subtypes.ts';
+import { advies, adviesContext, adviesIcoon, type Advies, type AdviesContext } from '../_shared/advies.ts';
 
 const SITE = 'https://www.yardigo.nl';
 const MINIAPP = SITE + '/tg';
@@ -97,11 +98,12 @@ function heeftContact(p: any): boolean {
   return !!(p.organizer_url || p.contact_phone || p.contact_email);
 }
 
-function kaartTekst(p: any): string {
+function kaartTekst(p: any, a?: Advies): string {
   const tijd = p.time_start ? ` ${String(p.time_start).slice(0, 5)}${p.time_end ? '–' + String(p.time_end).slice(0, 5) : ''}` : '';
   const regels = [
     ...(p.discovered_via_query === TIP_VIA ? ['📮 <b>Tip via de website, zonder account</b>'] : []),
     `${p.is_private_seller ? '🏠' : '🎪'} <b>${esc(p.title)}</b>`,
+    ...(a ? [`${adviesIcoon(a.k)} <b>Advies: ${esc(a.kop)}</b>`, ...a.waarom.slice(0, 3).map(w => `   · ${esc(w)}`), ''] : []),
     `📅 ${datumNl(p.date_start)}${p.date_end ? ' t/m ' + datumNl(p.date_end) : ''}${tijd}`,
     `📍 ${esc(p.city || '?')}${p.address ? ' — ' + esc(p.address) : ''}${p.latitude == null ? ' ⚠️ geen coördinaten' : ''}`,
     `🏷 ${esc(p.event_subtype || '?')} · ${p.is_private_seller === true ? 'particulier' : p.is_private_seller === false ? 'organisator' : 'onbekend'}`,
@@ -121,7 +123,7 @@ function kaartTekst(p: any): string {
   return regels.join('\n');
 }
 
-function kaartKnoppen(p: any) {
+function kaartKnoppen(p: any, a?: Advies) {
   const bewerk = { text: '✏️ Bewerken', web_app: { url: `${MINIAPP}?id=${p.id}` } };
   const zonder = heeftContact(p) ? [] : [[{ text: '📍 Toch plaatsen zonder contact', callback_data: `nc:${p.id}` }]];
   if (p.status === 'tip') {
@@ -132,15 +134,17 @@ function kaartKnoppen(p: any) {
       [bewerk, { text: '❌ Overslaan', callback_data: `no:${p.id}` }],
     ] };
   }
+  const ok = { text: '✅ Publiceren', callback_data: `ok:${p.id}` }, no = { text: '❌ Afwijzen', callback_data: `no:${p.id}` };
   return { inline_keyboard: [
-    [{ text: '✅ Publiceren', callback_data: `ok:${p.id}` }, { text: '❌ Afwijzen', callback_data: `no:${p.id}` }],
+    a?.k === 'afwijzen' ? [no, ok] : [ok, no],
     ...zonder,
     [bewerk],
   ] };
 }
 
-async function stuurKaart(sb: any, chat: string, p: any) {
-  await send(chat, kaartTekst(p), { reply_markup: kaartKnoppen(p) });
+async function stuurKaart(sb: any, chat: string, p: any, ctx?: AdviesContext) {
+  const a = advies(p, watOntbreekt(p), ctx ?? await adviesContext(sb, [p.id]));
+  await send(chat, kaartTekst(p, a), { reply_markup: kaartKnoppen(p, a) });
   await sb.from('pending_events').update({ telegram_sent_at: new Date().toISOString() }).eq('id', p.id);
 }
 
@@ -154,7 +158,8 @@ async function digest(sb: any, chat: string, alleenNieuw: boolean): Promise<numb
     .limit(DIGEST_BATCH);
   if (alleenNieuw) q = q.is('telegram_sent_at', null);
   const { data } = await q;
-  for (const p of data || []) await stuurKaart(sb, chat, p);
+  const ctx = await adviesContext(sb, (data || []).map((p: any) => p.id));
+  for (const p of data || []) await stuurKaart(sb, chat, p, ctx);
   return (data || []).length;
 }
 
@@ -290,7 +295,7 @@ type Maak = { ok: true; row: any } | { ok: false; msg: string; dup?: Dup };
 async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: string } | null> {
   if ((await cfg(sb, 'telegram_autopublish')) !== 'true') return null;
   const g = metGroep(row);
-  if (g.ontbreekt.length || g.groep === 'twijfel') return null;
+  if (g.ontbreekt.length || g.groep === 'controleren' || g.groep === 'afwijzen') return null;
   try {
     const listingId = await publishPending(sb, row, await curatorId(sb), null);
     return await deel(sb, listingId);
@@ -766,8 +771,9 @@ async function aanvulling(sb: any, chat: string, tekst: string, kaart: any) {
   }
   const up = await sb.from('pending_events').update(patch).eq('id', id).select(PENDING_COLS).single();
   if (up.error) { await send(chat, '⚠️ ' + esc(up.error.message)); return true; }
+  const a = advies(up.data, watOntbreekt(up.data), await adviesContext(sb, [id]));
   await tg('editMessageText', { chat_id: chat, message_id: kaart.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
-    text: kaartTekst(up.data), reply_markup: kaartKnoppen(up.data) });
+    text: kaartTekst(up.data, a), reply_markup: kaartKnoppen(up.data, a) });
   await send(chat, '👍 Bijgewerkt', { reply_to_message_id: kaart.message_id });
   return true;
 }
@@ -803,15 +809,11 @@ async function initDataUser(initData: string): Promise<number | null> {
   try { return JSON.parse(params.get('user') || '{}').id ?? null; } catch { return null; }
 }
 
-// Eén eenvoudige indeling voor de mini-app.
-const TWIJFEL = ['past niet bij YardiGo', 'type onduidelijk', 'onbekend of particulier'];
-function metGroep(p: any) {
+// Indeling voor de mini-app: de groep is het advies (_shared/advies.ts).
+function metGroep(p: any, ctx?: AdviesContext) {
   const ontbreekt = watOntbreekt(p);
-  const redenen: string[] = p.auto_check?.redenen || [];
-  const groep = p.status === 'tip' || p.is_private_seller === true ? 'particulier'
-    : redenen.some(r => TWIJFEL.includes(r)) ? 'twijfel'
-    : ontbreekt.length ? 'mist' : 'klaar';
-  return { ...p, ontbreekt, groep };
+  const a = advies(p, ontbreekt, ctx);
+  return { ...p, ontbreekt, advies: a, groep: a.k };
 }
 
 const BEWERKBAAR = ['title','description','event_subtype','date_start','date_end','time_start','time_end','city','address',
@@ -846,7 +848,7 @@ async function api(sb: any, req: Request): Promise<Response> {
     case 'get': {
       const r = await sb.from('pending_events').select(cols).eq('id', b.id).maybeSingle();
       if (!r.data) return apiJson({ error: 'Niet gevonden' }, 404);
-      return apiJson({ item: metGroep(r.data) });
+      return apiJson({ item: metGroep(r.data, await adviesContext(sb, [r.data.id])) });
     }
 
     case 'save': {
@@ -869,7 +871,7 @@ async function api(sb: any, req: Request): Promise<Response> {
       const past = !(r.data.auto_check?.redenen || []).includes('past niet bij YardiGo');
       const check = autoCheck(r.data, past);
       await sb.from('pending_events').update({ auto_check: check }).eq('id', b.id);
-      return apiJson({ item: metGroep({ ...r.data, auto_check: check }) });
+      return apiJson({ item: metGroep({ ...r.data, auto_check: check }, await adviesContext(sb, [r.data.id])) });
     }
 
     case 'geocode':
@@ -890,6 +892,16 @@ async function api(sb: any, req: Request): Promise<Response> {
         }
         return apiJson({ listing_id: listingId, ...(await deel(sb, listingId)) });
       } catch (e) { return apiJson({ error: (e as Error).message }, 500); }
+    }
+
+    // Meerdere tegelijk afwijzen (groep 'afwijzen' in de mini-app). Terugzetten kan per item via 'reopen'.
+    case 'reject_many': {
+      const ids = (Array.isArray(b.ids) ? b.ids : []).map(Number).filter(Number.isFinite).slice(0, 200);
+      if (!ids.length) return apiJson({ error: 'Geen items' }, 400);
+      const r = await sb.from('pending_events').update({ status: 'afgewezen', reviewed_at: new Date().toISOString(), review_notes: 'via mini-app (advies)' })
+        .in('id', ids).in('status', ['tip', 'nieuw']).select('id');
+      if (r.error) return apiJson({ error: r.error.message }, 400);
+      return apiJson({ ok: true, aantal: (r.data || []).length });
     }
 
     case 'reject': {
@@ -930,7 +942,8 @@ async function api(sb: any, req: Request): Promise<Response> {
         .in('status', ['tip', 'nieuw']).gte('date_start', vandaag)
         .order('date_start', { ascending: true }).order('id', { ascending: true }).limit(400);
       if (r.error) return apiJson({ error: r.error.message }, 500);
-      return apiJson({ items: (r.data || []).map(metGroep) });
+      const ctx = await adviesContext(sb, (r.data || []).map((p: any) => p.id));
+      return apiJson({ items: (r.data || []).map((p: any) => metGroep(p, ctx)) });
     }
 
     case 'recent': {

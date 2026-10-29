@@ -71,6 +71,13 @@
   .todo.bad { color: var(--red); } .todo.ok { color: var(--green); } .todo.warn { color: var(--amber); } .todo.blue { color: var(--blue); }
   .card .go { flex: none; color: var(--hint); font-size: 20px; }
   .quick { flex: none; border: 0; background: var(--green); color: #fff; font-weight: 600; font-size: 13px; padding: 8px 12px; border-radius: 10px; }
+  .quick.red { background: var(--red-soft); color: var(--red); }
+  .card .why { color: var(--hint); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bulk { margin: 8px 16px 0; display: grid; gap: 6px; }
+  .bulk .btn { padding: 10px 14px; }
+  .btn.red { background: var(--red-soft); color: var(--red); }
+  .advies ul { margin: 6px 0 0; padding-left: 18px; }
+  .advies li { margin: 2px 0; }
   .empty { text-align: center; color: var(--hint); padding: 40px 16px; }
   .empty .big { font-size: 40px; margin-bottom: 6px; }
 
@@ -166,6 +173,7 @@
   <section id="v-todo">
     <div class="groups" id="groups"></div>
     <div class="explain" id="explain"></div>
+    <div class="bulk" id="bulk"></div>
     <div class="list" id="list"><div class="spin"></div></div>
   </section>
 
@@ -212,11 +220,12 @@
       <div class="group" style="padding:4px 14px 6px">
         <h3 style="padding-left:0">Zo werkt het</h3>
         <ol class="help" style="padding-left:18px;margin:6px 0 10px">
-          <li><b>Te doen</b> toont alles wat nog niet op de kaart staat, in vier groepen.</li>
-          <li><b>Klaar</b>: alles is compleet. Tik op <i>Plaatsen</i>.</li>
-          <li><b>Particulier</b>: verkoop bij iemand thuis. Vraag eerst toestemming met de kant-en-klare tekst.</li>
-          <li><b>Mist iets</b>: vul de contactweg of locatie aan, dan kan hij op de kaart.</li>
-          <li><b>Twijfel</b>: de AI weet niet zeker of het bij YardiGo past. Jij beslist.</li>
+          <li><b>Te doen</b> toont alles wat nog niet op de kaart staat, gegroepeerd op advies. Bij elk item staat waarom.</li>
+          <li><b>Plaatsen</b>: compleet en geen twijfel. Tik op <i>Plaatsen</i>, of <i>Alle plaatsen</i>.</li>
+          <li><b>Afwijzen</b>: staat al live of lijkt een winkel. Tik op <i>Afwijzen</i>, of <i>Alle afwijzen</i>.</li>
+          <li><b>Controleren</b>: mogelijk dubbel, soort onduidelijk of een bron die je vaak afwees. Jij beslist.</li>
+          <li><b>Toestemming</b>: verkoop bij iemand thuis. Vraag eerst toestemming met de kant-en-klare tekst.</li>
+          <li><b>Aanvullen</b>: meestal mist contact. <i>Zoek contact</i> opent Google. Van betrouwbare bronnen (85% of meer eerder goedgekeurd) kun je ze ook in één keer zonder contact plaatsen.</li>
           <li>Na plaatsen krijg je een reactie om onder de Facebook-post te zetten.</li>
           <li>Een geüploade affiche wordt de foto van de advertentie. Je kunt dat per advertentie uitzetten.</li>
           <li>Een Facebook-post delen naar de bot werkt bij openbare posts. Bij besloten groepen: stuur een screenshot.</li>
@@ -241,12 +250,15 @@
   var API = 'https://fwehqudhwzcnkcuypuqw.supabase.co/functions/v1/telegram-bot?api=1';
   var tg = window.Telegram && window.Telegram.WebApp;
   var SUBTYPES = ['rommelmarkt','vlooienmarkt','opritverkoop','rommelroute','buurtverkoop','kofferbak','antiekmarkt','boekenmarkt','braderie','kerstmarkt','overig'];
+  // Groepen volgen het advies van de bot (supabase/functions/_shared/advies.ts).
   var GROEPEN = [
-    { k: 'klaar',       l: '✅ Klaar',      uitleg: 'Alles is compleet. Controleer kort en plaats ze op de kaart.' },
-    { k: 'particulier', l: '🏠 Particulier', uitleg: 'Verkoop bij iemand thuis. Vraag eerst toestemming voordat je plaatst.' },
-    { k: 'mist',        l: '✏️ Mist iets',   uitleg: 'Er ontbreekt nog een contactweg of locatie. Vul het aan, dan kan hij op de kaart.' },
-    { k: 'twijfel',     l: '🤔 Twijfel',     uitleg: 'De AI weet niet zeker of dit bij YardiGo past. Jij beslist: plaatsen of niet.' }
+    { k: 'plaatsen',    l: '✅ Plaatsen',    cls: 'ok',   uitleg: 'Advies: plaatsen. Compleet en geen twijfelpunten.' },
+    { k: 'afwijzen',    l: '🗑 Afwijzen',    cls: 'bad',  uitleg: 'Advies: afwijzen. Staat al live of lijkt geen tweedehandsmarkt. Afgewezen items kun je later terugzetten.' },
+    { k: 'controleren', l: '🤔 Controleren', cls: 'warn', uitleg: 'Twijfelgevallen: mogelijk dubbel, soort onduidelijk of een wankele bron. Jij beslist.' },
+    { k: 'toestemming', l: '🏠 Toestemming', cls: 'blue', uitleg: 'Verkoop bij iemand thuis. Vraag eerst toestemming voordat je plaatst.' },
+    { k: 'aanvullen',   l: '✏️ Aanvullen',   cls: 'bad',  uitleg: 'Er mist nog iets, meestal contact. Bij betrouwbare bronnen mag plaatsen zonder contact ook.' }
   ];
+  function groepVan(k) { return GROEPEN.filter(function (g) { return g.k === k; })[0] || GROEPEN[0]; }
   var STATS = [
     { k: 'live', l: 'live op de kaart', cls: 'live' },
     { k: 'tips', l: 'tips' },
@@ -351,7 +363,7 @@
   function renderTodo() {
     if (!state.groep || !telGroep(state.groep)) {
       var eerste = GROEPEN.filter(function (g) { return telGroep(g.k); })[0];
-      state.groep = eerste ? eerste.k : 'klaar';
+      state.groep = eerste ? eerste.k : 'plaatsen';
     }
     $('groups').innerHTML = GROEPEN.map(function (g) {
       return '<button class="grp' + (g.k === state.groep ? ' on' : '') + '" data-groep="' + g.k + '">' + g.l + '<span class="n">' + telGroep(g.k) + '</span></button>';
@@ -359,17 +371,57 @@
     var g = GROEPEN.filter(function (x) { return x.k === state.groep; })[0];
     $('explain').textContent = g.uitleg;
     var items = state.items.filter(function (p) { return p.groep === state.groep; });
+    renderBulk(items);
     if (!state.items.length) { $('list').innerHTML = '<div class="empty"><div class="big">🎉</div>Alles is bijgewerkt. Niets te doen!</div>'; return; }
     if (!items.length) { $('list').innerHTML = '<div class="empty">Niets in deze groep.</div>'; return; }
     $('list').innerHTML = items.map(cardHtml).join('');
   }
 
+  // Alles in één keer het advies laten volgen.
+  function renderBulk(items) {
+    var b = [];
+    if (state.groep === 'plaatsen' && items.length > 1) b.push('<button class="btn green" data-bulk="plaatsen">Alle ' + items.length + ' plaatsen</button>');
+    if (state.groep === 'afwijzen' && items.length > 1) b.push('<button class="btn red" data-bulk="afwijzen">Alle ' + items.length + ' afwijzen</button>');
+    var zc = items.filter(function (p) { return p.advies && p.advies.zonderContact; }).length;
+    if (state.groep === 'aanvullen' && zc) b.push('<button class="btn" data-bulk="zonder">📍 ' + zc + ' van betrouwbare bronnen zonder contact plaatsen</button>');
+    $('bulk').innerHTML = b.join('');
+  }
+
+  function bulk(soort, btn) {
+    var items = state.items.filter(function (p) { return p.groep === state.groep && (soort !== 'zonder' || (p.advies && p.advies.zonderContact)); });
+    var vraag = soort === 'afwijzen' ? items.length + ' items afwijzen?' : soort === 'zonder' ? items.length + ' items zonder contact op de kaart zetten?' : items.length + ' items op de kaart zetten?';
+    tg.showConfirm(vraag, function (ok) {
+      if (!ok) return;
+      btn.disabled = true;
+      if (soort === 'afwijzen') {
+        btn.textContent = 'Bezig…';
+        api('reject_many', { ids: items.map(function (p) { return p.id; }) }).then(function (r) {
+          haptic('warning'); toast(r.aantal + ' afgewezen');
+          var weg = {}; items.forEach(function (p) { weg[p.id] = 1; });
+          state.items = state.items.filter(function (p) { return !weg[p.id]; });
+          renderTodo(); loadStats();
+        }).catch(function (e) { haptic('error'); toast(e.message); btn.disabled = false; });
+        return;
+      }
+      var gelukt = 0, mislukt = 0, i = 0;
+      (function volgende() {
+        if (i >= items.length) {
+          haptic(mislukt ? 'warning' : 'success');
+          toast(gelukt + ' geplaatst' + (mislukt ? ' · ' + mislukt + ' lukte niet, die staan er nog' : ''));
+          renderTodo(); loadStats(); return;
+        }
+        var p = items[i++];
+        btn.textContent = 'Bezig… ' + i + ' van ' + items.length;
+        api('publish', { id: p.id, zonder_contact: soort === 'zonder' }).then(function () {
+          gelukt++; state.items = state.items.filter(function (x) { return x.id !== p.id; });
+        }).catch(function () { mislukt++; }).then(volgende);
+      })();
+    });
+  }
+
   function wat(p) {
-    if (p.groep === 'klaar') return { cls: 'ok', t: 'Klaar om te plaatsen' };
-    if (p.groep === 'particulier') return { cls: 'blue', t: p.ontbreekt.length ? 'Vraag toestemming · mist ' + kort(p.ontbreekt) : 'Vraag toestemming, dan plaatsen' };
-    if (p.groep === 'mist') return { cls: 'bad', t: 'Mist: ' + kort(p.ontbreekt) };
-    var r = (p.auto_check && p.auto_check.redenen) || [];
-    return { cls: 'warn', t: r.indexOf('past niet bij YardiGo') > -1 ? 'Past mogelijk niet bij YardiGo' : r.indexOf('type onduidelijk') > -1 ? 'Soort verkoop onduidelijk' : 'Particulier of organisator?' };
+    var a = p.advies || { kop: '?', waarom: [] };
+    return { cls: groepVan(p.groep).cls, t: a.kop, why: a.waarom[0] || '' };
   }
   function kort(lijst) { return lijst.map(function (o) { return o.split(' (')[0].replace('locatie op de kaart', 'locatie').replace('contactweg', 'contact').replace('datum in de toekomst', 'datum'); }).join(', '); }
 
@@ -378,8 +430,9 @@
     return '<div class="card" data-id="' + p.id + '" role="button">' +
       '<div class="body"><div class="t">' + esc(p.title) + '</div>' +
       '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
-      '<div class="todo ' + w.cls + '">' + esc(w.t) + '</div></div>' +
-      (p.groep === 'klaar' ? '<button class="quick" data-quick="' + p.id + '">Plaatsen</button>' : '<span class="go">›</span>') +
+      '<div class="todo ' + w.cls + '">' + esc(w.t) + '</div>' + (w.why ? '<div class="why">' + esc(w.why) + '</div>' : '') + '</div>' +
+      (p.groep === 'plaatsen' ? '<button class="quick" data-quick="' + p.id + '">Plaatsen</button>'
+        : p.groep === 'afwijzen' ? '<button class="quick red" data-quick-no="' + p.id + '">Afwijzen</button>' : '<span class="go">›</span>') +
       '</div>';
   }
 
@@ -390,6 +443,15 @@
       state.items = state.items.filter(function (x) { return x.id !== id; });
       renderTodo(); loadStats();
     }).catch(function (e) { haptic('error'); toast(e.message); btn.disabled = false; btn.textContent = 'Plaatsen'; });
+  }
+
+  function quickReject(id, btn) {
+    btn.disabled = true; btn.textContent = '…';
+    api('reject', { id: id }).then(function () {
+      haptic('warning'); toast('Afgewezen');
+      state.items = state.items.filter(function (x) { return x.id !== id; });
+      renderTodo(); loadStats();
+    }).catch(function (e) { haptic('error'); toast(e.message); btn.disabled = false; btn.textContent = 'Afwijzen'; });
   }
 
   // ── Detail ───────────────────────────────────────────
@@ -405,22 +467,32 @@
     return '<div class="field"><label for="f-' + name + '">' + label + '</label><input id="f-' + name + '" name="' + name + '" type="' + (type || 'text') + '" value="' + esc(val == null ? '' : val) + '"' + (extra || '') + '></div>';
   }
 
+  function adviesHtml(p) {
+    var a = p.advies;
+    if (!a) return '';
+    var g = groepVan(p.groep);
+    var knoppen = [];
+    if (a.dubbel) knoppen.push('<button class="btn sm" data-open="https://www.yardigo.nl/v/' + esc(a.dubbel.listing_id) + '">Bekijk de live versie</button>');
+    if ((p.ontbreekt || []).some(function (x) { return x.indexOf('contact') === 0; }))
+      knoppen.push('<button class="btn sm" data-open="https://www.google.com/search?q=' + encodeURIComponent((p.title || '') + ' ' + (p.city || '')) + '">🔎 Zoek contact</button>');
+    return '<div class="step advies ' + g.cls + '"><b>' + g.l.split(' ')[0] + ' Advies: ' + esc(a.kop) + '</b>' +
+      (a.waarom.length ? '<ul>' + a.waarom.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>' : '') +
+      (knoppen.length ? '<div class="btns" style="margin-top:8px">' + knoppen.join('') + '</div>' : '') + '</div>';
+  }
+
   function stapHtml(p) {
     var o = p.ontbreekt || [];
     var mist = kort(o);
-    if (p.groep === 'particulier') {
+    if (p.groep === 'toestemming') {
       return '<div class="step blue"><b>Stap 1: vraag toestemming</b>Dit is een verkoop bij iemand thuis. Stuur eerst een berichtje.' +
         '<div class="btns" style="margin-top:8px"><button class="btn sm" id="dm">💬 Toon bericht</button></div><div id="dmbox"></div></div>' +
         '<div class="step ' + (o.length ? 'bad' : 'ok') + '"><b>Stap 2: ja gekregen?</b>' +
         (o.length ? 'Vul nog in: ' + esc(mist) + '. Daarna kun je plaatsen.' : 'Tik onderaan op <i>Plaatsen op de kaart</i>. Het contact is alleen zichtbaar voor ingelogde bezoekers.') + '</div>';
     }
-    if (p.groep === 'twijfel') {
-      return '<div class="step warn"><b>Jij beslist</b>' + esc(wat(p).t) + '. Past het wel? ' +
-        (o.length ? 'Vul dan nog in: ' + esc(mist) + '.' : 'Tik dan onderaan op <i>Plaatsen op de kaart</i>.') + ' Anders: <i>Niet plaatsen</i>.</div>';
-    }
-    if (o.length) return '<div class="step bad"><b>Nog nodig: ' + esc(mist) + '</b>Vul het hieronder in (rood omlijnd). Daarna kun je plaatsen.' +
+    if (p.groep === 'afwijzen') return '<button class="btn red" id="reject-top">Afwijzen</button>';
+    if (o.length) return '<div class="lead">Vul het rood omlijnde hieronder in, dan kun je plaatsen.' +
       (o.length === 1 && o[0].indexOf('contact') === 0 ? ' Geen contact te vinden? Je kunt hem ook zonder plaatsen.' : '') + '</div>';
-    return '<div class="step ok"><b>Klaar om te plaatsen</b>Controleer de gegevens en tik onderaan op <i>Plaatsen op de kaart</i>.</div>';
+    return '';
   }
 
   function renderDetail(p) {
@@ -465,7 +537,7 @@
       '<div class="head"><div class="field" style="padding:0;border:0"><input name="title" value="' + esc(p.title) + '" aria-label="Titel" style="font-size:20px;font-weight:700;border:0;background:none;width:100%;outline:none;padding:0"></div>' +
       '<div class="m">' + esc(dag(p.date_start)) + esc(tijd(p)) + ' · ' + esc(p.city || '?') + '</div>' +
       (p.lead_source_url ? '<div class="lead">Gevonden via <a href="#" data-open="' + esc(p.lead_source_url) + '">' + esc(domein(p.lead_source_url)) + '</a> (wordt niet als bron getoond)</div>' : '') + '</div>' +
-      stapHtml(p) +
+      adviesHtml(p) + stapHtml(p) +
       '<div id="nc-box" class="hidden"><button class="btn" id="nocontact">📍 Toch plaatsen zonder contact</button>' +
       '<div class="lead" style="padding:6px 2px 0">Bijvoorbeeld bij een rommelroute door een paar straten. Bezoekers zien dan geen contactknop.</div></div>' +
       (mistContact ? contact + waar : waar + contact) +
@@ -661,11 +733,13 @@
     if (t.dataset.statGo) {
       tick();
       if (t.dataset.statGo === 'live') go('live');
-      else { state.groep = t.dataset.statGo === 'tips' ? 'particulier' : null; go('todo'); }
+      else { state.groep = t.dataset.statGo === 'tips' ? 'toestemming' : null; go('todo'); }
       return;
     }
     if (t.dataset.groep) { tick(); state.groep = t.dataset.groep; renderTodo(); return; }
     if (t.dataset.quick) { e.stopPropagation(); quickPublish(+t.dataset.quick, t); return; }
+    if (t.dataset.quickNo) { e.stopPropagation(); quickReject(+t.dataset.quickNo, t); return; }
+    if (t.dataset.bulk) { bulk(t.dataset.bulk, t); return; }
     if (t.dataset.copy) { copy(t.dataset.copy); return; }
     if (t.dataset.open) { e.preventDefault(); openLink(t.dataset.open); return; }
     if (t.dataset.job !== undefined) { jobTap(state.jobs[+t.dataset.job]); return; }
@@ -685,7 +759,7 @@
       }).catch(function (er) { toast(er.message); }).then(function () { t.disabled = false; });
       return;
     }
-    if (t.id === 'reject') {
+    if (t.id === 'reject' || t.id === 'reject-top') {
       var p = state.current;
       tg.showConfirm('"' + p.title + '" niet plaatsen?', function (ok) {
         if (!ok) return;
