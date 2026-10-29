@@ -191,11 +191,13 @@ function buildJsonLd(sale) {
         address: { '@type': 'PostalAddress', streetAddress: sale.address || '', addressLocality: city || '', addressCountry: country },
         geo: sale.lat && sale.lng ? { '@type': 'GeoCoordinates', latitude: sale.lat, longitude: sale.lng } : undefined,
       };
+  // Zonder eigen site van de organisator: de verkooppagina zelf als url.
+  const pagina = `${base}/v/${sale.id}`;
   const wie = sale.organizer_name
-    ? { '@type': 'Organization', name: sale.organizer_name, url: sale.organizer_url || undefined }
+    ? { '@type': 'Organization', name: sale.organizer_name, url: sale.organizer_url || pagina }
     : sale.type === 'particulier'
-      ? { '@type': 'Person', name: 'Particuliere verkoper' }
-      : { '@type': 'Organization', name: sale.title || typeLabel };
+      ? { '@type': 'Person', name: 'Particuliere verkoper', url: pagina }
+      : { '@type': 'Organization', name: sale.title || typeLabel, url: pagina };
   // Sinds wanneer de verkoop op YardiGo staat (laatste wijziging), nooit na de dag zelf.
   const vandaag = new Date().toISOString().slice(0, 10);
   const validFrom = [sale.updated || vandaag, date || vandaag].sort()[0];
@@ -211,7 +213,7 @@ function buildJsonLd(sale) {
     location,
     image: Array.isArray(sale.photos) && sale.photos.length ? sale.photos.slice(0, 4) : [DEFAULT_OG_IMAGE],
     description: (sale.description || `${typeLabel} in ${city} op ${fmtDate(date)}.`).slice(0, 500),
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', availability: 'https://schema.org/InStock', url: `${base}/v/${sale.id}`, validFrom },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', availability: 'https://schema.org/InStock', url: pagina, validFrom },
     // Nooit YardiGo zelf: de opgegeven organisator, anders de particuliere
     // verkoper (zonder naam, privacy) of de organisatie achter het evenement.
     // Google wil ook een performer; bij een verkoop is dat dezelfde partij.
