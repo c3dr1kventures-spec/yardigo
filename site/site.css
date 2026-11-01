@@ -577,6 +577,28 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-hero .yg-shop { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-width: 1.5px; opacity: .85; }
 .yg-hero .yg-groep--winkel { opacity: .8; }
 
+/* Op de startpagina gloeien garagesales en rommelroutes zachtjes in hun eigen
+   kleur: ze vallen net iets meer op dan markten, zonder te knipperen. Met
+   'minder beweging' blijft alleen de stilstaande gloed over.
+   Geldt voor kaartjes, losse stippen en groepjes; --basis is de eigen schaduw. */
+.yg-hero .yg-tag--oprit, .yg-hero .yg-dot--oprit, .yg-hero .yg-groep--oprit { --gloei: 242, 168, 48; }
+.yg-hero .yg-tag--route, .yg-hero .yg-dot--route, .yg-hero .yg-groep--route { --gloei: 224, 123, 57; }
+.yg-hero .yg-tag { --basis: 0 2px 8px rgba(30, 41, 34, .28); }
+.yg-hero .yg-dot { --basis: 0 1px 4px rgba(30, 41, 34, .3); }
+.yg-hero .yg-groep { --basis: 0 0 0 5px rgba(var(--gloei, 58, 107, 74), .28), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-hero .yg-tag--oprit:not(.is-selected), .yg-hero .yg-tag--route:not(.is-selected),
+.yg-hero .yg-dot--oprit, .yg-hero .yg-dot--route, .yg-hero .yg-groep--oprit, .yg-hero .yg-groep--route {
+  box-shadow: var(--basis), 0 0 12px 3px rgba(var(--gloei), .5);
+  animation: yg-gloei 3.6s ease-in-out infinite;
+}
+@keyframes yg-gloei {
+  0%, 100% { box-shadow: var(--basis), 0 0 10px 2px rgba(var(--gloei), .38); }
+  50% { box-shadow: var(--basis), 0 0 20px 6px rgba(var(--gloei), .62); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yg-hero .yg-tag, .yg-hero .yg-dot, .yg-hero .yg-groep { animation: none; }
+}
+
 /* ── Kaartpagina ─────────────────────────────────────────────────────── */
 .yg-mappage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 .yg-mappage .yg-header { position: relative; top: 0; }
