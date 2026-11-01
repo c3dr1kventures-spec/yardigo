@@ -233,9 +233,13 @@ function vervangVerplicht(html, oud, nieuw, wat) {
   return html.replace(oud, nieuw);
 }
 
-// Illustratie voor verkopen zonder eigen foto (zelfde keuze als sfeer() in site/kaart.js).
-function sfeerbeeld(soort, category) {
-  return `/site/img/sfeer/${category === 'kofferbakverkoop' ? 'kofferbak' : soort}.svg`;
+// Illustratie voor verkopen zonder eigen foto (zelfde keuze als sfeerNaam() in site/kaart.js).
+const SFEER_SUB = [['kerst', 'markt-kerst'], ['boeken', 'markt-boeken'], ['antiek', 'markt-antiek'], ['kinderbeurs', 'markt-kinder'], ['kleding', 'markt-kleding'], ['kofferbak', 'kofferbak']];
+function sfeerbeeld(soort, category, sub) {
+  let naam = soort;
+  if (category === 'kofferbakverkoop') naam = 'kofferbak';
+  else if (soort === 'markt') naam = (SFEER_SUB.find(([k]) => String(sub || '').toLowerCase().includes(k)) || [, 'markt'])[1];
+  return `/site/img/sfeer/${naam}.svg`;
 }
 
 function renderVerkoopHtml(shell, sale, listings) {
@@ -249,7 +253,7 @@ function renderVerkoopHtml(shell, sale, listings) {
   const wanneer = dagEnTijd(sale);
   const waar = prive || sale.address_hidden || !sale.address ? city : sale.address + (city && !sale.address.includes(city) ? ', ' + city : '');
   const fotos = (sale.photos || []).filter(Boolean);
-  const beeld = fotos[0] || sfeerbeeld(soort, sale.category);
+  const beeld = fotos[0] || sfeerbeeld(soort, sale.category, sale.event_subtype);
   const titel = `${sale.title}, ${fmtDateShort(sale.date)} in ${city}`;
   const metaDesc = (sale.description || `${SOORT_LABEL[soort]} in ${city} op ${wanneer}. Bekijk wat er te koop is, de route en wat er die dag nog meer in de buurt is.`).slice(0, 200);
   const ogImage = fotos[0] || DEFAULT_OG_IMAGE;
@@ -308,7 +312,7 @@ function renderVerkoopHtml(shell, sale, listings) {
     h = vervangVerplicht(h, '<section class="yg-section" id="dag" hidden', '<section class="yg-section" id="dag"', 'dag');
     h = vervangVerplicht(h, '<ul class="yg-grid" id="dag-lijst"></ul>', '<ul class="yg-grid" id="dag-lijst">' + dag.map(l => {
       const s2 = soortVan(l), f = (l.photos || [])[0];
-      return `<li><a class="yg-item" href="/v/${esc(l.id)}"><span class="yg-item__img"><img src="${esc(f || sfeerbeeld(s2, l.category))}" alt="" width="320" height="240" loading="lazy"><span class="yg-badge yg-badge--${s2}">${SOORT_LABEL[s2]}</span>${f ? '' : '<span class="yg-sfeer">Sfeerbeeld</span>'}</span>` +
+      return `<li><a class="yg-item" href="/v/${esc(l.id)}"><span class="yg-item__img"><img src="${esc(f || sfeerbeeld(s2, l.category, l.event_subtype))}" alt="" width="320" height="240" loading="lazy"><span class="yg-badge yg-badge--${s2}">${SOORT_LABEL[s2]}</span>${f ? '' : '<span class="yg-sfeer">Sfeerbeeld</span>'}</span>` +
         `<span class="yg-item__txt"><span class="yg-item__day yg-item__day--${s2}">${esc(dagEnTijd(l))}</span><strong>${esc(l.title)}</strong><span class="yg-meta">${esc(cityFromAddress(l.address, l.city))}, ${Math.round(distKm(sale, l))} km</span></span></a></li>`;
     }).join('') + '</ul>', 'dag-lijst');
   }

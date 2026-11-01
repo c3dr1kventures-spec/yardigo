@@ -64,8 +64,9 @@
 
   function naarVerkoop(item) {
     if (typeof item.latitude !== 'number' || typeof item.longitude !== 'number') return null;
+    var s = soort(item);
     return {
-      id: item.id, soort: soort(item), kofferbak: item.category === 'kofferbakverkoop', titel: item.title || '', plaats: item.city || '',
+      id: item.id, soort: s, sfeer: sfeerNaam(s, item.category, item.event_subtype), titel: item.title || '', plaats: item.city || '',
       lat: item.latitude, lng: item.longitude, van: item.date_start, tot: item.date_end || item.date_start,
       begin: item.time_start, eind: item.time_end, benadering: !!item.location_approx,
       bevestigd: item.placed_by === 'user' || !!item.claimed_by_user_id,
@@ -170,11 +171,18 @@
   var VOLGORDE = { oprit: 0, route: 1, markt: 2 };
 
   // Beeld bij een verkoop: de eigen foto of het affiche, anders de illustratie van
-  // de soort (kofferbakverkopen hebben een eigen). Zelfde keuze als sfeerbeeld()
-  // in build/prerender.mjs.
-  function sfeer(v) {
-    return '/site/img/sfeer/' + (v.kofferbak ? 'kofferbak' : v.soort) + '.svg';
+  // de soort. Markten met een herkenbare subsoort (kerst, boeken, ...) en
+  // kofferbakverkopen hebben een eigen. Zelfde keuze als sfeerbeeld() in
+  // build/prerender.mjs.
+  var SFEER_SUB = [['kerst', 'markt-kerst'], ['boeken', 'markt-boeken'], ['antiek', 'markt-antiek'], ['kinderbeurs', 'markt-kinder'], ['kleding', 'markt-kleding'], ['kofferbak', 'kofferbak']];
+  function sfeerNaam(soort, category, sub) {
+    if (category === 'kofferbakverkoop') return 'kofferbak';
+    if (soort !== 'markt') return soort;
+    sub = String(sub || '').toLowerCase();
+    for (var i = 0; i < SFEER_SUB.length; i++) if (sub.indexOf(SFEER_SUB[i][0]) > -1) return SFEER_SUB[i][1];
+    return 'markt';
   }
+  function sfeer(v) { return '/site/img/sfeer/' + (v.sfeer || v.soort) + '.svg'; }
   function beeld(v) { return v.foto || sfeer(v); }
 
   // ── Kaartjes met beeld (startpagina, verkooppagina) ────────────────
