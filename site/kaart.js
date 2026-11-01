@@ -65,7 +65,7 @@
   function naarVerkoop(item) {
     if (typeof item.latitude !== 'number' || typeof item.longitude !== 'number') return null;
     return {
-      id: item.id, soort: soort(item), titel: item.title || '', plaats: item.city || '',
+      id: item.id, soort: soort(item), kofferbak: item.category === 'kofferbakverkoop', titel: item.title || '', plaats: item.city || '',
       lat: item.latitude, lng: item.longitude, van: item.date_start, tot: item.date_end || item.date_start,
       begin: item.time_start, eind: item.time_end, benadering: !!item.location_approx,
       bevestigd: item.placed_by === 'user' || !!item.claimed_by_user_id,
@@ -169,13 +169,11 @@
   // Volgorde van belang: garagesales eerst, dan rommelroutes, dan markten.
   var VOLGORDE = { oprit: 0, route: 1, markt: 2 };
 
-  // Beeld bij een verkoop: de eigen foto of het affiche, anders een sfeerbeeld van
-  // de soort (3 per soort; vast per verkoop, zodat buren afwisselen). Zelfde keuze
-  // als sfeerbeeld() in build/prerender.mjs.
+  // Beeld bij een verkoop: de eigen foto of het affiche, anders de illustratie van
+  // de soort (kofferbakverkopen hebben een eigen). Zelfde keuze als sfeerbeeld()
+  // in build/prerender.mjs.
   function sfeer(v) {
-    var n = 0, id = String(v.id);
-    for (var i = 0; i < id.length; i++) n = (n + id.charCodeAt(i)) % 997;
-    return '/site/img/sfeer/' + v.soort + '-' + (n % 3 + 1) + '.jpg';
+    return '/site/img/sfeer/' + (v.kofferbak ? 'kofferbak' : v.soort) + '.svg';
   }
   function beeld(v) { return v.foto || sfeer(v); }
 
