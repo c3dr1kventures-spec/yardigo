@@ -18295,6 +18295,26 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       history.replaceState(null, '', location.pathname);
     }
+
+    // Uit de weekendmail: ?instellingen=woonplaats opent het woonplaatsveld.
+    // Wacht tot de sessie hersteld is; gasten zien eerst het inlogscherm.
+    if (params.get('instellingen') === 'woonplaats') {
+      history.replaceState(null, '', location.pathname);
+      (function probeer(n) {
+        if (!isGuest && currentUser && currentUser.id) {
+          openSettings();
+          setTimeout(function() {
+            var veld = document.getElementById('set-city');
+            var wrap = veld && veld.closest('.settings-section');
+            if (wrap) wrap.classList.remove('collapsed');
+            if (veld) { veld.scrollIntoView({ behavior: 'smooth', block: 'center' }); veld.focus(); }
+          }, 400);
+          return;
+        }
+        if (n > 0) { setTimeout(function() { probeer(n - 1); }, 500); return; }
+        guestGate('woonplaats');
+      })(10);
+    }
   })();
 
   // Toon welcome sheet na 3 sec voor nieuwe gebruikers, alleen in de app

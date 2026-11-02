@@ -5,13 +5,16 @@
 //   weekly  (vrijdag 08:00): vandaag t/m 9 dagen vooruit (dit weekend + volgende week)
 //   monthly (de 1e, 08:00):  vandaag t/m 31 dagen vooruit
 // Plek: thuislocatie (home_lat/lng), anders het centrum van de woonplaats
-// (_shared/locatie.ts), anders de eerstvolgende verkopen in het hele land.
+// (_shared/locatie.ts). Zonder plek: een korte mail met de vraag om de
+// woonplaats in te vullen, hooguit eens per 4 weken.
 // Alleen titel, soort, datum en plaats; nooit een adres.
 //
 // Aanroep (pg_cron, header x-cron-secret):
 //   POST /functions/v1/send-reminders  body {"frequency":"weekly"}
 //   ...?dry=1   niets versturen: geeft per ontvanger wat hij zou krijgen,
 //               plus de HTML van de eerste mail.
+//   ...?test=<profiel-id>  alleen de mail van dat profiel, echt versturen naar
+//               het eigen adres (ook als de schakelaar uit staat).
 // Echt versturen alleen als app_config 'weekendmail_aan' = 'true'.
 // Secrets: BREVO_API_KEY, REMINDER_FROM_EMAIL, REMINDER_FROM_NAME.
 
@@ -61,8 +64,7 @@ interface Verkoop {
 }
 type Gekozen = Verkoop & { km: number | null };
 
-function kies(verkopen: Verkoop[], plek: { lat: number; lng: number } | null): Gekozen[] {
-  if (!plek) return verkopen.slice(0, AANTAL).map(v => ({ ...v, km: null }));
+function kies(verkopen: Verkoop[], plek: { lat: number; lng: number }): Gekozen[] {
   return verkopen
     .filter(v => v.latitude != null && v.longitude != null)
     .map(v => ({ ...v, km: distanceKm(plek.lat, plek.lng, v.latitude!, v.longitude!) }))
@@ -75,17 +77,21 @@ function link(v: Verkoop): string {
   return v.short_code ? `${SITE}/s/${v.short_code}` : `${SITE}/v/${v.id}`;
 }
 
+const WOONPLAATS = `${SITE}/app?instellingen=woonplaats`;
+
+// waar: plaatsnaam, of null bij alleen een thuislocatie. rijen leeg = geen plek bekend.
 function mail(naam: string, rijen: Gekozen[], waar: string | null, maand: boolean, uitschrijf: string, totaal: number) {
   const periode = maand ? 'de komende maand' : 'dit weekend en volgende week';
-  const intro = waar
-    ? `Dit staat er ${periode} binnen ${STRAAL_KM} km van ${esc(waar)}:`
-    : `Dit zijn de eerstvolgende verkopen ${periode}. Stel in de app je woonplaats in, dan krijg je alleen verkopen bij jou in de buurt.`;
+  const zonderPlek = !rijen.length;
+  const intro = zonderPlek
+    ? `Er staan ${periode} ${totaal} rommelmarkten en garage sales op de kaart. Welke bij jou in de buurt zijn, zetten we graag in deze mail. Daarvoor hebben we alleen je woonplaats nodig.`
+    : `Dit staat er ${periode} binnen ${STRAAL_KM} km van ${waar ? esc(waar) : 'je huis'}:`;
   const kaartjes = rijen.map(v => `
     <a href="${link(v)}" style="display:block;text-decoration:none;border:1px solid #E6E1D6;border-left:4px solid ${kleur(v.event_subtype, v.category)};border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#FFFFFF">
       <div style="font-size:14px;font-weight:700;color:#1E2922">${esc(v.title || 'Verkoop')}</div>
       <div style="font-size:12px;color:#5C6660;margin-top:3px">${esc(SOORT[v.event_subtype || ''] || 'Verkoop')} · ${esc(datumTekst(v.date_start, v.date_end, v.time_start))} · ${esc(v.city || '')}${v.km != null ? ` · ${v.km < 1 ? '< 1' : Math.round(v.km)} km` : ''}</div>
     </a>`).join('');
-  const meer = totaal > rijen.length ? `<p style="margin:12px 0 0;color:#5C6660;font-size:13px">En nog ${totaal - rijen.length} meer op de kaart.</p>` : '';
+  const meer = !zonderPlek && totaal > rijen.length ? `<p style="margin:12px 0 0;color:#5C6660;font-size:13px">En nog ${totaal - rijen.length} meer op de kaart.</p>` : '';
   const html = `<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;padding:0;background:#F4F2EC;font-family:Helvetica,Arial,sans-serif">
 <div style="max-width:560px;margin:0 auto;padding:20px 16px">
@@ -98,7 +104,7 @@ function mail(naam: string, rijen: Gekozen[], waar: string | null, maand: boolea
     <p style="margin:0 0 16px;color:#3B453F;font-size:14px;line-height:1.55">${intro}</p>
     ${kaartjes}${meer}
     <div style="text-align:center;margin:20px 0 4px">
-      <a href="${SITE}/" style="display:inline-block;background:#E07B39;color:#FFFFFF;border-radius:10px;padding:12px 26px;font-weight:700;font-size:14px;text-decoration:none">Bekijk de kaart</a>
+      <a href="${zonderPlek ? WOONPLAATS : SITE + '/'}" style="display:inline-block;background:#E07B39;color:#FFFFFF;border-radius:10px;padding:12px 26px;font-weight:700;font-size:14px;text-decoration:none">${zonderPlek ? 'Woonplaats invullen' : 'Bekijk de kaart'}</a>
     </div>
   </div>
   <p style="text-align:center;margin:14px 0 0;color:#8A918C;font-size:11px;line-height:1.6">
@@ -108,10 +114,10 @@ function mail(naam: string, rijen: Gekozen[], waar: string | null, maand: boolea
 </div></body></html>`;
   const tekst = [`Hoi ${naam}`, '', intro.replace(/<[^>]+>/g, ''), '',
     ...rijen.map(v => `${v.title || 'Verkoop'} (${SOORT[v.event_subtype || ''] || 'Verkoop'}), ${datumTekst(v.date_start, v.date_end, v.time_start)}, ${v.city || ''}\n${link(v)}`),
-    '', `Bekijk de kaart: ${SITE}/`, '', `Afmelden: ${uitschrijf}`].join('\n');
-  const onderwerp = waar
-    ? `${totaal} ${totaal === 1 ? 'verkoop' : 'verkopen'} bij ${waar} ${maand ? 'deze maand' : 'dit weekend en volgende week'}`
-    : `De eerstvolgende rommelmarkten en garage sales`;
+    '', zonderPlek ? `Woonplaats invullen: ${WOONPLAATS}` : `Bekijk de kaart: ${SITE}/`, '', `Afmelden: ${uitschrijf}`].join('\n');
+  const onderwerp = zonderPlek
+    ? 'Welke rommelmarkten zijn er bij jou in de buurt?'
+    : `${totaal} ${totaal === 1 ? 'verkoop' : 'verkopen'} ${waar ? 'bij ' + waar : 'bij jou in de buurt'} ${maand ? 'deze maand' : 'dit weekend en volgende week'}`;
   return { html, tekst, onderwerp };
 }
 
@@ -137,7 +143,8 @@ serve(async (req: Request) => {
 
   const url = new URL(req.url);
   const aan = (await sb.from('app_config').select('value').eq('key', 'weekendmail_aan').maybeSingle()).data?.value === 'true';
-  const droog = url.searchParams.has('dry') || !aan;
+  const test = url.searchParams.get('test');
+  const droog = url.searchParams.has('dry') || (!aan && !test);
   const body = await req.json().catch(() => ({}));
   const freq = body.frequency === 'monthly' || url.searchParams.get('frequency') === 'monthly' ? 'monthly' : 'weekly';
   const maand = freq === 'monthly';
@@ -152,13 +159,16 @@ serve(async (req: Request) => {
 
   // Niet twee keer in dezelfde periode, ook niet als de cron opnieuw draait.
   const grens = new Date(Date.now() - (maand ? 27 : 6) * 86400000).toISOString();
-  const { data: ontvangers, error: oErr } = await sb.from('profiles')
-    .select('id,display_name,city,home_lat,home_lng,unsubscribe_token')
-    .eq('promo_email_opt_in', true).eq('email_frequency', freq).not('is_blocked', 'is', true)
+  const grensZonderPlek = new Date(Date.now() - 27 * 86400000).toISOString();
+  let q = sb.from('profiles')
+    .select('id,display_name,city,home_lat,home_lng,unsubscribe_token,last_reminder_sent_at')
+    .not('is_blocked', 'is', true);
+  q = test ? q.eq('id', test) : q.eq('promo_email_opt_in', true).eq('email_frequency', freq)
     .or(`last_reminder_sent_at.is.null,last_reminder_sent_at.lt.${grens}`);
+  const { data: ontvangers, error: oErr } = await q;
   if (oErr) return json({ error: oErr.message }, 500);
 
-  const st = { ontvangers: ontvangers?.length ?? 0, verstuurd: 0, leeg: 0, geen_mail: 0, fout: 0 };
+  const st = { ontvangers: ontvangers?.length ?? 0, verstuurd: 0, leeg: 0, zonder_plek: 0, wacht: 0, geen_mail: 0, fout: 0 };
   const proef: unknown[] = [];
   let voorbeeld: string | null = null;
 
@@ -168,15 +178,17 @@ serve(async (req: Request) => {
     if (!email) { st.geen_mail++; continue; }
 
     let plek = p.home_lat != null && p.home_lng != null ? { lat: p.home_lat, lng: p.home_lng } : null;
-    let waar: string | null = plek ? (p.city?.split(',')[0].trim() || 'je huis') : null;
+    let waar: string | null = plek ? (p.city?.split(',')[0].trim() || null) : null;
     if (!plek && p.city) {
       const t = await toetsPlek(sb, null, p.city);
       if (t.centrum) { plek = t.centrum; waar = p.city.split(',')[0].trim(); }
     }
-    const binnen = plek ? kies(verkopen as Verkoop[], plek) : [];
+    // Zonder plek: de vraag om de woonplaats, niet elke week opnieuw.
+    if (!plek && !test && p.last_reminder_sent_at && p.last_reminder_sent_at > grensZonderPlek) { st.wacht++; continue; }
+    if (!plek) st.zonder_plek++;
+    const rijen = plek ? kies(verkopen as Verkoop[], plek) : [];
     // Niets in de buurt: liever geen mail dan een lege.
-    if (plek && !binnen.length) { st.leeg++; proef.push({ id: p.id, waar, aantal: 0 }); continue; }
-    const rijen = plek ? binnen : kies(verkopen as Verkoop[], null);
+    if (plek && !rijen.length) { st.leeg++; proef.push({ id: p.id, waar, aantal: 0 }); continue; }
     const totaal = plek ? (verkopen as Verkoop[]).filter(v => v.latitude != null && v.longitude != null
       && distanceKm(plek!.lat, plek!.lng, v.latitude!, v.longitude!) <= STRAAL_KM).length : (verkopen?.length ?? 0);
 
@@ -190,7 +202,8 @@ serve(async (req: Request) => {
     }
     if (await stuurMail(email, m.onderwerp, m.html, m.tekst)) {
       st.verstuurd++;
-      await sb.from('profiles').update({ last_reminder_sent_at: new Date().toISOString() }).eq('id', p.id);
+      // Een testmail telt niet mee, zodat de echte mail gewoon volgt.
+      if (!test) await sb.from('profiles').update({ last_reminder_sent_at: new Date().toISOString() }).eq('id', p.id);
     } else st.fout++;
   }
 

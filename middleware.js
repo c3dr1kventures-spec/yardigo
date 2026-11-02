@@ -14,7 +14,7 @@
 
 export const config = { matcher: ['/', '/fr'] };
 
-const APP_PARAMS = ['plaatsen', 'route', 'uitschrijven', 'uitschrijven-promo', 'token', 'reset', 'tab', 'action', 'country', 'code'];
+const APP_PARAMS = ['plaatsen', 'route', 'uitschrijven', 'uitschrijven-promo', 'token', 'reset', 'tab', 'action', 'country', 'code', 'instellingen'];
 
 export default function middleware(req) {
   const url = new URL(req.url);
