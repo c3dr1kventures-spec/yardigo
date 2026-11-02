@@ -34,8 +34,11 @@ function plaatsVarianten(plaats: string): string[] {
     .replace(/\s+/g, ' ').replace(/^[\s,]+|[\s,]+$/g, '').trim();
   const delen = schoon.split(',').map(d => d.trim()).filter(d => d.length > 1);
   const eersteWoord = schoon.includes(' ') ? schoon.split(/[ ,]+/)[0] : '';
+  // Duitse stadsdelen: "Meerbusch-Strümp" → "Meerbusch", "Strümp".
+  const streepDelen = delen.length === 1 && /\p{L}-\p{L}/u.test(schoon) && !/^'s-/i.test(schoon)
+    ? schoon.split('-').map(d => d.trim()).filter(d => d.length >= 4) : [];
   const alias = ALIAS[norm(plaats)] || ALIAS[norm(schoon)];
-  return [...new Set([alias, schoon, ...delen, ...binnenHaakjes, eersteWoord].filter(v => v && v.length > 1))].slice(0, 5) as string[];
+  return [...new Set([alias, schoon, ...delen, ...binnenHaakjes, eersteWoord, ...streepDelen].filter(v => v && v.length > 1))].slice(0, 6) as string[];
 }
 
 export async function toetsPlek(sb: any, p: Plek | null, plaats: string | null): Promise<Toets> {
@@ -46,12 +49,25 @@ export async function toetsPlek(sb: any, p: Plek | null, plaats: string | null):
   const r = await sb.rpc('plek_toets', { p_lat: p?.lat ?? null, p_lng: p?.lng ?? null, p_varianten: v });
   if (r.error) { console.log('plek_toets', r.error.message); return { ...leeg, status: 'storing' }; }
   const x = r.data?.[0];
+  // Naam staat niet in de lijst (bv. Frankrijk): vraag de kaart in welke
+  // plaats de pin ligt en vergelijk de namen.
+  if (!x?.kandidaten && p && await pinInPlaats(p, v)) return { ...leeg, status: 'ok', km: 0 };
   if (!x) return leeg;
   return {
     status: x.kandidaten ? (p ? x.status : 'onbekend') : 'onbekend',
     km: x.km, kandidaten: x.kandidaten, eenduidig: !!x.eenduidig,
     centrum: x.beste_lat != null ? { lat: x.beste_lat, lng: x.beste_lng } : null,
   };
+}
+
+async function pinInPlaats(p: Plek, varianten: string[]): Promise<boolean> {
+  try {
+    const r = await fetch(`https://photon.komoot.io/reverse?limit=1&lat=${p.lat}&lon=${p.lng}`,
+      { signal: AbortSignal.timeout(5000), headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl)' } });
+    const x = (await r.json())?.features?.[0]?.properties || {};
+    const namen = [x.city, x.district, x.locality, x.town, x.village, x.name].filter(Boolean).map(norm);
+    return varianten.some(v => namen.includes(v));
+  } catch { return false; }
 }
 
 // PDOK (alleen NL): exacte adressen.
