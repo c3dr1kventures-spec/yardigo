@@ -177,12 +177,28 @@ async function tellers(sb: any) {
 }
 
 // ── Nieuw item uit foto/tekst ──────────────────────────────────────
+// Telegram's getFile hangt soms een minuut en geeft dan 504: kort wachten en opnieuw.
+async function telegramBestand(fileId: string): Promise<Response | null> {
+  for (let poging = 0; poging < 3; poging++) {
+    try {
+      const f = await fetch(`https://api.telegram.org/bot${TOKEN}/getFile`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: fileId }),
+        signal: AbortSignal.timeout(12000) }).then(r => r.json());
+      const path = f?.result?.file_path;
+      if (path) {
+        const r = await fetch(`https://api.telegram.org/file/bot${TOKEN}/${path}`, { signal: AbortSignal.timeout(15000) });
+        if (r.ok) return r;
+      } else console.warn('getFile', poging, f?.description);
+    } catch (e) { console.warn('getFile', poging, (e as Error).message); }
+    await new Promise(z => setTimeout(z, 1500));
+  }
+  return null;
+}
+
 async function fotoAlsBase64(fileId: string): Promise<{ data: string; media_type: string } | null> {
-  const f = await tg('getFile', { file_id: fileId });
-  const path = f?.result?.file_path;
-  if (!path) return null;
-  const r = await fetch(`https://api.telegram.org/file/bot${TOKEN}/${path}`);
-  if (!r.ok) return null;
+  const r = await telegramBestand(fileId);
+  if (!r) return null;
+  const path = new URL(r.url).pathname;
   const buf = new Uint8Array(await r.arrayBuffer());
   let bin = '';
   for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
@@ -326,7 +342,7 @@ async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: str
 async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null, msgId?: number) {
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
-  if (fotoId && !image) return send(chat, '⚠️ Kon de afbeelding niet ophalen. Stuur hem als <b>foto</b> (niet als bestand).');
+  if (fotoId && !image) return send(chat, '⚠️ Telegram geeft de afbeelding nu niet vrij (storing bij Telegram). Stuur hem over een paar minuten nog een keer.');
   const r = await maakItem(sb, tekst, image);
   if (r.extra?.length) await send(chat, `📅 Deze affiche heeft ${r.extra.length + 1} data, je krijgt per datum een kaartje.`);
   for (const x of [r, ...(r.extra || [])]) await toonItem(sb, chat, x, msgId);
