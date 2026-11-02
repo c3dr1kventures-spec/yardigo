@@ -96,6 +96,7 @@ interface EventSchema {
   email: string | null;
   taal: 'nl' | 'fr' | 'de' | 'en' | null;
   datums: Array<{ datum: string; starttijd: string | null; eindtijd: string | null }>;
+  verkooppunten: number | null;
 }
 
 // Uitvoer voor mode 'organizer'. Volgt de velden van het plaatsingsformulier,
@@ -377,7 +378,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '  "telefoon": string | null,',
     '  "email": string | null,',
     '  "taal": "nl" | "fr" | "de" | "en" | null,',
-    '  "datums": [{ "datum": "YYYY-MM-DD", "starttijd": "HH:MM" | null, "eindtijd": "HH:MM" | null }]',
+    '  "datums": [{ "datum": "YYYY-MM-DD", "starttijd": "HH:MM" | null, "eindtijd": "HH:MM" | null }],',
+    '  "verkooppunten": number | null',
     '}',
     '',
     'Regels:',
@@ -385,6 +387,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
       ? '- adres = straat + huisnummer zoals vermeld, ook bij een particuliere verkoop (de verkoper heeft het zelf openbaar gedeeld). Bij een route of meerdere straten: de straatnamen.'
       : '- adres = straat + huisnummer ALLEEN bij een duidelijk publieke locatie (sporthal, plein, markthal, gemeentekantoor, kerk, schoolplein). Bij een privéadres van een particulier: adres = null (privacy).',
     '- beschrijving = EIGEN korte formulering (max 240 tekens), feitelijk. NIET de brontekst letterlijk overnemen.',
+    '- verkooppunten = bij hoeveel huizen/adressen er verkocht wordt: 1 bij één huis of één gezin; het aantal als de bron het noemt of opsomt ("15 adressen", een lijst of plattegrond met nummers); 2 als de bron alleen zegt dat er meerdere huizen, deelnemers of straten meedoen; null bij een markt met kramen of als het onbekend is.',
+    '- Het woord op de affiche beslist NIET de soort. Een "garagesale", "garageverkoop", "tuinverkoop" of "opritverkoop" in een hele straat, wijk, buurt of dorp, met deelnemers, een deelnemerslijst of een plattegrond = "rommelroute". Alleen één huis of één gezin = "opritverkoop". Een verkoop op één plek met tafels of kramen die je kunt huren (ook in een zaal, school of kerk, ook voor een goed doel) = "rommelmarkt".',
     '- event_type: "opritverkoop" bij één huis / eigen oprit, "rommelroute" bij meerdere adressen in een buurt, "rommelmarkt" bij georganiseerde markt met kramen, "buurtverkoop" bij aangekondigde buurt-actie, anders "overig". Elke georganiseerde markt (ook kerstmarkt, boekenmarkt, braderie, kofferbakverkoop, kleding-/kinderbeurs) = "rommelmarkt".',
     '- ' + SUBCATEGORIE_UITLEG,
     '- Ontbrekend veld = null. Verzin niets.',
@@ -590,9 +594,12 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
   const dt = clean(raw.datum as string);
   const st = clean(raw.starttijd as string);
   const en = clean(raw.eindtijd as string);
+  // Meerdere huizen is een route, ook als de affiche "garagesale" zegt.
+  const punten = Number(raw.verkooppunten);
+  const type = et === 'opritverkoop' && punten >= 2 ? 'rommelroute' : et;
   return {
     titel:        clean(raw.titel),
-    event_type:   (et && ALLOWED_TYPES.has(et)) ? (et as EventSchema['event_type']) : null,
+    event_type:   (type && ALLOWED_TYPES.has(type)) ? (type as EventSchema['event_type']) : null,
     subcategorie: (() => { const s = clean(raw.subcategorie as string)?.toLowerCase(); return s && MARKT_SUBTYPES.includes(s) ? s : null; })(),
     datum:        (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt)) ? dt : null,
     starttijd:    (st && /^\d{1,2}:\d{2}$/.test(st)) ? padTime(st) : null,
@@ -613,6 +620,7 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
         eindtijd: de && /^\d{1,2}:\d{2}$/.test(de) ? padTime(de) : null,
       }] : [];
     }).slice(0, 30),
+    verkooppunten: (() => { const n = Number(raw.verkooppunten); return Number.isFinite(n) && n >= 1 ? Math.round(n) : null; })(),
   };
 }
 

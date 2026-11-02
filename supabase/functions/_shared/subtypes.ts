@@ -54,7 +54,7 @@ export function bepaalSubtype(eventType: string | null | undefined, subcategorie
   const sub = norm(subcategorie);
 
   // Titel wint bij duidelijke particuliere verkoop of route.
-  if (/rommelroute|xxl ?garage|dorps?garage|buurtgarage|wijkgarage|garage ?sale route/i.test(t)) return 'rommelroute';
+  if (/rommelroute|xxl ?garage|(dorps?|buurt|wijk|straat)(garage|tuin|oprit)|garage ?sale ?route|garage ?sales\b|garageverkopen|(garage|tuin|oprit) ?(sale|verkoop) in (de|het) (wijk|buurt|dorp)/i.test(t)) return 'rommelroute';
   if (st === 'opritverkoop' || st === 'rommelroute' || st === 'buurtverkoop') return st;
   if (/opritverkoop|garage ?sale|tuinverkoop/i.test(t) && (!st || st === 'overig')) return 'opritverkoop';
 

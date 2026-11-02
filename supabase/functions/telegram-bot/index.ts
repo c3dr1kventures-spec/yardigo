@@ -329,14 +329,51 @@ function reeksen(e: any): Array<{ van: string; tot: string | null; start: string
 
 // Instelling 'direct plaatsen': zelf aangeleverde items gaan meteen live als
 // alles compleet is en de AI niet twijfelt.
-async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: string } | null> {
+async function directPlaatsen(sb: any, row: any): Promise<{ id: string; url: string; fb: string } | null> {
   if ((await cfg(sb, 'telegram_autopublish')) !== 'true') return null;
   const g = metGroep(row);
   if (g.ontbreekt.length || g.groep === 'controleren' || g.groep === 'afwijzen') return null;
   try {
     const listingId = await publishPending(sb, row, await curatorId(sb), null);
-    return await deel(sb, listingId, row.taal);
+    return { id: listingId, ...await deel(sb, listingId, row.taal) };
   } catch (e) { console.warn('direct plaatsen', (e as Error).message); return null; }
+}
+
+// Soort achteraf rechtzetten: de AI leest "garagesale" op de affiche, maar
+// met meerdere huizen is het een rommelroute (en andersom).
+const SOORTEN: Record<string, { naam: string; subtype: string }> = {
+  o: { naam: '🏠 Garagesale (1 huis)', subtype: 'opritverkoop' },
+  r: { naam: '🏘 Rommelroute', subtype: 'rommelroute' },
+  m: { naam: '🎪 Markt', subtype: 'rommelmarkt' },
+};
+function soortNaam(subtype: string | null): string {
+  if (subtype === 'opritverkoop') return SOORTEN.o.naam;
+  if (subtype === 'rommelroute' || subtype === 'buurtverkoop') return SOORTEN.r.naam;
+  return '🎪 Markt' + (subtype && subtype !== 'rommelmarkt' ? ` (${subtype})` : '');
+}
+function soortKnoppen(listingId: string, subtype: string | null) {
+  const nu = subtype === 'opritverkoop' ? 'o' : subtype === 'rommelroute' || subtype === 'buurtverkoop' ? 'r' : 'm';
+  return { inline_keyboard: [Object.entries(SOORTEN).filter(([k]) => k !== nu)
+    .map(([k, v]) => ({ text: 'Wordt ' + v.naam, callback_data: `sv:${listingId}:${k}` }))] };
+}
+async function liveBericht(sb: any, chat: string, titel: string, live: { id: string; url: string }) {
+  const { data } = await sb.from('listings').select('event_subtype').eq('id', live.id).maybeSingle();
+  const st = data?.event_subtype ?? null;
+  return send(chat, `✅ <b>${esc(titel)}</b> staat op de kaart\n🏷 Soort: ${soortNaam(st)}\n${live.url}`, { reply_markup: soortKnoppen(live.id, st) });
+}
+async function soortKnop(sb: any, chat: string, cq: any, listingId: string, k: string) {
+  const s = SOORTEN[k];
+  const { data: l } = await sb.from('listings').select('id,title,category').eq('id', listingId).maybeSingle();
+  if (!s || !l) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Advertentie niet gevonden' });
+  // Garagesale: adres pas 24 uur vooraf (category garagesale). Markt: openbaar.
+  // Route: privacy blijft zoals hij was.
+  const category = k === 'o' ? 'garagesale' : k === 'm' ? 'rommelmarkt' : l.category;
+  const u = await sb.from('listings').update({ event_subtype: s.subtype, category }).eq('id', l.id);
+  if (u.error) return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Opslaan mislukt', show_alert: true });
+  const tekst = String(cq.message?.text || '').replace(/🏷 Soort: .*/, '🏷 Soort: ' + s.naam);
+  await tg('editMessageText', { chat_id: chat, message_id: cq.message.message_id, disable_web_page_preview: true,
+    text: tekst, reply_markup: soortKnoppen(l.id, s.subtype) });
+  return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Soort is nu ' + s.naam });
 }
 
 async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null, msgId?: number) {
@@ -351,7 +388,7 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
 async function toonItem(sb: any, chat: string, r: Maak, msgId?: number) {
   if (r.ok) {
     const live = await directPlaatsen(sb, r.row);
-    if (live) { await send(chat, `✅ <b>${esc(r.row.title)}</b> staat op de kaart\n${live.url}`); return fbBericht(chat, live.fb); }
+    if (live) { await liveBericht(sb, chat, r.row.title, live); return fbBericht(chat, live.fb); }
     return stuurKaart(sb, chat, r.row);
   }
   const d = r.dup;
@@ -762,7 +799,8 @@ async function afficheKnop(sb: any, chat: string, cq: any, listingId: string) {
 }
 
 async function knop(sb: any, chat: string, cq: any) {
-  const [actie, idStr] = String(cq.data || '').split(':');
+  const [actie, idStr, extra] = String(cq.data || '').split(':');
+  if (actie === 'sv') return soortKnop(sb, chat, cq, idStr, extra);
   if (['lo', 'lb', 'lk', 'qok', 'qno', 'lpc', 'lpo'].includes(actie)) return kwaliteitKnop(sb, chat, cq, actie, idStr);
   if (actie === 'sa' || actie === 'sx') return bronKnop(sb, chat, cq, actie, parseInt(idStr, 10));
   if (actie === 'pv') return afficheKnop(sb, chat, cq, idStr);
@@ -803,8 +841,9 @@ async function knop(sb: any, chat: string, cq: any) {
       const reviewer = await curatorId(sb);
       const listingId = await publishPending(sb, p, reviewer, null);
       const d = await deel(sb, listingId, p.taal);
+      const st = (await sb.from('listings').select('event_subtype').eq('id', listingId).maybeSingle()).data?.event_subtype ?? null;
       await tg('editMessageText', { chat_id: chat, message_id: msg.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
-        text: `✅ <b>${esc(p.title)}</b> staat live\n${d.url}` });
+        text: `✅ <b>${esc(p.title)}</b> staat live\n🏷 Soort: ${soortNaam(st)}\n${d.url}`, reply_markup: soortKnoppen(listingId, st) });
       await fbBericht(chat, d.fb);
       return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Gepubliceerd' });
     } catch (e) {
