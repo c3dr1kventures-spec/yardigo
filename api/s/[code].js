@@ -22,7 +22,7 @@ export default async function handler(req) {
     });
     const rows = r.ok ? await r.json() : [];
     if (rows[0]?.id) {
-      return new Response(null, { status: 301, headers: { Location: BASE_URL + '/v/' + rows[0].id + (/^\?lang=(nl|fr|de|en)$/.test(url.search) ? url.search : ''), 'Cache-Control': 'public, max-age=86400' } });
+      return new Response(null, { status: 301, headers: { Location: BASE_URL + '/v/' + rows[0].id + (['nl', 'fr', 'de', 'en'].includes(url.searchParams.get('lang')) ? '?lang=' + url.searchParams.get('lang') : ''), 'Cache-Control': 'public, max-age=86400' } });
     }
   } catch (_) { /* naar de kaart */ }
   return Response.redirect(BASE_URL + '/', 302);
