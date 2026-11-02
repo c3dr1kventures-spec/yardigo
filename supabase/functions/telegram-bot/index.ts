@@ -285,7 +285,9 @@ async function bewaarPoster(sb: any, image: { data: string; media_type: string }
 function contactUitTekst(t: string) {
   const urls = [...t.matchAll(/https?:\/\/[^\s<>"]+/gi)].map(m => m[0].replace(/[).,]+$/, ''));
   const mail = t.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)?.[0] ?? null;
-  const tel = t.match(/(?:\+31|0031|\+32|0)\s?6[\s-]?(?:\d[\s-]?){8}|(?:\+31|\+32|0)\d{1,3}[\s-]?\d{6,7}/)?.[0]?.replace(/[^\d+]/g, '') ?? null;
+  // NL, BE en DE, mobiel en vast, ook met +31/0032/(0). Geen datums ("08-11-2026") of IBAN's.
+  const tel = t.replace(/\(0\)/g, '').match(/(?<![\w+])(?:\+|00)(?:31|32|49)(?:[\s\-./]{0,3}\d){8,11}(?!\d)|(?<![\w+])(?!0\d{0,1}[-./]\d{1,2}[-./]\d{2,4})0(?:[\s\-./]{0,3}\d){8,11}(?!\d)/)?.[0]
+    ?.replace(/[^\d+]/g, '').replace(/^00/, '+') ?? null;
   return { url: urls[0] ?? null, mail, tel };
 }
 
@@ -411,7 +413,11 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   const e = pj?.data;
   if (!e?.titel || !e?.datum) return { ok: false, msg: '⚠️ Kon dit niet lezen' + (pj?.error ? ': ' + esc(String(pj.error).slice(0, 200)) : ' (titel of datum ontbreekt).') };
 
+  // Contact uit het bericht zelf, anders wat de AI op de affiche las.
   const ct = contactUitTekst(tekst);
+  const ctAffiche = contactUitTekst([e.telefoon, e.email].filter(Boolean).join(' '));
+  ct.tel ??= ctAffiche.tel;
+  ct.mail ??= ctAffiche.mail;
   const orgUrl = ct.url || e.bron_url || null;
   // Plek moet in de plaats liggen; anders liever geen pin (dan kijkt er een mens naar).
   const geo = await borgPlek(sb, await geocode(e.adres, e.plaats), e.adres, e.plaats);
