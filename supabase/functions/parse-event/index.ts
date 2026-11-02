@@ -95,6 +95,7 @@ interface EventSchema {
   telefoon: string | null;
   email: string | null;
   taal: 'nl' | 'fr' | 'de' | 'en' | null;
+  datums: Array<{ datum: string; starttijd: string | null; eindtijd: string | null }>;
 }
 
 // Uitvoer voor mode 'organizer'. Volgt de velden van het plaatsingsformulier,
@@ -293,7 +294,7 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: ANTHROPIC_MODEL,
-        max_tokens: 1024,
+        max_tokens: 2048,   // ruimte voor een lange reeks datums
         system: systemPrompt,
         messages: [{ role: 'user', content: contentBlocks }],
       }),
@@ -375,7 +376,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '  "bron_url": string | null,',
     '  "telefoon": string | null,',
     '  "email": string | null,',
-    '  "taal": "nl" | "fr" | "de" | "en" | null',
+    '  "taal": "nl" | "fr" | "de" | "en" | null,',
+    '  "datums": [{ "datum": "YYYY-MM-DD", "starttijd": "HH:MM" | null, "eindtijd": "HH:MM" | null }]',
     '}',
     '',
     'Regels:',
@@ -388,6 +390,7 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '- Ontbrekend veld = null. Verzin niets.',
     '- bron_url alleen als er een URL zichtbaar is; anders null.',
     '- telefoon en email = het contactnummer en e-mailadres van de organisator zoals op de bron of affiche vermeld (bv. achter "info:"); anders null.',
+    '- datums = ALLE data die op de affiche of post staan (bv. een reeks markten, of zaterdag én zondag), chronologisch, elk met de tijden van die dag. datum/starttijd/eindtijd = de eerstvolgende daarvan. Bij één datum: datums = [].',
     '- taal = de taal waarin de affiche of post zelf geschreven is (nl, fr, de of en). Kijk naar de zinnen, niet naar los geplakte links. Andere taal of twijfel: null.',
     '',
     'Als de bron GEEN lokaal-verkoop-evenement bevat (onleesbaar, ander onderwerp, alleen een meme, enz.), antwoord dan met EXACT:',
@@ -602,6 +605,14 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
     telefoon:     clean(raw.telefoon),
     email:        clean(raw.email),
     taal:         (() => { const t = clean(raw.taal)?.toLowerCase(); return t && ['nl', 'fr', 'de', 'en'].includes(t) ? t as EventSchema['taal'] : null; })(),
+    datums:       (Array.isArray(raw.datums) ? raw.datums : []).flatMap((d: any) => {
+      const dd = clean(d?.datum), ds = clean(d?.starttijd), de = clean(d?.eindtijd);
+      return dd && /^\d{4}-\d{2}-\d{2}$/.test(dd) ? [{
+        datum: dd,
+        starttijd: ds && /^\d{1,2}:\d{2}$/.test(ds) ? padTime(ds) : null,
+        eindtijd: de && /^\d{1,2}:\d{2}$/.test(de) ? padTime(de) : null,
+      }] : [];
+    }).slice(0, 30),
   };
 }
 

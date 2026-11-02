@@ -294,7 +294,22 @@ function contactUitTekst(t: string) {
 // dup: het item dat er al is. kind 'live' = staat op de kaart, 'open' = in
 // de lijst (nieuw/tip), 'afgewezen' = eerder afgewezen.
 interface Dup { kind: 'live' | 'open' | 'afgewezen'; title: string; pending_id?: number; listing_id?: string; url?: string; fb?: string; affiche?: 'toegevoegd' | 'heeft_al' }
-type Maak = { ok: true; row: any } | { ok: false; msg: string; dup?: Dup };
+// extra: de items voor de overige data op dezelfde affiche.
+type Maak = ({ ok: true; row: any } | { ok: false; msg: string; dup?: Dup }) & { extra?: Maak[] };
+
+// Affiche met meerdere data: elke datum een eigen item, ook bij za + zo.
+// Data in het verleden vallen af, tenzij er niets anders is.
+function reeksen(e: any): Array<{ van: string; tot: string | null; start: string | null; eind: string | null }> {
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const per = new Map<string, any>();
+  for (const d of [{ datum: e.datum, starttijd: e.starttijd, eindtijd: e.eindtijd }, ...(e.datums || [])]) {
+    if (d?.datum && !per.has(d.datum)) per.set(d.datum, d);
+  }
+  const alle = [...per.values()].sort((a, b) => a.datum.localeCompare(b.datum));
+  const toekomst = alle.filter(d => d.datum >= vandaag);
+  return (toekomst.length ? toekomst : [per.get(e.datum) ?? alle[0]]).slice(0, 12)
+    .map(d => ({ van: d.datum, tot: null, start: d.starttijd ?? e.starttijd ?? null, eind: d.eindtijd ?? e.eindtijd ?? null }));
+}
 
 // Instelling 'direct plaatsen': zelf aangeleverde items gaan meteen live als
 // alles compleet is en de AI niet twijfelt.
@@ -313,6 +328,11 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
   const image = fotoId ? await fotoAlsBase64(fotoId) : null;
   if (fotoId && !image) return send(chat, '⚠️ Kon de afbeelding niet ophalen. Stuur hem als <b>foto</b> (niet als bestand).');
   const r = await maakItem(sb, tekst, image);
+  if (r.extra?.length) await send(chat, `📅 Deze affiche heeft ${r.extra.length + 1} data, je krijgt per datum een kaartje.`);
+  for (const x of [r, ...(r.extra || [])]) await toonItem(sb, chat, x, msgId);
+}
+
+async function toonItem(sb: any, chat: string, r: Maak, msgId?: number) {
   if (r.ok) {
     const live = await directPlaatsen(sb, r.row);
     if (live) { await send(chat, `✅ <b>${esc(r.row.title)}</b> staat op de kaart\n${live.url}`); return fbBericht(chat, live.fb); }
@@ -421,21 +441,32 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   const orgUrl = ct.url || e.bron_url || null;
   // Plek moet in de plaats liggen; anders liever geen pin (dan kijkt er een mens naar).
   const geo = await borgPlek(sb, await geocode(e.adres, e.plaats), e.adres, e.plaats);
-  const h = await sb.rpc('discovery_content_hash', { p_title: e.titel, p_date: e.datum, p_city: e.plaats });
+  let poster: Promise<string | null> | undefined;   // één keer uploaden, gedeeld door alle data
+  const items: Maak[] = [];
+  for (const r of reeksen(e)) {
+    items.push(await itemVoorDatum(sb, e, r, { geo, orgUrl, ct, image, via, poster: () => poster ??= image ? bewaarPoster(sb, image) : Promise.resolve(null) }));
+  }
+  return { ...items[0], extra: items.slice(1) };
+}
+
+async function itemVoorDatum(sb: any, e: any, r: { van: string; tot: string | null; start: string | null; eind: string | null },
+  o: { geo: any; orgUrl: string | null; ct: any; image: any; via: string; poster: () => Promise<string | null> }): Promise<Maak> {
+  const { geo, orgUrl, ct, image, via } = o;
+  const h = await sb.rpc('discovery_content_hash', { p_title: e.titel, p_date: r.van, p_city: e.plaats });
   if (h.data) {
-    const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: e.datum, p_radius_m: 500 });
+    const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: r.van, p_radius_m: 500 });
     if (ref.data) {
       const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail }, image, e.taal);
       return { ok: false, msg: 'Staat er al: ' + dup.title, dup };
     }
   }
-  const posterUrl = image ? await bewaarPoster(sb, image) : null;
+  const posterUrl = await o.poster();
   let subtype = bepaalSubtype(e.event_type, e.subcategorie, e.titel);
   if (subtype === 'overig' && e.event_type !== 'overig') subtype = 'rommelmarkt';
   const isPart = subtype === 'opritverkoop';
   const row: any = {
     title: e.titel, description: e.beschrijving, event_subtype: subtype,
-    date_start: e.datum, time_start: e.starttijd, time_end: e.eindtijd,
+    date_start: r.van, date_end: r.tot, time_start: r.start, time_end: r.eind,
     city: e.plaats, address: e.adres,
     latitude: geo?.lat ?? null, longitude: geo?.lng ?? null,
     source_url: orgUrl || via, source_domain: orgUrl ? domainOf(orgUrl) : via,
@@ -934,10 +965,15 @@ async function api(sb: any, req: Request): Promise<Response> {
     case 'create': {
       const image = b.image?.data ? { data: String(b.image.data), media_type: String(b.image.media_type || 'image/jpeg') } : null;
       const r = await maakItem(sb, String(b.text || ''), image);
-      if (!r.ok && r.dup) return apiJson({ dup: r.dup });
+      // Overige data van dezelfde affiche, elk als eigen item.
+      const extra = [];
+      for (const x of r.extra || []) {
+        if (x.ok) extra.push({ item: metGroep(x.row), published: await directPlaatsen(sb, x.row) });
+        else if (x.dup) extra.push({ dup: x.dup });
+      }
+      if (!r.ok && r.dup) return apiJson({ dup: r.dup, extra });
       if (!r.ok) return apiJson({ error: r.msg.replace(/<[^>]+>/g, '') }, 400);
-      const live = await directPlaatsen(sb, r.row);
-      return apiJson({ item: metGroep(r.row), published: live });
+      return apiJson({ item: metGroep(r.row), published: await directPlaatsen(sb, r.row), extra });
     }
 
     case 'settings':
@@ -1025,9 +1061,10 @@ async function tip(sb: any, req: Request): Promise<Response> {
   if (limiet) return tipJson({ ok: false, reason: limiet }, 429);
 
   const r = await maakItem(sb, tekst, image, TIP_VIA);
-  if (r.ok) {
+  const nieuw = [r, ...(r.extra || [])].filter(x => x.ok) as Array<{ ok: true; row: any }>;
+  if (nieuw.length) {
     const chat = await cfg(sb, 'telegram_admin_chat');
-    if (chat) await stuurKaart(sb, chat, r.row);
+    if (chat) for (const x of nieuw) await stuurKaart(sb, chat, x.row);
     return tipJson({ ok: true, status: 'ontvangen' });
   }
   if (r.dup && r.dup.kind !== 'afgewezen') return tipJson({ ok: true, status: 'bestaat_al', title: r.dup.title, url: r.dup.kind === 'live' ? r.dup.url : null });

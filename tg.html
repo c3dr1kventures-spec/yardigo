@@ -694,6 +694,10 @@
           else if (r.dup.kind === 'open') { j.st = 'open'; j.id = r.dup.pending_id; j.msg = 'Stond al in je lijst · tik om te openen'; }
           else { j.st = 'afgewezen'; j.id = r.dup.pending_id; j.msg = 'Eerder afgewezen · tik om opnieuw te bekijken'; }
         }
+        // Affiche met meerdere data: de overige staan als eigen items in de lijst.
+        var extra = r.extra || [];
+        extra.forEach(function (x) { if (x.item && !x.published) state.items.push(x.item); });
+        if (extra.length) j.msg += ' · +' + extra.length + (extra.length === 1 ? ' andere datum' : ' andere data');
       })
       .catch(function (e) { j.st = 'fout'; j.msg = e.message; haptic('error'); })
       .then(function () { j.file = null; bezig = false; renderJobs(); verwerkWachtrij(); });
