@@ -65,14 +65,39 @@ async function pdok(q: string): Promise<Plek | null> {
   } catch { return null; }
 }
 
+// Geopunt (alleen Vlaanderen): exacte adressen uit het adressenregister.
+// Kan niet tegen haakjes ("Leuven (Heverlee)"), die halen we eruit.
+export async function vlaanderen(q: string): Promise<Plek | null> {
+  try {
+    const r = await fetch('https://geo.api.vlaanderen.be/geolocation/v4/Location?c=1&q=' + encodeURIComponent(q.replace(/\(.*?\)/g, ' ').replace(/\s+/g, ' ')),
+      { signal: AbortSignal.timeout(6000) });
+    const l = (await r.json())?.LocationResult?.[0]?.Location;
+    return l?.Lat_WGS84 ? { lat: l.Lat_WGS84, lng: l.Lon_WGS84 } : null;
+  } catch { return null; }
+}
+
+// Photon (OpenStreetMap, heel Europa): vangnet voor Wallonië, Brussel en
+// Duitsland. Trager, dus als laatste.
+export async function photon(q: string): Promise<Plek | null> {
+  try {
+    const r = await fetch('https://photon.komoot.io/api/?limit=3&q=' + encodeURIComponent(q.replace(/[()]/g, ' ')),
+      { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl)' } });
+    const f = ((await r.json())?.features || []).find((x: any) => ['NL', 'BE', 'DE'].includes(x?.properties?.countrycode));
+    const c = f?.geometry?.coordinates;
+    return c ? { lng: c[0], lat: c[1] } : null;
+  } catch { return null; }
+}
+
 // Zoek een plek die gegarandeerd bij de plaats past: eerst het exacte adres
 // (alleen als dat in de plaats ligt), anders het centrum van de plaats als die
 // naam maar op één plek voorkomt (bij_benadering), anders null.
 export async function veiligeGeocode(sb: any, adres: string | null, plaats: string | null): Promise<(Plek & { bij_benadering: boolean }) | null> {
   if (!plaats) return null;
   if (adres && norm(adres) !== norm(plaats)) {
-    const a = await pdok(`${adres}, ${plaats}`);
-    if (a && (await toetsPlek(sb, a, plaats)).status === 'ok') return { ...a, bij_benadering: false };
+    for (const zoek of [pdok, vlaanderen, photon]) {
+      const a = await zoek(`${adres}, ${plaats}`);
+      if (a && (await toetsPlek(sb, a, plaats)).status === 'ok') return { ...a, bij_benadering: false };
+    }
   }
   const t = await toetsPlek(sb, null, plaats);
   return t.eenduidig && t.centrum ? { ...t.centrum, bij_benadering: true } : null;

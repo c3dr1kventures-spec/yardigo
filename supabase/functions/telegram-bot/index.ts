@@ -26,7 +26,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
-import { borgPlek, toetsPlek, veiligeGeocode } from '../_shared/locatie.ts';
+import { borgPlek, photon, toetsPlek, veiligeGeocode, vlaanderen } from '../_shared/locatie.ts';
 import { bepaalSubtype } from '../_shared/subtypes.ts';
 import { advies, adviesContext, adviesIcoon, type Advies, type AdviesContext } from '../_shared/advies.ts';
 
@@ -211,6 +211,10 @@ async function geocode(adres: string | null, plaats: string | null): Promise<{ l
     // Beerse") een gelijknamige straat elders. Plaats moet dus kloppen.
     if (m && plaatsKlopt(doc?.woonplaatsnaam, plaats)) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
   } catch (_) { /* volgende */ }
+  // België: Nominatim blokkeert de Supabase-servers, dus eerst Geopunt
+  // (Vlaanderen) en Photon (Wallonië, Brussel).
+  const be = await vlaanderen(q) || await photon(q);
+  if (be) return be;
   try {
     const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl,be&q=' + encodeURIComponent(q),
       { headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl; yardigo.app@gmail.com)' } });
