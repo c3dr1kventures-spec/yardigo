@@ -302,7 +302,14 @@
     }).catch(function () { return nominatim().catch(function () { return null; }); });
   }
 
-  function bewaarPlek(p) { opslag(function () { localStorage.setItem('yg-plek', JSON.stringify(p)); }); }
+  // Plaats onthouden staat standaard aan; wie het uitzet, krijgt bij een
+  // volgend bezoek weer alle verkopen (yg-plek-vergeet).
+  function onthoudPlek(aan) {
+    if (aan === undefined) return opslag(function () { return localStorage.getItem('yg-plek-vergeet') !== '1'; }) !== false;
+    opslag(function () { if (aan) localStorage.removeItem('yg-plek-vergeet'); else { localStorage.setItem('yg-plek-vergeet', '1'); localStorage.removeItem('yg-plek'); } });
+  }
+  function bewaarPlek(p) { if (onthoudPlek()) opslag(function () { localStorage.setItem('yg-plek', JSON.stringify(p)); }); }
+  function vergeetPlek() { opslag(function () { localStorage.removeItem('yg-plek'); }); }
   function bewaardePlek() { return opslag(function () { return JSON.parse(localStorage.getItem('yg-plek')); }); }
 
   // ── Kaart ────────────────────────────────────────────────────────────
@@ -456,7 +463,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    detail: detail, winkels: winkels, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, maakKaart: maakKaart, esc: esc,
+    detail: detail, winkels: winkels, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, vergeetPlek: vergeetPlek, onthoudPlek: onthoudPlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN, SUPABASE_URL: SUPABASE_URL, SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
   };
 })();

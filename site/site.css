@@ -82,8 +82,8 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-num { font-variant-numeric: tabular-nums; }
 
 /* ── Logo ────────────────────────────────────────────────────────────── */
-.yg-logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--yg-ink); font-weight: 800; font-size: 21px; letter-spacing: -0.02em; }
-.yg-logo:hover { color: var(--yg-ink); }
+.yg-logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--yg-muted); font-weight: 800; font-size: 21px; letter-spacing: -0.02em; }
+.yg-logo:hover { color: var(--yg-muted); }
 .yg-logo img { width: 22px; height: 28px; display: block; }
 .yg-logo .yg-i { color: var(--yg-amber); }
 .yg-logo .yg-go { color: var(--yg-terra); }
@@ -241,6 +241,10 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-seg button { flex: 1; border: 1px solid var(--yg-line-strong); background: var(--yg-paper); border-radius: 10px; padding: 9px 4px; font-size: 14px; cursor: pointer; }
 .yg-seg button[aria-pressed="true"] { border: 1.5px solid var(--yg-forest); background: var(--yg-land); font-weight: 600; }
 .yg-error { margin: 0; font-size: 14px; color: #9B2C1F; }
+.yg-plek { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; font-size: 14px; }
+.yg-plek label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; min-height: 32px; }
+.yg-plek input { width: 18px; height: 18px; margin: 0; accent-color: var(--yg-forest); }
+.yg-plek button { border: 0; background: none; padding: 6px 0; font: inherit; font-weight: 600; color: var(--yg-forest); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 @media (min-width: 960px) {
   .yg-hero { height: 620px; }
   .yg-hero__map { position: absolute; inset: 0; margin: 0; border-radius: 0; height: auto; }

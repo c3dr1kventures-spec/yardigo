@@ -167,7 +167,14 @@
   function kiesPlek(p) {
     state.plek = p; K.bewaarPlek(p); fout('');
     $('plaats').value = p.naam === YG.t('loc.mine') ? '' : p.naam;
+    plekKeuze();
     toon(true);
+  }
+
+  // Onder het zoekveld: plaats onthouden aan/uit, en terug naar alle verkopen.
+  function plekKeuze() {
+    $('plek-keuze').hidden = !state.plek;
+    $('onthoud').checked = K.onthoudPlek();
   }
 
   function locatie() {
@@ -188,6 +195,17 @@
     if (['weekend', 'vandaag', 'volgend'].indexOf(q.get('w')) > -1) state.wanneer = q.get('w');
     var b = K.bewaardePlek();
     if (b && typeof b.lat === 'number') { state.plek = b; $('plaats').value = b.naam === YG.t('loc.mine') ? '' : b.naam; }
+    plekKeuze();
+    $('onthoud').addEventListener('change', function () {
+      K.onthoudPlek(this.checked);
+      if (this.checked && state.plek) K.bewaarPlek(state.plek);
+    });
+    $('overal').addEventListener('click', function () {
+      state.plek = null; K.vergeetPlek(); fout('');
+      $('plaats').value = '';
+      plekKeuze();
+      toon(true);
+    });
 
     kaart = K.maakKaart($('heromap'), {
       maxKaartjes: 60, voorrang: true,
