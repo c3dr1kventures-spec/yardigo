@@ -86,7 +86,7 @@ async function setCfg(sb: any, key: string, value: string) {
 }
 
 // ── Kaartje ────────────────────────────────────────────────────────
-const PENDING_COLS = 'id,discovered_via_query,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url';
+const PENDING_COLS = 'id,discovered_via_query,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url,taal:raw_ai_response->parse_event->>taal';
 
 function datumNl(d: string | null): string {
   if (!d) return '?';
@@ -304,7 +304,7 @@ async function directPlaatsen(sb: any, row: any): Promise<{ url: string; fb: str
   if (g.ontbreekt.length || g.groep === 'controleren' || g.groep === 'afwijzen') return null;
   try {
     const listingId = await publishPending(sb, row, await curatorId(sb), null);
-    return await deel(sb, listingId);
+    return await deel(sb, listingId, row.taal);
   } catch (e) { console.warn('direct plaatsen', (e as Error).message); return null; }
 }
 
@@ -347,7 +347,7 @@ async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | 
 // heeft. Alleen bij onze eigen (niet-geclaimde) advertenties, nooit bij die van
 // een gebruiker.
 async function bestaandItem(sb: any, ref: any, contact: { url: string | null; tel: string | null; mail: string | null },
-  image: { data: string; media_type: string } | null = null): Promise<Dup> {
+  image: { data: string; media_type: string } | null = null, taal: string | null = null): Promise<Dup> {
   const listingId: string | null = ref.listing_id ?? null;
   if (listingId) {
     if (contact.url || contact.tel || contact.mail) {
@@ -369,7 +369,7 @@ async function bestaandItem(sb: any, ref: any, contact: { url: string | null; te
         }
       }
     }
-    return { kind: 'live', title: ref.title, listing_id: listingId, affiche, ...(await deel(sb, listingId)) };
+    return { kind: 'live', title: ref.title, listing_id: listingId, affiche, ...(await deel(sb, listingId, taal)) };
   }
   const id = ref.pending_id as number;
   if (ref.status === 'afgewezen') return { kind: 'afgewezen', title: ref.title, pending_id: id };
@@ -425,7 +425,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   if (h.data) {
     const ref = await sb.rpc('discovery_find_similar_ref', { p_hash: h.data, p_lat: geo?.lat ?? null, p_lng: geo?.lng ?? null, p_date: e.datum, p_radius_m: 500 });
     if (ref.data) {
-      const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail }, image);
+      const dup = await bestaandItem(sb, ref.data, { url: orgUrl, tel: ct.tel, mail: ct.mail }, image, e.taal);
       return { ok: false, msg: 'Staat er al: ' + dup.title, dup };
     }
   }
@@ -468,12 +468,16 @@ async function korteLink(sb: any, listingId: string): Promise<string> {
   const { data } = await sb.from('listings').select('short_code').eq('id', listingId).maybeSingle();
   return data?.short_code ? `yardigo.nl/s/${data.short_code}` : `${SITE}/v/${listingId}`;
 }
-function fbTekst(link: string): string {
-  return `Staat nu ook op YardiGo 📍 ${link}`;
+// Reactie onder de Facebook-post, in de taal van de affiche (parse-event 'taal').
+const FB_ZIN: Record<string, string> = {
+  nl: 'Staat nu ook op YardiGo', fr: 'Maintenant aussi sur YardiGo', de: 'Jetzt auch auf YardiGo', en: 'Now also on YardiGo',
+};
+function fbTekst(link: string, taal?: string | null): string {
+  return `${FB_ZIN[taal || ''] || FB_ZIN.nl} 📍 ${link}`;
 }
-async function deel(sb: any, listingId: string): Promise<{ url: string; fb: string }> {
+async function deel(sb: any, listingId: string, taal?: string | null): Promise<{ url: string; fb: string }> {
   const kort = await korteLink(sb, listingId);
-  return { url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort) };
+  return { url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort, taal) };
 }
 
 function dmTekst(p: any): string {
@@ -751,7 +755,7 @@ async function knop(sb: any, chat: string, cq: any) {
     try {
       const reviewer = await curatorId(sb);
       const listingId = await publishPending(sb, p, reviewer, null);
-      const d = await deel(sb, listingId);
+      const d = await deel(sb, listingId, p.taal);
       await tg('editMessageText', { chat_id: chat, message_id: msg.message_id, parse_mode: 'HTML', disable_web_page_preview: true,
         text: `✅ <b>${esc(p.title)}</b> staat live\n${d.url}` });
       await fbBericht(chat, d.fb);
@@ -900,7 +904,7 @@ async function api(sb: any, req: Request): Promise<Response> {
         if (b.zonder_contact === true && !heeftContact(p)) {
           await sb.from('pending_events').update({ review_notes: 'geplaatst zonder contact (admin)' }).eq('id', p.id);
         }
-        return apiJson({ listing_id: listingId, ...(await deel(sb, listingId)) });
+        return apiJson({ listing_id: listingId, ...(await deel(sb, listingId, p.taal)) });
       } catch (e) { return apiJson({ error: (e as Error).message }, 500); }
     }
 
@@ -959,9 +963,12 @@ async function api(sb: any, req: Request): Promise<Response> {
     case 'recent': {
       const r = await sb.from('listings').select('id,title,city,date_start,event_subtype,created_at,short_code')
         .eq('placed_by', 'yardigo').order('created_at', { ascending: false }).limit(30);
+      const ids = (r.data || []).map((l: any) => l.id);
+      const talen = ids.length ? (await sb.from('pending_events').select('approved_listing_id,taal:raw_ai_response->parse_event->>taal').in('approved_listing_id', ids)).data || [] : [];
+      const taalVan = new Map(talen.map((t: any) => [t.approved_listing_id, t.taal]));
       return apiJson({ items: (r.data || []).map((l: any) => {
         const kort = l.short_code ? `yardigo.nl/s/${l.short_code}` : `${SITE}/v/${l.id}`;
-        return { ...l, url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort) };
+        return { ...l, url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort, taalVan.get(l.id) as string | undefined) };
       }) });
     }
   }

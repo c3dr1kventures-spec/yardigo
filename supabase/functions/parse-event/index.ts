@@ -94,6 +94,7 @@ interface EventSchema {
   bron_url: string | null;
   telefoon: string | null;
   email: string | null;
+  taal: 'nl' | 'fr' | 'de' | 'en' | null;
 }
 
 // Uitvoer voor mode 'organizer'. Volgt de velden van het plaatsingsformulier,
@@ -373,7 +374,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '  "bron_naam": string | null,',
     '  "bron_url": string | null,',
     '  "telefoon": string | null,',
-    '  "email": string | null',
+    '  "email": string | null,',
+    '  "taal": "nl" | "fr" | "de" | "en" | null',
     '}',
     '',
     'Regels:',
@@ -386,6 +388,7 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '- Ontbrekend veld = null. Verzin niets.',
     '- bron_url alleen als er een URL zichtbaar is; anders null.',
     '- telefoon en email = het contactnummer en e-mailadres van de organisator zoals op de bron of affiche vermeld (bv. achter "info:"); anders null.',
+    '- taal = de taal waarin de affiche of post zelf geschreven is (nl, fr, de of en). Kijk naar de zinnen, niet naar los geplakte links. Andere taal of twijfel: null.',
     '',
     'Als de bron GEEN lokaal-verkoop-evenement bevat (onleesbaar, ander onderwerp, alleen een meme, enz.), antwoord dan met EXACT:',
     '{"error": "geen event gevonden"}',
@@ -598,6 +601,7 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
     bron_url:     clean(raw.bron_url),
     telefoon:     clean(raw.telefoon),
     email:        clean(raw.email),
+    taal:         (() => { const t = clean(raw.taal)?.toLowerCase(); return t && ['nl', 'fr', 'de', 'en'].includes(t) ? t as EventSchema['taal'] : null; })(),
   };
 }
 
