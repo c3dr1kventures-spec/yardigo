@@ -547,10 +547,23 @@ function watOntbreekt(p: any, zonderContact = false): string[] {
 }
 
 // ── Knoppen ────────────────────────────────────────────────────────
-// Korte deellink (yardigo.nl/s/<code>); valt terug op /v/<id>.
-async function korteLink(sb: any, listingId: string): Promise<string> {
+// Domein per land van de verkoop (listing_land, listing-land.sql). De site
+// kiest zelf de taal van de bezoeker, dus een Franse affiche in België
+// wordt yardigo.be en opent in het Frans bij een Franstalige browser.
+// yardigo.de is er nog niet: Duitsland tot dan op yardigo.nl.
+// Frankrijk staat niet in de plaatsenlijst: Franse affiches naar yardigo.be.
+const DOMEIN: Record<string, string> = { nl: 'yardigo.nl', be: 'yardigo.be', lu: 'yardigo.be', de: 'yardigo.nl' };
+async function domeinVan(sb: any, listingId: string, taal?: string | null): Promise<string> {
+  const { data: land } = await sb.rpc('listing_land', { p_id: listingId });
+  return DOMEIN[land as string] || (taal === 'fr' ? 'yardigo.be' : 'yardigo.nl');
+}
+// Korte deellink (yardigo.be/s/<code>); valt terug op /v/<id>.
+async function korteLink(sb: any, listingId: string, taal?: string | null): Promise<string> {
   const { data } = await sb.from('listings').select('short_code').eq('id', listingId).maybeSingle();
-  return data?.short_code ? `yardigo.nl/s/${data.short_code}` : `${SITE}/v/${listingId}`;
+  const domein = await domeinVan(sb, listingId, taal);
+  // Franse of Duitse affiche: pagina opent in die taal.
+  const lang = taal === 'fr' || taal === 'de' ? `?lang=${taal}` : '';
+  return (data?.short_code ? `${domein}/s/${data.short_code}` : `https://www.${domein}/v/${listingId}`) + lang;
 }
 // Reactie onder de Facebook-post, in de taal van de affiche (parse-event 'taal').
 const FB_ZIN: Record<string, string> = {
@@ -560,7 +573,7 @@ function fbTekst(link: string, taal?: string | null): string {
   return `${FB_ZIN[taal || ''] || FB_ZIN.nl} 📍 ${link}`;
 }
 async function deel(sb: any, listingId: string, taal?: string | null): Promise<{ url: string; fb: string }> {
-  const kort = await korteLink(sb, listingId);
+  const kort = await korteLink(sb, listingId, taal);
   return { url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort, taal) };
 }
 
@@ -1057,10 +1070,12 @@ async function api(sb: any, req: Request): Promise<Response> {
       const ids = (r.data || []).map((l: any) => l.id);
       const talen = ids.length ? (await sb.from('pending_events').select('approved_listing_id,taal:raw_ai_response->parse_event->>taal').in('approved_listing_id', ids)).data || [] : [];
       const taalVan = new Map(talen.map((t: any) => [t.approved_listing_id, t.taal]));
-      return apiJson({ items: (r.data || []).map((l: any) => {
-        const kort = l.short_code ? `yardigo.nl/s/${l.short_code}` : `${SITE}/v/${l.id}`;
-        return { ...l, url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort, taalVan.get(l.id) as string | undefined) };
-      }) });
+      return apiJson({ items: await Promise.all((r.data || []).map(async (l: any) => {
+        const taal = taalVan.get(l.id) as string | undefined;
+        const domein = await domeinVan(sb, l.id, taal);
+        const kort = (l.short_code ? `${domein}/s/${l.short_code}` : `https://www.${domein}/v/${l.id}`) + (taal === 'fr' || taal === 'de' ? `?lang=${taal}` : '');
+        return { ...l, url: kort.startsWith('http') ? kort : 'https://' + kort, fb: fbTekst(kort, taal) };
+      })) });
     }
   }
   return apiJson({ error: 'onbekende op' }, 400);
