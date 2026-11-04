@@ -644,12 +644,13 @@ function watOntbreekt(p: any, zonderContact = false): string[] {
 // Domein per land van de verkoop (listing_land, listing-land.sql). De site
 // kiest zelf de taal van de bezoeker, dus een Franse affiche in België
 // wordt yardigo.be en opent in het Frans bij een Franstalige browser.
-// yardigo.de is er nog niet: Duitsland tot dan op yardigo.nl.
-// Frankrijk staat niet in de plaatsenlijst: Franse affiches naar yardigo.be.
-const DOMEIN: Record<string, string> = { nl: 'yardigo.nl', be: 'yardigo.be', lu: 'yardigo.be', de: 'yardigo.nl' };
+// yardigo.de is er nog niet: Duitsland tot dan op yardigo.app (neutraler dan
+// een Nederlands domein). Frankrijk staat niet in de plaatsenlijst: Franse
+// affiches naar yardigo.be.
+const DOMEIN: Record<string, string> = { nl: 'yardigo.nl', be: 'yardigo.be', lu: 'yardigo.be', de: 'yardigo.app' };
 async function domeinVan(sb: any, listingId: string, taal?: string | null): Promise<string> {
   const { data: land } = await sb.rpc('listing_land', { p_id: listingId });
-  return DOMEIN[land as string] || (taal === 'fr' ? 'yardigo.be' : 'yardigo.nl');
+  return DOMEIN[land as string] || (taal === 'fr' ? 'yardigo.be' : taal === 'de' ? 'yardigo.app' : 'yardigo.nl');
 }
 // Korte deellink (yardigo.be/s/<code>); valt terug op /v/<id>.
 async function korteLink(sb: any, listingId: string, taal?: string | null): Promise<string> {

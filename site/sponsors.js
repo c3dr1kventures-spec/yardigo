@@ -18,7 +18,8 @@
   var LAND = (function () {
     var h = location.hostname, q = new URLSearchParams(location.search).get('land');
     if (/(^|\.)yardigo\.be$/.test(h)) return 'be';
-    if (/(^|\.)yardigo\.de$/.test(h)) return 'de';
+    // yardigo.app gebruiken we voor Duitse verkopen zolang yardigo.de er niet is.
+    if (/(^|\.)yardigo\.(de|app)$/.test(h)) return 'de';
     if (!/(^|\.)yardigo\.nl$/.test(h) && (q === 'be' || q === 'de')) return q;
     return 'nl';
   })();

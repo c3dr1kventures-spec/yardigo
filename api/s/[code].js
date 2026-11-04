@@ -14,7 +14,7 @@ export default async function handler(req) {
   const url = new URL(req.url);
   const code = url.pathname.split('/').pop().toLowerCase();
   // Op het domein blijven waar de link op staat (yardigo.be/s/... → yardigo.be/v/...).
-  const BASE_URL = /(^|\.)yardigo\.(nl|be|de)$/.test(url.hostname) ? url.origin : BASE_NL;
+  const BASE_URL = /(^|\.)yardigo\.(nl|be|de|app)$/.test(url.hostname) ? url.origin : BASE_NL;
   if (!/^[a-z0-9]{4,12}$/.test(code)) return Response.redirect(BASE_URL + '/', 302);
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/listings?select=id&limit=1&short_code=eq.' + code, {
