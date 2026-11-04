@@ -97,6 +97,8 @@ interface EventSchema {
   taal: 'nl' | 'fr' | 'de' | 'en' | null;
   datums: Array<{ datum: string; starttijd: string | null; eindtijd: string | null }>;
   verkooppunten: number | null;
+  land: 'NL' | 'BE' | 'DE' | 'LU' | 'FR' | null;
+  postcode: string | null;
 }
 
 // Uitvoer voor mode 'organizer'. Volgt de velden van het plaatsingsformulier,
@@ -352,7 +354,7 @@ serve(async (req: Request) => {
 function buildSystemPrompt(today: string, hintCountry: string, keepAddress = false): string {
   const countryLine = hintCountry
     ? `Context: de bron gaat waarschijnlijk over een evenement in ${hintCountry === 'BE' ? 'België' : 'Nederland'}.`
-    : 'Context: de bron gaat over een lokale verkoop in Nederland of België.';
+    : 'Context: de bron gaat over een lokale verkoop in Nederland, België of Duitsland.';
 
   return [
     'Je bent een strikte JSON-extractor voor lokale-verkoop-evenementen (rommelmarkten, rommelroutes, opritverkoop, buurtverkopen).',
@@ -379,7 +381,9 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '  "email": string | null,',
     '  "taal": "nl" | "fr" | "de" | "en" | null,',
     '  "datums": [{ "datum": "YYYY-MM-DD", "starttijd": "HH:MM" | null, "eindtijd": "HH:MM" | null }],',
-    '  "verkooppunten": number | null',
+    '  "verkooppunten": number | null,',
+    '  "land": "NL" | "BE" | "DE" | "LU" | "FR" | null,',
+    '  "postcode": string | null',
     '}',
     '',
     'Regels:',
@@ -395,6 +399,8 @@ function buildSystemPrompt(today: string, hintCountry: string, keepAddress = fal
     '- bron_url alleen als er een URL zichtbaar is; anders null.',
     '- telefoon en email = het contactnummer en e-mailadres van de organisator zoals op de bron of affiche vermeld (bv. achter "info:"); anders null.',
     '- datums = ALLE data die op de affiche of post staan (bv. een reeks markten, of zaterdag én zondag), chronologisch, elk met de tijden van die dag. datum/starttijd/eindtijd = de eerstvolgende daarvan. Bij één datum: datums = [].',
+    '- land = het land waar de verkoop is. Let op postcode (NL "1234 AB", BE 4 cijfers, DE 5 cijfers), taal, kenteken, telefoonnummer (+31/+32/+49) en bekende plaatsen. Twijfel: null.',
+    '- postcode = de postcode van de verkoop zoals vermeld (ook als die in het adres staat); anders null.',
     '- taal = de taal waarin de affiche of post zelf geschreven is (nl, fr, de of en). Kijk naar de zinnen, niet naar los geplakte links. Andere taal of twijfel: null.',
     '',
     'Als de bron GEEN lokaal-verkoop-evenement bevat (onleesbaar, ander onderwerp, alleen een meme, enz.), antwoord dan met EXACT:',
@@ -621,6 +627,8 @@ function normalizeEvent(raw: Record<string, unknown>): EventSchema {
       }] : [];
     }).slice(0, 30),
     verkooppunten: (() => { const n = Number(raw.verkooppunten); return Number.isFinite(n) && n >= 1 ? Math.round(n) : null; })(),
+    land:         (() => { const l = clean(raw.land)?.toUpperCase(); return l && ['NL', 'BE', 'DE', 'LU', 'FR'].includes(l) ? l as EventSchema['land'] : null; })(),
+    postcode:     (() => { const pc = clean(raw.postcode)?.toUpperCase().replace(/^(?:[A-Z]{1,2}-)/, ''); return pc && /^\d{4,5}(?: ?[A-Z]{2})?$/.test(pc) ? pc : null; })(),
   };
 }
 
