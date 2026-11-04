@@ -1,7 +1,8 @@
 // YardiGo sponsors op de homepage. Elk domein heeft eigen sponsors:
 // yardigo.nl Nederlandse, yardigo.be Belgische, yardigo.de Duitse.
 //   - Brede schermen (vanaf 1600 px): vakken naast de inhoud, 3 links
-//     (plek 1-3) en 3 rechts (4-6), plus één vrij vak per kant.
+//     (plek 1-3) en 3 rechts (4-6), met onderaan altijd een vak dat om
+//     sponsors vraagt.
 //   - Smallere schermen (telefoon, laptop): één sponsor als vierde kaartje in
 //     de lijst "Binnenkort", elke keer een andere. home.js roept inLijst() aan
 //     na het vullen van die lijst.
@@ -60,15 +61,15 @@
       '<span class="yg-sv__knop">' + K.esc(t('sp.cta')) + '</span></a>';
   }
 
-  // Per kant de verkochte plekken op volgorde, plus één vrij vak zolang er nog plek is.
+  // Per kant de sponsors onder elkaar (hooguit 3, op volgorde van plek) en
+  // daaronder altijd het vak dat om sponsors vraagt.
   function kolom(lijst, van) {
     var html = '';
     for (var p = van; p < van + 3; p++) {
       var s = lijst.filter(function (x) { return x.plek === p; })[0];
       if (s) html += vak(s);
     }
-    if (lijst.filter(function (x) { return x.plek >= van && x.plek < van + 3; }).length < 3) html += leeg();
-    return html;
+    return html + leeg();
   }
 
   // Kaartje in dezelfde vorm als een verkoop, met het label Sponsor.
