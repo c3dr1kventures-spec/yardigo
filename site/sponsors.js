@@ -1,13 +1,22 @@
 // YardiGo sponsorvakken op de homepage: 3 links (plek 1-3), 3 rechts (4-6),
-// alleen op schermen waar naast de inhoud ruimte is. Beheer via de
-// Telegram-bot (/sponsor). Weergaven en kliks tellen we per dag in
-// sponsor_stats, zonder cookies of iets over de bezoeker.
+// alleen op schermen waar naast de inhoud ruimte is. Elk domein heeft eigen
+// sponsors: yardigo.nl Nederlandse, yardigo.be Belgische, yardigo.de Duitse.
+// Beheer via de Telegram-bot (/sponsor). Weergaven en kliks tellen we per dag
+// in sponsor_stats, zonder cookies of iets over de bezoeker.
 (function () {
   'use strict';
 
   var K = window.YGKaart;
   var BREED = window.matchMedia('(min-width: 1600px)');
   var MAIL = 'mailto:info@yardigo.nl?subject=Sponsorplek%20YardiGo';
+  // Preview-deploys en localhost: ?land=be of ?land=de om een domein na te doen.
+  var LAND = (function () {
+    var h = location.hostname, q = new URLSearchParams(location.search).get('land');
+    if (/(^|\.)yardigo\.be$/.test(h)) return 'be';
+    if (/(^|\.)yardigo\.de$/.test(h)) return 'de';
+    if (!/(^|\.)yardigo\.nl$/.test(h) && (q === 'be' || q === 'de')) return q;
+    return 'nl';
+  })();
   var geteld = false;
   var t = function (k) { return window.YG ? window.YG.t(k) : k; };
 
@@ -83,7 +92,7 @@
       if (BREED.addEventListener) BREED.addEventListener('change', function wacht() { BREED.removeEventListener('change', wacht); start(); });
       return;
     }
-    api('sponsors?select=id,plek,naam,tekst,url,logo_url,kleur&order=plek')
+    api('sponsors?select=id,plek,naam,tekst,url,logo_url,kleur&land=eq.' + LAND + '&order=plek')
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (lijst) { teken(Array.isArray(lijst) ? lijst : []); })
       .catch(function () { teken([]); });
