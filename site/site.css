@@ -646,6 +646,34 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 }
 
 
+/* Pagina voor organisatoren (organisatoren.html) */
+.yg-orgp-hero { display: flex; align-items: center; gap: 24px; padding-top: 32px; padding-bottom: 8px; }
+.yg-orgp-hero__txt { display: grid; gap: 14px; }
+.yg-orgp-hero__cedrik { display: none; width: 200px; height: auto; margin-left: auto; }
+@media (min-width: 760px) { .yg-orgp-hero { padding-top: 56px; } .yg-orgp-hero__cedrik { display: block; } }
+.yg-keuze { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 14px; }
+.yg-keuze__item { display: flex; flex-direction: column; gap: 10px; padding: 20px; border: 1px solid var(--yg-line); border-radius: var(--yg-radius-l); background: var(--yg-paper); }
+.yg-keuze__item .yg-h3 { display: flex; align-items: center; gap: 10px; }
+.yg-keuze__item p { margin: 0 0 6px; color: var(--yg-muted); flex: 1; }
+.yg-keuze__item .yg-btn { align-self: flex-start; }
+@media (min-width: 760px) { .yg-keuze { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; } }
+.yg-orgp-how { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .yg-orgp-how { grid-template-columns: minmax(0, 1fr); } }
+.yg-waarom { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; }
+.yg-waarom li { display: grid; gap: 2px; }
+.yg-waarom strong { font-size: 17px; }
+.yg-waarom span { color: var(--yg-muted); }
+@media (min-width: 760px) { .yg-waarom { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
+.yg-faq { margin-top: 12px; max-width: 46em; border-top: 1px solid var(--yg-line); }
+.yg-faq details { border-bottom: 1px solid var(--yg-line); }
+.yg-faq summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 12px 0; font-weight: 600; font-size: 16px; cursor: pointer; list-style: none; }
+.yg-faq summary::-webkit-details-marker { display: none; }
+.yg-faq summary::after { content: '+'; flex: none; font-size: 22px; font-weight: 400; color: var(--yg-forest); }
+.yg-faq details[open] summary::after { content: '\2212'; }
+.yg-faq p { margin: 0 0 16px; color: var(--yg-muted); }
+.yg-orgp-hero + .yg-section { padding-top: 32px; }
+main#inhoud-start > .yg-section:last-child { padding-bottom: 0; margin-top: 48px; }
+
 /* Sponsorvakken (site/sponsors.js): naast de inhoud, alleen op brede schermen */
 .yg-sponsors { display: none; }
 @media (min-width: 1600px) {
