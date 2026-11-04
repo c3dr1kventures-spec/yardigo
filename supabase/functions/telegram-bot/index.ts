@@ -176,6 +176,83 @@ async function tellers(sb: any) {
   };
 }
 
+// ── Sponsorvakken (homepage) ───────────────────────────────────────
+// Plek 1-3 links, 4-6 rechts. De site toont alleen lopende sponsors
+// (RLS op public.sponsors); weergaven en kliks staan per dag in sponsor_stats.
+const SPONSOR_KLEUREN = ['#3A6B4A', '#E07B39', '#B7791F', '#55625A', '#3A6B4A', '#E07B39'];
+
+async function sponsorOverzicht(sb: any, chat: string) {
+  const vandaag = new Date().toISOString().slice(0, 10);
+  const week = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  const { data: lijst } = await sb.from('sponsors').select('id,plek,naam,eindigt').eq('actief', true).order('plek');
+  const ids = (lijst || []).map((s: any) => s.id);
+  const { data: stats } = ids.length
+    ? await sb.from('sponsor_stats').select('sponsor_id,dag,weergaven,kliks').in('sponsor_id', ids)
+    : { data: [] };
+  const som = (a: any[], k: string) => a.reduce((n, x) => n + (x[k] || 0), 0);
+  const regels = ['<b>Sponsorvakken</b> (1-3 links, 4-6 rechts)'];
+  for (let p = 1; p <= 6; p++) {
+    const s = (lijst || []).find((x: any) => x.plek === p);
+    if (!s) { regels.push(`${p}. <i>vrij</i>`); continue; }
+    const st = (stats || []).filter((x: any) => x.sponsor_id === s.id);
+    const w = st.filter((x: any) => x.dag >= week);
+    regels.push(`${p}. <b>${esc(s.naam)}</b> t/m ${datumNl(s.eindigt)}${s.eindigt < vandaag ? ' (verlopen, niet meer zichtbaar)' : ''}\n` +
+      `     7 dagen: ${som(w, 'weergaven')}× gezien, ${som(w, 'kliks')} kliks. Totaal: ${som(st, 'weergaven')}× gezien, ${som(st, 'kliks')} kliks`);
+  }
+  regels.push('',
+    'Plaatsen: <code>/sponsor 2 Naam | korte zin | https://site.nl | 4</code>',
+    'Het laatste getal is het aantal weken (standaard 4). Stuur het als bijschrift bij een foto, dan wordt die foto het logo.',
+    'Weghalen: <code>/sponsorweg 2</code>');
+  await send(chat, regels.join('\n'));
+}
+
+async function sponsorZet(sb: any, chat: string, tekst: string, fileIds: string[]) {
+  const m = tekst.match(/^\/sponsor\s+([1-6])\s+([\s\S]+)$/);
+  if (!m) return send(chat, 'Gebruik: <code>/sponsor 2 Naam | korte zin | https://site.nl | 4</code>. Typ /sponsor voor het overzicht.');
+  const plek = Number(m[1]);
+  const [naam = '', zin = '', link = '', weken = ''] = m[2].split('|').map(x => x.trim());
+  let url = link;
+  if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+  url = url.replace(/^http:\/\//i, 'https://');
+  const fout: string[] = [];
+  if (!naam || naam.length > 40) fout.push('naam (1 tot 40 tekens)');
+  if (zin.length > 90) fout.push(`korte zin (max 90 tekens, nu ${zin.length})`);
+  try { if (!url || !new URL(url).hostname.includes('.')) throw 0; } catch { fout.push('website'); }
+  if (fout.length) return send(chat, '⚠️ Klopt niet: ' + fout.join(', ') + '.\nVoorbeeld: <code>/sponsor 2 Kringloop De Zwaluw | Elke zaterdag nieuwe spullen | https://dezwaluw.nl | 4</code>');
+
+  let logo: string | null = null;
+  if (fileIds.length) {
+    const img = await fotoAlsBase64(fileIds);
+    if (!img) return send(chat, '⚠️ Ik kon het logo niet ophalen. Probeer het nog eens, of stuur de opdracht zonder foto.');
+    try {
+      const bin = Uint8Array.from(atob(img.data), c => c.charCodeAt(0));
+      const pad = `sponsors/${randomHex(8)}.${img.media_type.split('/')[1].replace('jpeg', 'jpg')}`;
+      const up = await sb.storage.from('listings').upload(pad, bin, { contentType: img.media_type, upsert: false });
+      if (up.error) throw new Error(up.error.message);
+      logo = sb.storage.from('listings').getPublicUrl(pad).data.publicUrl;
+    } catch (e) { return send(chat, '⚠️ Logo opslaan mislukt: ' + esc((e as Error).message)); }
+  }
+
+  const n = Math.min(Math.max(parseInt(weken, 10) || 4, 1), 52);
+  const begint = new Date().toISOString().slice(0, 10);
+  const eindigt = new Date(Date.now() + (n * 7 - 1) * 864e5).toISOString().slice(0, 10);
+  const { data: oud } = await sb.from('sponsors').update({ actief: false }).eq('plek', plek).eq('actief', true).select('naam');
+  const { error } = await sb.from('sponsors').insert({
+    plek, naam, tekst: zin || null, url, logo_url: logo, kleur: SPONSOR_KLEUREN[plek - 1], begint, eindigt,
+  });
+  if (error) return send(chat, '⚠️ Opslaan mislukt: ' + esc(error.message));
+  await send(chat, `✅ Plek ${plek} (${plek <= 3 ? 'links' : 'rechts'}): <b>${esc(naam)}</b> staat live t/m ${datumNl(eindigt)}.` +
+    (oud?.length ? `\nVervangt ${esc(oud[0].naam)}.` : '') +
+    `\nZichtbaar op ${SITE} op brede schermen (vanaf 1600 px). /sponsor voor het overzicht.`);
+}
+
+async function sponsorWeg(sb: any, chat: string, tekst: string) {
+  const plek = Number(tekst.match(/^\/sponsorweg\s+([1-6])\b/)?.[1] || 0);
+  if (!plek) return send(chat, 'Gebruik: <code>/sponsorweg 2</code> (plek 1 tot 6).');
+  const { data } = await sb.from('sponsors').update({ actief: false }).eq('plek', plek).eq('actief', true).select('naam');
+  await send(chat, data?.length ? `🗑 ${esc(data[0].naam)} is weg van plek ${plek}.` : `Plek ${plek} was al vrij.`);
+}
+
 // ── Nieuw item uit foto/tekst ──────────────────────────────────────
 // Telegram's getFile hangt soms een minuut. Kort wachten, en daarna de
 // kleinere versie van de foto proberen (ander bestand, vaak wel meteen
@@ -1260,6 +1337,11 @@ serve(async (req: Request) => {
     if (/^\/stats\b/.test(tekst)) {
       const t = await tellers(sb);
       await send(chat, `🗺 ${t.live} live (toekomst)\n🏠 ${t.tips} tips\n📥 ${t.wachtrij} in wachtrij\n✉️ ${t.onverstuurd} nog niet getoond`);
+    } else if (/^\/sponsorweg\b/.test(tekst)) {
+      await sponsorWeg(sb, chat, tekst);
+    } else if (/^\/sponsor\b/.test(tekst)) {
+      if (/^\/sponsor\s*$/.test(tekst)) await sponsorOverzicht(sb, chat);
+      else await sponsorZet(sb, chat, tekst, m.photo?.length ? fotoIds(m) : []);
     } else if (/^\/meer\b/.test(tekst)) {
       const n = await digest(sb, chat, true);
       if (!n) await send(chat, '🎉 Niets meer — alles is getoond.');
@@ -1287,7 +1369,8 @@ serve(async (req: Request) => {
         '↩️ Antwoord op een kaartje met een link, 06 of e-mail → contact aangevuld; met een adres → locatie',
         '✅/❌ op een kaartje → publiceren of afwijzen. Na publiceren krijg je een kant-en-klare Facebook-reactie.',
         '📣 /oproep → kant-en-klare Facebook-posts met yardigo.nl/verkoop',
-        '/stats · /meer · /oproep',
+        '💼 /sponsor → sponsorvakken op de homepage: overzicht, plaatsen en weghalen',
+        '/stats · /meer · /oproep · /sponsor',
       ].join('\n'));
     } else if (m.reply_to_message?.from?.is_bot && await aanvulling(sb, chat, tekst, m.reply_to_message)) {
       // afgehandeld

@@ -645,6 +645,29 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
   .yg-row { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; }
 }
 
+
+/* Sponsorvakken (site/sponsors.js): naast de inhoud, alleen op brede schermen */
+.yg-sponsors { display: none; }
+@media (min-width: 1600px) {
+  .yg-met-sponsors main { position: relative; }
+  .yg-sponsors { --sp-w: min(220px, calc((100vw - 1200px) / 2 - 32px)); display: flex; flex-direction: column; gap: 14px; position: absolute; top: 660px; width: var(--sp-w); z-index: 5; }
+  .yg-sponsors--l { left: calc(((100vw - 1200px) / 2 - var(--sp-w)) / 2); }
+  .yg-sponsors--r { right: calc(((100vw - 1200px) / 2 - var(--sp-w)) / 2); }
+  .yg-met-sponsors .yg-routebalk { right: auto; left: 50%; transform: translateX(-50%); }
+}
+.yg-sv { display: block; padding: 12px; border: 1px solid var(--yg-line); border-radius: var(--yg-radius-m); background: var(--yg-paper); color: var(--yg-ink); text-decoration: none; }
+.yg-sv:hover { border-color: var(--yg-line-strong); }
+.yg-sv:focus-visible { outline: 3px solid var(--yg-forest); outline-offset: 2px; }
+.yg-sv__lbl { display: block; margin-bottom: 8px; font-size: 11px; color: var(--yg-muted); }
+.yg-sv__rij { display: flex; gap: 10px; align-items: center; }
+.yg-sv__logo { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; object-fit: contain; background: var(--yg-land); font-weight: 800; font-size: 17px; color: #FFFFFF; }
+.yg-sv__naam { display: block; font-weight: 700; font-size: 14px; line-height: 1.25; }
+.yg-sv__url { display: block; font-size: 12px; color: var(--yg-forest); text-decoration: underline; overflow-wrap: anywhere; }
+.yg-sv__tekst { display: block; margin-top: 8px; font-size: 12.5px; line-height: 1.4; color: var(--yg-muted); }
+.yg-sv--leeg { border: 1.5px dashed var(--yg-line-strong); background: transparent; text-align: center; }
+.yg-sv--leeg .yg-sv__naam { color: var(--yg-forest); }
+.yg-sv__knop { display: inline-block; margin-top: 10px; padding: 6px 14px; border: 1.5px solid var(--yg-forest); border-radius: 999px; color: var(--yg-forest); font-weight: 600; font-size: 12px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
