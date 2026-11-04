@@ -26,7 +26,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { autoCheck, curatorId, publishPending } from '../_shared/publish.ts';
-import { borgPlek, photon, toetsPlek, veiligeGeocode, vlaanderen } from '../_shared/locatie.ts';
+import { toetsPlek, veiligeGeocode, zoekPlek } from '../_shared/locatie.ts';
 import { bepaalSubtype } from '../_shared/subtypes.ts';
 import { advies, adviesContext, adviesIcoon, type Advies, type AdviesContext } from '../_shared/advies.ts';
 
@@ -86,7 +86,7 @@ async function setCfg(sb: any, key: string, value: string) {
 }
 
 // ── Kaartje ────────────────────────────────────────────────────────
-const PENDING_COLS = 'id,discovered_via_query,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url,taal:raw_ai_response->parse_event->>taal';
+const PENDING_COLS = 'id,discovered_via_query,title,description,event_subtype,date_start,date_end,time_start,time_end,city,address,latitude,longitude,organizer_name,organizer_url,contact_email,contact_phone,is_private_seller,status,auto_check,lead_source_url,source_url,approved_listing_id,poster_url,plek_geschat,taal:raw_ai_response->parse_event->>taal,land:raw_ai_response->parse_event->>land,postcode:raw_ai_response->parse_event->>postcode';
 
 function datumNl(d: string | null): string {
   if (!d) return '?';
@@ -105,7 +105,7 @@ function kaartTekst(p: any, a?: Advies): string {
     `${p.is_private_seller ? '🏠' : '🎪'} <b>${esc(p.title)}</b>`,
     ...(a ? [`${adviesIcoon(a.k)} <b>Advies: ${esc(a.kop)}</b>`, ...a.waarom.slice(0, 3).map(w => `   · ${esc(w)}`), ''] : []),
     `📅 ${datumNl(p.date_start)}${p.date_end ? ' t/m ' + datumNl(p.date_end) : ''}${tijd}`,
-    `📍 ${esc(p.city || '?')}${p.address ? ' — ' + esc(p.address) : ''}${p.latitude == null ? ' ⚠️ geen coördinaten' : ''}`,
+    `📍 ${esc(p.city || '?')}${p.address ? ' — ' + esc(p.address) : ''}${p.latitude == null ? ' ⚠️ geen coördinaten' : p.plek_geschat ? '\n⚠️ <b>plek geschat</b>: meer plaatsen heten zo. Klopt de pin niet? Antwoord met het adres of de postcode.' : ''}`,
     `🏷 ${esc(p.event_subtype || '?')} · ${p.is_private_seller === true ? 'particulier' : p.is_private_seller === false ? 'organisator' : 'onbekend'}`,
   ];
   if (p.description) regels.push(`<i>${esc(p.description)}</i>`);
@@ -177,26 +177,29 @@ async function tellers(sb: any) {
 }
 
 // ── Nieuw item uit foto/tekst ──────────────────────────────────────
-// Telegram's getFile hangt soms een minuut en geeft dan 504: kort wachten en opnieuw.
-async function telegramBestand(fileId: string): Promise<Response | null> {
+// Telegram's getFile hangt soms een minuut. Kort wachten, en daarna de
+// kleinere versie van de foto proberen (ander bestand, vaak wel meteen
+// beschikbaar; 800 px is voor de AI nog goed leesbaar).
+async function telegramBestand(fileIds: string[]): Promise<Response | null> {
   for (let poging = 0; poging < 3; poging++) {
+    const fileId = fileIds[Math.min(poging, fileIds.length - 1)];
     try {
       const f = await fetch(`https://api.telegram.org/bot${TOKEN}/getFile`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_id: fileId }),
-        signal: AbortSignal.timeout(12000) }).then(r => r.json());
+        signal: AbortSignal.timeout(7000) }).then(r => r.json());
       const path = f?.result?.file_path;
       if (path) {
-        const r = await fetch(`https://api.telegram.org/file/bot${TOKEN}/${path}`, { signal: AbortSignal.timeout(15000) });
+        const r = await fetch(`https://api.telegram.org/file/bot${TOKEN}/${path}`, { signal: AbortSignal.timeout(12000) });
         if (r.ok) return r;
       } else console.warn('getFile', poging, f?.description);
     } catch (e) { console.warn('getFile', poging, (e as Error).message); }
-    await new Promise(z => setTimeout(z, 1500));
+    await new Promise(z => setTimeout(z, 1000));
   }
   return null;
 }
 
-async function fotoAlsBase64(fileId: string): Promise<{ data: string; media_type: string } | null> {
-  const r = await telegramBestand(fileId);
+async function fotoAlsBase64(fileIds: string[]): Promise<{ data: string; media_type: string } | null> {
+  const r = await telegramBestand(fileIds);
   if (!r) return null;
   const path = new URL(r.url).pathname;
   const buf = new Uint8Array(await r.arrayBuffer());
@@ -208,36 +211,15 @@ async function fotoAlsBase64(fileId: string): Promise<{ data: string; media_type
   return { data: btoa(bin), media_type: mt };
 }
 
-function plaatsKlopt(gevonden: string | null | undefined, gevraagd: string | null): boolean {
-  if (!gevraagd || !gevonden) return true;
-  const n = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]/g, '');
-  const a = n(gevonden), b = n(gevraagd);
-  return a === b || a.includes(b) || b.includes(a);
+// Grootste foto eerst, daarna de op één na grootste als reserve.
+function fotoIds(m: any): string[] {
+  if (m?.photo?.length) return m.photo.slice(-2).reverse().map((x: any) => x.file_id);
+  return m?.document?.file_id ? [m.document.file_id] : [];
 }
 
-async function geocode(adres: string | null, plaats: string | null): Promise<{ lat: number; lng: number } | null> {
-  const q = [adres, plaats].filter(Boolean).join(', ');
-  if (!q) return null;
-  try {
-    const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll,woonplaatsnaam&fq=type:(adres+woonplaats+weg)&q=' + encodeURIComponent(q));
-    const doc = (await r.json())?.response?.docs?.[0];
-    const c = doc?.centroide_ll;
-    const m = typeof c === 'string' ? c.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/) : null;
-    // PDOK kent alleen Nederland en geeft bij een Belgische plaats ("Kerkplein,
-    // Beerse") een gelijknamige straat elders. Plaats moet dus kloppen.
-    if (m && plaatsKlopt(doc?.woonplaatsnaam, plaats)) return { lng: parseFloat(m[1]), lat: parseFloat(m[2]) };
-  } catch (_) { /* volgende */ }
-  // België: Nominatim blokkeert de Supabase-servers, dus eerst Geopunt
-  // (Vlaanderen) en Photon (Wallonië, Brussel).
-  const be = await vlaanderen(q) || await photon(q);
-  if (be) return be;
-  try {
-    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=nl,be&q=' + encodeURIComponent(q),
-      { headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl; yardigo.app@gmail.com)' } });
-    const j = await r.json();
-    if (j?.[0]?.lat) return { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-  } catch (_) { /* geen */ }
-  return null;
+// Land voor de plekzoeker: wat de AI las, anders een Duitse affiche = Duitsland.
+function landVan(e: { land?: string | null; taal?: string | null } | null | undefined): string | null {
+  return e?.land || (e?.taal === 'de' ? 'DE' : null);
 }
 
 // Facebook-link → openbare preview (zoals Telegram/WhatsApp die ook tonen).
@@ -330,7 +312,7 @@ function reeksen(e: any): Array<{ van: string; tot: string | null; start: string
 // Instelling 'direct plaatsen': zelf aangeleverde items gaan meteen live als
 // alles compleet is en de AI niet twijfelt.
 async function directPlaatsen(sb: any, row: any): Promise<{ id: string; url: string; fb: string } | null> {
-  if ((await cfg(sb, 'telegram_autopublish')) !== 'true') return null;
+  if (row.plek_geschat || (await cfg(sb, 'telegram_autopublish')) !== 'true') return null;
   const g = metGroep(row);
   if (g.ontbreekt.length || g.groep === 'controleren' || g.groep === 'afwijzen') return null;
   try {
@@ -376,13 +358,38 @@ async function soortKnop(sb: any, chat: string, cq: any, listingId: string, k: s
   return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Soort is nu ' + s.naam });
 }
 
-async function nieuwItem(sb: any, chat: string, tekst: string, fotoId: string | null, msgId?: number) {
+// Meteen laten zien dat de affiche binnen is; het lezen duurt even.
+// Lukt de foto niet (Telegram hapert), dan zelf nog één keer proberen.
+async function nieuwItem(sb: any, chat: string, tekst: string, ids: string[], msgId?: number, herkansing = false) {
+  const bezig = (await send(chat, herkansing ? '🔁 Nieuwe poging om de affiche op te halen…' : ids.length ? '⏳ Affiche ontvangen, ik lees hem…' : '⏳ Even lezen…',
+    { reply_to_message_id: msgId }))?.result?.message_id;
   await tg('sendChatAction', { chat_id: chat, action: 'typing' });
-  const image = fotoId ? await fotoAlsBase64(fotoId) : null;
-  if (fotoId && !image) return send(chat, '⚠️ Telegram geeft de afbeelding nu niet vrij (storing bij Telegram). Stuur hem over een paar minuten nog een keer.');
-  const r = await maakItem(sb, tekst, image);
-  if (r.extra?.length) await send(chat, `📅 Deze affiche heeft ${r.extra.length + 1} data, je krijgt per datum een kaartje.`);
-  for (const x of [r, ...(r.extra || [])]) await toonItem(sb, chat, x, msgId);
+  try {
+    const image = ids.length ? await fotoAlsBase64(ids) : null;
+    if (ids.length && !image) {
+      if (herkansing) return send(chat, '⚠️ Telegram geeft de afbeelding nog steeds niet vrij (storing bij Telegram). Stuur hem later nog een keer.', { reply_to_message_id: msgId });
+      await send(chat, '🐢 Telegram geeft de afbeelding traag vrij. Ik probeer het over een halve minuut zelf opnieuw, je hoeft niets te doen.', { reply_to_message_id: msgId });
+      return opAchtergrond(chat, (async () => {
+        await new Promise(z => setTimeout(z, 25000));
+        await nieuwItem(sb, chat, tekst, ids, msgId, true);
+      })());
+    }
+    const r = await maakItem(sb, tekst, image);
+    if (r.extra?.length) await send(chat, `📅 Deze affiche heeft ${r.extra.length + 1} data, je krijgt per datum een kaartje.`);
+    for (const x of [r, ...(r.extra || [])]) await toonItem(sb, chat, x, msgId);
+  } finally {
+    if (bezig) await tg('deleteMessage', { chat_id: chat, message_id: bezig });
+  }
+}
+
+// Werk na het antwoord aan Telegram afmaken (Supabase EdgeRuntime.waitUntil).
+function opAchtergrond(chat: string, werk: Promise<unknown>) {
+  const klaar = werk.catch(async e => {
+    console.error('achtergrond', e);
+    await send(chat, '⚠️ Fout: ' + esc((e as Error).message.slice(0, 200)));
+  });
+  const rt = (globalThis as any).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(klaar); else return klaar;
 }
 
 async function toonItem(sb: any, chat: string, r: Maak, msgId?: number) {
@@ -493,7 +500,7 @@ async function maakItem(sb: any, tekst: string, image: { data: string; media_typ
   ct.mail ??= ctAffiche.mail;
   const orgUrl = ct.url || e.bron_url || null;
   // Plek moet in de plaats liggen; anders liever geen pin (dan kijkt er een mens naar).
-  const geo = await borgPlek(sb, await geocode(e.adres, e.plaats), e.adres, e.plaats);
+  const geo = await zoekPlek(sb, e.adres, e.plaats, landVan(e), e.postcode);
   let poster: Promise<string | null> | undefined;   // één keer uploaden, gedeeld door alle data
   const items: Maak[] = [];
   for (const r of reeksen(e)) {
@@ -521,7 +528,7 @@ async function itemVoorDatum(sb: any, e: any, r: { van: string; tot: string | nu
     title: e.titel, description: e.beschrijving, event_subtype: subtype,
     date_start: r.van, date_end: r.tot, time_start: r.start, time_end: r.eind,
     city: e.plaats, address: e.adres,
-    latitude: geo?.lat ?? null, longitude: geo?.lng ?? null,
+    latitude: geo?.lat ?? null, longitude: geo?.lng ?? null, plek_geschat: !!geo?.geschat,
     source_url: orgUrl || via, source_domain: orgUrl ? domainOf(orgUrl) : via,
     source_label: e.bron_naam, source_status: orgUrl ? 'origineel' : 'onbekend',
     discovered_via_query: via, content_hash: h.data || randomHex(16),
@@ -798,8 +805,8 @@ async function kwaliteitKnop(sb: any, chat: string, cq: any, actie: string, list
 // "Deze affiche als hoofdfoto": de foto zit in het bericht waar de knop op antwoordt.
 async function afficheKnop(sb: any, chat: string, cq: any, listingId: string) {
   const bron = cq.message?.reply_to_message;
-  const fileId = bron?.photo?.length ? bron.photo[bron.photo.length - 1].file_id : bron?.document?.file_id;
-  const image = fileId ? await fotoAlsBase64(fileId) : null;
+  const ids = fotoIds(bron);
+  const image = ids.length ? await fotoAlsBase64(ids) : null;
   const { data: l } = await sb.from('listings').select('images,placed_by,claimed_by_user_id').eq('id', listingId).maybeSingle();
   if (!image || !l || l.placed_by !== 'yardigo' || l.claimed_by_user_id) {
     return tg('answerCallbackQuery', { callback_query_id: cq.id, text: 'Kan de affiche hier niet bij zetten', show_alert: true });
@@ -877,10 +884,10 @@ async function aanvulling(sb: any, chat: string, tekst: string, kaart: any) {
   if (ct.tel) patch.contact_phone = ct.tel;
   if (ct.mail) patch.contact_email = ct.mail;
   if (!ct.url && !ct.tel && !ct.mail && tekst.trim().length > 3) {
-    const { data: p0 } = await sb.from('pending_events').select('city').eq('id', id).maybeSingle();
-    const geo = await geocode(tekst.trim(), tekst.includes(',') ? null : p0?.city);
+    const { data: p0 } = await sb.from('pending_events').select('city,land:raw_ai_response->parse_event->>land,taal:raw_ai_response->parse_event->>taal').eq('id', id).maybeSingle();
+    const geo = await zoekPlek(sb, tekst.trim(), tekst.includes(',') ? null : p0?.city, landVan(p0));
     if (!geo) { await send(chat, '⚠️ Geen link, 06, e-mail of vindbaar adres herkend.'); return true; }
-    patch.address = tekst.trim(); patch.latitude = geo.lat; patch.longitude = geo.lng;
+    patch.address = tekst.trim(); patch.latitude = geo.lat; patch.longitude = geo.lng; patch.plek_geschat = geo.geschat;
   }
   const up = await sb.from('pending_events').update(patch).eq('id', id).select(PENDING_COLS).single();
   if (up.error) { await send(chat, '⚠️ ' + esc(up.error.message)); return true; }
@@ -972,11 +979,13 @@ async function api(sb: any, req: Request): Promise<Response> {
       }
       if ('poster_url' in (b.patch || {}) && !b.patch.poster_url) patch.poster_url = null;
       if (typeof patch.is_private_seller === 'boolean') patch.status = patch.is_private_seller ? 'tip' : 'nieuw';
+      // Pin zelf verzet in de mini-app: dan is hij niet meer geschat.
+      if (patch.latitude !== undefined) patch.plek_geschat = false;
       if (b.geocode && (patch.address !== undefined || patch.city !== undefined)) {
-        const cur = (await sb.from('pending_events').select('address,city').eq('id', b.id).maybeSingle()).data || {};
+        const cur = (await sb.from('pending_events').select('address,city,postcode:raw_ai_response->parse_event->>postcode,land:raw_ai_response->parse_event->>land,taal:raw_ai_response->parse_event->>taal').eq('id', b.id).maybeSingle()).data || {};
         const ga = (patch.address ?? cur.address) as string | null, gc = (patch.city ?? cur.city) as string | null;
-        const g = await borgPlek(sb, await geocode(ga, gc), ga, gc);
-        if (g) { patch.latitude = g.lat; patch.longitude = g.lng; }
+        const g = await zoekPlek(sb, ga, gc, landVan(cur), cur.postcode);
+        if (g) { patch.latitude = g.lat; patch.longitude = g.lng; patch.plek_geschat = g.geschat; }
       }
       const r = await sb.from('pending_events').update(patch).eq('id', b.id).in('status', ['tip', 'nieuw']).select(cols).single();
       if (r.error) return apiJson({ error: r.error.message }, 400);
@@ -987,8 +996,10 @@ async function api(sb: any, req: Request): Promise<Response> {
       return apiJson({ item: metGroep({ ...r.data, auto_check: check }, await adviesContext(sb, [r.data.id])) });
     }
 
-    case 'geocode':
-      return apiJson({ geo: await borgPlek(sb, await geocode(b.address || null, b.city || null), b.address || null, b.city || null) });
+    case 'geocode': {
+      const cur = b.id ? (await sb.from('pending_events').select('postcode:raw_ai_response->parse_event->>postcode,land:raw_ai_response->parse_event->>land,taal:raw_ai_response->parse_event->>taal').eq('id', b.id).maybeSingle()).data : null;
+      return apiJson({ geo: await zoekPlek(sb, b.address || null, b.city || null, landVan(cur), cur?.postcode) });
+    }
 
     case 'publish': {
       const r = await sb.from('pending_events').select(PENDING_COLS).eq('id', b.id).maybeSingle();
@@ -1285,10 +1296,9 @@ serve(async (req: Request) => {
     } else if (m.document && /^image\//.test(m.document.mime_type || '') && (m.document.file_size || 0) > 4_500_000) {
       await send(chat, '📷 Dit bestand is te groot. Stuur hem als <b>foto</b> (dan verkleint Telegram hem) of als screenshot.');
     } else if (m.photo?.length || (m.document && /^image\//.test(m.document.mime_type || ''))) {
-      const fileId = m.photo?.length ? m.photo[m.photo.length - 1].file_id : m.document.file_id;
-      await nieuwItem(sb, chat, tekst, fileId, m.message_id);
+      await nieuwItem(sb, chat, tekst, fotoIds(m), m.message_id);
     } else if (tekst.trim().length >= 10) {
-      await nieuwItem(sb, chat, tekst, null);
+      await nieuwItem(sb, chat, tekst, [], m.message_id);
     } else {
       await send(chat, 'Stuur een affiche, screenshot of tekst/link van een verkoop. /help voor meer.');
     }

@@ -74,7 +74,7 @@ async function pinInPlaats(p: Plek, varianten: string[]): Promise<boolean> {
 async function pdok(q: string): Promise<Plek | null> {
   try {
     const r = await fetch('https://api.pdok.nl/bzk/locatieserver/search/v3_1/free?rows=1&fl=centroide_ll&fq=type:(adres+woonplaats+weg)&q=' + encodeURIComponent(q),
-      { signal: AbortSignal.timeout(6000) });
+      { signal: AbortSignal.timeout(5000) });
     const c = (await r.json())?.response?.docs?.[0]?.centroide_ll;
     const m = typeof c === 'string' ? c.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/) : null;
     return m ? { lng: parseFloat(m[1]), lat: parseFloat(m[2]) } : null;
@@ -94,14 +94,47 @@ export async function vlaanderen(q: string): Promise<Plek | null> {
 
 // Photon (OpenStreetMap, heel Europa): vangnet voor Wallonië, Brussel en
 // Duitsland. Trager, dus als laatste.
-export async function photon(q: string): Promise<Plek | null> {
+// Met land: alleen treffers in dat land.
+export async function photon(q: string, land?: string | null): Promise<Plek | null> {
   try {
-    const r = await fetch('https://photon.komoot.io/api/?limit=3&q=' + encodeURIComponent(q.replace(/[()]/g, ' ')),
+    const r = await fetch('https://photon.komoot.io/api/?limit=5&q=' + encodeURIComponent(q.replace(/[()]/g, ' ')),
       { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'YardiGo/1.0 (https://www.yardigo.nl)' } });
-    const f = ((await r.json())?.features || []).find((x: any) => ['NL', 'BE', 'DE'].includes(x?.properties?.countrycode));
+    const landen = land ? [land] : ['NL', 'BE', 'DE', 'LU'];
+    const f = ((await r.json())?.features || []).find((x: any) => landen.includes(x?.properties?.countrycode));
     const c = f?.geometry?.coordinates;
     return c ? { lng: c[0], lat: c[1] } : null;
   } catch { return null; }
+}
+
+// Een plek zoeken voor een affiche of bericht, met het land dat de AI las.
+// PDOK kent alleen NL en Geopunt alleen Vlaanderen; beide geven bij een
+// Duitse plaats toch iets terug ("Hamm" wordt het Belgische Hamme), dus per
+// land alleen de diensten die daar iets weten. Een treffer telt pas als hij
+// in de plaats ligt, anders de volgende dienst. Postcode gaat mee in de
+// zoekvraag: "59063 Hamm" is Hamm in Westfalen, "57577 Hamm" die aan de Sieg.
+// geschat = alleen de plaats gevonden, en die naam bestaat op meer plekken.
+export async function zoekPlek(sb: any, adres: string | null, plaats: string | null,
+  land?: string | null, postcode?: string | null): Promise<(Plek & { geschat: boolean }) | null> {
+  const pc = postcode && !`${adres ?? ''} ${plaats ?? ''}`.replace(/\s/g, '').includes(postcode.replace(/\s/g, '')) ? postcode : null;
+  const plaatsQ = [pc, plaats].filter(Boolean).join(' ');
+  const diensten: Array<(q: string) => Promise<Plek | null>> =
+    land === 'NL' ? [pdok, q => photon(q, 'NL')]
+    : land === 'BE' ? [vlaanderen, q => photon(q, 'BE')]
+    : land ? [q => photon(q, land)]
+    : [pdok, vlaanderen, q => photon(q)];
+  const vragen = [...new Set([[adres, plaatsQ].filter(Boolean).join(', '), plaatsQ].filter(Boolean))];
+  for (const q of vragen) {
+    const alleenPlaats = q === plaatsQ;
+    for (const dienst of diensten) {
+      const p = await dienst(q);
+      if (!p) continue;
+      if (!plaats) return { ...p, geschat: false };
+      const t = await toetsPlek(sb, p, plaats);
+      if (t.status === 'afwijkend') continue;
+      return { ...p, geschat: alleenPlaats && !pc && t.kandidaten > 1 && !t.eenduidig };
+    }
+  }
+  return null;
 }
 
 // Zoek een plek die gegarandeerd bij de plaats past: eerst het exacte adres

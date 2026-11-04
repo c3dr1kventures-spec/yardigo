@@ -757,7 +757,7 @@
     }
     if (t.id === 'geo') {
       t.disabled = true;
-      api('geocode', { address: $('f-address').value, city: $('f-city').value }).then(function (r) {
+      api('geocode', { id: state.current && state.current.id, address: $('f-address').value, city: $('f-city').value }).then(function (r) {
         if (!r.geo) { toast('Adres niet gevonden — tik zelf op de kaart'); haptic('error'); return; }
         placeMarker([r.geo.lat, r.geo.lng]); state.map.setView([r.geo.lat, r.geo.lng], 16); haptic('success');
       }).catch(function (er) { toast(er.message); }).then(function () { t.disabled = false; });
