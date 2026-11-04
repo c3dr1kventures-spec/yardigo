@@ -163,7 +163,7 @@
   Object.assign(T.nl, {
     'nav.driveway': 'Garagesales', 'nav.markets': 'Rommelmarkten', 'nav.thrift': 'Kringloopwinkels', 'type.driveway': 'Garagesale',
     'home.title': 'Garagesales, rommelroutes en rommelmarkten bij jou in de buurt',
-    'sp.label': 'Sponsor', 'sp.free': 'Hier jouw bedrijf?', 'sp.freeTxt': 'Bereik mensen die deze week spullen zoeken of kwijt willen. Vanaf €10 per week.', 'sp.cta': 'Neem contact op', 'sp.aria': 'Sponsors',
+    'sp.label': 'Sponsor', 'sp.free': 'Hier jouw bedrijf?', 'sp.freeTxt': 'Word een van onze eerste sponsors en bereik mensen die tweedehands kopen of verkopen.', 'sp.cta': 'Neem contact op', 'sp.aria': 'Sponsors',
     'home.remember': 'Onthoud deze plaats', 'home.showAll': 'Alle verkopen tonen', 'home.locBtn': 'Toon wat er bij mij in de buurt is', 'home.locBusy': 'Even kijken waar je bent…', 'det.loading': 'Verkoop laden…', 'nav.skip': 'Naar de inhoud', 'home.orType': 'of typ een plaats', 'home.layers': 'Lagen op de kaart',
     'home.howTitle': 'Zo werkt YardiGo', 'home.more': 'Lees verder',
     'home.how1': 'Kijk op de kaart', 'home.how1Txt': 'Elke pin is een verkoop met dag en tijd. Geel is een garagesale, oranje een rommelroute, groen een markt.',
@@ -179,7 +179,7 @@
   Object.assign(T.en, {
     'nav.driveway': 'Garage sales', 'nav.markets': 'Flea markets', 'nav.thrift': 'Thrift stores', 'type.driveway': 'Garage sale',
     'home.title': 'Garage sales, yard sale routes and flea markets near you',
-    'sp.label': 'Sponsor', 'sp.free': 'Your business here?', 'sp.freeTxt': 'Reach people who want to buy or clear out second-hand items this week. From €10 a week.', 'sp.cta': 'Get in touch', 'sp.aria': 'Sponsors',
+    'sp.label': 'Sponsor', 'sp.free': 'Your business here?', 'sp.freeTxt': 'Become one of our first sponsors and reach people who buy and sell second-hand.', 'sp.cta': 'Get in touch', 'sp.aria': 'Sponsors',
     'home.remember': 'Remember this place', 'home.showAll': 'Show all sales', 'home.locBtn': 'Show what is near me', 'home.locBusy': 'Finding your location…', 'det.loading': 'Loading sale…', 'nav.skip': 'Skip to content', 'home.orType': 'or type a town', 'home.layers': 'Map layers',
     'home.howTitle': 'How YardiGo works', 'home.more': 'Read more',
     'home.how1': 'Look at the map', 'home.how1Txt': 'Every pin is a sale with its day and time. Yellow is a garage sale, orange a yard sale route, green a market.',
@@ -195,7 +195,7 @@
   Object.assign(T.fr, {
     'nav.driveway': 'Ventes de garage', 'nav.markets': 'Brocantes', 'nav.thrift': 'Ressourceries', 'type.driveway': 'Vente de garage',
     'home.title': 'Ventes de garage, circuits brocante et brocantes près de chez vous',
-    'sp.label': 'Sponsor', 'sp.free': 'Votre entreprise ici ?', 'sp.freeTxt': 'Touchez les personnes qui cherchent ou vendent de l’occasion cette semaine. À partir de 10 € par semaine.', 'sp.cta': 'Nous contacter', 'sp.aria': 'Sponsors',
+    'sp.label': 'Sponsor', 'sp.free': 'Votre entreprise ici ?', 'sp.freeTxt': 'Devenez l’un de nos premiers sponsors et touchez les personnes qui achètent et vendent de l’occasion.', 'sp.cta': 'Nous contacter', 'sp.aria': 'Sponsors',
     'home.remember': 'Retenir ce lieu', 'home.showAll': 'Voir toutes les ventes', 'home.locBtn': 'Voir ce qui est près de moi', 'home.locBusy': 'Recherche de votre position…', 'det.loading': 'Chargement de la vente…', 'nav.skip': 'Aller au contenu', 'home.orType': 'ou tapez une ville', 'home.layers': 'Couches de la carte',
     'home.howTitle': 'Comment fonctionne YardiGo', 'home.more': 'Lire la suite',
     'home.how1': 'Regardez la carte', 'home.how1Txt': 'Chaque repère est une vente avec son jour et son heure. Jaune pour une vente de garage, orange pour un circuit brocante, vert pour un marché.',
@@ -211,7 +211,7 @@
   Object.assign(T.de, {
     'nav.driveway': 'Garagenverkäufe', 'nav.markets': 'Flohmärkte', 'nav.thrift': 'Gebrauchtwarenläden', 'type.driveway': 'Garagenverkauf',
     'home.title': 'Garagenverkäufe, Hofflohmärkte und Flohmärkte in deiner Nähe',
-    'sp.label': 'Sponsor', 'sp.free': 'Ihr Unternehmen hier?', 'sp.freeTxt': 'Erreichen Sie Menschen, die diese Woche Second-Hand kaufen oder loswerden möchten. Ab 10 € pro Woche.', 'sp.cta': 'Kontakt aufnehmen', 'sp.aria': 'Sponsoren',
+    'sp.label': 'Sponsor', 'sp.free': 'Ihr Unternehmen hier?', 'sp.freeTxt': 'Werden Sie einer unserer ersten Sponsoren und erreichen Sie Menschen, die Second-Hand kaufen und verkaufen.', 'sp.cta': 'Kontakt aufnehmen', 'sp.aria': 'Sponsoren',
     'home.remember': 'Diesen Ort merken', 'home.showAll': 'Alle Verkäufe zeigen', 'home.locBtn': 'Zeig, was in meiner Nähe ist', 'home.locBusy': 'Standort wird gesucht…', 'det.loading': 'Verkauf wird geladen…', 'nav.skip': 'Zum Inhalt', 'home.orType': 'oder gib einen Ort ein', 'home.layers': 'Kartenebenen',
     'home.howTitle': 'So funktioniert YardiGo', 'home.more': 'Weiterlesen',
     'home.how1': 'Schau auf die Karte', 'home.how1Txt': 'Jede Markierung ist ein Verkauf mit Tag und Uhrzeit. Gelb ist ein Garagenverkauf, orange ein Hofflohmarkt, grün ein Markt.',

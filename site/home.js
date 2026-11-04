@@ -116,6 +116,7 @@
     ul.innerHTML = '';
     var rest = lijst.filter(function (v) { return !alGetoond[v.id] && inGebied(v); });
     rest.slice(0, 8).forEach(function (v) { ul.appendChild(kaartje(v)); });
+    if (rest.length && window.YGSponsors) window.YGSponsors.inLijst(ul);   // sponsor als vierde kaartje (site/sponsors.js)
     $('leeg').hidden = rest.length > 0;
 
     var gu = $('garages');

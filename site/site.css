@@ -667,6 +667,10 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-sv--leeg { border: 1.5px dashed var(--yg-line-strong); background: transparent; text-align: center; }
 .yg-sv--leeg .yg-sv__naam { color: var(--yg-forest); }
 .yg-sv__knop { display: inline-block; margin-top: 10px; padding: 6px 14px; border: 1.5px solid var(--yg-forest); border-radius: 999px; color: var(--yg-forest); font-weight: 600; font-size: 12px; }
+.yg-sponsor-item__img { display: grid; place-items: center; }
+.yg-sponsor-item__img .yg-sv__logo { width: 52px; height: 52px; font-size: 20px; }
+.yg-sponsor-item__lbl { color: var(--yg-muted); font-weight: 500; }
+@media (min-width: 1600px) { .yg-sponsor-item { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
