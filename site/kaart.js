@@ -205,9 +205,12 @@
     return html;
   }
 
+  // Pins, labels en kaartjes met een echte foto: groot tonen bij hoveren (zie onder).
+  function grootAttr(v) { return v.foto ? ' data-groot="' + esc(v.foto) + '"' : ''; }
+
   function kaartje(v) {
     var li = document.createElement('li');
-    li.innerHTML = '<a class="yg-item" href="' + link(v) + '" data-id="' + esc(v.id) + '"' + (v.foto ? ' data-groot="' + esc(v.foto) + '"' : '') + '>' +
+    li.innerHTML = '<a class="yg-item" href="' + link(v) + '" data-id="' + esc(v.id) + '"' + grootAttr(v) + '>' +
       '<span class="yg-item__img">' + beeldHtml(v) + '</span>' +
       '<span class="yg-item__txt">' +
         '<span class="yg-item__day yg-item__day--' + v.soort + '">' + esc(dagTekst(v)) + '</span>' +
@@ -357,7 +360,7 @@
       groepen = { winkel: nieuweGroep('winkel'), markt: nieuweGroep('markt'), route: nieuweGroep('route'), oprit: nieuweGroep('oprit') };
       state.lijst.forEach(function (v) {
         var m = L.marker([v.lat, v.lng], {
-          icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-dot yg-dot--' + v.soort + '"></span>', iconSize: [0, 0] }),
+          icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-dot yg-dot--' + v.soort + '"' + grootAttr(v) + '></span>', iconSize: [0, 0] }),
           title: v.titel, keyboard: true
         });
         m.on('click', function () { if (opties.opKlik) opties.opKlik(v); });
@@ -409,7 +412,7 @@
           var cls = 'yg-tag' + (v.soort === 'route' ? ' yg-tag--route' : v.soort === 'oprit' ? ' yg-tag--oprit' : '') + (state.gekozen === v.id ? ' is-selected' : '');
           var huis = v.soort === 'oprit' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M3 11 L12 4 L21 11 V20 H3 Z"/></svg>' : '';
           m = L.marker([v.lat, v.lng], {
-            icon: L.divIcon({ className: 'yg-pin', html: '<span class="' + cls + '">' + huis + esc(tekst) + '</span>', iconSize: [0, 0] }),
+            icon: L.divIcon({ className: 'yg-pin', html: '<span class="' + cls + '"' + grootAttr(v) + '>' + huis + esc(tekst) + '</span>', iconSize: [0, 0] }),
             keyboard: true, title: v.titel, riseOnHover: true, zIndexOffset: state.gekozen === v.id ? 1000 : 500 - i
           });
         } else {
@@ -422,6 +425,7 @@
         m.on('mouseover', function () { if (opties.opWijs) opties.opWijs(v.id, true); });
         m.on('mouseout', function () { if (opties.opWijs) opties.opWijs(v.id, false); });
         m.addTo(laag);
+        if (!vrij && v.foto && m.getElement()) m.getElement().setAttribute('data-groot', v.foto);
         markers[v.id] = m;
       });
       tekenMidden();
@@ -461,8 +465,8 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   // ── Foto of affiche groot tonen bij hoveren ─────────────────────────
-  // Alleen met een muis: na een halve seconde stil op een kaartje met een
-  // echte foto (data-groot) verschijnt hij groot naast het kaartje. Weg bij
+  // Alleen met een muis: na een halve seconde stil op een kaartje, pin of
+  // label met een echte foto (data-groot) verschijnt hij groot ernaast. Weg bij
   // verlaten, scrollen, klikken of een toets. Op touch doet dit niets.
   (function () {
     if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
@@ -507,6 +511,7 @@
       timer = setTimeout(function () { if (huidig === a) toon(a); }, 500);
     });
     window.addEventListener('scroll', verberg, { passive: true, capture: true });
+    window.addEventListener('wheel', verberg, { passive: true, capture: true });   // inzoomen: Leaflet stopt de wheel-event zelf
     document.addEventListener('mousedown', verberg);
     document.addEventListener('keydown', verberg);
   })();
