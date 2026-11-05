@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# YardiGo: Capacitor-bridge en plugins (reflectie vanuit de WebView) heel laten.
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keepclassmembers class * { @com.getcapacitor.PluginMethod public *; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-dontwarn com.onesignal.**
+# Leesbare stacktraces in Play Console (mapping-bestand gaat mee in de AAB).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
