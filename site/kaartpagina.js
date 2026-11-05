@@ -62,7 +62,7 @@
     rijen.slice(0, MAX_RIJEN).forEach(function (v) {
       var li = document.createElement('li');
       var cls = 'yg-tag yg-tag--inline' + (v.soort === 'route' ? ' yg-tag--route' : v.soort === 'oprit' ? ' yg-tag--oprit' : '');
-      li.innerHTML = '<a class="yg-row' + (state.gekozen === v.id ? ' is-hot' : '') + '" href="' + K.link(v) + '" data-id="' + K.esc(v.id) + '">' +
+      li.innerHTML = '<a class="yg-row' + (state.gekozen === v.id ? ' is-hot' : '') + '" href="' + K.link(v) + '" data-id="' + K.esc(v.id) + '"' + (v.foto ? ' data-groot="' + K.esc(v.foto) + '"' : '') + '>' +
         '<span class="' + cls + '">' + K.esc(metDatum() ? K.label(v, true) : v.dagen.map(K.dagKort).join(' + ')) + '</span>' +
         '<span style="min-width:0"><strong>' + K.esc(v.titel) + '</strong><span class="yg-meta">' + K.esc([v.plaats, K.tijden(v)].filter(Boolean).join(', ')) + '</span></span>' +
         '<span class="yg-km yg-num">' + Math.round(v.km) + ' ' + YG.t('unit.km') + '</span></a>';

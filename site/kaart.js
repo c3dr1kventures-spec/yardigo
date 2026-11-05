@@ -207,7 +207,7 @@
 
   function kaartje(v) {
     var li = document.createElement('li');
-    li.innerHTML = '<a class="yg-item" href="' + link(v) + '" data-id="' + esc(v.id) + '">' +
+    li.innerHTML = '<a class="yg-item" href="' + link(v) + '" data-id="' + esc(v.id) + '"' + (v.foto ? ' data-groot="' + esc(v.foto) + '"' : '') + '>' +
       '<span class="yg-item__img">' + beeldHtml(v) + '</span>' +
       '<span class="yg-item__txt">' +
         '<span class="yg-item__day yg-item__day--' + v.soort + '">' + esc(dagTekst(v)) + '</span>' +
@@ -459,6 +459,57 @@
   }
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  // ── Foto of affiche groot tonen bij hoveren ─────────────────────────
+  // Alleen met een muis: na een halve seconde stil op een kaartje met een
+  // echte foto (data-groot) verschijnt hij groot naast het kaartje. Weg bij
+  // verlaten, scrollen, klikken of een toets. Op touch doet dit niets.
+  (function () {
+    if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    var el = null, timer = null, huidig = null;
+    function verberg() {
+      clearTimeout(timer);
+      huidig = null;
+      if (el) el.classList.remove('is-open');
+    }
+    function plaats(r) {
+      var m = 16, w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+      var x = r.right + m;
+      if (x + w > vw - m) x = r.left - m - w;
+      if (x < m) x = Math.max(m, (vw - w) / 2);
+      var y = Math.min(Math.max(m, r.top + r.height / 2 - h / 2), vh - h - m);
+      el.style.left = Math.round(x) + 'px';
+      el.style.top = Math.round(Math.max(m, y)) + 'px';
+    }
+    function toon(a) {
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'yg-groot';
+        el.setAttribute('aria-hidden', 'true');
+        el.innerHTML = '<img alt="">';
+        document.body.appendChild(el);
+      }
+      var img = el.firstChild;
+      img.onload = function () {
+        if (huidig !== a) return;
+        plaats(a.getBoundingClientRect());
+        el.classList.add('is-open');
+      };
+      if (img.getAttribute('src') === a.getAttribute('data-groot') && img.complete && img.naturalWidth) img.onload();
+      else img.src = a.getAttribute('data-groot');
+    }
+    document.addEventListener('mouseover', function (e) {
+      var a = e.target.closest ? e.target.closest('[data-groot]') : null;
+      if (a === huidig) return;
+      verberg();
+      if (!a) return;
+      huidig = a;
+      timer = setTimeout(function () { if (huidig === a) toon(a); }, 500);
+    });
+    window.addEventListener('scroll', verberg, { passive: true, capture: true });
+    document.addEventListener('mousedown', verberg);
+    document.addEventListener('keydown', verberg);
+  })();
 
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
