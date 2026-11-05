@@ -67,19 +67,21 @@
 </script>
 
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Bibliotheken en lettertype staan in /vendor: de app laadt ze uit zichzelf (sneller, werkt ook met slecht bereik) -->
+<link rel="stylesheet" href="vendor/poppins.css">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="vendor/MarkerCluster.css">
+<link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/leaflet.markercluster.js"></script>
+<!-- supabase-js 2.119.0 -->
+<script src="vendor/supabase.min.js"></script>
 <!-- Markdown rendering voor Home news/blog/info posts (admin-content) -->
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
 <!-- QR-code generator voor de organisator-promotiepakketten -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- qrcode 1.4.4: de laatste versie met een browserbestand (1.5.3 had er geen: gaf 404) -->
+<script src="vendor/qrcode.min.js"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -1408,6 +1410,22 @@ body.dark .review-card{background:var(--bg2);}
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+.ygk-pin{background:none;border:0;}
+.ygk-tag{position:absolute;transform:translate(-50%,calc(-100% - 6px));display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 17px;border-radius:6px 10px 10px 6px;font:600 13px/1.2 'Poppins',Arial,sans-serif;white-space:nowrap;background:#3A6B4A;color:#fff;box-shadow:0 2px 8px rgba(30,41,34,.28);cursor:pointer;}
+.ygk-tag::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:#CFE0D3;}
+.ygk-tag::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #3A6B4A;}
+.ygk-tag--route{background:#E07B39;color:#1E2922;}.ygk-tag--route::after{border-top-color:#E07B39;}.ygk-tag--route::before{background:#1E2922;}
+.ygk-tag--oprit{background:#F2A830;color:#1E2922;}.ygk-tag--oprit::after{border-top-color:#F2A830;}.ygk-tag--oprit::before{background:#1E2922;}
+.ygk-tag.is-live::before{background:#2FA84F;box-shadow:0 0 0 2px #fff;}
+.ygk-tag.is-dicht,.ygk-dot.is-dicht{opacity:.5;filter:grayscale(1);}
+.ygk-tag.is-selected{background:#1E2922;color:#fff;z-index:3;box-shadow:0 0 0 3px #fff,0 0 0 6px #1E2922;}.ygk-tag.is-selected::after{border-top-color:#1E2922;}.ygk-tag.is-selected::before{background:#fff;}
+.ygk-tag svg{width:12px;height:12px;flex:none;}
+.ygk-dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#3A6B4A;border:2px solid #fff;box-shadow:0 1px 4px rgba(30,41,34,.3);box-sizing:border-box;}
+.ygk-dot--route{background:#E07B39;}.ygk-dot--oprit{background:#F2A830;}
+.ygk-dot--oprit,.ygk-dot--route{width:15px;height:15px;margin:-7.5px 0 0 -7.5px;}
+.ygk-groep{position:absolute;display:grid;place-items:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:700 13px/1 'Poppins',Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;background:#3A6B4A;box-sizing:border-box;box-shadow:0 0 0 5px rgba(58,107,74,.25),0 2px 6px rgba(30,41,34,.28);}
+.ygk-groep--route{background:#E07B39;color:#1E2922;box-shadow:0 0 0 5px rgba(224,123,57,.25),0 2px 6px rgba(30,41,34,.28);}
+.ygk-groep--oprit{background:#F2A830;color:#1E2922;box-shadow:0 0 0 5px rgba(242,168,48,.3),0 2px 6px rgba(30,41,34,.28);}
 .yg-groep-wrap{background:none;border:none;}
 .yg-groep{display:flex;align-items:center;justify-content:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:800 13px/1 Poppins,Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;transition:transform .15s;box-sizing:border-box;}
 .yg-groep:hover{transform:scale(1.08);}
@@ -10380,75 +10398,130 @@ function groupByNeighborhoodSale(listings) {
 // Wordt herbouwd bij elke renderMarkers().
 var _markersById = {};
 
-// Pin per verkoop-object (een verse lijst van de server geeft nieuwe objecten,
-// dus nieuwe pins; oude worden vanzelf opgeruimd).
-var _pinCache = new WeakMap();
-var _pinsOpKaart = new Set();
-function _pinVoor(sale) {
-  var fav = favorites.has(sale.id);
-  var pin = _pinCache.get(sale);
-  var lk = JSON.stringify(liveVan(sale) && [liveVan(sale).status]);
-  if (pin) {
-    if (pin.fav !== fav || pin.live !== lk) { pin.fav = fav; pin.live = lk; pin.marker.setIcon(createDefaultPin(sale)); }
-    return pin;
-  }
-  pin = { fav: fav, live: lk, ring: null, marker: null };
-  // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
-  // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
-  if (sale.location_approx) {
-    pin.ring = L.circle([sale.lat, sale.lng], {
-      radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
-      fillOpacity: 0.1, interactive: false
-    });
-  }
-  pin.marker = L.marker([sale.lat, sale.lng], { icon: createDefaultPin(sale) });
-  pin.marker._ygSale = sale;
-  pin.marker.bindPopup(function() { return createListingPopup(sale); }, { maxWidth: 260 });
-  bindHoverTip(pin.marker, sale);
-  _pinCache.set(sale, pin);
-  return pin;
+// ── Kaart in de stijl van de website (yardigo.nl/kaart) ──
+// Ver uitgezoomd: per soort eigen bolletjes met het aantal (garagesale geel,
+// rommelroute oranje, markt groen). Vanaf YG_GROEP_TOT_ZOOM: alleen wat in
+// beeld is, als kaartje met dag (en tijd); raken kaartjes elkaar, dan wordt
+// de minst belangrijke een stip. Zo staan er nooit honderden pins tegelijk
+// in de pagina: veel sneller op telefoons.
+var YG_GROEP_TOT_ZOOM = 10;
+var YG_MAX_KAARTJES = 40;
+var _losseVerkopen = [];      // gefilterde losse verkopen (geen buurtverkoop-adressen)
+var _losseSleutel = '';
+var _soortGroepen = null;
+var _tagLaag = null;
+var _gekozenId = null;
+
+function _groepIcoonVoor(soort) {
+  return function(cluster) {
+    var n = cluster.getChildCount(), d = n < 10 ? 34 : n < 50 ? 40 : 48;
+    return L.divIcon({ className: 'ygk-pin', iconSize: [0, 0],
+      html: '<span class="ygk-groep ygk-groep--' + soort + '" title="' + n + ' · ' + escapeHtml(i18n('map.zoom_in', 'tik om in te zoomen')) + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
+  };
 }
-// Pins opnieuw opbouwen (bijv. na taalwissel): cache leeg en alles eraf.
-function _pinsVergeten() {
-  if (_losseGroep) _losseGroep.clearLayers();
-  _pinsOpKaart.forEach(function(pin) { if (pin.ring) map.removeLayer(pin.ring); });
-  _pinsOpKaart = new Set();
-  _pinCache = new WeakMap();
+function _soortGroepenWeg() {
+  if (!_soortGroepen) return;
+  Object.keys(_soortGroepen).forEach(function(k) { map.removeLayer(_soortGroepen[k]); });
+  _soortGroepen = null;
+}
+function _soortGroepenTonen() {
+  if (_soortGroepen) return;
+  _soortGroepen = {};
+  ['markt', 'route', 'oprit'].forEach(function(k) {
+    _soortGroepen[k] = L.markerClusterGroup({
+      disableClusteringAtZoom: YG_GROEP_TOT_ZOOM, maxClusterRadius: k === 'markt' ? 55 : 45, chunkedLoading: true,
+      showCoverageOnHover: false, spiderfyOnMaxZoom: false, zoomToBoundsOnClick: true, removeOutsideVisibleBounds: true,
+      iconCreateFunction: _groepIcoonVoor(k)
+    });
+  });
+  var per = { markt: [], route: [], oprit: [] };
+  _losseVerkopen.forEach(function(s) {
+    var m = L.marker([s.lat, s.lng], { icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="ygk-dot ygk-dot--' + saleKind(s) + '"></span>' }), title: s.title || '' });
+    m.on('click', function() { _openSalePopup(s); });
+    per[saleKind(s)].push(m);
+  });
+  // Volgorde = wat bovenop ligt: garagesales boven.
+  ['markt', 'route', 'oprit'].forEach(function(k) { _soortGroepen[k].addLayers(per[k]); map.addLayer(_soortGroepen[k]); });
 }
 
-// ── Groeperen bij uitzoomen ──
-// Ver uitgezoomd worden pins dicht bij elkaar één bolletje met het aantal
-// (kleur van de soort die erin het meest voorkomt, zoals in de Mac-app).
-// Vanaf regio-niveau (zoom 11) staat elke verkoop weer als losse pin.
-// Pins ver buiten beeld laat de bibliotheek weg; dat scheelt veel op telefoons.
-var YG_GROEP_TOT_ZOOM = 10;
-var _losseGroep = null;
-function _groepIcoon(cluster) {
-  var leden = cluster.getAllChildMarkers(), n = leden.length, tel = {}, top = 'markt';
-  leden.forEach(function(m) {
-    var k = m._ygSale ? saleKind(m._ygSale) : 'markt';
-    tel[k] = (tel[k] || 0) + 1;
-    if (tel[k] > (tel[top] || 0)) top = k;
-  });
-  var kleur = (YG_KIND_COLORS[top] || YG_KIND_COLORS.markt).base;
-  var d = n < 10 ? 34 : n < 50 ? 40 : 48;
-  var html = '<div class="yg-groep" title="' + n + ' verkopen · klik om in te zoomen" style="width:' + d + 'px;height:' + d + 'px;'
-    + 'background:' + kleur + ';box-shadow:0 0 0 5px ' + kleur + '40,0 2px 6px rgba(0,0,0,.28)">' + n + '</div>';
-  return L.divIcon({ html: html, className: 'yg-groep-wrap', iconSize: [d, d], iconAnchor: [d / 2, d / 2] });
+// Tekst op het kaartje: "za 9:00" bij een korte periode, "za 14 nov" als alles getoond wordt.
+function _kaartjeTekst(s) {
+  if (!s.date) return '';
+  var loc = currentLang === 'en' ? 'en-GB' : currentLang === 'fr' ? 'fr-BE' : currentLang === 'de' ? 'de-DE' : 'nl-NL';
+  var d = new Date(s.date + 'T12:00:00Z');
+  var kort = activeDateFilter === 'today' || activeDateFilter === 'weekend' || activeDateFilter === 'nu';
+  if (!kort) return d.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(/\./g, '');
+  var dag = d.toLocaleDateString(loc, { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+  return s.from ? dag + ' ' + s.from.replace(/^0/, '') : dag;
 }
-function _losseGroepMaken() {
-  _losseGroep = L.markerClusterGroup({
-    disableClusteringAtZoom: YG_GROEP_TOT_ZOOM,
-    maxClusterRadius: 55,
-    chunkedLoading: true,          // grote aantallen in stukjes toevoegen: geen hapering
-    showCoverageOnHover: false,
-    spiderfyOnMaxZoom: false,
-    zoomToBoundsOnClick: true,
-    removeOutsideVisibleBounds: true,
-    iconCreateFunction: _groepIcoon
-  });
-  map.addLayer(_losseGroep);
+
+function _openSalePopup(sale) {
+  if (!map) return;
+  _gekozenId = sale.id;
+  var opKaartje = map.getZoom() >= YG_GROEP_TOT_ZOOM;
+  L.popup({ maxWidth: 260, autoPanPadding: [20, 70], offset: [0, opKaartje ? -30 : -4] })
+    .setLatLng([sale.lat, sale.lng])
+    .setContent(createListingPopup(sale))
+    .openOn(map);
+  _tekenLosse();
 }
+
+function _tekenLosse() {
+  if (typeof L === 'undefined' || !map) return;
+  if (!_tagLaag) {
+    _tagLaag = L.layerGroup().addTo(map);
+    map.on('moveend', _tekenLosse);
+    map.on('popupclose', function() { if (_gekozenId) { _gekozenId = null; setTimeout(_tekenLosse, 0); } });
+  }
+  _tagLaag.clearLayers();
+  var groeperen = !!L.markerClusterGroup && map.getZoom() < YG_GROEP_TOT_ZOOM;
+  if (groeperen) { _soortGroepenTonen(); return; }
+  _soortGroepenWeg();
+  var grens = map.getBounds().pad(0.15);
+  var midden = userLocation || map.getCenter();
+  var zichtbaar = _losseVerkopen.filter(function(s) { return grens.contains([s.lat, s.lng]); });
+  // Belangrijk: het gekozen kaartje, dan het eerst (op datum), dan het dichtst bij.
+  zichtbaar.sort(function(a, b) {
+    if (a.id === _gekozenId) return -1;
+    if (b.id === _gekozenId) return 1;
+    var da = a.date || '9999', db = b.date || '9999';
+    if (activeDateFilter === 'all' && da !== db) return da < db ? -1 : 1;
+    return dist(midden, a) - dist(midden, b);
+  });
+  var bezet = [];
+  zichtbaar.forEach(function(s, i) {
+    var kind = saleKind(s);
+    var live = liveVan(s), dicht = live && live.status === 'gesloten';
+    if (s.location_approx) {
+      L.circle([s.lat, s.lng], { radius: 220, color: YG_KIND_COLORS[kind].base, weight: 1, opacity: 0.5, fillOpacity: 0.1, interactive: false }).addTo(_tagLaag);
+    }
+    var p = map.latLngToContainerPoint([s.lat, s.lng]);
+    var tekst = _kaartjeTekst(s);
+    var w = tekst.length * 7.4 + 30;
+    var box = { x1: p.x - w / 2 - 4, x2: p.x + w / 2 + 4, y1: p.y - 38, y2: p.y + 2 };
+    var vrij = tekst && i < YG_MAX_KAARTJES && !bezet.some(function(b) { return box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1; });
+    var m;
+    if (vrij) {
+      bezet.push(box);
+      var cls = 'ygk-tag ygk-tag--' + kind + (s.id === _gekozenId ? ' is-selected' : '') + (dicht ? ' is-dicht' : '') + (live && !dicht ? ' is-live' : '');
+      var huis = kind === 'oprit' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M3 11 L12 4 L21 11 V20 H3 Z"/></svg>' : '';
+      m = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="' + cls + '">' + huis + escapeHtml(tekst) + '</span>' }),
+        title: s.title || '', riseOnHover: true, zIndexOffset: s.id === _gekozenId ? 1000 : 500 - i
+      });
+    } else {
+      m = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="ygk-dot ygk-dot--' + kind + (dicht ? ' is-dicht' : '') + '"></span>' }),
+        title: s.title || '', zIndexOffset: -i
+      });
+    }
+    m.on('click', function() { _openSalePopup(s); });
+    m.addTo(_tagLaag);
+  });
+}
+
+// Pins opnieuw opbouwen (bijv. na taalwissel).
+function _pinsVergeten() { _losseSleutel = ''; _soortGroepenWeg(); if (_tagLaag) _tagLaag.clearLayers(); }
 
 function renderMarkers() {
   // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
@@ -10576,29 +10649,11 @@ function renderMarkers() {
     clusterGroups.push(group);
   });
 
-  // Losse listings als gewone markers. Elke pin wordt één keer gemaakt en bij
-  // filteren hergebruikt: alleen wat verdwijnt of erbij komt verandert op de
-  // kaart. De popup-HTML wordt pas gebouwd als iemand de pin opent.
-  if (!_losseGroep) _losseGroepMaken();
-  var nuZichtbaar = new Set(), erbij = [], eraf = [];
-  losseListings.forEach(function(sale) {
-    var pin = _pinVoor(sale);
-    nuZichtbaar.add(pin);
-    if (!_pinsOpKaart.has(pin)) {
-      if (pin.ring) pin.ring.addTo(map);
-      erbij.push(pin.marker);
-    }
-    _markersById[sale.id] = { marker: pin.marker, cluster: _losseGroep };
-  });
-  _pinsOpKaart.forEach(function(pin) {
-    if (nuZichtbaar.has(pin)) return;
-    eraf.push(pin.marker);
-    if (pin.ring) map.removeLayer(pin.ring);
-  });
-  // In één keer: veel sneller dan per pin.
-  if (eraf.length) _losseGroep.removeLayers(eraf);
-  if (erbij.length) _losseGroep.addLayers(erbij);
-  _pinsOpKaart = nuZichtbaar;
+  // Losse listings: in de stijl van de website (zie _tekenLosse).
+  _losseVerkopen = losseListings;
+  var sleutel = losseListings.map(function(x) { return x.id; }).join(',') + '|' + activeDateFilter + '|' + currentLang;
+  if (sleutel !== _losseSleutel) { _losseSleutel = sleutel; _soortGroepenWeg(); }
+  _tekenLosse();
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
   if (fb && fb.style.display !== 'none') fbRenderMarkers();
@@ -17193,7 +17248,12 @@ function _focusSaleOnMap(saleId) {
   // Open de marker-popup. Bij clusters openen we de cluster-popup omdat
   // de marker zelf gegroepeerd is op het huidige zoom-niveau.
   var entry = _markersById[saleId];
-  if (!entry) return;
+  if (!entry) {
+    // Losse verkoop: inzoomen tot de kaartjes staan en het kaartje openen.
+    if (map.getZoom() < 13) map.setView([sale.lat, sale.lng], 13);
+    setTimeout(function() { _openSalePopup(sale); }, 450);
+    return;
+  }
   setTimeout(function() {
     try {
       // Zit de pin in een groepje? Dan eerst inzoomen tot hij los staat.

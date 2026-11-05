@@ -2,27 +2,21 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>YardiGo: Ontdek garagesales bij jou in de buurt</title>
 <meta name="description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route, ontdek schatten bij jou om de hoek en plaats gratis je eigen verkoop.">
 <meta name="theme-color" content="#E07B39">
-<link rel="canonical" href="https://www.yardigo.nl/">
+<!-- Web-app op /app (sinds 27 okt 2026; de website staat op /). Niet in Google:
+     de website is de voordeur, de app is het gereedschap. -->
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="https://www.yardigo.nl/app">
 
-<!-- hreflang voor SEO: vertelt Google dat yardigo.nl en yardigo.be twee
-     locale-varianten zijn van dezelfde site, geen duplicate content. De
-     FR-variant deelt voorlopig dezelfde URL als de NL-variant op .be met
-     ?lang=fr; later kunnen we naar /fr en /nl subpaths als de FR-content
-     substantieel uitbreidt. -->
-<link rel="alternate" hreflang="nl-nl" href="https://www.yardigo.nl/">
-<link rel="alternate" hreflang="nl-be" href="https://www.yardigo.be/">
-<link rel="alternate" hreflang="fr-be" href="https://www.yardigo.be/?lang=fr">
-<link rel="alternate" hreflang="x-default" href="https://www.yardigo.nl/">
 
 <!-- Open Graph (WhatsApp, Facebook, LinkedIn, Slack) -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://www.yardigo.nl/">
+<meta property="og:url" content="https://www.yardigo.nl/app">
 <meta property="og:title" content="YardiGo: Ontdek garagesales bij jou in de buurt">
 <meta property="og:description" content="Vind rommelmarkten, rommelroutes en garagesales op de kaart. Plan je route en plaats gratis je eigen verkoop.">
 <meta property="og:image" content="https://www.yardigo.nl/og-image.png">
@@ -72,50 +66,22 @@
 })();
 </script>
 
-<!-- JSON-LD: WebSite + Organization (helpt Google met sitelinks-search + knowledge panel) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "https://www.yardigo.nl/#website",
-      "url": "https://www.yardigo.nl/",
-      "name": "YardiGo",
-      "description": "Vind rommelmarkten, rommelroutes en garagesales op de kaart.",
-      "inLanguage": "nl-NL",
-      "publisher": { "@id": "https://www.yardigo.nl/#organization" },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://www.yardigo.nl/?q={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
-    },
-    {
-      "@type": "Organization",
-      "@id": "https://www.yardigo.nl/#organization",
-      "name": "YardiGo",
-      "url": "https://www.yardigo.nl/",
-      "logo": "https://www.yardigo.nl/og-image.png",
-      "description": "Privacy-vriendelijk kaart- en route-platform voor lokale rommelmarkten, garageverkopen en buurtverkopen in Nederland, België, Frankrijk en Duitsland."
-    }
-  ]
-}
-</script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Bibliotheken en lettertype staan in /vendor: de app laadt ze uit zichzelf (sneller, werkt ook met slecht bereik) -->
+<link rel="stylesheet" href="vendor/poppins.css">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="vendor/MarkerCluster.css">
+<link rel="stylesheet" href="vendor/MarkerCluster.Default.css">
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/leaflet.markercluster.js"></script>
+<!-- supabase-js 2.119.0 -->
+<script src="vendor/supabase.min.js"></script>
 <!-- Markdown rendering voor Home news/blog/info posts (admin-content) -->
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.11/dist/purify.min.js"></script>
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
 <!-- QR-code generator voor de organisator-promotiepakketten -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- qrcode 1.4.4: de laatste versie met een browserbestand (1.5.3 had er geen: gaf 404) -->
+<script src="vendor/qrcode.min.js"></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -1444,6 +1410,22 @@ body.dark .review-card{background:var(--bg2);}
 /* ── ONDERHOUDSBANNER ── */
 #maintenance-banner{display:none;background:#FFF8EC;border-bottom:2px solid #F2A830;padding:10px 16px;z-index:1000;position:relative;}
 #maintenance-banner.active{display:flex;align-items:center;gap:10px;}
+.ygk-pin{background:none;border:0;}
+.ygk-tag{position:absolute;transform:translate(-50%,calc(-100% - 6px));display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 17px;border-radius:6px 10px 10px 6px;font:600 13px/1.2 'Poppins',Arial,sans-serif;white-space:nowrap;background:#3A6B4A;color:#fff;box-shadow:0 2px 8px rgba(30,41,34,.28);cursor:pointer;}
+.ygk-tag::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:#CFE0D3;}
+.ygk-tag::after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #3A6B4A;}
+.ygk-tag--route{background:#E07B39;color:#1E2922;}.ygk-tag--route::after{border-top-color:#E07B39;}.ygk-tag--route::before{background:#1E2922;}
+.ygk-tag--oprit{background:#F2A830;color:#1E2922;}.ygk-tag--oprit::after{border-top-color:#F2A830;}.ygk-tag--oprit::before{background:#1E2922;}
+.ygk-tag.is-live::before{background:#2FA84F;box-shadow:0 0 0 2px #fff;}
+.ygk-tag.is-dicht,.ygk-dot.is-dicht{opacity:.5;filter:grayscale(1);}
+.ygk-tag.is-selected{background:#1E2922;color:#fff;z-index:3;box-shadow:0 0 0 3px #fff,0 0 0 6px #1E2922;}.ygk-tag.is-selected::after{border-top-color:#1E2922;}.ygk-tag.is-selected::before{background:#fff;}
+.ygk-tag svg{width:12px;height:12px;flex:none;}
+.ygk-dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#3A6B4A;border:2px solid #fff;box-shadow:0 1px 4px rgba(30,41,34,.3);box-sizing:border-box;}
+.ygk-dot--route{background:#E07B39;}.ygk-dot--oprit{background:#F2A830;}
+.ygk-dot--oprit,.ygk-dot--route{width:15px;height:15px;margin:-7.5px 0 0 -7.5px;}
+.ygk-groep{position:absolute;display:grid;place-items:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:700 13px/1 'Poppins',Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;background:#3A6B4A;box-sizing:border-box;box-shadow:0 0 0 5px rgba(58,107,74,.25),0 2px 6px rgba(30,41,34,.28);}
+.ygk-groep--route{background:#E07B39;color:#1E2922;box-shadow:0 0 0 5px rgba(224,123,57,.25),0 2px 6px rgba(30,41,34,.28);}
+.ygk-groep--oprit{background:#F2A830;color:#1E2922;box-shadow:0 0 0 5px rgba(242,168,48,.3),0 2px 6px rgba(30,41,34,.28);}
 .yg-groep-wrap{background:none;border:none;}
 .yg-groep{display:flex;align-items:center;justify-content:center;border-radius:50%;border:2.5px solid #fff;color:#fff;font:800 13px/1 Poppins,Arial,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer;transition:transform .15s;box-sizing:border-box;}
 .yg-groep:hover{transform:scale(1.08);}
@@ -1573,6 +1555,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
   color: white;
   font-weight: bold;
   font-family: 'Poppins', sans-serif;
+}
+/* Zoomen mag weer (toegankelijkheid). iOS zoomt in op velden onder 16px,
+   dus op touchscreens minstens 16px. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }
 }
 </style>
 </head>
@@ -2123,6 +2110,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <button class="fdd-btn" id="btn-datum" onclick="openDD(event,'datum')"><span data-i18n="filter.date_label">📅 Datum</span>: <span id="lbl-datum" data-i18n="filter.date.all_short">Alle</span> ▾</button>
     <div class="fdd-menu" id="dd-datum">
       <div class="fdd-opt sel" data-datekey="all" onclick="pickD('all','filter.date.all_short')" data-i18n="filter.date.all">Alle datums</div>
+      <div class="fdd-opt" data-datekey="nu" onclick="pickD('nu','filter.date.now')" data-i18n="filter.date.now">Nu open</div>
       <div class="fdd-opt" data-datekey="today" onclick="pickD('today','filter.date.today')" data-i18n="filter.date.today">Vandaag</div>
       <div class="fdd-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')" data-i18n="filter.date.weekend">Dit weekend</div>
       <div class="fdd-opt" data-datekey="week" onclick="pickD('week','filter.date.week')" data-i18n="filter.date.week">Deze week</div>
@@ -2227,6 +2215,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div class="lijst-side-group">
       <div class="lijst-side-h">📅 Datum</div>
       <button class="ls-opt active" data-datekey="all" onclick="pickD('all','filter.date.all_short')">Alle datums</button>
+      <button class="ls-opt" data-datekey="nu" onclick="pickD('nu','filter.date.now')" data-i18n="filter.date.now">Nu open</button>
       <button class="ls-opt" data-datekey="today" onclick="pickD('today','filter.date.today')">Vandaag</button>
       <button class="ls-opt" data-datekey="weekend" onclick="pickD('weekend','filter.date.weekend')">Dit weekend</button>
       <button class="ls-opt" data-datekey="week" onclick="pickD('week','filter.date.week')">Deze week</button>
@@ -3281,6 +3270,11 @@ body.dark .bv-addr-row:active { background: var(--bg); }
           <span style="margin-left:auto;color:var(--muted);font-size:16px">›</span>
         </button>
       </div>
+      <!-- Waze neemt via een link maar één bestemming: bij meer stops kies je hier de volgende. -->
+      <div id="nav-waze-stops" style="display:none;margin-top:12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px" data-i18n="nav.waze.each">Waze neemt één stop per keer. Kies je volgende stop:</div>
+        <div id="nav-waze-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -3365,6 +3359,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
     <div style="padding:16px">
       <div id="det-title" style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">Titel</div>
       <div id="det-meta" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
+      <div id="det-live"></div>
       <div id="det-addr" style="font-size:12px;color:var(--muted);margin-bottom:4px"></div>
       <div id="det-addr-guest" style="display:none;font-size:12px;color:var(--muted);margin-bottom:4px;cursor:pointer;border:1.5px dashed #F2C89A;border-radius:8px;padding:6px 10px" onclick="guestGate('adres')">
         <span id="det-addr-city"></span><span style="filter:blur(4px)">Straatnaam 12</span> 🔒
@@ -3512,6 +3507,17 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         <button onclick="closeTipModal()" style="width:100%;margin-top:14px;padding:11px;border-radius:10px;border:none;background:var(--forest);color:white;font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;cursor:pointer">OK</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════ ROMMELROUTE BEHEREN (Fase 3) ═══════════
+     Aanmelden via link/QR, goedkeuren, statistieken, printen, bericht aan
+     deelnemers en opnieuw organiseren. Inhoud wordt door renderRouteBeheer()
+     opgebouwd uit route_beheer() (zie rommelroute-organisator.sql). -->
+<div class="overlay" id="routeOv" onclick="if(event.target===this)closeRouteBeheer()">
+  <div class="sheet" style="max-height:92vh;max-width:560px;overflow-y:auto">
+    <div class="sheet-handle"></div>
+    <div style="padding:18px 22px 28px" id="route-body"></div>
   </div>
 </div>
 
@@ -4625,10 +4631,13 @@ function mapSupabaseToSale(item) {
     lat: lat,
     lng: lng,
     date: item.date_start || item.date || '',
+    date_end: item.date_end || null,
     from: item.time_start ? String(item.time_start).substring(0, 5) : '09:00',
     till: item.time_end   ? String(item.time_end).substring(0, 5)   : '17:00',
     tags: item.tags || [],
-    interested: item.view_count || 0,
+    // "Gaan erheen": echte aantallen uit listing_ik_ga_aantallen (laadIkGaAantallen).
+    // view_count is iets anders en werd hier ten onrechte getoond.
+    interested: (_ikGaAantallen && _ikGaAantallen[item.id]) || 0,
     photos: item.images || item.photos || [],
     neighborhood_sale_id: item.neighborhood_group_id || item.neighborhood_sale_id || null,
     neighborhood_sale: item.neighborhood_group_id ? { id: item.neighborhood_group_id, title: item.title, date: item.date_start || '' } : null,
@@ -4990,6 +4999,95 @@ var I18N = {
     'tip.err_limit': "Je hebt al veel tips gestuurd. Probeer het later opnieuw.",
     'tip.err_generic': "Versturen lukte niet. Probeer het opnieuw.",
     'tip.need_photo': "Kies eerst een foto, of beschrijf de markt in het tekstvak.",
+    // Fase 3: rommelroute beheren
+    'route.manage_btn': "⚙️ Beheer",
+    'route.loading': "Laden…",
+    "filter.date.now": "Nu open",
+    "live.open": "Open",
+    "live.bijna_leeg": "Bijna leeg",
+    "live.gesloten": "Gesloten",
+    "live.nog_veel": "nog veel",
+    "live.nog_veel_kies": "Nog veel van… (optioneel)",
+    "live.titel": "Live vandaag",
+    "live.zojuist": "zojuist",
+    "live.min_geleden": "{n} min geleden",
+    "live.uur_geleden": "{n} uur geleden",
+    "live.opgeslagen": "Status bijgewerkt",
+    "live.fout": "Status kon niet worden opgeslagen",
+    "live.fout_niet_vandaag": "Dit kan alleen op de dag van de verkoop zelf",
+    "live.fout_voorbij": "De verkoop is voor vandaag al afgelopen",
+    "live.fout_te_snel": "Even wachten, en probeer het dan opnieuw",
+    "live.link_btn": "🔗 Live-link",
+    "live.link_text": "Op de dag van {titel} kun je hier met één tik laten zien of je open, bijna leeg of gesloten bent:",
+    "live.route_overgeslagen": "✨ Route geoptimaliseerd, {n} gesloten adres(sen) overgeslagen",
+    "live.n_open": "{n} open",
+    "live.n_gesloten": "{n} gesloten",
+    'route.error': "Dat lukte niet. Probeer het later nog eens.",
+    'route.past_badge': "Voorbij",
+    'route.stat_views': "keer bekeken",
+    'route.stat_going': "gaan erheen",
+    'route.stat_favs': "favorieten",
+    'route.stat_addresses': "adressen",
+    'route.stat_waiting': "{n} wachten op bevestiging",
+    'route.signup_title': "📣 Buren laten aanmelden",
+    'route.signup_intro': "Deel deze link of QR-code in de buurtapp, op een flyer of in de groepsapp. Buren melden zich zelf aan; jij keurt ze goed.",
+    'route.copy': "Kopieer link",
+    'route.share': "Delen",
+    'route.copied': "Link gekopieerd",
+    'route.share_text': "Doe mee met {titel} op {datum}! Meld je adres hier aan:",
+    'route.signup_open': "Inschrijving staat open",
+    'route.signup_closed': "Inschrijving is gesloten",
+    'route.close_signup': "Sluiten",
+    'route.open_signup': "Openen",
+    'route.requests_title': "Aanmeldingen",
+    'route.requests_empty': "Nog geen aanmeldingen. Deel de link hierboven met je buren.",
+    'route.approve': "✓ Goedkeuren",
+    'route.reject': "Afwijzen",
+    'route.approved_toast': "Goedgekeurd, het adres staat op de kaart",
+    'route.rejected_toast': "Afgewezen, de gegevens zijn gewist",
+    'route.st_nieuw': "Nieuw",
+    'route.st_uitgenodigd': "Uitgenodigd",
+    'route.st_goedgekeurd': "Op de kaart",
+    'route.st_afgewezen': "Afgewezen",
+    'route.st_ingetrokken': "Afgemeld",
+    'route.sells': "Verkoopt: ",
+    'route.neighbour': "Buur",
+    'route.own_address': "Jouw adres",
+    'route.addresses_title': "Adressen op de route",
+    'route.pending': "Wacht op bevestiging",
+    'route.resend': "📨 Link",
+    'route.print_title': "🖨️ Printen",
+    'route.print_map': "Routekaart",
+    'route.print_posters': "Raamposters",
+    'route.print_intro': "De routekaart heeft genummerde adressen en een QR-code naar de route. De raamposter hangt elke deelnemer achter het raam.",
+    'route.print_none': "Er staan nog geen adressen op de kaart.",
+    'route.map_scan': "Scan voor de route in de app",
+    'route.poster_nr': "Adres {nr} van {n}",
+    'route.poster_scan': "Scan voor de kaart met alle adressen",
+    'route.msg_title': "✉️ Bericht aan deelnemers",
+    'route.msg_intro': "Verandert er iets? Stuur alle goedgekeurde buren met een e-mailadres een bericht. Je ziet hun e-mailadres niet.",
+    'route.msg_none': "Nog geen deelnemers met een e-mailadres. Buren die zich via de link aanmelden kunnen er een opgeven.",
+    'route.msg_ph': "Bijvoorbeeld: Door de regen schuiven we een week op.",
+    'route.msg_count': "{n} ontvanger(s)",
+    'route.msg_send': "Versturen",
+    'route.msg_sent': "Bericht verstuurd naar {n} deelnemer(s)",
+    'route.msg_limit': "Je kunt maximaal 3 berichten per dag sturen.",
+    'route.msg_short': "Schrijf een bericht van minimaal 5 tekens.",
+    'route.again_title': "🔁 Opnieuw organiseren",
+    'route.again_intro': "Zelfde route, nieuwe datum. Buren geven per editie opnieuw toestemming: wie zich met e-mail aanmeldde en dat wilde, krijgt een uitnodiging. Voor de anderen krijg je nieuwe bevestigingslinks om te delen.",
+    'route.again_date': "Nieuwe datum",
+    'route.again_from': "Van",
+    'route.again_till': "Tot",
+    'route.again_btn': "Nieuwe editie aanmaken",
+    'route.again_done': "Nieuwe editie staat erop!",
+    'route.again_invited': "{n} buren krijgen een uitnodiging per mail.",
+    'route.again_date_err': "Kies een datum vanaf vandaag.",
+    'route.close': "Sluiten",
+    'route.past_title': "Eerdere rommelroutes",
+    'route.past_sub': "Bekijk hoe het ging of organiseer opnieuw.",
+    'route.new_requests': "{n} nieuw",
+    'gate.rommelroute.title': "Log in om je rommelroute te beheren",
+    'gate.rommelroute.desc': "Log in met het account waarmee je de rommelroute plaatste.",
     'claim.title': "✨ Claim deze vermelding",
     'claim.intro': "Ben jij de organisator? Vul je gegevens in. Onze admin verifieert de claim binnen 2 werkdagen. Na goedkeuring kun je foto's en extra info toevoegen.",
     'claim.field_name': "Jouw naam *",
@@ -5526,6 +5624,7 @@ var I18N = {
     'nav.app.google.sub': 'Altijd beschikbaar',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'Met live verkeer',
+    'nav.waze.each': 'Waze neemt één stop per keer. Kies je volgende stop:',
     'toast.route_optimized': '✨ Route geoptimaliseerd!',
     'toast.removed_from_route': '🗑️ Verwijderd uit route',
     // Mijn / Profile
@@ -5702,6 +5801,95 @@ var I18N = {
     'tip.err_limit': "You've sent a lot of tips. Please try again later.",
     'tip.err_generic': "Sending failed. Please try again.",
     'tip.need_photo': "Choose a photo first, or describe the market in the text box.",
+    // Fase 3: rommelroute beheren
+    'route.manage_btn': "⚙️ Manage",
+    'route.loading': "Loading…",
+    "filter.date.now": "Open now",
+    "live.open": "Open",
+    "live.bijna_leeg": "Almost sold out",
+    "live.gesloten": "Closed",
+    "live.nog_veel": "still lots of",
+    "live.nog_veel_kies": "Still lots of… (optional)",
+    "live.titel": "Live today",
+    "live.zojuist": "just now",
+    "live.min_geleden": "{n} min ago",
+    "live.uur_geleden": "{n} h ago",
+    "live.opgeslagen": "Status updated",
+    "live.fout": "Could not save the status",
+    "live.fout_niet_vandaag": "This only works on the day of the sale",
+    "live.fout_voorbij": "The sale has already ended for today",
+    "live.fout_te_snel": "Please wait a moment and try again",
+    "live.link_btn": "🔗 Live link",
+    "live.link_text": "On the day of {titel}, one tap here shows visitors whether you are open, almost sold out or closed:",
+    "live.route_overgeslagen": "✨ Route optimised, {n} closed address(es) skipped",
+    "live.n_open": "{n} open",
+    "live.n_gesloten": "{n} closed",
+    'route.error': "That did not work. Please try again later.",
+    'route.past_badge': "Past",
+    'route.stat_views': "views",
+    'route.stat_going': "going",
+    'route.stat_favs': "favourites",
+    'route.stat_addresses': "addresses",
+    'route.stat_waiting': "{n} waiting for confirmation",
+    'route.signup_title': "📣 Let neighbours sign up",
+    'route.signup_intro': "Share this link or QR code in the neighbourhood app, on a flyer or in the group chat. Neighbours sign up themselves; you approve them.",
+    'route.copy': "Copy link",
+    'route.share': "Share",
+    'route.copied': "Link copied",
+    'route.share_text': "Join {titel} on {datum}! Sign up your address here:",
+    'route.signup_open': "Sign-up is open",
+    'route.signup_closed': "Sign-up is closed",
+    'route.close_signup': "Close",
+    'route.open_signup': "Open",
+    'route.requests_title': "Sign-ups",
+    'route.requests_empty': "No sign-ups yet. Share the link above with your neighbours.",
+    'route.approve': "✓ Approve",
+    'route.reject': "Reject",
+    'route.approved_toast': "Approved, the address is on the map",
+    'route.rejected_toast': "Rejected, the details have been deleted",
+    'route.st_nieuw': "New",
+    'route.st_uitgenodigd': "Invited",
+    'route.st_goedgekeurd': "On the map",
+    'route.st_afgewezen': "Rejected",
+    'route.st_ingetrokken': "Withdrawn",
+    'route.sells': "Selling: ",
+    'route.neighbour': "Neighbour",
+    'route.own_address': "Your address",
+    'route.addresses_title': "Addresses on the route",
+    'route.pending': "Waiting for confirmation",
+    'route.resend': "📨 Link",
+    'route.print_title': "🖨️ Print",
+    'route.print_map': "Route map",
+    'route.print_posters': "Window posters",
+    'route.print_intro': "The route map has numbered addresses and a QR code to the route. Each participant hangs the window poster in their window.",
+    'route.print_none': "There are no addresses on the map yet.",
+    'route.map_scan': "Scan for the route in the app",
+    'route.poster_nr': "Address {nr} of {n}",
+    'route.poster_scan': "Scan for the map with all addresses",
+    'route.msg_title': "✉️ Message to participants",
+    'route.msg_intro': "Something changing? Send a message to all approved neighbours with an email address. You will not see their email address.",
+    'route.msg_none': "No participants with an email address yet. Neighbours who sign up via the link can add one.",
+    'route.msg_ph': "For example: Because of the rain we are moving a week later.",
+    'route.msg_count': "{n} recipient(s)",
+    'route.msg_send': "Send",
+    'route.msg_sent': "Message sent to {n} participant(s)",
+    'route.msg_limit': "You can send at most 3 messages per day.",
+    'route.msg_short': "Write a message of at least 5 characters.",
+    'route.again_title': "🔁 Organise again",
+    'route.again_intro': "Same route, new date. Neighbours give consent again for each edition: those who signed up with an email and wanted it get an invitation. For the others you get new confirmation links to share.",
+    'route.again_date': "New date",
+    'route.again_from': "From",
+    'route.again_till': "Until",
+    'route.again_btn': "Create new edition",
+    'route.again_done': "New edition is live!",
+    'route.again_invited': "{n} neighbours get an invitation by email.",
+    'route.again_date_err': "Choose a date from today onwards.",
+    'route.close': "Close",
+    'route.past_title': "Past yard sale routes",
+    'route.past_sub': "See how it went or organise again.",
+    'route.new_requests': "{n} new",
+    'gate.rommelroute.title': "Log in to manage your route",
+    'gate.rommelroute.desc': "Log in with the account you used to list the yard sale route.",
     'claim.title': "✨ Claim this listing",
     'claim.intro': "Are you the organizer? Fill in your details. Our admin verifies claims within 2 business days. Once approved you can add photos and extra info.",
     'claim.field_name': "Your name *",
@@ -6238,6 +6426,7 @@ var I18N = {
     'nav.app.google.sub': 'Always available',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'With live traffic',
+    'nav.waze.each': 'Waze takes one stop at a time. Choose your next stop:',
     'toast.route_optimized': '✨ Route optimized!',
     'toast.removed_from_route': '🗑️ Removed from route',
     // Profile / My
@@ -6414,6 +6603,95 @@ var I18N = {
     'tip.err_limit': "Tu as déjà envoyé beaucoup de signalements. Réessaie plus tard.",
     'tip.err_generic': "L'envoi a échoué. Réessaie.",
     'tip.need_photo': "Choisis d'abord une photo, ou décris le marché dans la zone de texte.",
+    // Fase 3: rommelroute beheren
+    'route.manage_btn': "⚙️ Gérer",
+    'route.loading': "Chargement…",
+    "filter.date.now": "Ouvert maintenant",
+    "live.open": "Ouvert",
+    "live.bijna_leeg": "Presque vide",
+    "live.gesloten": "Fermé",
+    "live.nog_veel": "encore beaucoup de",
+    "live.nog_veel_kies": "Encore beaucoup de… (facultatif)",
+    "live.titel": "En direct aujourd'hui",
+    "live.zojuist": "à l'instant",
+    "live.min_geleden": "il y a {n} min",
+    "live.uur_geleden": "il y a {n} h",
+    "live.opgeslagen": "Statut mis à jour",
+    "live.fout": "Impossible d'enregistrer le statut",
+    "live.fout_niet_vandaag": "Possible uniquement le jour de la vente",
+    "live.fout_voorbij": "La vente est déjà terminée pour aujourd'hui",
+    "live.fout_te_snel": "Patientez un instant puis réessayez",
+    "live.link_btn": "🔗 Lien direct",
+    "live.link_text": "Le jour de {titel}, un seul clic ici montre si vous êtes ouvert, presque vide ou fermé :",
+    "live.route_overgeslagen": "✨ Itinéraire optimisé, {n} adresse(s) fermée(s) ignorée(s)",
+    "live.n_open": "{n} ouvert(s)",
+    "live.n_gesloten": "{n} fermé(s)",
+    'route.error': "Cela n’a pas fonctionné. Réessayez plus tard.",
+    'route.past_badge': "Passé",
+    'route.stat_views': "vues",
+    'route.stat_going': "y vont",
+    'route.stat_favs': "favoris",
+    'route.stat_addresses': "adresses",
+    'route.stat_waiting': "{n} en attente de confirmation",
+    'route.signup_title': "📣 Faire inscrire les voisins",
+    'route.signup_intro': "Partagez ce lien ou ce QR code dans l'appli du quartier, sur un flyer ou dans le groupe. Les voisins s'inscrivent eux-mêmes ; vous les approuvez.",
+    'route.copy': "Copier le lien",
+    'route.share': "Partager",
+    'route.copied': "Lien copié",
+    'route.share_text': "Participez à {titel} le {datum} ! Inscrivez votre adresse ici :",
+    'route.signup_open': "Les inscriptions sont ouvertes",
+    'route.signup_closed': "Les inscriptions sont closes",
+    'route.close_signup': "Fermer",
+    'route.open_signup': "Ouvrir",
+    'route.requests_title': "Inscriptions",
+    'route.requests_empty': "Pas encore d’inscriptions. Partagez le lien ci-dessus avec vos voisins.",
+    'route.approve': "✓ Approuver",
+    'route.reject': "Refuser",
+    'route.approved_toast': "Approuvé, l'adresse est sur la carte",
+    'route.rejected_toast': "Refusé, les données ont été effacées",
+    'route.st_nieuw': "Nouveau",
+    'route.st_uitgenodigd': "Invité",
+    'route.st_goedgekeurd': "Sur la carte",
+    'route.st_afgewezen': "Refusé",
+    'route.st_ingetrokken': "Désinscrit",
+    'route.sells': "Vend : ",
+    'route.neighbour': "Voisin",
+    'route.own_address': "Votre adresse",
+    'route.addresses_title': "Adresses du parcours",
+    'route.pending': "En attente de confirmation",
+    'route.resend': "📨 Lien",
+    'route.print_title': "🖨️ Imprimer",
+    'route.print_map': "Carte du parcours",
+    'route.print_posters': "Affiches de fenêtre",
+    'route.print_intro': "La carte a des adresses numérotées et un QR code vers le parcours. Chaque participant met l’affiche à sa fenêtre.",
+    'route.print_none': "Il n'y a pas encore d'adresses sur la carte.",
+    'route.map_scan': "Scannez pour le parcours dans l'appli",
+    'route.poster_nr': "Adresse {nr} sur {n}",
+    'route.poster_scan': "Scannez pour la carte avec toutes les adresses",
+    'route.msg_title': "✉️ Message aux participants",
+    'route.msg_intro': "Un changement ? Envoyez un message à tous les voisins approuvés ayant une adresse e-mail. Vous ne voyez pas leur adresse e-mail.",
+    'route.msg_none': "Pas encore de participants avec une adresse e-mail. Les voisins qui s'inscrivent via le lien peuvent en indiquer une.",
+    'route.msg_ph': "Par exemple : à cause de la pluie, nous décalons d’une semaine.",
+    'route.msg_count': "{n} destinataire(s)",
+    'route.msg_send': "Envoyer",
+    'route.msg_sent': "Message envoyé à {n} participant(s)",
+    'route.msg_limit': "Vous pouvez envoyer au maximum 3 messages par jour.",
+    'route.msg_short': "Écrivez un message d’au moins 5 caractères.",
+    'route.again_title': "🔁 Organiser à nouveau",
+    'route.again_intro': "Même parcours, nouvelle date. Les voisins redonnent leur accord à chaque édition : ceux qui se sont inscrits avec un e-mail et l'ont souhaité reçoivent une invitation. Pour les autres, vous recevez de nouveaux liens de confirmation à partager.",
+    'route.again_date': "Nouvelle date",
+    'route.again_from': "De",
+    'route.again_till': "À",
+    'route.again_btn': "Créer une nouvelle édition",
+    'route.again_done': "La nouvelle édition est en ligne !",
+    'route.again_invited': "{n} voisins reçoivent une invitation par e-mail.",
+    'route.again_date_err': "Choisissez une date à partir d'aujourd'hui.",
+    'route.close': "Fermer",
+    'route.past_title': "Parcours précédents",
+    'route.past_sub': "Voyez le bilan ou organisez à nouveau.",
+    'route.new_requests': "{n} nouveau(x)",
+    'gate.rommelroute.title': "Connectez-vous pour gérer votre parcours",
+    'gate.rommelroute.desc': "Connectez-vous avec le compte utilisé pour publier le parcours.",
     'claim.title': "✨ Revendiquer cette annonce",
     'claim.intro': "Êtes-vous l'organisateur ? Remplissez vos coordonnées. Notre admin vérifie les revendications dans les 2 jours ouvrables. Une fois approuvée, vous pourrez ajouter des photos et infos.",
     'claim.field_name': "Votre nom *",
@@ -6950,6 +7228,7 @@ var I18N = {
     'nav.app.google.sub': 'Toujours disponible',
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.waze.sub': 'Avec trafic en direct',
+    'nav.waze.each': 'Waze prend un arrêt à la fois. Choisissez votre prochain arrêt :',
     'toast.route_optimized': '✨ Itinéraire optimisé !',
     'toast.removed_from_route': '🗑️ Retiré de l\'itinéraire',
     // Profil / Mes ventes
@@ -7124,6 +7403,95 @@ var I18N = {
     'tip.err_limit': "Du hast schon viele Tipps gesendet. Versuche es später noch einmal.",
     'tip.err_generic': "Senden fehlgeschlagen. Bitte versuche es erneut.",
     'tip.need_photo': "Wähle zuerst ein Foto oder beschreibe den Markt im Textfeld.",
+    // Fase 3: rommelroute beheren
+    'route.manage_btn': "⚙️ Verwalten",
+    'route.loading': "Wird geladen…",
+    "filter.date.now": "Jetzt geöffnet",
+    "live.open": "Geöffnet",
+    "live.bijna_leeg": "Fast leer",
+    "live.gesloten": "Geschlossen",
+    "live.nog_veel": "noch viel",
+    "live.nog_veel_kies": "Noch viel… (optional)",
+    "live.titel": "Heute live",
+    "live.zojuist": "gerade eben",
+    "live.min_geleden": "vor {n} Min.",
+    "live.uur_geleden": "vor {n} Std.",
+    "live.opgeslagen": "Status aktualisiert",
+    "live.fout": "Status konnte nicht gespeichert werden",
+    "live.fout_niet_vandaag": "Das geht nur am Tag des Verkaufs",
+    "live.fout_voorbij": "Der Verkauf ist für heute schon vorbei",
+    "live.fout_te_snel": "Kurz warten und dann erneut versuchen",
+    "live.link_btn": "🔗 Live-Link",
+    "live.link_text": "Am Tag von {titel} zeigst du hier mit einem Tippen, ob du geöffnet, fast leer oder geschlossen bist:",
+    "live.route_overgeslagen": "✨ Route optimiert, {n} geschlossene Adresse(n) übersprungen",
+    "live.n_open": "{n} geöffnet",
+    "live.n_gesloten": "{n} geschlossen",
+    'route.error': "Das hat nicht geklappt. Bitte versuche es später noch einmal.",
+    'route.past_badge': "Vorbei",
+    'route.stat_views': "Aufrufe",
+    'route.stat_going': "gehen hin",
+    'route.stat_favs': "Favoriten",
+    'route.stat_addresses': "Adressen",
+    'route.stat_waiting': "{n} warten auf Bestätigung",
+    'route.signup_title': "📣 Nachbarn anmelden lassen",
+    'route.signup_intro': "Teile diesen Link oder QR-Code in der Nachbarschafts-App, auf einem Flyer oder in der Gruppe. Nachbarn melden sich selbst an; du bestätigst sie.",
+    'route.copy': "Link kopieren",
+    'route.share': "Teilen",
+    'route.copied': "Link kopiert",
+    'route.share_text': "Mach mit bei {titel} am {datum}! Melde deine Adresse hier an:",
+    'route.signup_open': "Anmeldung ist offen",
+    'route.signup_closed': "Anmeldung ist geschlossen",
+    'route.close_signup': "Schließen",
+    'route.open_signup': "Öffnen",
+    'route.requests_title': "Anmeldungen",
+    'route.requests_empty': "Noch keine Anmeldungen. Teile den Link oben mit deinen Nachbarn.",
+    'route.approve': "✓ Bestätigen",
+    'route.reject': "Ablehnen",
+    'route.approved_toast': "Bestätigt, die Adresse ist auf der Karte",
+    'route.rejected_toast': "Abgelehnt, die Daten wurden gelöscht",
+    'route.st_nieuw': "Neu",
+    'route.st_uitgenodigd': "Eingeladen",
+    'route.st_goedgekeurd': "Auf der Karte",
+    'route.st_afgewezen': "Abgelehnt",
+    'route.st_ingetrokken': "Abgemeldet",
+    'route.sells': "Verkauft: ",
+    'route.neighbour': "Nachbar",
+    'route.own_address': "Deine Adresse",
+    'route.addresses_title': "Adressen der Route",
+    'route.pending': "Wartet auf Bestätigung",
+    'route.resend': "📨 Link",
+    'route.print_title': "🖨️ Drucken",
+    'route.print_map': "Routenkarte",
+    'route.print_posters': "Fensterplakate",
+    'route.print_intro': "Die Routenkarte hat nummerierte Adressen und einen QR-Code zur Route. Das Fensterplakat hängt jede teilnehmende Person ins Fenster.",
+    'route.print_none': "Es sind noch keine Adressen auf der Karte.",
+    'route.map_scan': "Scannen für die Route in der App",
+    'route.poster_nr': "Adresse {nr} von {n}",
+    'route.poster_scan': "Scannen für die Karte mit allen Adressen",
+    'route.msg_title': "✉️ Nachricht an alle",
+    'route.msg_intro': "Ändert sich etwas? Schick allen bestätigten Nachbarn mit E-Mail-Adresse eine Nachricht. Ihre E-Mail-Adressen siehst du nicht.",
+    'route.msg_none': "Noch keine Teilnehmenden mit E-Mail-Adresse. Wer sich über den Link anmeldet, kann eine angeben.",
+    'route.msg_ph': "Zum Beispiel: Wegen Regen verschieben wir um eine Woche.",
+    'route.msg_count': "{n} Empfänger",
+    'route.msg_send': "Senden",
+    'route.msg_sent': "Nachricht an {n} Teilnehmende gesendet",
+    'route.msg_limit': "Du kannst höchstens 3 Nachrichten pro Tag senden.",
+    'route.msg_short': "Schreib eine Nachricht mit mindestens 5 Zeichen.",
+    'route.again_title': "🔁 Erneut organisieren",
+    'route.again_intro': "Gleiche Route, neues Datum. Nachbarn stimmen für jede Ausgabe neu zu: Wer sich mit E-Mail angemeldet hat und das wollte, bekommt eine Einladung. Für die anderen bekommst du neue Bestätigungslinks zum Teilen.",
+    'route.again_date': "Neues Datum",
+    'route.again_from': "Von",
+    'route.again_till': "Bis",
+    'route.again_btn': "Neue Ausgabe anlegen",
+    'route.again_done': "Die neue Ausgabe ist online!",
+    'route.again_invited': "{n} Nachbarn bekommen eine Einladung per E-Mail.",
+    'route.again_date_err': "Wähle ein Datum ab heute.",
+    'route.close': "Schließen",
+    'route.past_title': "Frühere Hofflohmärkte",
+    'route.past_sub': "Sieh dir an, wie es lief, oder organisiere erneut.",
+    'route.new_requests': "{n} neu",
+    'gate.rommelroute.title': "Melde dich an, um deine Route zu verwalten",
+    'gate.rommelroute.desc': "Melde dich mit dem Konto an, mit dem du die Route eingestellt hast.",
     'claim.title': "✨ Diesen Eintrag beanspruchen",
     'claim.intro': "Bist du der Organisator? Trage deine Daten ein. Unser Admin prüft den Anspruch innerhalb von 2 Werktagen. Nach Genehmigung kannst du Fotos und weitere Infos hinzufügen.",
     'claim.field_name': "Dein Name *",
@@ -7535,6 +7903,7 @@ var I18N = {
     'nav.app.apple.sub': 'iPhone & iPad',
     'nav.app.google.sub': 'Immer verfügbar',
     'nav.app.waze.sub': 'Mit Live-Verkehr',
+    'nav.waze.each': 'Waze nimmt einen Stopp nach dem anderen. Wähl deinen nächsten Stopp:',
     'nav.sheet.cedrik': 'Super! Wähle dein Verkehrsmittel und deine Navigations-App, dann mache ich alles bereit! 🗺️',
     'nav.sheet.choose_app': 'Navigations-App',
     'nav.sheet.transport': 'Verkehrsmittel',
@@ -8436,14 +8805,18 @@ function _renderMySalesNu() {
   var sv = document.getElementById('stat-verkopen');
   var sw = document.getElementById('stat-weergaven');
   var si = document.getElementById('stat-interesses');
+  // Echte cijfers uit mijn_listing_stats (laadMijnStats); tot die binnen zijn 0.
+  var _totaal = mijnStatsVan(mine.map(function(s) { return s.id; }));
   if (sv) sv.textContent = display.length;
-  if (sw) sw.textContent = mine.reduce(function(a, s) { return a + (s.views || 0); }, 0);
-  if (si) si.textContent = mine.reduce(function(a, s) { return a + (s.interested || 0); }, 0);
+  if (sw) sw.textContent = _totaal.weergaven;
+  if (si) si.textContent = _totaal.ik_ga;
+  if (!_mijnStatsGevraagd) { _mijnStatsGevraagd = true; laadMijnStats(); }
 
   if (!display.length) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏪</div>'
       + '<div class="empty-title">Nog geen verkopen</div>'
-      + '<div class="empty-sub">Jouw geplaatste verkopen verschijnen hier.</div></div>';
+      + '<div class="empty-sub">Jouw geplaatste verkopen verschijnen hier.</div></div>'
+      + eerdereRoutesHtml(display);
     return;
   }
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
@@ -8503,6 +8876,8 @@ function _renderMySalesNu() {
             actions = '<button type="button" onclick="reshareOneBuurtLink(\'' + escapeHtml(row.id) + '\')" '
               + 'style="margin-top:6px;padding:6px 10px;border-radius:7px;border:1.5px solid var(--terra);background:var(--terra);color:white;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">📨 Link opnieuw delen</button>';
           }
+          // Op de dag zelf: live-status per adres (de organisator mag dat voor iedereen).
+          if (status === 'confirmed') actions += liveKnoppenHtml(row);
           return '<div style="padding:8px 10px;border-top:1px solid var(--border)">'
             + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
               + '<div style="flex:1;min-width:0">'
@@ -8514,7 +8889,7 @@ function _renderMySalesNu() {
             + actions
           + '</div>';
         }).join('');
-        bvAddressesHtml = '<details style="margin-top:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">'
+        bvAddressesHtml = '<details' + (saleIsVandaag(s) ? ' open' : '') + ' style="margin-top:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">'
           + '<summary style="cursor:pointer;padding:8px 10px;font-size:11px;font-weight:700;color:var(--bark);list-style:none;display:flex;justify-content:space-between;align-items:center">'
             + '<span>📋 Adressen van buren (' + grp.length + ')</span>'
             + '<span style="color:var(--muted);font-size:10px;font-weight:500">tik om uit te klappen</span>'
@@ -8531,19 +8906,56 @@ function _renderMySalesNu() {
           + '<div style="font-size:11px;color:var(--muted)">' + (s.date ? fmtDate(s.date) : '') + ' · ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + ' · ' + escapeHtml(addrShort) + '</div>'
           + bvStatusBadge
           + '<div style="display:flex;gap:10px;margin-top:5px">'
-          + '<span style="font-size:10px;font-weight:600;color:var(--muted)">Interesse: <span style="color:var(--terra)">' + (s.interested || 0) + '</span></span>'
+          + (function() {
+              var ids = s.neighborhood_sale_id ? mine.filter(function(x) { return x.neighborhood_sale_id === s.neighborhood_sale_id; }).map(function(x) { return x.id; }) : [s.id];
+              var st = mijnStatsVan(ids);
+              return '<span style="font-size:10px;font-weight:600;color:var(--muted)">👁 ' + st.weergaven + ' · 🎉 ' + st.ik_ga + ' · ❤️ ' + st.favorieten + '</span>';
+            })()
+          + (s.neighborhood_sale_id ? nieuweAanmeldingenBadge(s.neighborhood_sale_id) : '')
           + '</div>'
         + '</div>'
         + '<div style="display:flex;flex-direction:column;gap:4px">'
+          + (s.neighborhood_sale_id ? '<button onclick="openRouteBeheer(\'' + escapeHtml(s.neighborhood_sale_id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:700;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--forest);color:white">' + escapeHtml(i18n('route.manage_btn', '⚙️ Beheer')) + '</button>' : '')
           + '<button onclick="openDetail(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--bg2);color:var(--text)">Bekijk</button>'
           + '<button onclick="openMySaleShare(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:#3A6B4A;color:white">🚀 Delen</button>'
           + '<button onclick="openEditSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--terra);color:white">✏️ Bewerk</button>'
           + '<button onclick="confirmDeleteSale(\'' + escapeHtml(s.id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #d04545;cursor:pointer;background:white;color:#d04545">🗑️ Verwijder</button>'
         + '</div>'
       + '</div>'
+      + (bvAddressesHtml ? '' : liveKnoppenHtml(s))
       + bvAddressesHtml
     + '</div>';
-  }).join('');
+  }).join('') + eerdereRoutesHtml(display);
+}
+
+var _mijnStatsGevraagd = false;
+function nieuweAanmeldingenBadge(groepId) {
+  var r = (_mijnRoutes || []).filter(function(x) { return x.groep_id === groepId; })[0];
+  if (!r || !r.nieuw) return '';
+  return ' <span onclick="openRouteBeheer(\'' + escapeHtml(groepId) + '\')" style="cursor:pointer;background:#E07B39;color:white;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;margin-left:4px">'
+    + escapeHtml(rtxt('route.new_requests', '{n} nieuw', { n: r.nieuw })) + '</span>';
+}
+// Voorbije rommelroutes staan niet meer in 'sales' (alleen toekomstige
+// listings komen mee), maar de organisator wil het resultaat zien en de
+// route opnieuw kunnen organiseren.
+function eerdereRoutesHtml(display) {
+  var actief = {};
+  display.forEach(function(s) { if (s.neighborhood_sale_id) actief[s.neighborhood_sale_id] = true; });
+  var oud = (_mijnRoutes || []).filter(function(r) { return r.voorbij && !actief[r.groep_id]; });
+  if (!oud.length) return '';
+  return '<div style="margin-top:18px">'
+    + '<div class="section-label">' + escapeHtml(i18n('route.past_title', 'Eerdere rommelroutes')) + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin:-4px 0 8px">' + escapeHtml(i18n('route.past_sub', 'Bekijk hoe het ging of organiseer opnieuw.')) + '</div>'
+    + oud.map(function(r) {
+        var st = r.stats || {};
+        return '<div class="my-sale-card" style="display:flex;gap:10px;align-items:center">'
+          + '<div style="font-size:24px">🏘️</div>'
+          + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">' + escapeHtml(r.titel || '') + '</div>'
+          + '<div style="font-size:11px;color:var(--muted)">' + (r.datum ? fmtDate(r.datum) : '') + ' · 👁 ' + (st.weergaven || 0) + ' · 🎉 ' + (st.ik_ga || 0) + ' · 🏠 ' + (st.adressen || 0) + '</div></div>'
+          + '<button onclick="openRouteBeheer(\'' + escapeHtml(r.groep_id) + '\')" style="font-family:\'Poppins\',sans-serif;font-size:10px;font-weight:700;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--forest);color:white">' + escapeHtml(i18n('route.manage_btn', '⚙️ Beheer')) + '</button>'
+          + '</div>';
+      }).join('')
+    + '</div>';
 }
 
 // Open share-modal voor een eigen verkoop vanuit "Mijn verkopen"
@@ -8569,11 +8981,560 @@ function reshareOneBuurtLink(saleId) {
   showBuurtSharesModal([item]);
 }
 
+// ══════════════════════════════════════════════════
+// ROMMELROUTE BEHEREN (Fase 3)
+// ══════════════════════════════════════════════════
+// Alles komt uit security-definer RPC's (rommelroute-organisator.sql); de
+// e-mailadressen van buren komen nooit naar de app. Mails (nieuwe aanmelding,
+// goedkeuring, uitnodiging, rapport) verstuurt edge function 'rommelroute'.
+
+var YG_SITE = 'https://www.yardigo.nl';
+var _routeData = null;        // laatste route_beheer()-antwoord
+var _mijnRoutes = null;       // mijn_rommelroutes(), voor "Eerdere rommelroutes"
+var _mijnStats = {};          // listing_id -> { weergaven, ik_ga, favorieten }
+
+function rtxt(key, fallback, vars) {
+  var s = i18n(key, fallback);
+  if (vars) Object.keys(vars).forEach(function(k) { s = s.split('{' + k + '}').join(vars[k]); });
+  return s;
+}
+function routeLink(code) { return YG_SITE + '/doe-mee?r=' + encodeURIComponent(code) + '&lang=' + (currentLang || 'nl'); }
+function routeDatum(r) {
+  var d = r.datum ? fmtDate(r.datum) : '';
+  return d + (r.tijd_van ? ' · ' + r.tijd_van + (r.tijd_tot ? '–' + r.tijd_tot : '') : '');
+}
+
+// Weergaven, "ik ga" en favorieten van eigen listings (Mijn verkopen).
+async function laadMijnStats() {
+  if (!sbClient || isGuest) return;
+  try {
+    var res = await sbClient.rpc('mijn_listing_stats');
+    if (res.error || !res.data) return;
+    _mijnStats = {};
+    res.data.forEach(function(r) { _mijnStats[r.listing_id] = r; });
+    var r2 = await sbClient.rpc('mijn_rommelroutes');
+    if (!r2.error) _mijnRoutes = r2.data || [];
+    _renderMySalesNu();
+  } catch(e) { console.warn('mijn stats:', e); }
+}
+function mijnStatsVan(ids) {
+  var t = { weergaven: 0, ik_ga: 0, favorieten: 0 };
+  ids.forEach(function(id) {
+    var s = _mijnStats[id];
+    if (s) { t.weergaven += s.weergaven || 0; t.ik_ga += s.ik_ga || 0; t.favorieten += s.favorieten || 0; }
+  });
+  return t;
+}
+
+// Eén weergave per listing per sessie.
+function telWeergave(id) {
+  if (!sbClient || !id || String(id).length !== 36) return;
+  try {
+    var k = 'yg-gezien-' + id;
+    if (sessionStorage.getItem(k)) return;
+    sessionStorage.setItem(k, '1');
+  } catch(e) {}
+  sbClient.rpc('listing_bekeken', { p_id: id }).then(function(){}, function(){});
+}
+
+// Echte "gaan erheen"-aantallen (voorheen toonde de app view_count).
+var _ikGaAantallen = null;
+async function laadIkGaAantallen() {
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.rpc('listing_ik_ga_aantallen');
+    if (res.error) return;
+    _ikGaAantallen = {};
+    (res.data || []).forEach(function(r) { _ikGaAantallen[r.listing_id] = r.aantal; });
+    pasIkGaToe();
+    if (typeof renderList === 'function') renderList();
+  } catch(e) {}
+}
+function pasIkGaToe() {
+  if (!_ikGaAantallen) return;
+  sales.forEach(function(s) { if (!s.is_sample) s.interested = _ikGaAantallen[s.id] || 0; });
+}
+
+// ── Live-status op de dag zelf (Fase 4, live-status.sql) ──
+// Verkoper of buur zet open / bijna leeg / gesloten; de server geeft alleen
+// statussen die nu gelden (vervallen na de eindtijd van vandaag).
+var _liveStatus = {};   // listing_id -> { status, categorie, updated_at }
+var _liveTimer = null;
+function vandaagIso() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function saleIsVandaag(s) {
+  var v = vandaagIso();
+  return !!(s && s.date) && s.date <= v && (s.date_end || s.date) >= v;
+}
+function liveVan(s) { return (s && _liveStatus[s.id]) || null; }
+// Nu open: vandaag, niet op gesloten gezet, en binnen de tijden (tenzij de
+// verkoper zelf al op open/bijna leeg zette).
+function saleNuOpen(s) {
+  if (!saleIsVandaag(s)) return false;
+  var l = liveVan(s);
+  if (l) return l.status !== 'gesloten';
+  var d = new Date(), nu = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  return nu >= (s.from || '00:00') && nu < (s.till || '23:59');
+}
+function saleGesloten(s) { var l = liveVan(s); return !!(l && l.status === 'gesloten'); }
+function liveGeleden(iso) {
+  var min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 1) return i18n('live.zojuist', 'zojuist');
+  if (min < 60) return i18n('live.min_geleden', '{n} min geleden').replace('{n}', min);
+  return i18n('live.uur_geleden', '{n} uur geleden').replace('{n}', Math.floor(min / 60));
+}
+function liveRegelHtml(s) {
+  var l = liveVan(s);
+  if (!l) return '';
+  var kl = { open: '#3A6B4A', bijna_leeg: '#C8701F', gesloten: '#6B6259' }[l.status];
+  var ic = { open: '🟢', bijna_leeg: '🟠', gesloten: '⚫' }[l.status];
+  var t = ic + ' ' + i18n('live.' + l.status, l.status);
+  if (l.categorie && l.status !== 'gesloten') t += ' · ' + i18n('live.nog_veel', 'nog veel') + ' ' + ygTagLabel(l.categorie);
+  return '<div class="live-regel" style="font-size:11px;font-weight:700;color:' + kl + ';margin:3px 0">' + escapeHtml(t)
+    + ' <span style="font-weight:500;color:var(--muted)">· ' + escapeHtml(liveGeleden(l.updated_at)) + '</span></div>';
+}
+async function laadLiveStatussen() {
+  if (!sbClient) return;
+  try {
+    var res = await sbClient.rpc('live_statussen');
+    if (res.error) return;
+    var nieuw = {};
+    (res.data || []).forEach(function(r) { nieuw[r.listing_id] = { status: r.status, categorie: r.categorie, updated_at: r.updated_at }; });
+    var veranderd = JSON.stringify(nieuw) !== JSON.stringify(_liveStatus);
+    _liveStatus = nieuw;
+    // Bij "Nu open" ook zonder wijziging hertekenen: de tijd schuift door.
+    if (veranderd || activeDateFilter === 'nu') liveHertekenen();
+  } catch (e) {}
+}
+// Rommelroute-kaart in de lijst: "🟢 3 open · ⚫ 1 gesloten" (alleen als er live-statussen zijn).
+function liveRouteSamenvatting(lijst) {
+  var open = 0, dicht = 0;
+  (lijst || []).forEach(function(x) { var l = liveVan(x); if (!l) return; if (l.status === 'gesloten') dicht++; else open++; });
+  if (!open && !dicht) return '';
+  var t = [];
+  if (open) t.push('🟢 ' + i18n('live.n_open', '{n} open').replace('{n}', open));
+  if (dicht) t.push('⚫ ' + i18n('live.n_gesloten', '{n} gesloten').replace('{n}', dicht));
+  return '<div style="font-size:11px;font-weight:700;color:#3A6B4A;margin:3px 0">' + escapeHtml(t.join(' · ')) + '</div>';
+}
+function liveHertekenen() {
+  if (typeof renderMarkers === 'function') renderMarkers();
+  if (typeof renderList === 'function') renderList();
+  if (typeof updateRouteView === 'function') updateRouteView();
+}
+// Elke 2 minuten verversen, alleen als het tabblad zichtbaar is en er vandaag iets is.
+function startLiveVerversen() {
+  if (_liveTimer) return;
+  var magNu = function() { return !document.hidden && sales.some(saleIsVandaag); };
+  if (sales.some(saleIsVandaag)) laadLiveStatussen();
+  _liveTimer = setInterval(function() { if (magNu()) laadLiveStatussen(); }, 120000);
+  document.addEventListener('visibilitychange', function() { if (magNu()) laadLiveStatussen(); });
+}
+// Knoppen voor de eigenaar (Mijn verkopen, route-beheer). Alleen op de dag zelf.
+function liveKnoppenHtml(s) {
+  if (!saleIsVandaag(s)) return '';
+  var l = liveVan(s) || {};
+  var sid = escapeHtml(String(s.id));
+  var knop = function(st, ic) {
+    var aan = l.status === st;
+    return '<button onclick="event.stopPropagation();liveZet(\'' + sid + '\',\'' + st + '\')" style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ' + (aan ? 'var(--green,#3A6B4A)' : 'var(--border,#E5DDD0)') + ';background:' + (aan ? 'rgba(58,107,74,.1)' : 'white') + ';font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink,#2C2416)">' + ic + ' ' + escapeHtml(i18n('live.' + st, st)) + '</button>';
+  };
+  var tags = (s.tags || []).filter(Boolean);
+  var cat = '';
+  if (tags.length && l.status && l.status !== 'gesloten') {
+    cat = '<select onclick="event.stopPropagation()" onchange="liveZet(\'' + sid + '\',\'' + l.status + '\',this.value)" style="width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1.5px solid var(--border,#E5DDD0);font-family:inherit;font-size:11px;background:white">'
+      + '<option value="">' + escapeHtml(i18n('live.nog_veel_kies', 'Nog veel van… (optioneel)')) + '</option>'
+      + tags.map(function(tg) { return '<option value="' + escapeHtml(tg) + '"' + (l.categorie === tg ? ' selected' : '') + '>' + escapeHtml(i18n('live.nog_veel', 'nog veel') + ' ' + ygTagLabel(tg)) + '</option>'; }).join('')
+      + '</select>';
+  }
+  return '<div class="live-knoppen" style="margin-top:8px;padding:8px;border-radius:10px;background:#F7F3EC">'
+    + '<div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">' + escapeHtml(i18n('live.titel', 'Live vandaag')) + '</div>'
+    + '<div style="display:flex;gap:5px">' + knop('open', '🟢') + knop('bijna_leeg', '🟠') + knop('gesloten', '⚫') + '</div>' + cat + '</div>';
+}
+async function liveZet(id, status, categorie) {
+  if (!sbClient || isGuest) return;
+  try {
+    var res = await sbClient.rpc('live_status_zet', { p_listing: id, p_status: status, p_categorie: categorie || null });
+    var r = res.data || {};
+    if (res.error || !r.ok) {
+      var reden = (r && r.reden) || 'fout';
+      toast(i18n('live.fout_' + reden, i18n('live.fout', 'Status kon niet worden opgeslagen')));
+      return;
+    }
+    _liveStatus[id] = { status: r.status, categorie: r.categorie, updated_at: new Date().toISOString() };
+    toast(i18n('live.opgeslagen', 'Status bijgewerkt'));
+    liveHertekenen();
+    if (typeof renderMySales === 'function') renderMySales();
+    if (_routeData && typeof renderRouteBeheer === 'function') renderRouteBeheer();
+  } catch (e) {
+    toast(i18n('live.fout', 'Status kon niet worden opgeslagen'));
+  }
+}
+
+async function openRouteBeheer(groepId) {
+  if (isGuest) { guestGate('rommelroute'); return; }
+  var body = document.getElementById('route-body');
+  body.innerHTML = '<div style="padding:30px 0;text-align:center;color:var(--muted);font-size:13px">' + escapeHtml(i18n('route.loading', 'Laden…')) + '</div>';
+  document.getElementById('routeOv').classList.add('open');
+  await herlaadRouteBeheer(groepId);
+}
+function closeRouteBeheer() {
+  document.getElementById('routeOv').classList.remove('open');
+  _routeData = null;
+}
+async function herlaadRouteBeheer(groepId) {
+  try {
+    var res = await sbClient.rpc('route_beheer', { p_groep: groepId });
+    if (res.error) throw res.error;
+    _routeData = res.data;
+    renderRouteBeheer();
+  } catch(e) {
+    console.warn('route_beheer:', e);
+    document.getElementById('route-body').innerHTML = '<div style="padding:20px 0;color:#7A2222;font-size:13px;font-weight:600">' + escapeHtml(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')) + '</div>';
+  }
+}
+
+function _rbKnop(label, onclick, stijl) {
+  var basis = 'padding:9px 12px;border-radius:9px;font-family:\'Poppins\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
+  var s = stijl === 'primair' ? 'border:none;background:var(--forest);color:white;'
+        : stijl === 'terra' ? 'border:none;background:var(--terra);color:white;'
+        : 'border:1.5px solid var(--border);background:white;color:var(--text);';
+  return '<button type="button" onclick="' + onclick + '" style="' + basis + s + '">' + label + '</button>';
+}
+function _rbBlok(titel, inhoud) {
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px">'
+    + '<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px">' + titel + '</div>' + inhoud + '</div>';
+}
+function _rbUitleg(t) { return '<div style="font-size:11.5px;color:var(--muted);line-height:1.55;margin-bottom:10px">' + t + '</div>'; }
+
+function renderRouteBeheer() {
+  var r = _routeData;
+  if (!r) return;
+  var st = r.stats || {};
+  var h = '';
+  h += '<div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px">🏘️ ' + escapeHtml(r.titel || '') + '</div>';
+  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">' + escapeHtml(routeDatum(r))
+    + (r.voorbij ? ' <span style="background:#F2EADD;color:#7A6E62;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-left:4px">' + escapeHtml(i18n('route.past_badge', 'Voorbij')) + '</span>' : '') + '</div>';
+
+  // Statistieken
+  var stat = function(n, lbl) {
+    return '<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center">'
+      + '<div style="font-size:19px;font-weight:800;color:var(--terra)">' + (n || 0) + '</div>'
+      + '<div style="font-size:10px;color:var(--muted);line-height:1.3">' + escapeHtml(lbl) + '</div></div>';
+  };
+  h += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'
+    + stat(st.weergaven, i18n('route.stat_views', 'keer bekeken'))
+    + stat(st.ik_ga, i18n('route.stat_going', 'gaan erheen'))
+    + stat(st.favorieten, i18n('route.stat_favs', 'favorieten'))
+    + stat(st.adressen, i18n('route.stat_addresses', 'adressen')) + '</div>';
+  if (st.wachtend > 0) h += '<div style="font-size:11px;color:#A04A18;margin-top:6px">⏳ ' + escapeHtml(rtxt('route.stat_waiting', '{n} wachten op bevestiging', { n: st.wachtend })) + '</div>';
+
+  // Buren laten aanmelden
+  if (!r.voorbij) {
+    var link = routeLink(r.code);
+    var inh = _rbUitleg(escapeHtml(i18n('route.signup_intro', 'Deel deze link of QR-code in de buurtapp, op een flyer of in de groepsapp. Buren melden zich zelf aan; jij keurt ze goed.')));
+    inh += '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+      + '<canvas id="route-qr" width="120" height="120" style="background:white;border-radius:8px;flex-shrink:0"></canvas>'
+      + '<div style="flex:1;min-width:180px">'
+      + '<div style="font-size:11px;background:white;border:1px solid var(--border);border-radius:8px;padding:8px;word-break:break-all;margin-bottom:8px">' + escapeHtml(link) + '</div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      + _rbKnop(escapeHtml(i18n('route.copy', 'Kopieer link')), 'routeKopieer()', 'terra')
+      + _rbKnop(escapeHtml(i18n('route.share', 'Delen')), 'routeDeel()')
+      + '</div></div></div>';
+    inh += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:600;color:' + (r.open ? '#2C4A36' : '#7A2222') + '">'
+      + '<span>' + (r.open ? '🟢 ' + escapeHtml(i18n('route.signup_open', 'Inschrijving staat open')) : '🔴 ' + escapeHtml(i18n('route.signup_closed', 'Inschrijving is gesloten'))) + '</span>'
+      + _rbKnop(escapeHtml(r.open ? i18n('route.close_signup', 'Sluiten') : i18n('route.open_signup', 'Openen')), 'routeZetOpen(' + (r.open ? 'false' : 'true') + ')')
+      + '</div>';
+    h += _rbBlok(escapeHtml(i18n('route.signup_title', '📣 Buren laten aanmelden')), inh);
+  }
+
+  // Aanmeldingen
+  var aanm = r.aanmeldingen || [];
+  var aInh = '';
+  if (!aanm.length) aInh = _rbUitleg(escapeHtml(i18n('route.requests_empty', 'Nog geen aanmeldingen. Deel de link hierboven met je buren.')));
+  aanm.forEach(function(a) {
+    var adres = [a.adres, a.plaats].filter(Boolean).join(', ');
+    aInh += '<div style="background:white;border:1px solid var(--border);border-radius:9px;padding:9px 10px;margin-bottom:6px">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'
+      + '<div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:700;color:var(--text)">' + escapeHtml(a.naam || i18n('route.neighbour', 'Buur')) + '</div>'
+      + '<div style="font-size:11px;color:var(--muted)">' + escapeHtml(adres || '–') + '</div>'
+      + (a.wat ? '<div style="font-size:11px;color:var(--text);margin-top:2px">' + escapeHtml(i18n('route.sells', 'Verkoopt: ')) + escapeHtml(a.wat) + '</div>' : '')
+      + '</div>'
+      + '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;background:' + (a.status === 'goedgekeurd' ? '#EAF2EC;color:#2C4A36' : a.status === 'nieuw' || a.status === 'uitgenodigd' ? '#FFF4E6;color:#A04A18' : '#F2EADD;color:#7A6E62') + '">'
+      + escapeHtml(i18n('route.st_' + a.status, a.status)) + '</span></div>';
+    if (a.status === 'nieuw' && !r.voorbij) {
+      aInh += '<div style="display:flex;gap:6px;margin-top:8px">'
+        + _rbKnop(escapeHtml(i18n('route.approve', '✓ Goedkeuren')), "routeBeoordeel('" + escapeHtml(a.id) + "',true)", 'primair')
+        + _rbKnop(escapeHtml(i18n('route.reject', 'Afwijzen')), "routeBeoordeel('" + escapeHtml(a.id) + "',false)")
+        + '</div>';
+    }
+    aInh += '</div>';
+  });
+  h += _rbBlok(escapeHtml(i18n('route.requests_title', 'Aanmeldingen')) + (aanm.length ? ' (' + aanm.length + ')' : ''), aInh);
+
+  // Adressen op de route
+  var adr = r.adressen || [];
+  if (adr.length) {
+    var adInh = '';
+    adr.forEach(function(x, i) {
+      var label = x.hoofd ? i18n('route.own_address', 'Jouw adres') : (x.label || i18n('route.neighbour', 'Buur'));
+      adInh += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:' + (i ? '1px solid var(--border)' : 'none') + '">'
+        + '<div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">' + escapeHtml(label) + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(String(x.adres || '').split(',')[0]) + '</div></div>'
+        + (x.status === 'pending'
+          ? '<span style="display:flex;gap:6px;align-items:center"><span style="font-size:10px;font-weight:700;color:#A04A18">⏳ ' + escapeHtml(i18n('route.pending', 'Wacht op bevestiging')) + '</span>'
+            + (x.token && !r.voorbij ? _rbKnop(escapeHtml(i18n('route.resend', '📨 Link')), "routeDeelBevestiging(" + i + ")") : '') + '</span>'
+          : '<span style="display:flex;gap:6px;align-items:center">'
+            + (x.token && !x.hoofd && !r.voorbij ? _rbKnop(escapeHtml(i18n('live.link_btn', '🔗 Live-link')), 'routeLiveLink(' + i + ')') : '')
+            + '<span style="font-size:10px;font-weight:700;color:#2C4A36">✅</span></span>')
+        + '</div>';
+      // Op de dag zelf: status per adres zetten (organisator is eigenaar van alle rijen).
+      if (x.status === 'confirmed' && x.id) {
+        var _ls = sales.filter(function(z) { return String(z.id) === String(x.id); })[0]
+          || { id: x.id, date: r.datum, date_end: r.datum_eind || null, tags: [] };
+        adInh += liveKnoppenHtml(_ls);
+      }
+    });
+    h += _rbBlok(escapeHtml(i18n('route.addresses_title', 'Adressen op de route')) + ' (' + adr.length + ')', adInh);
+  }
+
+  // Printen
+  var nOk = adr.filter(function(x) { return x.status === 'confirmed' && x.lat && x.lng; }).length;
+  h += _rbBlok(escapeHtml(i18n('route.print_title', '🖨️ Printen')),
+    nOk ? '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        + _rbKnop('🗺️ ' + escapeHtml(i18n('route.print_map', 'Routekaart')), 'printRoutekaart()')
+        + _rbKnop('🪧 ' + escapeHtml(i18n('route.print_posters', 'Raamposters')), 'printRaamposters()') + '</div>'
+        + '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">' + escapeHtml(i18n('route.print_intro', 'De routekaart heeft genummerde adressen en een QR-code naar de route. De raamposter hangt elke deelnemer achter het raam.')) + '</div>'
+        : _rbUitleg(escapeHtml(i18n('route.print_none', 'Er staan nog geen adressen op de kaart.'))));
+
+  // Bericht aan deelnemers (tot 2 dagen na de route)
+  var mag = !r.voorbij || (r.datum && (Date.now() - new Date(r.datum + 'T12:00:00').getTime()) < 2.5 * 86400000);
+  if (mag) {
+    var bInh = _rbUitleg(escapeHtml(i18n('route.msg_intro', 'Verandert er iets? Stuur alle goedgekeurde buren met een e-mailadres een bericht. Je ziet hun e-mailadres niet.')));
+    if (!r.ontvangers) {
+      bInh += _rbUitleg('<i>' + escapeHtml(i18n('route.msg_none', 'Nog geen deelnemers met een e-mailadres. Buren die zich via de link aanmelden kunnen er een opgeven.')) + '</i>');
+    } else {
+      bInh += '<textarea id="route-bericht" maxlength="1000" rows="3" placeholder="' + escapeHtml(i18n('route.msg_ph', 'Bijvoorbeeld: Door de regen schuiven we een week op.')) + '" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'Poppins\',sans-serif;font-size:13px;resize:vertical;box-sizing:border-box"></textarea>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">'
+        + '<span style="font-size:11px;color:var(--muted)">' + escapeHtml(rtxt('route.msg_count', '{n} ontvanger(s)', { n: r.ontvangers })) + '</span>'
+        + _rbKnop(escapeHtml(i18n('route.msg_send', 'Versturen')), 'routeStuurBericht()', 'terra') + '</div>';
+    }
+    h += _rbBlok(escapeHtml(i18n('route.msg_title', '✉️ Bericht aan deelnemers')), bInh);
+  }
+
+  // Opnieuw organiseren
+  var vandaag = new Date().toISOString().slice(0, 10);
+  var oInh = _rbUitleg(escapeHtml(i18n('route.again_intro', 'Zelfde route, nieuwe datum. Buren geven per editie opnieuw toestemming: wie zich met e-mail aanmeldde en dat wilde, krijgt een uitnodiging. Voor de anderen krijg je nieuwe bevestigingslinks om te delen.')));
+  var inputStijl = 'width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:\'Poppins\',sans-serif;font-size:13px;box-sizing:border-box';
+  var lblStijl = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px';
+  oInh += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px">'
+    + '<div><div style="' + lblStijl + '">' + escapeHtml(i18n('route.again_date', 'Nieuwe datum')) + '</div><input type="date" id="route-nieuw-datum" min="' + vandaag + '" style="' + inputStijl + '"></div>'
+    + '<div><div style="' + lblStijl + '">' + escapeHtml(i18n('route.again_from', 'Van')) + '</div><input type="time" id="route-nieuw-van" value="' + escapeHtml(r.tijd_van || '') + '" style="' + inputStijl + '"></div>'
+    + '<div><div style="' + lblStijl + '">' + escapeHtml(i18n('route.again_till', 'Tot')) + '</div><input type="time" id="route-nieuw-tot" value="' + escapeHtml(r.tijd_tot || '') + '" style="' + inputStijl + '"></div>'
+    + '</div><div style="margin-top:8px">' + _rbKnop(escapeHtml(i18n('route.again_btn', 'Nieuwe editie aanmaken')), 'routeOpnieuw()', 'primair') + '</div>';
+  h += _rbBlok(escapeHtml(i18n('route.again_title', '🔁 Opnieuw organiseren')), oInh);
+
+  h += '<button onclick="closeRouteBeheer()" style="width:100%;margin-top:16px;padding:11px;border-radius:10px;border:1.5px solid var(--border);background:white;color:var(--text);font-family:\'Poppins\',sans-serif;font-size:13px;font-weight:600;cursor:pointer">' + escapeHtml(i18n('route.close', 'Sluiten')) + '</button>';
+
+  document.getElementById('route-body').innerHTML = h;
+  var qr = document.getElementById('route-qr');
+  if (qr && typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+    QRCode.toCanvas(qr, routeLink(r.code), { width: 120, margin: 1, color: { dark: '#2C2416', light: '#FFFFFF' } }, function() {});
+  }
+}
+
+function routeKopieer() {
+  var link = routeLink(_routeData.code);
+  try {
+    navigator.clipboard.writeText(link).then(function() { toast(i18n('route.copied', 'Link gekopieerd')); });
+  } catch(e) { toast(link); }
+}
+function routeDeel() {
+  var r = _routeData;
+  var tekst = rtxt('route.share_text', 'Doe mee met {titel} op {datum}! Meld je adres hier aan:', { titel: r.titel, datum: r.datum ? fmtDate(r.datum) : '' });
+  var link = routeLink(r.code);
+  if (navigator.share) { navigator.share({ title: r.titel, text: tekst, url: link }).catch(function(){}); return; }
+  window.open('https://wa.me/?text=' + encodeURIComponent(tekst + '\n' + link), '_blank');
+}
+async function routeZetOpen(open) {
+  try {
+    var res = await sbClient.rpc('route_inschrijving_zet', { p_groep: _routeData.groep_id, p_open: open });
+    if (res.error) throw res.error;
+    await herlaadRouteBeheer(_routeData.groep_id);
+  } catch(e) { toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')); }
+}
+async function routeBeoordeel(id, goed) {
+  try {
+    var res = await sbClient.rpc('route_aanmelding_beoordelen', { p_id: id, p_goedkeuren: goed });
+    if (res.error) throw res.error;
+    toast(goed ? i18n('route.approved_toast', 'Goedgekeurd, het adres staat op de kaart') : i18n('route.rejected_toast', 'Afgewezen, de gegevens zijn gewist'));
+    await herlaadRouteBeheer(_routeData.groep_id);
+    if (goed) herlaadVerkopen();
+  } catch(e) { console.warn('beoordelen:', e); toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')); }
+}
+// Persoonlijke link voor een bevestigde buur: daarmee zet hij op de dag zelf
+// zijn live-status zonder account (/doe-mee?t=).
+function routeLiveLink(i) {
+  var x = (_routeData.adressen || [])[i];
+  if (!x || !x.token) return;
+  var link = YG_SITE + '/doe-mee?t=' + encodeURIComponent(x.token) + '&lang=' + (currentLang || 'nl');
+  var tekst = rtxt('live.link_text', 'Op de dag van {titel} kun je hier met één tik laten zien of je open, bijna leeg of gesloten bent:', { titel: _routeData.titel || '' });
+  if (navigator.share) { navigator.share({ title: _routeData.titel, text: tekst, url: link }).catch(function(){}); return; }
+  window.open('https://wa.me/?text=' + encodeURIComponent(tekst + '\n' + link), '_blank');
+}
+function routeDeelBevestiging(i) {
+  var x = (_routeData.adressen || [])[i];
+  if (!x || !x.token) return;
+  showBuurtSharesModal([{ address: x.adres, token: x.token, date: _routeData.datum || '', label: x.label || '', email: '' }]);
+}
+async function routeStuurBericht() {
+  var el = document.getElementById('route-bericht');
+  var tekst = el ? el.value.trim() : '';
+  if (tekst.length < 5) { toast(i18n('route.msg_short', 'Schrijf een bericht van minimaal 5 tekens.')); return; }
+  try {
+    var sess = await sbClient.auth.getSession();
+    var token = sess && sess.data && sess.data.session && sess.data.session.access_token;
+    var res = await fetch(SUPABASE_URL + '/functions/v1/rommelroute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ actie: 'bericht', groep_id: _routeData.groep_id, tekst: tekst })
+    });
+    var j = await res.json().catch(function() { return {}; });
+    if (j.ok) { toast(rtxt('route.msg_sent', 'Bericht verstuurd naar {n} deelnemer(s)', { n: j.verstuurd })); el.value = ''; }
+    else if (j.reden === 'limiet') toast(i18n('route.msg_limit', 'Je kunt maximaal 3 berichten per dag sturen.'));
+    else toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.'));
+  } catch(e) { toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')); }
+}
+async function routeOpnieuw() {
+  var datum = (document.getElementById('route-nieuw-datum') || {}).value;
+  if (!datum || datum < new Date().toISOString().slice(0, 10)) { toast(i18n('route.again_date_err', 'Kies een datum vanaf vandaag.')); return; }
+  var van = (document.getElementById('route-nieuw-van') || {}).value || null;
+  var tot = (document.getElementById('route-nieuw-tot') || {}).value || null;
+  try {
+    var res = await sbClient.rpc('route_opnieuw', { p_groep: _routeData.groep_id, p_datum: datum, p_tijd_van: van, p_tijd_tot: tot });
+    if (res.error) throw res.error;
+    var d = res.data;
+    var msg = i18n('route.again_done', 'Nieuwe editie staat erop!');
+    if (d.uitgenodigd) msg += ' ' + rtxt('route.again_invited', '{n} buren krijgen een uitnodiging per mail.', { n: d.uitgenodigd });
+    toast(msg);
+    herlaadVerkopen();
+    await herlaadRouteBeheer(d.groep_id);
+    if (d.links && d.links.length) {
+      setTimeout(function() {
+        showBuurtSharesModal(d.links.map(function(l) { return { address: l.adres, token: l.token, date: datum, label: l.label || '', email: '' }; }));
+      }, 400);
+    }
+  } catch(e) {
+    console.warn('route_opnieuw:', e);
+    toast((e && e.message && /maximale|te veel/.test(e.message)) ? e.message : i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.'));
+  }
+}
+function herlaadVerkopen() {
+  fetchListings().then(function(d) {
+    if (!d || !d.length) return;
+    sales = d.map(mapSupabaseToSale);
+    pasIkGaToe();
+    schrijfListingsCache(d);
+    if (typeof renderMarkers === 'function') renderMarkers();
+    renderList(); renderMySales(); laadMijnStats();
+  }).catch(function(){});
+}
+
+// ── Printen: routekaart en raamposters ──
+// Nummering: vanaf het eigen adres steeds naar het dichtstbijzijnde volgende adres.
+function routeVolgorde(adressen) {
+  var rest = adressen.filter(function(x) { return x.status === 'confirmed' && x.lat && x.lng; });
+  if (!rest.length) return [];
+  var start = rest.filter(function(x) { return x.hoofd; })[0] || rest[0];
+  var uit = [start];
+  rest = rest.filter(function(x) { return x !== start; });
+  while (rest.length) {
+    var laatst = uit[uit.length - 1], best = 0, bestD = Infinity;
+    rest.forEach(function(x, i) {
+      var d = Math.pow(x.lat - laatst.lat, 2) + Math.pow((x.lng - laatst.lng) * Math.cos(laatst.lat * Math.PI / 180), 2);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    uit.push(rest.splice(best, 1)[0]);
+  }
+  return uit;
+}
+function _printVenster(titel, css, body, script) {
+  var w = window.open('', '_blank');
+  if (!w) { toast(i18n('route.error', 'Dat lukte niet. Probeer het later nog eens.')); return null; }
+  w.document.open();
+  w.document.write('<!DOCTYPE html><html lang="' + (currentLang || 'nl') + '"><head><meta charset="UTF-8"><title>' + escapeHtml(titel) + '</title>'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">'
+    + '<style>body{margin:0;font-family:Poppins,Helvetica,Arial,sans-serif;color:#2C2416}' + css + '</style></head><body>' + body
+    + (script || '') + '</body></html>');
+  w.document.close();
+  return w;
+}
+function _qrDataUrl(url) {
+  return new Promise(function(resolve) {
+    if (typeof QRCode === 'undefined' || !QRCode.toDataURL) return resolve('');
+    QRCode.toDataURL(url, { width: 360, margin: 1, color: { dark: '#2C2416', light: '#FFFFFF' } }, function(err, u) { resolve(err ? '' : u); });
+  });
+}
+async function printRoutekaart() {
+  var r = _routeData;
+  var lijst = routeVolgorde(r.adressen || []);
+  if (!lijst.length) return;
+  var routeUrl = YG_SITE + '/v/' + r.hoofd_id;
+  var qr = await _qrDataUrl(routeUrl);
+  var items = lijst.map(function(x, i) {
+    var naam = x.hoofd ? '' : (x.label ? ' (' + escapeHtml(x.label) + ')' : '');
+    return '<li><b>' + (i + 1) + '.</b> ' + escapeHtml(String(x.adres || '').split(',').slice(0, 2).join(',')) + naam + '</li>';
+  }).join('');
+  var punten = JSON.stringify(lijst.map(function(x) { return [x.lat, x.lng]; }));
+  var css = '@page{size:A4;margin:12mm}h1{font-size:22px;margin:0 0 2px;color:#E07B39}.sub{font-size:13px;color:#7A6E62;margin-bottom:10px}'
+    + '#kaart{height:150mm;border:1px solid #ddd;border-radius:8px}.onder{display:flex;gap:16px;margin-top:10px}'
+    + 'ol{list-style:none;padding:0;margin:0;columns:2;font-size:11.5px;line-height:1.6;flex:1}.qr{text-align:center;font-size:10px;color:#7A6E62;width:34mm}.qr img{width:34mm;height:34mm}'
+    + '.nr{background:#E07B39;color:white;border:2px solid white;border-radius:50%;width:24px;height:24px;line-height:20px;text-align:center;font-weight:800;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,.4)}'
+    + '.voet{margin-top:8px;font-size:10px;color:#9E9587}@media print{.knop{display:none}}'
+    + '.knop{position:fixed;top:10px;right:10px;padding:10px 16px;background:#3A6B4A;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer}';
+  var body = '<button class="knop" onclick="window.print()">🖨️</button>'
+    + '<h1>🏘️ ' + escapeHtml(r.titel) + '</h1><div class="sub">' + escapeHtml(routeDatum(r)) + ' · ' + lijst.length + ' ' + escapeHtml(i18n('route.stat_addresses', 'adressen')) + '</div>'
+    + '<div id="kaart"></div><div class="onder"><ol>' + items + '</ol>'
+    + (qr ? '<div class="qr"><img src="' + qr + '" alt=""><div>' + escapeHtml(i18n('route.map_scan', 'Scan voor de route in de app')) + '</div></div>' : '') + '</div>'
+    + '<div class="voet">yardigo.nl</div>';
+  var script = '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script><script>'
+    + 'var p=' + punten + ';var k=L.map("kaart",{zoomControl:false,attributionControl:true});'
+    + 'var t=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",maxZoom:19}).addTo(k);'
+    + 'p.forEach(function(c,i){L.marker(c,{icon:L.divIcon({className:"",html:"<div class=\\"nr\\">"+(i+1)+"</div>",iconSize:[24,24],iconAnchor:[12,12]})}).addTo(k);});'
+    + 'if(p.length>1)k.fitBounds(p,{padding:[30,30]});else k.setView(p[0],16);'
+    + 'var klaar=false;function pr(){if(klaar)return;klaar=true;setTimeout(function(){window.print();},300);}'
+    + 't.on("load",pr);setTimeout(pr,5000);<\/script>';
+  _printVenster(r.titel, css, body, script);
+}
+async function printRaamposters() {
+  var r = _routeData;
+  var lijst = routeVolgorde(r.adressen || []);
+  if (!lijst.length) return;
+  var qr = await _qrDataUrl(YG_SITE + '/v/' + r.hoofd_id);
+  var css = '@page{size:A4;margin:0}.p{width:210mm;height:296mm;box-sizing:border-box;padding:22mm 18mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;page-break-after:always;border:10px solid #E07B39}'
+    + '.p:last-child{page-break-after:auto}.kop{font-size:20px;font-weight:800;letter-spacing:4px;color:#3A6B4A;text-transform:uppercase}'
+    + '.t{font-size:44px;font-weight:800;color:#E07B39;margin:10px 0;line-height:1.15}.d{font-size:24px;font-weight:700;margin-bottom:22px}'
+    + '.nr{font-size:120px;font-weight:800;color:#2C2416;line-height:1}.van{font-size:20px;color:#7A6E62;margin-bottom:24px}'
+    + '.qr img{width:60mm;height:60mm}.scan{font-size:16px;color:#7A6E62;margin-top:6px}.y{margin-top:18px;font-size:18px;font-weight:800;color:#E07B39}'
+    + '@media print{.knop{display:none}}.knop{position:fixed;top:10px;right:10px;padding:10px 16px;background:#3A6B4A;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer}';
+  var body = '<button class="knop" onclick="window.print()">🖨️</button>' + lijst.map(function(x, i) {
+    return '<div class="p"><div class="kop">' + escapeHtml(i18n('type.buurt', 'Rommelroute')) + '</div>'
+      + '<div class="t">' + escapeHtml(r.titel) + '</div><div class="d">' + escapeHtml(routeDatum(r)) + '</div>'
+      + '<div class="nr">' + (i + 1) + '</div><div class="van">' + escapeHtml(rtxt('route.poster_nr', 'Adres {nr} van {n}', { nr: i + 1, n: lijst.length })) + '</div>'
+      + (qr ? '<div class="qr"><img src="' + qr + '" alt=""></div><div class="scan">' + escapeHtml(i18n('route.poster_scan', 'Scan voor de kaart met alle adressen')) + '</div>' : '')
+      + '<div class="y">📍 yardigo.nl</div></div>';
+  }).join('');
+  _printVenster(r.titel, css, body, '<script>setTimeout(function(){window.print();},600);<\/script>');
+}
+
 // ── Uitloggen ──
 async function doLogout() {
   if (sbClient) { try { await sbClient.auth.signOut(); } catch(e) {} }
   isGuest = true;
   currentUser = { name: '', email: '' };
+  _mijnStats = {}; _mijnRoutes = null; _mijnStatsGevraagd = false;
   localStorage.removeItem('yg-user'); localStorage.removeItem('yg-listings-cache');
   updateUserUI();
   if (map) renderMarkers();
@@ -9018,6 +9979,14 @@ function hideWelcomeSheet(cb) {
   body.style.transform = 'translateY(100%)';
   setTimeout(function() { sheet.style.display = 'none'; if (cb) cb(); }, 450);
 }
+// Op het web pas na 3 bekeken verkopen: een inlogscherm bij binnenkomst
+// verjaagt bezoekers en telt bij Google als opdringerig (mobiel).
+var _welkomGezien = {};
+function telWelkomWeergave(id) {
+  if (window.Capacitor || !isGuest || localStorage.getItem('yg-onboarded')) return;
+  _welkomGezien[id] = true;
+  if (Object.keys(_welkomGezien).length === 3) setTimeout(showWelcomeSheet, 1500);
+}
 function dismissWelcomeSheet() {
   hideWelcomeSheet(function() {
     isGuest = true;
@@ -9195,12 +10164,17 @@ function initMap() {
 function makeMarkerIcon(sale) {
   var c = YG_KIND_COLORS[saleKind(sale)].base;
   var isCurated = sale.placed_by === 'yardigo' && !sale.claimed_by_user_id;
+  // Live-status (Fase 4): gesloten = grijs en half doorzichtig, open/bijna leeg = stipje.
+  var live = liveVan(sale);
+  if (live && live.status === 'gesloten') c = '#9A9086';
   var strokeAttrs = 'stroke="white" stroke-width="2"';
   var icon = YG_KIND_ICON_PATHS[saleIconName(sale)] || YG_KIND_ICON_PATHS.stall;
   var svg = '<svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 1.5px 1.5px rgba(0,0,0,.25))">'
     + '<path d="M18 2C10.268 2 4 8.268 4 16C4 26 18 44 18 44C18 44 32 26 32 16C32 8.268 25.732 2 18 2Z" fill="' + c + '" ' + strokeAttrs + '/>'
     + '<g transform="translate(9.6 7.6) scale(0.7)" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">' + icon + '</g>'
+    + (live && live.status !== 'gesloten' ? '<circle cx="29" cy="7" r="5.5" fill="' + (live.status === 'open' ? '#2FA84F' : '#F08A24') + '" stroke="white" stroke-width="2"/>' : '')
     + '</svg>';
+  if (live && live.status === 'gesloten') svg = '<div style="opacity:.5">' + svg + '</div>';
   return L.divIcon({ className: isCurated ? 'yg-pin-curated' : '', html: svg, iconSize: [36, 46], iconAnchor: [18, 46], popupAnchor: [0, -48] });
 }
 
@@ -9284,6 +10258,7 @@ function createListingPopup(sale) {
     + '<div class="pop-meta">&#128197; ' + fmtDate(sale.date) + ' &middot; &#128336; ' + escapeHtml(sale.from || '') + '&ndash;' + escapeHtml(sale.till || '') + '</div>'
     + '</div>'
     + '<div class="pop-body">'
+    + liveRegelHtml(sale)
     + '<div class="pop-addr">' + addrHtml + '</div>'
     + '<div class="pop-tags">' + tagsHtml + '</div>'
     + '<div class="pop-actions">'
@@ -9423,74 +10398,130 @@ function groupByNeighborhoodSale(listings) {
 // Wordt herbouwd bij elke renderMarkers().
 var _markersById = {};
 
-// Pin per verkoop-object (een verse lijst van de server geeft nieuwe objecten,
-// dus nieuwe pins; oude worden vanzelf opgeruimd).
-var _pinCache = new WeakMap();
-var _pinsOpKaart = new Set();
-function _pinVoor(sale) {
-  var fav = favorites.has(sale.id);
-  var pin = _pinCache.get(sale);
-  if (pin) {
-    if (pin.fav !== fav) { pin.fav = fav; pin.marker.setIcon(createDefaultPin(sale)); }
-    return pin;
-  }
-  pin = { fav: fav, ring: null, marker: null };
-  // Particuliere verkoop waarvan het adres (nog) niet zichtbaar is: de pin is
-  // server-side verschoven; toon een zachte cirkel als 'ergens hier'.
-  if (sale.location_approx) {
-    pin.ring = L.circle([sale.lat, sale.lng], {
-      radius: 220, color: YG_KIND_COLORS[saleKind(sale)].base, weight: 1, opacity: 0.5,
-      fillOpacity: 0.1, interactive: false
-    });
-  }
-  pin.marker = L.marker([sale.lat, sale.lng], { icon: createDefaultPin(sale) });
-  pin.marker._ygSale = sale;
-  pin.marker.bindPopup(function() { return createListingPopup(sale); }, { maxWidth: 260 });
-  bindHoverTip(pin.marker, sale);
-  _pinCache.set(sale, pin);
-  return pin;
+// ── Kaart in de stijl van de website (yardigo.nl/kaart) ──
+// Ver uitgezoomd: per soort eigen bolletjes met het aantal (garagesale geel,
+// rommelroute oranje, markt groen). Vanaf YG_GROEP_TOT_ZOOM: alleen wat in
+// beeld is, als kaartje met dag (en tijd); raken kaartjes elkaar, dan wordt
+// de minst belangrijke een stip. Zo staan er nooit honderden pins tegelijk
+// in de pagina: veel sneller op telefoons.
+var YG_GROEP_TOT_ZOOM = 10;
+var YG_MAX_KAARTJES = 40;
+var _losseVerkopen = [];      // gefilterde losse verkopen (geen buurtverkoop-adressen)
+var _losseSleutel = '';
+var _soortGroepen = null;
+var _tagLaag = null;
+var _gekozenId = null;
+
+function _groepIcoonVoor(soort) {
+  return function(cluster) {
+    var n = cluster.getChildCount(), d = n < 10 ? 34 : n < 50 ? 40 : 48;
+    return L.divIcon({ className: 'ygk-pin', iconSize: [0, 0],
+      html: '<span class="ygk-groep ygk-groep--' + soort + '" title="' + n + ' · ' + escapeHtml(i18n('map.zoom_in', 'tik om in te zoomen')) + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
+  };
 }
-// Pins opnieuw opbouwen (bijv. na taalwissel): cache leeg en alles eraf.
-function _pinsVergeten() {
-  if (_losseGroep) _losseGroep.clearLayers();
-  _pinsOpKaart.forEach(function(pin) { if (pin.ring) map.removeLayer(pin.ring); });
-  _pinsOpKaart = new Set();
-  _pinCache = new WeakMap();
+function _soortGroepenWeg() {
+  if (!_soortGroepen) return;
+  Object.keys(_soortGroepen).forEach(function(k) { map.removeLayer(_soortGroepen[k]); });
+  _soortGroepen = null;
+}
+function _soortGroepenTonen() {
+  if (_soortGroepen) return;
+  _soortGroepen = {};
+  ['markt', 'route', 'oprit'].forEach(function(k) {
+    _soortGroepen[k] = L.markerClusterGroup({
+      disableClusteringAtZoom: YG_GROEP_TOT_ZOOM, maxClusterRadius: k === 'markt' ? 55 : 45, chunkedLoading: true,
+      showCoverageOnHover: false, spiderfyOnMaxZoom: false, zoomToBoundsOnClick: true, removeOutsideVisibleBounds: true,
+      iconCreateFunction: _groepIcoonVoor(k)
+    });
+  });
+  var per = { markt: [], route: [], oprit: [] };
+  _losseVerkopen.forEach(function(s) {
+    var m = L.marker([s.lat, s.lng], { icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="ygk-dot ygk-dot--' + saleKind(s) + '"></span>' }), title: s.title || '' });
+    m.on('click', function() { _openSalePopup(s); });
+    per[saleKind(s)].push(m);
+  });
+  // Volgorde = wat bovenop ligt: garagesales boven.
+  ['markt', 'route', 'oprit'].forEach(function(k) { _soortGroepen[k].addLayers(per[k]); map.addLayer(_soortGroepen[k]); });
 }
 
-// ── Groeperen bij uitzoomen ──
-// Ver uitgezoomd worden pins dicht bij elkaar één bolletje met het aantal
-// (kleur van de soort die erin het meest voorkomt, zoals in de Mac-app).
-// Vanaf regio-niveau (zoom 11) staat elke verkoop weer als losse pin.
-// Pins ver buiten beeld laat de bibliotheek weg; dat scheelt veel op telefoons.
-var YG_GROEP_TOT_ZOOM = 10;
-var _losseGroep = null;
-function _groepIcoon(cluster) {
-  var leden = cluster.getAllChildMarkers(), n = leden.length, tel = {}, top = 'markt';
-  leden.forEach(function(m) {
-    var k = m._ygSale ? saleKind(m._ygSale) : 'markt';
-    tel[k] = (tel[k] || 0) + 1;
-    if (tel[k] > (tel[top] || 0)) top = k;
-  });
-  var kleur = (YG_KIND_COLORS[top] || YG_KIND_COLORS.markt).base;
-  var d = n < 10 ? 34 : n < 50 ? 40 : 48;
-  var html = '<div class="yg-groep" title="' + n + ' verkopen · klik om in te zoomen" style="width:' + d + 'px;height:' + d + 'px;'
-    + 'background:' + kleur + ';box-shadow:0 0 0 5px ' + kleur + '40,0 2px 6px rgba(0,0,0,.28)">' + n + '</div>';
-  return L.divIcon({ html: html, className: 'yg-groep-wrap', iconSize: [d, d], iconAnchor: [d / 2, d / 2] });
+// Tekst op het kaartje: "za 9:00" bij een korte periode, "za 14 nov" als alles getoond wordt.
+function _kaartjeTekst(s) {
+  if (!s.date) return '';
+  var loc = currentLang === 'en' ? 'en-GB' : currentLang === 'fr' ? 'fr-BE' : currentLang === 'de' ? 'de-DE' : 'nl-NL';
+  var d = new Date(s.date + 'T12:00:00Z');
+  var kort = activeDateFilter === 'today' || activeDateFilter === 'weekend' || activeDateFilter === 'nu';
+  if (!kort) return d.toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }).replace(/\./g, '');
+  var dag = d.toLocaleDateString(loc, { weekday: 'short', timeZone: 'UTC' }).replace('.', '');
+  return s.from ? dag + ' ' + s.from.replace(/^0/, '') : dag;
 }
-function _losseGroepMaken() {
-  _losseGroep = L.markerClusterGroup({
-    disableClusteringAtZoom: YG_GROEP_TOT_ZOOM,
-    maxClusterRadius: 55,
-    chunkedLoading: true,          // grote aantallen in stukjes toevoegen: geen hapering
-    showCoverageOnHover: false,
-    spiderfyOnMaxZoom: false,
-    zoomToBoundsOnClick: true,
-    removeOutsideVisibleBounds: true,
-    iconCreateFunction: _groepIcoon
-  });
-  map.addLayer(_losseGroep);
+
+function _openSalePopup(sale) {
+  if (!map) return;
+  _gekozenId = sale.id;
+  var opKaartje = map.getZoom() >= YG_GROEP_TOT_ZOOM;
+  L.popup({ maxWidth: 260, autoPanPadding: [20, 70], offset: [0, opKaartje ? -30 : -4] })
+    .setLatLng([sale.lat, sale.lng])
+    .setContent(createListingPopup(sale))
+    .openOn(map);
+  _tekenLosse();
 }
+
+function _tekenLosse() {
+  if (typeof L === 'undefined' || !map) return;
+  if (!_tagLaag) {
+    _tagLaag = L.layerGroup().addTo(map);
+    map.on('moveend', _tekenLosse);
+    map.on('popupclose', function() { if (_gekozenId) { _gekozenId = null; setTimeout(_tekenLosse, 0); } });
+  }
+  _tagLaag.clearLayers();
+  var groeperen = !!L.markerClusterGroup && map.getZoom() < YG_GROEP_TOT_ZOOM;
+  if (groeperen) { _soortGroepenTonen(); return; }
+  _soortGroepenWeg();
+  var grens = map.getBounds().pad(0.15);
+  var midden = userLocation || map.getCenter();
+  var zichtbaar = _losseVerkopen.filter(function(s) { return grens.contains([s.lat, s.lng]); });
+  // Belangrijk: het gekozen kaartje, dan het eerst (op datum), dan het dichtst bij.
+  zichtbaar.sort(function(a, b) {
+    if (a.id === _gekozenId) return -1;
+    if (b.id === _gekozenId) return 1;
+    var da = a.date || '9999', db = b.date || '9999';
+    if (activeDateFilter === 'all' && da !== db) return da < db ? -1 : 1;
+    return dist(midden, a) - dist(midden, b);
+  });
+  var bezet = [];
+  zichtbaar.forEach(function(s, i) {
+    var kind = saleKind(s);
+    var live = liveVan(s), dicht = live && live.status === 'gesloten';
+    if (s.location_approx) {
+      L.circle([s.lat, s.lng], { radius: 220, color: YG_KIND_COLORS[kind].base, weight: 1, opacity: 0.5, fillOpacity: 0.1, interactive: false }).addTo(_tagLaag);
+    }
+    var p = map.latLngToContainerPoint([s.lat, s.lng]);
+    var tekst = _kaartjeTekst(s);
+    var w = tekst.length * 7.4 + 30;
+    var box = { x1: p.x - w / 2 - 4, x2: p.x + w / 2 + 4, y1: p.y - 38, y2: p.y + 2 };
+    var vrij = tekst && i < YG_MAX_KAARTJES && !bezet.some(function(b) { return box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1; });
+    var m;
+    if (vrij) {
+      bezet.push(box);
+      var cls = 'ygk-tag ygk-tag--' + kind + (s.id === _gekozenId ? ' is-selected' : '') + (dicht ? ' is-dicht' : '') + (live && !dicht ? ' is-live' : '');
+      var huis = kind === 'oprit' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><path d="M3 11 L12 4 L21 11 V20 H3 Z"/></svg>' : '';
+      m = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="' + cls + '">' + huis + escapeHtml(tekst) + '</span>' }),
+        title: s.title || '', riseOnHover: true, zIndexOffset: s.id === _gekozenId ? 1000 : 500 - i
+      });
+    } else {
+      m = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({ className: 'ygk-pin', iconSize: [0, 0], html: '<span class="ygk-dot ygk-dot--' + kind + (dicht ? ' is-dicht' : '') + '"></span>' }),
+        title: s.title || '', zIndexOffset: -i
+      });
+    }
+    m.on('click', function() { _openSalePopup(s); });
+    m.addTo(_tagLaag);
+  });
+}
+
+// Pins opnieuw opbouwen (bijv. na taalwissel).
+function _pinsVergeten() { _losseSleutel = ''; _soortGroepenWeg(); if (_tagLaag) _tagLaag.clearLayers(); }
 
 function renderMarkers() {
   // Guard: alleen uitvoeren als Leaflet geladen is én de kaart geïnitialiseerd is.
@@ -9618,29 +10649,11 @@ function renderMarkers() {
     clusterGroups.push(group);
   });
 
-  // Losse listings als gewone markers. Elke pin wordt één keer gemaakt en bij
-  // filteren hergebruikt: alleen wat verdwijnt of erbij komt verandert op de
-  // kaart. De popup-HTML wordt pas gebouwd als iemand de pin opent.
-  if (!_losseGroep) _losseGroepMaken();
-  var nuZichtbaar = new Set(), erbij = [], eraf = [];
-  losseListings.forEach(function(sale) {
-    var pin = _pinVoor(sale);
-    nuZichtbaar.add(pin);
-    if (!_pinsOpKaart.has(pin)) {
-      if (pin.ring) pin.ring.addTo(map);
-      erbij.push(pin.marker);
-    }
-    _markersById[sale.id] = { marker: pin.marker, cluster: _losseGroep };
-  });
-  _pinsOpKaart.forEach(function(pin) {
-    if (nuZichtbaar.has(pin)) return;
-    eraf.push(pin.marker);
-    if (pin.ring) map.removeLayer(pin.ring);
-  });
-  // In één keer: veel sneller dan per pin.
-  if (eraf.length) _losseGroep.removeLayers(eraf);
-  if (erbij.length) _losseGroep.addLayers(erbij);
-  _pinsOpKaart = nuZichtbaar;
+  // Losse listings: in de stijl van de website (zie _tekenLosse).
+  _losseVerkopen = losseListings;
+  var sleutel = losseListings.map(function(x) { return x.id; }).join(',') + '|' + activeDateFilter + '|' + currentLang;
+  if (sleutel !== _losseSleutel) { _losseSleutel = sleutel; _soortGroepenWeg(); }
+  _tekenLosse();
   // Also update fallback map markers if active
   var fb = document.getElementById('map-fallback');
   if (fb && fb.style.display !== 'none') fbRenderMarkers();
@@ -9679,7 +10692,9 @@ function saleMatchesFilters(s) {
     var hasCat = (s.tags || []).some(function(t) { return _catsToCheck.has(t); });
     if (!hasCat) return false;
   }
-  if (activeDateFilter !== 'all') {
+  if (activeDateFilter === 'nu') {
+    if (!saleNuOpen(s)) return false;
+  } else if (activeDateFilter !== 'all') {
     var sd = new Date(s.date), range = getDateRange(activeDateFilter);
     if (range && (sd < range[0] || sd > range[1])) return false;
   }
@@ -10136,7 +11151,9 @@ function renderList() {
         // Type-filter
         if (activeFilters.size > 0 && !activeFilters.has(s.type)) return false;
         // Date-filter (reuse bestaande getDateRange)
-        if (hasDateFilter) {
+        if (activeDateFilter === 'nu') {
+          if (!saleNuOpen(s)) return false;
+        } else if (hasDateFilter) {
           var _sd = new Date(s.date), _rng = getDateRange(activeDateFilter);
           if (_rng && (_sd < _rng[0] || _sd > _rng[1])) return false;
         }
@@ -10283,6 +11300,7 @@ function renderBvCard(bv) {
         + '<span class="type-chip buurt">' + escapeHtml(i18n('type.buurt', 'Rommelroute')) + '</span>'
       + '</div>'
       + '<div class="card-addr">' + addrLine + '</div>'
+      + liveRouteSamenvatting(bv.listings)
       + '<div class="card-tags">' + tags + '</div>'
       + '<div class="card-foot">'
         + addrPill
@@ -10344,6 +11362,7 @@ function createListingCard(s, i) {
     + '<div class="card-top"><div class="card-title">' + ((s.placed_by === 'yardigo' && !s.claimed_by_user_id) ? '<span title="Door YardiGo verzameld" style="font-size:11px;opacity:0.65;margin-right:4px">🔍</span>' : '') + escapeHtml(s.title) + '</div><span class="type-chip ' + s.type + '">' + escapeHtml(_chipLabel) + '</span></div>'
     + (s.is_sample ? '<div style="margin-bottom:4px"><span class="sample-badge">🏷️ Voorbeeldadvertentie</span></div>' : '')
     + '<div class="card-addr">' + addr + '</div>'
+    + liveRegelHtml(s)
     + '<div class="card-tags">' + tags + '</div>'
     + '<div class="card-foot"><span class="c-time ' + s.type + '">' + (s.date ? '📅 ' + fmtDate(s.date) + ' · ' : '') + '🕐 ' + escapeHtml(s.from) + '–' + escapeHtml(s.till) + '</span>'
     + '<span style="font-size:10px;font-weight:700;color:' + (going ? '#3A6B4A' : 'var(--muted)') + '">' + (going ? '✓ Ik ga' : '🎉 ' + (s.interested || 0)) + '</span>'
@@ -10441,8 +11460,10 @@ function updateRouteView() {
   if (!list) return;
   if (!ordered.length) { list.innerHTML = ''; if (empty) empty.style.display = 'block'; if (stats) stats.style.display = 'none'; return; }
   if (empty) empty.style.display = 'none'; if (stats) stats.style.display = 'grid';
+  // Afstand en tijd zonder gesloten adressen (live-status).
+  var _open = ordered.filter(function(s) { return !saleGesloten(s); });
   var totalDist = 0;
-  for (var i = 1; i < ordered.length; i++) totalDist += dist(ordered[i-1], ordered[i]);
+  for (var i = 1; i < _open.length; i++) totalDist += dist(_open[i-1], _open[i]);
   var speeds = { auto: 40, fiets: 15, lopen: 5 };
   var speed = speeds[transportMode] || 40;
   var sc = document.getElementById('stopCount'), dk = document.getElementById('distKm'), tm = document.getElementById('timeMin');
@@ -10462,10 +11483,12 @@ function updateRouteView() {
       _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' (adres zichtbaar na inloggen)';
     }
     var sid = escapeHtml(String(s.id));
-    return '<div class="route-stop-card">'
-      + '<div class="route-stop-num" style="background:' + colors[s.type] + '">' + (i+1) + '</div>'
+    var _dicht = saleGesloten(s);
+    return '<div class="route-stop-card"' + (_dicht ? ' style="opacity:.5"' : '') + '>'
+      + '<div class="route-stop-num" style="background:' + (_dicht ? '#9A9086' : colors[s.type]) + '">' + (i+1) + '</div>'
       + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.title) + '</div>'
-      + '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _addrLine + '</div></div>'
+      + '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _addrLine + '</div>'
+      + liveRegelHtml(s) + '</div>'
       + '<div class="route-order-btns">'
       + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',-1)" ' + (i === 0 ? 'disabled' : '') + '>▲</button>'
       + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',1)" ' + (i === ordered.length - 1 ? 'disabled' : '') + '>▼</button>'
@@ -10496,10 +11519,13 @@ function moveRouteStop(id, dir) {
 function optimizeAndSaveRoute() {
   var inRoute = sales.filter(function(s) { return routeSet.has(s.id); });
   if (!inRoute.length) { toast(i18n('toast.add_sales_first', 'Voeg eerst verkopen toe')); return; }
-  var opt = optimizeRoute(inRoute.slice());
-  routeOrder = opt.map(function(s) { return String(s.id); });
+  // Gesloten adressen (live-status) slaan we over: achteraan, buiten de route.
+  var dicht = inRoute.filter(saleGesloten);
+  var opt = optimizeRoute(inRoute.filter(function(s) { return !saleGesloten(s); }));
+  routeOrder = opt.concat(dicht).map(function(s) { return String(s.id); });
   saveRoute(); updateRouteView();
-  toast(i18n('toast.route_optimized', '✨ Route geoptimaliseerd!'));
+  toast(dicht.length ? i18n('live.route_overgeslagen', '✨ Route geoptimaliseerd, {n} gesloten adres(sen) overgeslagen').replace('{n}', dicht.length)
+                     : i18n('toast.route_optimized', '✨ Route geoptimaliseerd!'));
 }
 
 // ── Auto-route: plan route op basis van GPS-locatie ──
@@ -10509,7 +11535,7 @@ function autoRouteFromLocation() {
   toast(i18n('toast.fetching_location', '📍 Locatie ophalen…'));
   navigator.geolocation.getCurrentPosition(function(pos) {
     var userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    var visible = sales.filter(function(s) { return saleMatchesFilters(s); });
+    var visible = sales.filter(function(s) { return saleMatchesFilters(s) && !saleGesloten(s); });
     if (!visible.length) { toast(i18n('toast.no_sales_found', 'Geen verkopen gevonden')); return; }
     var sorted = visible.slice().sort(function(a, b) { return dist(userPos, a) - dist(userPos, b); });
     routeSet.clear();
@@ -10541,6 +11567,8 @@ function openNavSheet() {
     var el = document.getElementById('tp-' + m);
     if (el) el.classList.toggle('active', m === transportMode);
   });
+  var wazeStops = document.getElementById('nav-waze-stops');
+  if (wazeStops) wazeStops.style.display = 'none';
   // Apple Maps: toon alleen op iOS/macOS
   var appleBtn = document.getElementById('nav-apple-btn');
   if (appleBtn) appleBtn.style.display = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) ? 'flex' : 'none';
@@ -10564,20 +11592,46 @@ function startNavWithApp(app) {
   var wazeTypes = { auto: 'car', fiets: 'walk', lopen: 'walk' };
   var tMode = travelModes[transportMode] || 'driving';
   var country = ygCountryName();
-  var addrs = ordered.map(function(s) { return encodeURIComponent(s.address + ', ' + country); });
+  // Met huisnummer het adres; anders (gast, of adres nog verborgen) staat er
+  // alleen een plaats en is "<plaats>, Nederland" fout bij Belgische verkopen:
+  // dan de coördinaten.
+  var punt = function(s) { return s.address && /\d/.test(s.address) ? encodeURIComponent(s.address + ', ' + country) : s.lat + ',' + s.lng; };
+  var addrs = ordered.map(punt);
   var url;
   if (app === 'google') {
     url = 'https://www.google.com/maps/dir/' + addrs.join('/') + '?travelmode=' + tMode;
   } else if (app === 'apple') {
-    var waypoints = ordered.map(function(s) { return encodeURIComponent(s.address + ', ' + country); });
-    url = 'maps://?daddr=' + waypoints[waypoints.length - 1];
-    if (waypoints.length > 1) url += '&saddr=' + waypoints[0];
+    // Apple's 'unified Maps URL' (iOS 18.4 / macOS 15.4): alle stops als waypoint.
+    // Het oude maps://?daddr= nam alleen de laatste stop mee.
+    var appleModes = { auto: 'driving', fiets: 'cycling', lopen: 'walking' };
+    url = 'https://maps.apple.com/directions?destination=' + punt(ordered[ordered.length - 1]) +
+      ordered.slice(0, -1).map(function(s) { return '&waypoint=' + punt(s); }).join('') +
+      '&mode=' + (appleModes[transportMode] || 'driving');
   } else if (app === 'waze') {
-    var last = ordered[ordered.length - 1];
-    url = 'https://waze.com/ul?ll=' + last.lat + '%2C' + last.lng + '&navigate=yes&zoom=17';
+    // Waze neemt één bestemming per link: bij meer stops kies je de volgende.
+    if (ordered.length > 1) { toonWazeStops(ordered); return; }
+    url = wazeUrl(ordered[0]);
   }
   closeNavSheet();
   if (url) window.open(url);
+}
+function wazeUrl(s) { return 'https://waze.com/ul?ll=' + s.lat + '%2C' + s.lng + '&navigate=yes&zoom=17'; }
+function toonWazeStops(ordered) {
+  var lijst = document.getElementById('nav-waze-list');
+  if (!lijst) return;
+  lijst.innerHTML = '';
+  ordered.forEach(function(s, i) {
+    var b = document.createElement('button');
+    b.className = 'nav-transport-pill';
+    b.style.flex = '0 0 auto';
+    b.style.minWidth = '48px';
+    b.textContent = String(i + 1);
+    b.setAttribute('aria-label', 'Waze: ' + (s.title || ''));
+    b.title = s.title || '';
+    b.onclick = function() { closeNavSheet(); window.open(wazeUrl(s)); };
+    lijst.appendChild(b);
+  });
+  document.getElementById('nav-waze-stops').style.display = 'block';
 }
 function startNavigation() { openNavSheet(); }
 
@@ -10734,6 +11788,8 @@ function openDetail(id) {
     });
   }
   detailSaleId = s.id; carouselIdx = 0;
+  telWeergave(s.id);
+  telWelkomWeergave(s.id);
   var t = TYPES[s.type], fav = favorites.has(id);
   var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
   var textColors = { particulier:'#2C2416', buurt:'white', evenement:'white' };
@@ -10745,6 +11801,8 @@ function openDetail(id) {
   if (sampleBadge) sampleBadge.style.display = s.is_sample ? 'block' : 'none';
   document.getElementById('det-title').textContent = s.title;
   document.getElementById('det-meta').textContent = '📅 ' + fmtDate(s.date) + ' · 🕐 ' + s.from + '–' + s.till;
+  var _detLive = document.getElementById('det-live');
+  if (_detLive) _detLive.innerHTML = liveRegelHtml(s);
   // Curated banner: alleen tonen voor 'Door YardiGo verzameld' evenementen
   (function() {
     var banner = document.getElementById('det-curated-banner');
@@ -16074,7 +17132,7 @@ setTimeout(_hideAppSplash, 8000);
 function _goHome() {
   var isCapacitor = (typeof window.Capacitor !== 'undefined') ||
                     (location.hostname === 'localhost' && location.protocol === 'https:');
-  location.href = isCapacitor ? 'home.html' : '/home';
+  location.href = isCapacitor ? 'home.html' : '/';
 }
 
 // ══════════════════════════════════════════════════
@@ -16190,7 +17248,12 @@ function _focusSaleOnMap(saleId) {
   // Open de marker-popup. Bij clusters openen we de cluster-popup omdat
   // de marker zelf gegroepeerd is op het huidige zoom-niveau.
   var entry = _markersById[saleId];
-  if (!entry) return;
+  if (!entry) {
+    // Losse verkoop: inzoomen tot de kaartjes staan en het kaartje openen.
+    if (map.getZoom() < 13) map.setView([sale.lat, sale.lng], 13);
+    setTimeout(function() { _openSalePopup(sale); }, 450);
+    return;
+  }
   setTimeout(function() {
     try {
       // Zit de pin in een groepje? Dan eerst inzoomen tot hij los staat.
@@ -16957,7 +18020,7 @@ document.addEventListener('error', function(e) {
 
 // ── Cache reset via ?reset=1 ──
 // Vangnet voor gebruikers die volledig vastzitten in een oude cache.
-// Bezoek https://yardigo.nl/?reset=1 en alle SW + caches worden gewist,
+// Bezoek https://yardigo.nl/app?reset=1 en alle SW + caches worden gewist,
 // daarna keer je terug naar de homepage met een verse versie.
 if (location.search.indexOf('reset=1') !== -1) {
   (async function() {
@@ -17111,6 +18174,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   }
 
+  laadIkGaAantallen();
+  startLiveVerversen();
+
   // Onderhoudsbanner: toon banner indien actief
   if (sbClient) {
     try {
@@ -17215,7 +18281,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (s) {
         openDetail(s.id);
         // URL schoon maken
-        try { history.replaceState({}, '', '/'); } catch(e) {}
+        try { history.replaceState({}, '', window.Capacitor ? '/' : '/app'); } catch(e) {}
       } else if (retries > 0) {
         setTimeout(function() { tryOpen(retries - 1); }, 400);
       }
@@ -17232,13 +18298,27 @@ document.addEventListener('DOMContentLoaded', async function() {
     var t = params.get('plaatsen');
     if (t === null) t = ({ '/verkoop': 'particulier', '/aanmelden': 'evenement' })[(location.pathname || '').replace(/\/$/, '')] || null;
     if (t === null) return;
-    try { history.replaceState({}, '', '/'); } catch(e) {}
+    try { history.replaceState({}, '', window.Capacitor ? '/' : '/app'); } catch(e) {}
     setTimeout(async function() {
       try {
         await openAdd();
         if (['particulier', 'buurt', 'evenement'].indexOf(t) >= 0 && typeof selType === 'function') selType(t);
       } catch(e) { console.warn('plaatsen-deeplink:', e); }
     }, 900);
+  })();
+
+  // ─── Rommelroute beheren vanuit een mail: /?route=<groep_id> ───
+  // Wacht tot de sessie hersteld is; gasten zien eerst het inlogscherm.
+  (function handleRouteDeepLink() {
+    var groep = new URLSearchParams(location.search).get('route');
+    if (!groep || !/^bv-\d+$/.test(groep)) return;
+    try { history.replaceState({}, '', window.Capacitor ? '/' : '/app'); } catch(e) {}
+    function probeer(n) {
+      if (!isGuest && currentUser && currentUser.id) { openRouteBeheer(groep); return; }
+      if (n > 0) { setTimeout(function() { probeer(n - 1); }, 500); return; }
+      guestGate('rommelroute');
+    }
+    setTimeout(function() { probeer(10); }, 800);
   })();
 
   // ─── Uitschrijf-handlers ─────────────────────────────────
@@ -17275,10 +18355,31 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
       history.replaceState(null, '', location.pathname);
     }
+
+    // Uit de weekendmail: ?instellingen=woonplaats opent het woonplaatsveld.
+    // Wacht tot de sessie hersteld is; gasten zien eerst het inlogscherm.
+    if (params.get('instellingen') === 'woonplaats') {
+      history.replaceState(null, '', location.pathname);
+      (function probeer(n) {
+        if (!isGuest && currentUser && currentUser.id) {
+          openSettings();
+          setTimeout(function() {
+            var veld = document.getElementById('set-city');
+            var wrap = veld && veld.closest('.settings-section');
+            if (wrap) wrap.classList.remove('collapsed');
+            if (veld) { veld.scrollIntoView({ behavior: 'smooth', block: 'center' }); veld.focus(); }
+          }, 400);
+          return;
+        }
+        if (n > 0) { setTimeout(function() { probeer(n - 1); }, 500); return; }
+        guestGate('woonplaats');
+      })(10);
+    }
   })();
 
-  // Toon welcome sheet na 3 sec voor nieuwe gebruikers
-  if (!localStorage.getItem('yg-onboarded')) {
+  // Toon welcome sheet na 3 sec voor nieuwe gebruikers, alleen in de app
+  // (op het web: zie telWelkomWeergave)
+  if (window.Capacitor && !localStorage.getItem('yg-onboarded')) {
     setTimeout(showWelcomeSheet, 3000);
   }
 

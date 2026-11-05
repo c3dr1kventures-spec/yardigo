@@ -642,7 +642,9 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
   .yg-split__map .yg-mapctl button { width: 40px; height: 40px; }
 }
 @media (max-width: 599px) {
-  .yg-row { grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; }
+  /* 78px: past "za 14 nov" (weergave Alles); smaller liep het label over de titel */
+  .yg-row { grid-template-columns: 78px minmax(0, 1fr) auto; gap: 10px; }
+  .yg-row .yg-tag--inline { font-size: 12px; padding: 3px 7px; max-width: 100%; white-space: normal; }
 }
 
 
