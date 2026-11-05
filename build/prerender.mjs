@@ -147,6 +147,11 @@ async function fetchListings() {
       id: l.id,
       title: l.title,
       category: l.category, // behouden voor landing-page grouping
+      // Rommelroutes staan in de database als rommelmarkt met subsoort
+      // rommelroute. Ze horen bij de rommelroute-pagina's en blijven ook op
+      // de rommelmarkt-pagina's staan (die bestaan al en staan in Google).
+      paginaCats: String(l.event_subtype || '').toLowerCase() === 'rommelroute' && l.category !== 'buurtverkoop'
+        ? [l.category, 'buurtverkoop'] : [l.category],
       type: CATEGORY_TO_TYPE[l.category] || 'particulier',
       event_subtype: l.event_subtype,
       date: l.date_start,
@@ -366,8 +371,8 @@ function buildLandingGroupsByCategory(listingsWithCat) {
   const groups = new Map();
   for (const l of listingsWithCat) {
     if (!l.city || !l.plaats_ok || !PAGINA_LANDEN.has(l.land)) continue;
-    const dest = CATEGORY_TO_LANDINGS[l.category];
-    if (!dest) continue;
+    const dest = l.paginaCats.flatMap(c => CATEGORY_TO_LANDINGS[c] || []);
+    if (!dest.length) continue;
     const citySlug = slugify(l.city);
     if (!citySlug || SKIP_CITIES.has(citySlug) || citySlug.length < 3) continue;
     for (const d of dest) {
@@ -542,6 +547,8 @@ function renderLandingHtml(template, group, allGroups) {
 // ─── Overzicht per soort + "dit weekend" ───────────────────────────────
 // Eén set per landing-path (rommelmarkt, opritverkoop, ...). Deze pagina's
 // tonen NL en BE samen en staan canoniek op yardigo.nl.
+function hoortBij(t, l) { return l.paginaCats.some(c => t.categories.includes(c)); }
+
 function landingTypes() {
   const m = new Map();
   for (const lst of Object.entries(CATEGORY_TO_LANDINGS)) {
@@ -564,7 +571,7 @@ function weekendRange(today) {
 function renderTypeIndexHtml(template, t, listings, groups) {
   const today = dagNL();
   const [za, zo] = weekendRange(today);
-  const vanType = listings.filter(l => t.categories.includes(l.category) && l.date >= today && PAGINA_LANDEN.has(l.land));
+  const vanType = listings.filter(l => hoortBij(t, l) && l.date >= today && PAGINA_LANDEN.has(l.land));
   const weekend = vanType.filter(l => l.date >= za && l.date <= zo).sort((a, b) => a.date.localeCompare(b.date));
   const plaatsen = [...groups.values()].filter(g => g.path === t.path && g.indexeren)
     .sort((a, b) => b.upcoming.length - a.upcoming.length || a.city.localeCompare(b.city));
@@ -621,7 +628,7 @@ function renderTypeIndexHtml(template, t, listings, groups) {
 function provincieTelling(t, listings, today) {
   const tel = {};
   for (const l of listings) {
-    if (!t.categories.includes(l.category) || l.date < today || !PROVINCIES[l.provincie]) continue;
+    if (!hoortBij(t, l) || l.date < today || !PROVINCIES[l.provincie]) continue;
     tel[l.provincie] = (tel[l.provincie] || 0) + 1;
   }
   return Object.entries(tel).sort((a, b) => b[1] - a[1]);
@@ -633,7 +640,7 @@ function renderProvincieHtml(template, t, slug, listings, groups) {
   const land = BE_PROVINCIES.has(slug) ? 'be' : 'nl';
   const base = baseFor(land);
   const komend = listings
-    .filter(l => t.categories.includes(l.category) && l.provincie === slug && l.date >= today)
+    .filter(l => hoortBij(t, l) && l.provincie === slug && l.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date));
   const plaatsen = [...groups.values()]
     .filter(g => g.path === t.path && g.provincie === slug && g.indexeren)
@@ -694,7 +701,7 @@ function renderWeekendHtml(template, t, listings) {
   const today = dagNL();
   const [za, zo] = weekendRange(today);
   const weekend = listings
-    .filter(l => t.categories.includes(l.category) && l.date >= za && l.date <= zo && PAGINA_LANDEN.has(l.land))
+    .filter(l => hoortBij(t, l) && l.date >= za && l.date <= zo && PAGINA_LANDEN.has(l.land))
     .sort((a, b) => a.date.localeCompare(b.date) || String(a.city).localeCompare(String(b.city)));
   const canonical = `${BASE_URL}/${t.path}/dit-weekend`;
   // "24 en 25 oktober 2026"; over een maandgrens "31 oktober en 1 november 2026".
@@ -1064,7 +1071,7 @@ async function main() {
   const provPaginas = [];
   const vandaag = dagNL();
   for (const t of types) {
-    const slugs = new Set(listings.filter(l => t.categories.includes(l.category) && PROVINCIES[l.provincie]).map(l => l.provincie));
+    const slugs = new Set(listings.filter(l => hoortBij(t, l) && PROVINCIES[l.provincie]).map(l => l.provincie));
     const metKomend = new Set(provincieTelling(t, listings, vandaag).map(([slug]) => slug));
     for (const slug of slugs) {
       schrijfPagina(`${t.path}/provincie/${slug}`, renderProvincieHtml(landingTemplate, t, slug, listings, landingGroups));
