@@ -148,10 +148,9 @@ async function fetchListings() {
       title: l.title,
       category: l.category, // behouden voor landing-page grouping
       // Rommelroutes staan in de database als rommelmarkt met subsoort
-      // rommelroute. Ze horen bij de rommelroute-pagina's en blijven ook op
-      // de rommelmarkt-pagina's staan (die bestaan al en staan in Google).
-      paginaCats: String(l.event_subtype || '').toLowerCase() === 'rommelroute' && l.category !== 'buurtverkoop'
-        ? [l.category, 'buurtverkoop'] : [l.category],
+      // rommelroute. Op de site zijn het een eigen soort: ze staan alleen op
+      // de rommelroute-pagina's, niet op die van rommelmarkten.
+      paginaCats: String(l.event_subtype || '').toLowerCase() === 'rommelroute' ? ['buurtverkoop'] : [l.category],
       type: CATEGORY_TO_TYPE[l.category] || 'particulier',
       event_subtype: l.event_subtype,
       date: l.date_start,
@@ -1059,6 +1058,20 @@ async function main() {
     }
   }
   console.log(`  rendered ${landingsRendered} landing pages (${noindex} noindex)`);
+
+  // Tot 5 nov 2026 stonden rommelroutes ook op /rommelmarkt/<plaats>. Plaatsen
+  // die daar alleen een rommelroute hadden, sturen we door naar
+  // /rommelroute/<plaats> zodat links en Google niet op een 404 uitkomen.
+  const doorgestuurd = new Set();
+  for (const l of listings) {
+    if (l.category !== 'rommelmarkt' || !l.paginaCats.includes('buurtverkoop')) continue;
+    const slug = slugify(l.city);
+    if (!slug || doorgestuurd.has(slug) || landingGroups.has(`rommelmarkt|${slug}`) || !landingGroups.has(`rommelroute|${slug}`)) continue;
+    doorgestuurd.add(slug);
+    const doel = `/rommelroute/${slug}`;
+    schrijfPagina(`rommelmarkt/${slug}`, `<!doctype html><html lang="nl"><head><meta charset="utf-8"><title>Rommelroute ${esc(landingGroups.get(`rommelroute|${slug}`).city)}</title><meta name="robots" content="noindex"><link rel="canonical" href="${BASE_URL}${doel}"><meta http-equiv="refresh" content="0; url=${doel}"></head><body><a href="${doel}">Naar de rommelroutes</a></body></html>`);
+  }
+  console.log(`  ${doorgestuurd.size} rommelmarkt-plaatsen doorgestuurd naar rommelroute`);
 
   const types = landingTypes();
   for (const t of types) {
