@@ -31,7 +31,11 @@ platform :ios do
       project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      output_directory: "./build"
+      output_directory: "./build",
+      # Cloud-ondertekening met de Admin API-sleutel: geen lokaal
+      # distributiecertificaat nodig (die staat niet in de Sleutelhanger).
+      xcargs: "-allowProvisioningUpdates",
+      export_xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{ENV.fetch('ASC_KEY_FILEPATH')} -authenticationKeyID #{ENV.fetch('ASC_KEY_ID')} -authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}"
     )
     upload_to_testflight(
       skip_waiting_for_build_processing: true
@@ -45,7 +49,11 @@ platform :ios do
       project: "App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
-      output_directory: "./build"
+      output_directory: "./build",
+      # Cloud-ondertekening met de Admin API-sleutel: geen lokaal
+      # distributiecertificaat nodig (die staat niet in de Sleutelhanger).
+      xcargs: "-allowProvisioningUpdates",
+      export_xcargs: "-allowProvisioningUpdates -authenticationKeyPath #{ENV.fetch('ASC_KEY_FILEPATH')} -authenticationKeyID #{ENV.fetch('ASC_KEY_ID')} -authenticationKeyIssuerID #{ENV.fetch('ASC_ISSUER_ID')}"
     )
     upload_to_app_store(
       skip_screenshots: true,
