@@ -535,6 +535,11 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-sleept { user-select: none; -webkit-user-select: none; }
 .yg-rt-terug { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--yg-tint); font-size: 14px; }
 .yg-rt-terug .yg-btn { min-height: 36px; padding: 4px 12px; font-size: 14px; }
+/* Gast bij stop 4: eerst inloggen (route.js, GRATIS). */
+.yg-rt-grens { display: grid; gap: 10px; margin: 0; padding: 14px; border-radius: 12px; background: var(--yg-wood-tint); border: 1px solid #E2CFAE; }
+.yg-rt-grens p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--yg-ink); }
+.yg-rt-grens__btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.yg-rt-grens__btns .yg-btn { min-height: 40px; }
 .yg-routelijst__btns button:not(:disabled):hover, .yg-mijnroutes__btns button:hover { border-color: var(--yg-ink); background: var(--yg-tint); }
 .yg-mijnroutes__open:hover strong { text-decoration: underline; }
 .yg-rt-sugg { display: grid; gap: 8px; padding: 12px 14px; border: 1px dashed var(--yg-line-strong); border-radius: 12px; }

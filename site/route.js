@@ -24,6 +24,7 @@
 // staat (geen zwevende knop, geen sluitknop); window.YG_ROUTE_BASIS = adres voor
 // deellinks (https://yardigo.nl); window.YG_ROUTE_TOON() = naar het paneel gaan;
 // window.YG_ROUTE_POORT() = false als toevoegen nu niet mag (de app: eerst inloggen).
+// Op de website: zonder account tot GRATIS stops; daarna eerst inloggen via /app.
 // Stops met exact: true (de app kent soms het echte adres) gaan nooit precies
 // mee in een deellink: dan alleen het gebied.
 // ═══════════════════════════════════════════════════════════════════════
@@ -78,8 +79,17 @@
   function plek(id) { for (var i = 0; i < stops.length; i++) if (stops[i].id === id) return i; return -1; }
   function heeft(id) { return plek(id) > -1; }
 
-  // Mag er iets bij? Weghalen mag altijd.
-  function magToevoegen() { return typeof window.YG_ROUTE_POORT !== 'function' || window.YG_ROUTE_POORT() !== false; }
+  // Mag er iets bij? Weghalen mag altijd. Wie ooit in /app inlogde (ook met een
+  // verlopen sessie) heeft een account en plant onbeperkt.
+  var GRATIS = 3, grens = false;
+  function magToevoegen() {
+    if (typeof window.YG_ROUTE_POORT === 'function') return window.YG_ROUTE_POORT() !== false;
+    if (stops.length < GRATIS || heeftAccount()) return true;
+    grens = true; weergave = 'route';
+    open(true); meld(t('rt.limit'));
+    return false;
+  }
+  function heeftAccount() { var s = lees(SESSIE); return !!(s && s.user && s.user.id); }
   function wissel(stop) {
     var i = plek(stop.id);
     if (i < 0 && !magToevoegen()) return;
@@ -696,6 +706,7 @@
     var rid = b.getAttribute('data-rid');
     var r = rid && routes.filter(function (x) { return x.id === rid; })[0];
     if (actie === 'sluit') open(false);
+    else if (actie === 'grensNee') { grens = false; tekenPaneel(); focusKop(); }
     else if (actie === 'grootte') { paneel.classList.toggle('is-vol'); tekenPaneel(); var gr = paneel.querySelector('[data-actie="grootte"]'); if (gr) gr.focus(); }
     else if (actie === 'op' && i > 0) { stops.splice(i - 1, 0, stops.splice(i, 1)[0]); bewaar(); focusOp('op', i - 1); }
     else if (actie === 'neer' && i < stops.length - 1) { stops.splice(i + 1, 0, stops.splice(i, 1)[0]); bewaar(); focusOp('neer', i + 1); }
@@ -832,6 +843,10 @@
     var html = greepHtml() + '<div class="yg-routepaneel__kop"><h2 id="yg-route-kop" tabindex="-1">' + esc(naamVan(actief)) + '</h2>' +
       '<button type="button" class="yg-btn yg-btn--ghost yg-routepaneel__mijn" data-actie="mijn">' + esc(t('rt.myRoutes')) + (routes.length > 1 ? ' (' + routes.length + ')' : '') + '</button>' +
       '<button type="button" class="yg-routepaneel__dicht" data-actie="sluit" aria-label="' + esc(t('rt.close')) + '">×</button></div>';
+    if (grens && stops.length < GRATIS) grens = false;
+    if (grens) html += '<div class="yg-rt-grens" role="status"><p>' + esc(t('rt.limit')) + '</p><div class="yg-rt-grens__btns">' +
+      '<a class="yg-btn yg-btn--primary" href="/app#route">' + esc(t('rt.limitBtn')) + '</a>' +
+      '<button type="button" class="yg-btn yg-btn--ghost" data-actie="grensNee">' + esc(t('rt.limitLater')) + '</button></div></div>';
     if (terug) html += '<p class="yg-rt-terug" role="status">' + esc(terug.tekst) + ' <button type="button" class="yg-btn yg-btn--outline" data-actie="ongedaan">' + esc(t('rt.undo')) + '</button></p>';
     if (!stops.length) {
       paneel.innerHTML = html + '<p class="yg-meta">' + esc(t('rt.empty')) + '</p>';

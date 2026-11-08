@@ -4350,8 +4350,16 @@ try {
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.sbClient = sbClient; // Debug-hook voor console-diagnostics
   // Dagplanner: na inloggen de routes uit het account erbij halen (zelfde tabel als yardigo.nl/kaart).
-  sbClient.auth.onAuthStateChange(function(ev) {
-    if (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') setTimeout(function() { if (window.YGRoute) YGRoute.account(); }, 0);
+  // Via /app#route (de website vraagt bij stop 4 om in te loggen): daarna meteen de route-tab.
+  sbClient.auth.onAuthStateChange(function(ev, sessie) {
+    if (ev !== 'SIGNED_IN' && ev !== 'INITIAL_SESSION') return;
+    setTimeout(function() {
+      if (window.YGRoute) YGRoute.account();
+      if (sessie && location.hash === '#route' && typeof toonRouteTab === 'function') {
+        try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) {}
+        setTimeout(toonRouteTab, 400);
+      }
+    }, 0);
   });
 } catch(e) {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
