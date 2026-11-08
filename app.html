@@ -82,6 +82,19 @@
 <!-- QR-code generator voor de organisator-promotiepakketten -->
 <!-- qrcode 1.4.4: de laatste versie met een browserbestand (1.5.3 had er geen: gaf 404) -->
 <script src="vendor/qrcode.min.js"></script>
+<!-- Dagplanner van de website (site/route.js) in de route-tab. site.js levert
+     alleen de teksten (YG_APP), kaart.js de verkopen/winkels en plaatsen zoeken.
+     route-app.css komt uit site.css via scripts/route-app-css.js. -->
+<link rel="stylesheet" href="site/route-app.css">
+<script>
+  window.YG_APP = { taal: function () { return (typeof currentLang !== 'undefined' && currentLang) || 'nl'; } };
+  window.YG_ROUTE_HOUDER = '#yg-route-houder';
+  window.YG_ROUTE_BASIS = 'https://yardigo.nl';
+  window.YG_ROUTE_TOON = function () { if (typeof toonRouteTab === 'function') toonRouteTab(); };
+</script>
+<script src="site/site.js" defer></script>
+<script src="site/kaart.js" defer></script>
+<script src="site/route.js" defer></script>
 <style>
 :root {
   --terra:#E07B39; --terra-dark:#C5612A;
@@ -1264,6 +1277,14 @@ body.dark .ctag.tag-more,body.dark .pop-tag.tag-more{background:#2A2418 !importa
 
 /* ── ROUTE ── */
 .route-wrap{padding:14px;}
+/* Dagplanner (site/route.js) vast in de route-tab: geen zwevend paneel. */
+#view-route{--yg-font:'Poppins',sans-serif;}
+#view-route .yg-routepaneel--ingebed{position:static;width:auto;max-height:none;overflow:visible;padding:4px 2px 24px;border-radius:0;box-shadow:none;background:transparent;font-family:var(--yg-font);color:var(--yg-ink);z-index:auto;}
+#view-route .yg-routepaneel--ingebed .yg-routepaneel__dicht,#view-route .yg-routepaneel--ingebed .yg-routepaneel__greep{display:none;}
+#view-route .yg-routepaneel--ingebed .yg-routepaneel__kop h2{font-size:19px;font-weight:800;}
+#view-route .yg-btn{font-family:var(--yg-font);}
+@media (max-width:599px){#view-route .yg-routepaneel--ingebed{max-height:none;padding-top:4px;}}
+body.dark #view-route{--yg-paper:var(--bg2);--yg-ink:var(--text);--yg-muted:var(--muted);--yg-line:var(--border);--yg-line-strong:var(--border);--yg-tint:var(--bg);--yg-land:var(--bg);}
 .route-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
 .rstat{background:white;border-radius:10px;padding:12px 8px;text-align:center;border:1.5px solid var(--border);}
 .rstat-num{font-size:20px;font-weight:800;color:var(--terra);}
@@ -2280,17 +2301,7 @@ body.dark .bv-addr-row:active { background: var(--bg); }
 
 <div class="view" id="view-route">
   <div class="route-wrap">
-    <div class="route-stats" id="routeStats" style="display:none">
-      <div class="rstat"><div class="rstat-num" id="stopCount">0</div><div class="rstat-lbl" data-i18n="route.stops">Stops</div></div>
-      <div class="rstat"><div class="rstat-num" id="distKm">0</div><div class="rstat-lbl" data-i18n="route.distance">Afstand</div></div>
-      <div class="rstat"><div class="rstat-num" id="timeMin">0</div><div class="rstat-lbl" data-i18n="route.duration">Rijtijd</div></div>
-    </div>
-    <div class="route-actions">
-      <button class="route-btn primary" onclick="openNavSheet()" data-i18n="route.navigate">🧭 Navigeren</button>
-      <button class="route-btn forest" onclick="optimizeAndSaveRoute()" data-i18n="route.optimize">✨ Optimaliseer</button>
-      <button class="route-btn ghost icon-only" onclick="clearRoute()" title="Route wissen">🗑️</button>
-    </div>
-    <div id="routeList"></div>
+    <div id="yg-route-houder"></div>
     <div id="routeEmpty">
     <div class="empty-state">
       <div class="empty-icon">🧭</div>
@@ -3233,48 +3244,6 @@ body.dark .bv-addr-row:active { background: var(--bg); }
         style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--muted);color:white;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:not-allowed;margin-bottom:8px;transition:background .2s" data-i18n="review.save_btn">✓ Review opslaan</button>
       <button onclick="closeReviewSheet()"
         style="width:100%;padding:10px;border-radius:12px;border:none;background:none;color:var(--muted);font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;cursor:pointer" data-i18n="review.skip_btn">Overslaan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════ NAVIGATIE SHEET ═══════════ -->
-<div class="overlay" id="nav-overlay" onclick="closeNavSheet()">
-  <div class="sheet" id="nav-sheet" onclick="event.stopPropagation()">
-    <div class="sheet-handle"></div>
-    <div style="padding:20px 20px max(28px,env(safe-area-inset-bottom,28px))">
-      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:20px">
-        <img src="cedrik-ob-s3.png" alt="Cedrik" style="width:72px;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(44,36,22,.12))">
-        <div style="background:var(--bg2);border-radius:14px 14px 14px 4px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--text)" data-i18n="nav.sheet.cedrik">Super! Kies je vervoermiddel en navigatie-app, dan zet ik alles voor je klaar! 🗺️</div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px" data-i18n="nav.sheet.transport">Vervoermiddel</div>
-      <div class="nav-transport-row">
-        <button class="nav-transport-pill" id="tp-auto" onclick="setTransport('auto',this)">🚗<br>Auto</button>
-        <button class="nav-transport-pill" id="tp-fiets" onclick="setTransport('fiets',this)">🚲<br>Fiets</button>
-        <button class="nav-transport-pill" id="tp-lopen" onclick="setTransport('lopen',this)">🚶<br>Lopen</button>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px" data-i18n="nav.sheet.choose_app">Navigatie-app</div>
-      <div class="nav-app-grid">
-        <button class="nav-app-btn" onclick="startNavWithApp('google')">
-          <span style="font-size:24px">🗺️</span>
-          <div style="text-align:left"><div style="font-size:14px;font-weight:700">Google Maps</div><div style="font-size:11px;color:var(--muted)" data-i18n="nav.app.google.sub">Altijd beschikbaar</div></div>
-          <span style="margin-left:auto;color:var(--muted);font-size:16px">›</span>
-        </button>
-        <button class="nav-app-btn" id="nav-apple-btn" onclick="startNavWithApp('apple')" style="display:none">
-          <span style="font-size:24px">🍎</span>
-          <div style="text-align:left"><div style="font-size:14px;font-weight:700">Apple Maps</div><div style="font-size:11px;color:var(--muted)" data-i18n="nav.app.apple.sub">iPhone &amp; iPad</div></div>
-          <span style="margin-left:auto;color:var(--muted);font-size:16px">›</span>
-        </button>
-        <button class="nav-app-btn" onclick="startNavWithApp('waze')">
-          <span style="font-size:24px">🚦</span>
-          <div style="text-align:left"><div style="font-size:14px;font-weight:700">Waze</div><div style="font-size:11px;color:var(--muted)" data-i18n="nav.app.waze.sub">Met live verkeer</div></div>
-          <span style="margin-left:auto;color:var(--muted);font-size:16px">›</span>
-        </button>
-      </div>
-      <!-- Waze neemt via een link maar één bestemming: bij meer stops kies je hier de volgende. -->
-      <div id="nav-waze-stops" style="display:none;margin-top:12px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px" data-i18n="nav.waze.each">Waze neemt één stop per keer. Kies je volgende stop:</div>
-        <div id="nav-waze-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-      </div>
     </div>
   </div>
 </div>
@@ -4361,6 +4330,10 @@ let sbClient = null;
 try {
   sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.sbClient = sbClient; // Debug-hook voor console-diagnostics
+  // Dagplanner: na inloggen de routes uit het account erbij halen (zelfde tabel als yardigo.nl/kaart).
+  sbClient.auth.onAuthStateChange(function(ev) {
+    if (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') setTimeout(function() { if (window.YGRoute) YGRoute.account(); }, 0);
+  });
 } catch(e) {
   console.warn('Supabase client kon niet worden aangemaakt, fallback naar demo-data:', e);
 }
@@ -8682,9 +8655,9 @@ let sales = [
 
 let map, markers = [], routeLine = null;
 let favorites = new Set(JSON.parse(localStorage.getItem('yg-favorites') || '[]'));
-let routeSet = new Set(JSON.parse(localStorage.getItem('yg-route') || '[]'));
-let routeOrder = JSON.parse(localStorage.getItem('yg-route-order') || '[]');
-let transportMode = localStorage.getItem('yg-transport') || 'auto';
+// Route: de dagplanner (site/route.js, window.YGRoute) houdt de stops bij.
+// routeSet.has() blijft bestaan voor de knoppen op kaartjes, popup en detail.
+const routeSet = { has: function(id) { return !!(window.YGRoute && YGRoute.heeft(String(id))); } };
 let goingSet = new Set(JSON.parse(localStorage.getItem('yg-going') || '[]'));
 let activeFilters = new Set();
 let activeDateFilter = 'all';
@@ -11394,16 +11367,7 @@ function toggleRouteCard(id) {
   if (isGuest) { guestGate('route'); return; }
   var s = sales.find(function(x) { return String(x.id) === String(id); });
   if (!s) return;
-  if (routeSet.has(s.id)) {
-    routeSet.delete(s.id);
-    routeOrder = routeOrder.filter(function(x) { return String(x) !== String(s.id); });
-    saveRoute(); updateRouteView(); renderList();
-    toast(i18n('toast.removed_from_route', '🗑️ Verwijderd uit route'));
-  } else {
-    routeSet.add(s.id);
-    saveRoute(); updateRouteView(); renderList();
-    toast(i18n('toast.added_to_route', '📍 Toegevoegd aan route!'));
-  }
+  routeWissel(s);
 }
 function updateFavProfile() {
   var list = document.getElementById('fav-list'), empty = document.getElementById('fav-empty');
@@ -11427,213 +11391,71 @@ function dist(a, b) {
   var x = Math.sin(df/2)**2 + Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
 }
-function optimizeRoute(arr) {
-  if (arr.length <= 1) return arr;
-  var result = [arr.splice(0, 1)[0]];
-  while (arr.length) {
-    var last = result[result.length - 1], bestIdx = 0, bestD = Infinity;
-    arr.forEach(function(s, i) { var d = dist(last, s); if (d < bestD) { bestD = d; bestIdx = i; } });
-    result.push(arr.splice(bestIdx, 1)[0]);
+// Verkoop uit de app → stop voor de dagplanner. Garagesales en rommelroutes
+// met een echt adres krijgen exact: true; in een deellink gaat dan alleen het gebied mee.
+function saleNaarStop(s) {
+  var van = s.date || '', tot = s.date_end || van, dagen = [];
+  for (var d = van; d && d <= tot && dagen.length < 14; d = YGKaart.plus(d, 1)) dagen.push(d);
+  if (!dagen.length && van) dagen = [van];
+  var stop = YGKaart.stopVan({
+    id: String(s.id), titel: s.title || '', soort: saleKind(s), lat: s.lat, lng: s.lng,
+    plaats: (s.city || (s.address || '').split(',').slice(-1)[0] || '').trim(),
+    van: van, tot: tot, begin: s.from ? s.from + ':00' : null, eind: s.till ? s.till + ':00' : null,
+    benadering: !!s.location_approx, dagen: dagen
+  });
+  if (!s.location_approx && s.address && /\d/.test(s.address)) stop.exact = true;
+  return stop;
+}
+function routeWissel(s) {
+  if (!window.YGRoute || !window.YGKaart) { toast(i18n('toast.route_loading', 'Routeplanner laadt nog, probeer het zo opnieuw')); return null; }
+  var aan = YGRoute.wissel(saleNaarStop(s));
+  toast(aan ? i18n('toast.added_to_route', '📍 Toegevoegd aan route!') : i18n('toast.removed_from_route', '🗑️ Verwijderd uit route'));
+  return aan;
+}
+function toonRouteTab() {
+  var routeNavBtn = document.getElementById('bni-route');
+  if (routeNavBtn) {
+    document.querySelectorAll('.bni').forEach(function(b) { b.classList.remove('active'); });
+    routeNavBtn.classList.add('active');
   }
-  return result;
+  sv('route', document.querySelectorAll('.tab')[2]);
 }
-function saveRoute() {
-  localStorage.setItem('yg-route', JSON.stringify(Array.from(routeSet)));
-  localStorage.setItem('yg-route-order', JSON.stringify(routeOrder));
-}
-function getOrderedRouteStops() {
-  var inRoute = sales.filter(function(s) { return routeSet.has(s.id); });
-  if (!routeOrder.length) return inRoute;
-  var ordered = [];
-  routeOrder.forEach(function(id) {
-    var s = inRoute.find(function(x) { return String(x.id) === String(id); });
-    if (s) ordered.push(s);
+// Stops uit de app bijwerken met de verkopen zoals ze nu zijn (bijv. het echte
+// adres zodra dat zichtbaar wordt). Winkels en verkopen die er niet meer zijn blijven staan.
+function routeStopsBijwerken() {
+  if (!window.YGRoute || !window.YGKaart || !YGRoute.werkBij) return;
+  YGRoute.stops().forEach(function(st) {
+    if (st.soort === 'winkel') return;
+    var s = sales.find(function(x) { return String(x.id) === st.id; });
+    if (s) YGRoute.werkBij(saleNaarStop(s));
   });
-  inRoute.forEach(function(s) {
-    if (!ordered.find(function(x) { return x.id === s.id; })) ordered.push(s);
-  });
-  return ordered;
 }
 function updateRouteView() {
-  var ordered = getOrderedRouteStops();
-  var list = document.getElementById('routeList'), empty = document.getElementById('routeEmpty'), stats = document.getElementById('routeStats');
-  if (!list) return;
-  if (!ordered.length) { list.innerHTML = ''; if (empty) empty.style.display = 'block'; if (stats) stats.style.display = 'none'; return; }
-  if (empty) empty.style.display = 'none'; if (stats) stats.style.display = 'grid';
-  // Afstand en tijd zonder gesloten adressen (live-status).
-  var _open = ordered.filter(function(s) { return !saleGesloten(s); });
-  var totalDist = 0;
-  for (var i = 1; i < _open.length; i++) totalDist += dist(_open[i-1], _open[i]);
-  var speeds = { auto: 40, fiets: 15, lopen: 5 };
-  var speed = speeds[transportMode] || 40;
-  var sc = document.getElementById('stopCount'), dk = document.getElementById('distKm'), tm = document.getElementById('timeMin');
-  if (sc) sc.textContent = ordered.length;
-  if (dk) dk.textContent = totalDist.toFixed(1) + ' km';
-  if (tm) tm.textContent = Math.round(totalDist / speed * 60) + ' min';
-  var colors = { particulier:'#F2A830', buurt:'#E07B39', evenement:'#3A6B4A' };
-  list.innerHTML = ordered.map(function(s, i) {
-    var _cityFallback = (s.city || (s.address || '').split(',').slice(-1)[0] || '').trim();
-    var _addrLine;
-    if (s.address_hidden && !isGuest && s.address_reveal_mode === 'day_before') {
-      var _cd = formatCountdownDetail(s.address_visible_at);
-      _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' · 🔒 ' + (_cd ? 'adres over ' + escapeHtml(_cd) : 'adres 24u vooraf');
-    } else if (s.address) {
-      _addrLine = '📍 ' + escapeHtml(s.address);
-    } else {
-      _addrLine = '📍 ' + escapeHtml(_cityFallback) + ' (adres zichtbaar na inloggen)';
-    }
-    var sid = escapeHtml(String(s.id));
-    var _dicht = saleGesloten(s);
-    return '<div class="route-stop-card"' + (_dicht ? ' style="opacity:.5"' : '') + '>'
-      + '<div class="route-stop-num" style="background:' + (_dicht ? '#9A9086' : colors[s.type]) + '">' + (i+1) + '</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.title) + '</div>'
-      + '<div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _addrLine + '</div>'
-      + liveRegelHtml(s) + '</div>'
-      + '<div class="route-order-btns">'
-      + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',-1)" ' + (i === 0 ? 'disabled' : '') + '>▲</button>'
-      + '<button class="route-order-btn" onclick="moveRouteStop(\'' + sid + '\',1)" ' + (i === ordered.length - 1 ? 'disabled' : '') + '>▼</button>'
-      + '</div>'
-      + '<button onclick="removeFromRoute(\'' + sid + '\')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);padding:4px;flex-shrink:0">✕</button>'
-      + '</div>';
-  }).join('');
+  routeOudeOverzetten();
+  routeStopsBijwerken();
+  var leeg = !(window.YGRoute && YGRoute.aantal());
+  var empty = document.getElementById('routeEmpty');
+  if (empty) empty.style.display = leeg ? 'block' : 'none';
 }
-function clearRoute() {
-  routeSet.clear(); routeOrder = []; saveRoute(); updateRouteView();
-  toast(i18n('toast.route_cleared', '🗑️ Route gewist'));
+// De planner meldt elke wijziging (ook weghalen in het paneel zelf).
+var _routeHerteken = null;
+document.addEventListener('yg-route-wijzig', function() {
+  updateRouteView(); updateDetailRouteBtn();
+  clearTimeout(_routeHerteken);
+  _routeHerteken = setTimeout(function() { if (typeof renderList === 'function') renderList(); }, 150);
+});
+// Eenmalig: de oude app-route (yg-route) naar de planner overzetten zodra de verkopen er zijn.
+function routeOudeOverzetten() {
+  var oud;
+  try { oud = JSON.parse(localStorage.getItem('yg-route') || 'null'); } catch (e) { oud = null; }
+  if (!Array.isArray(oud) || !window.YGRoute || !window.YGKaart || !sales.length) return;
+  var volgorde = [];
+  try { volgorde = JSON.parse(localStorage.getItem('yg-route-order') || '[]'); } catch (e) {}
+  var ids = volgorde.concat(oud.map(String)).filter(function(id, i, a) { return a.indexOf(id) === i && oud.map(String).indexOf(id) > -1; });
+  var lijst = ids.map(function(id) { return sales.find(function(x) { return String(x.id) === id; }); }).filter(Boolean);
+  if (lijst.length && !YGRoute.aantal()) YGRoute.nieuw(lijst.map(saleNaarStop), '');
+  try { localStorage.removeItem('yg-route'); localStorage.removeItem('yg-route-order'); } catch (e) {}
 }
-function removeFromRoute(id) {
-  routeSet.delete(id);
-  routeOrder = routeOrder.filter(function(x) { return String(x) !== String(id); });
-  saveRoute(); updateRouteView(); updateDetailRouteBtn();
-}
-function moveRouteStop(id, dir) {
-  var ordered = getOrderedRouteStops();
-  if (!routeOrder.length) routeOrder = ordered.map(function(s) { return String(s.id); });
-  var idx = routeOrder.indexOf(String(id));
-  if (idx === -1) return;
-  var newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= routeOrder.length) return;
-  var tmp = routeOrder[idx]; routeOrder[idx] = routeOrder[newIdx]; routeOrder[newIdx] = tmp;
-  saveRoute(); updateRouteView();
-}
-function optimizeAndSaveRoute() {
-  var inRoute = sales.filter(function(s) { return routeSet.has(s.id); });
-  if (!inRoute.length) { toast(i18n('toast.add_sales_first', 'Voeg eerst verkopen toe')); return; }
-  // Gesloten adressen (live-status) slaan we over: achteraan, buiten de route.
-  var dicht = inRoute.filter(saleGesloten);
-  var opt = optimizeRoute(inRoute.filter(function(s) { return !saleGesloten(s); }));
-  routeOrder = opt.concat(dicht).map(function(s) { return String(s.id); });
-  saveRoute(); updateRouteView();
-  toast(dicht.length ? i18n('live.route_overgeslagen', '✨ Route geoptimaliseerd, {n} gesloten adres(sen) overgeslagen').replace('{n}', dicht.length)
-                     : i18n('toast.route_optimized', '✨ Route geoptimaliseerd!'));
-}
-
-// ── Auto-route: plan route op basis van GPS-locatie ──
-function autoRouteFromLocation() {
-  if (isGuest) { guestGate('route'); return; }
-  if (!navigator.geolocation) { toast(i18n('toast.location_unavailable_emoji', '📍 Locatie niet beschikbaar')); return; }
-  toast(i18n('toast.fetching_location', '📍 Locatie ophalen…'));
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    var userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    var visible = sales.filter(function(s) { return saleMatchesFilters(s) && !saleGesloten(s); });
-    if (!visible.length) { toast(i18n('toast.no_sales_found', 'Geen verkopen gevonden')); return; }
-    var sorted = visible.slice().sort(function(a, b) { return dist(userPos, a) - dist(userPos, b); });
-    routeSet.clear();
-    sorted.slice(0, 8).forEach(function(s) { routeSet.add(s.id); });
-    var opt = optimizeRoute(sorted.slice(0, 8));
-    routeOrder = opt.map(function(s) { return String(s.id); });
-    saveRoute(); updateRouteView();
-    var routeTab = document.querySelectorAll('.tab')[2];
-    var routeNavBtn = document.getElementById('bni-route');
-    if (routeNavBtn) {
-      document.querySelectorAll('.bni').forEach(function(b) { b.classList.remove('active'); });
-      routeNavBtn.classList.add('active');
-    }
-    sv('route', routeTab);
-    toast(i18n('toast.route_planned', '✅ Route gepland met {count} stops!').replace('{count}', Math.min(sorted.length, 8)));
-  }, function() {
-    toast(i18n('toast.location_denied', '❌ Locatie geweigerd. Zet locatie aan in je instellingen.'));
-  }, { timeout: 8000 });
-}
-
-// ── Navigatie sheet ──
-function openNavSheet() {
-  var ordered = getOrderedRouteStops();
-  if (!ordered.length) { toast(i18n('toast.add_sales_first', 'Voeg eerst verkopen toe')); return; }
-  var overlay = document.getElementById('nav-overlay'), sheet = document.getElementById('nav-sheet');
-  if (!overlay || !sheet) return;
-  // Transport pill sync
-  ['auto','fiets','lopen'].forEach(function(m) {
-    var el = document.getElementById('tp-' + m);
-    if (el) el.classList.toggle('active', m === transportMode);
-  });
-  var wazeStops = document.getElementById('nav-waze-stops');
-  if (wazeStops) wazeStops.style.display = 'none';
-  // Apple Maps: toon alleen op iOS/macOS
-  var appleBtn = document.getElementById('nav-apple-btn');
-  if (appleBtn) appleBtn.style.display = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) ? 'flex' : 'none';
-  overlay.classList.add('open');
-}
-function closeNavSheet() {
-  var overlay = document.getElementById('nav-overlay');
-  if (overlay) overlay.classList.remove('open');
-}
-function setTransport(mode, el) {
-  transportMode = mode;
-  localStorage.setItem('yg-transport', mode);
-  document.querySelectorAll('.nav-transport-pill').forEach(function(p) { p.classList.remove('active'); });
-  if (el) el.classList.add('active');
-  updateRouteView();
-}
-function startNavWithApp(app) {
-  var ordered = getOrderedRouteStops();
-  if (!ordered.length) return;
-  var travelModes = { auto: 'driving', fiets: 'bicycling', lopen: 'walking' };
-  var wazeTypes = { auto: 'car', fiets: 'walk', lopen: 'walk' };
-  var tMode = travelModes[transportMode] || 'driving';
-  var country = ygCountryName();
-  // Met huisnummer het adres; anders (gast, of adres nog verborgen) staat er
-  // alleen een plaats en is "<plaats>, Nederland" fout bij Belgische verkopen:
-  // dan de coördinaten.
-  var punt = function(s) { return s.address && /\d/.test(s.address) ? encodeURIComponent(s.address + ', ' + country) : s.lat + ',' + s.lng; };
-  var addrs = ordered.map(punt);
-  var url;
-  if (app === 'google') {
-    url = 'https://www.google.com/maps/dir/' + addrs.join('/') + '?travelmode=' + tMode;
-  } else if (app === 'apple') {
-    // Apple's 'unified Maps URL' (iOS 18.4 / macOS 15.4): alle stops als waypoint.
-    // Het oude maps://?daddr= nam alleen de laatste stop mee.
-    var appleModes = { auto: 'driving', fiets: 'cycling', lopen: 'walking' };
-    url = 'https://maps.apple.com/directions?destination=' + punt(ordered[ordered.length - 1]) +
-      ordered.slice(0, -1).map(function(s) { return '&waypoint=' + punt(s); }).join('') +
-      '&mode=' + (appleModes[transportMode] || 'driving');
-  } else if (app === 'waze') {
-    // Waze neemt één bestemming per link: bij meer stops kies je de volgende.
-    if (ordered.length > 1) { toonWazeStops(ordered); return; }
-    url = wazeUrl(ordered[0]);
-  }
-  closeNavSheet();
-  if (url) window.open(url);
-}
-function wazeUrl(s) { return 'https://waze.com/ul?ll=' + s.lat + '%2C' + s.lng + '&navigate=yes&zoom=17'; }
-function toonWazeStops(ordered) {
-  var lijst = document.getElementById('nav-waze-list');
-  if (!lijst) return;
-  lijst.innerHTML = '';
-  ordered.forEach(function(s, i) {
-    var b = document.createElement('button');
-    b.className = 'nav-transport-pill';
-    b.style.flex = '0 0 auto';
-    b.style.minWidth = '48px';
-    b.textContent = String(i + 1);
-    b.setAttribute('aria-label', 'Waze: ' + (s.title || ''));
-    b.title = s.title || '';
-    b.onclick = function() { closeNavSheet(); window.open(wazeUrl(s)); };
-    lijst.appendChild(b);
-  });
-  document.getElementById('nav-waze-stops').style.display = 'block';
-}
-function startNavigation() { openNavSheet(); }
 
 // ══════════════════════════════════════════════════
 // VIEW SWITCHING
@@ -12184,17 +12006,9 @@ function detailFav() {
 function detailRoute() {
   var s = sales.find(function(x) { return x.id === detailSaleId; });
   if (!s) return;
-  if (routeSet.has(s.id)) {
-    routeSet.delete(s.id);
-    routeOrder = routeOrder.filter(function(x) { return String(x) !== String(s.id); });
-    saveRoute(); updateDetailRouteBtn();
-    toast(i18n('toast.removed_from_route', '🗑️ Verwijderd uit route'));
-  } else {
-    routeSet.add(s.id);
-    saveRoute(); updateDetailRouteBtn();
-    closeDetail(); sv('route', document.querySelectorAll('.tab')[2]);
-    toast(i18n('toast.added_to_route', '📍 Toegevoegd aan route!'));
-  }
+  var aan = routeWissel(s);
+  updateDetailRouteBtn();
+  if (aan) { closeDetail(); toonRouteTab(); }
 }
 function updateDetailRouteBtn() {
   if (!detailSaleId) return;

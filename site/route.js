@@ -20,6 +20,11 @@
 // luisteraar op het document. Kaart: YGRoute.opKaart(map) tekent de stops.
 // Vereist: site.js (window.YG); kaart.js (window.YGKaart) voor plaatsen zoeken
 // en controle van verkopen.
+// In de app (app.html): window.YG_ROUTE_HOUDER = element waarin het paneel vast
+// staat (geen zwevende knop, geen sluitknop); window.YG_ROUTE_BASIS = adres voor
+// deellinks (https://yardigo.nl); window.YG_ROUTE_TOON() = naar het paneel gaan.
+// Stops met exact: true (de app kent soms het echte adres) gaan nooit precies
+// mee in een deellink: dan alleen het gebied.
 // ═══════════════════════════════════════════════════════════════════════
 (function () {
   'use strict';
@@ -34,6 +39,8 @@
   var terug = null;   // { stops, geweest, tekst }: om weghalen of leegmaken ongedaan te maken
   var controle = {};   // id → 'weg' | 'gewijzigd' (na controle bij openen)
   var kaartLaag = null;
+  var BASIS = window.YG_ROUTE_BASIS || location.origin;
+  function ingebed() { return !!window.YG_ROUTE_HOUDER; }
 
   function opslaan() { schrijf(SLEUTEL, routes); synchroniseerLater(); }
   function lees(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
@@ -62,7 +69,9 @@
     opslaan();
     schrijf(ACTIEF, actief.id);
     werkKnoppenBij(); tekenPaneel(); tekenKaart();
+    meldWijziging();
   }
+  function meldWijziging() { try { document.dispatchEvent(new CustomEvent('yg-route-wijzig')); } catch (e) { /* oude browser */ } }
   function kies(r) { actief = r; stops = r.stops; controle = {}; bewaar(); controleer(); }
 
   function plek(id) { for (var i = 0; i < stops.length; i++) if (stops[i].id === id) return i; return -1; }
@@ -482,11 +491,15 @@
   // gebied) en plaats. Nooit het startpunt. Geen account nodig, niets op de server.
   function deelLink() {
     var rij = stops.map(function (s) {
-      return [s.id, s.titel, s.soort, +s.lat.toFixed(5), +s.lng.toFixed(5), s.plaats || '', s.sub || '', s.benadering ? 1 : 0];
+      var n = geheim(s) ? 2 : 5;
+      return [s.id, s.titel, s.soort, +s.lat.toFixed(n), +s.lng.toFixed(n), s.plaats || '', s.sub || '', s.benadering || geheim(s) ? 1 : 0];
     });
     var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(rij)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    return location.origin + '/kaart?stops=' + b64;
+    return BASIS + '/kaart?stops=' + b64;
   }
+  // Een echt adres van een garagesale of rommelroute (alleen in de app bekend).
+  function geheim(s) { return !!s.exact && (s.soort === 'oprit' || s.soort === 'route'); }
+  function heeftGeheim(r) { return r.stops.some(geheim); }
   function laadGedeeld(rij, naam) {
     var r = stops.length ? legeRoute(naam || t('rt.sharedName')) : actief;
     if (r !== actief) routes.unshift(r); else if (naam) r.naam = naam;
@@ -522,9 +535,10 @@
     if (nieuw.length) laadGedeeld(nieuw);
   }
   function deel(b) {
-    if (sessie()) {
+    // Met een echt adres erin: nooit via de server delen (die link toont de stops zoals bewaard).
+    if (sessie() && !heeftGeheim(actief)) {
       if (!actief.deelCode) { actief.deelCode = maakCode(); opslaan(); }
-      upsert(actief).then(function () { deelUrl(b, location.origin + '/kaart?r=' + actief.deelCode); })
+      upsert(actief).then(function () { deelUrl(b, BASIS + '/kaart?r=' + actief.deelCode); })
         .catch(function () { deelUrl(b, deelLink()); });
       return;
     }
@@ -608,6 +622,24 @@
 
   // ── Paneel ───────────────────────────────────────────────────────────
   function bouw() {
+    if (ingebed()) {
+      paneel = document.createElement('section');
+      paneel.id = 'yg-route';
+      paneel.className = 'yg-routepaneel yg-routepaneel--ingebed';
+      paneel.setAttribute('aria-labelledby', 'yg-route-kop');
+      var houder = typeof window.YG_ROUTE_HOUDER === 'string' ? document.querySelector(window.YG_ROUTE_HOUDER) : window.YG_ROUTE_HOUDER;
+      (houder || document.body).appendChild(paneel);
+    }
+    else bouwZwevend();
+    var live = document.createElement('p');
+    live.id = 'yg-route-live';
+    live.className = 'yg-sr';
+    live.setAttribute('aria-live', 'polite');
+    document.body.appendChild(live);
+    bouwLuisteraars();
+    tekenPaneel();
+  }
+  function bouwZwevend() {
     knopEl = document.createElement('button');
     knopEl.type = 'button';
     knopEl.className = 'yg-routebalk';
@@ -624,13 +656,9 @@
     paneel.setAttribute('aria-labelledby', 'yg-route-kop');
     paneel.hidden = true;
     document.body.appendChild(paneel);
-
-    var live = document.createElement('p');
-    live.id = 'yg-route-live';
-    live.className = 'yg-sr';
-    live.setAttribute('aria-live', 'polite');
-    document.body.appendChild(live);
-
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !paneel.hidden) open(false); });
+  }
+  function bouwLuisteraars() {
     paneel.addEventListener('click', klik);
     paneel.addEventListener('change', wijzig);
     paneel.addEventListener('submit', function (e) {
@@ -647,7 +675,6 @@
       var g = e.target.closest('.yg-routelijst__greep');
       if (g) sleepStart(e, g);
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !paneel.hidden) open(false); });
     werkKnoppenBij();
     leesDeelLink();
     controleer();
@@ -729,6 +756,11 @@
   function focusKop() { var h = paneel.querySelector('h2'); if (h) h.focus(); }
 
   function open(aan) {
+    if (ingebed()) {
+      weergave = 'route'; tekenPaneel();
+      if (aan && typeof window.YG_ROUTE_TOON === 'function') window.YG_ROUTE_TOON();
+      return;
+    }
     paneel.hidden = !aan;
     knopEl.setAttribute('aria-expanded', String(aan));
     document.body.classList.toggle('yg-route-open', aan);
@@ -851,7 +883,7 @@
     else html += '<p class="yg-meta yg-rt-som">' + esc(t('rt.sum', { n: stops.length, km: Math.round(totaalKm()) })) +
       (reisBezig ? ' ' + esc(t('rt.roadLoading')) : reis && reis.fout ? ' ' + esc(t('rt.roadFail')) : '') + '</p>';
     if (stops.length > 2) html += '<button type="button" class="yg-btn yg-btn--ghost" data-actie="kortste">' + esc(t('rt.order')) + '</button>';
-    if (gebied) html += '<p class="yg-routepaneel__let">' + esc(t('rt.approx')) + '</p>';
+    if (gebied) html += '<p class="yg-routepaneel__let">' + esc(t(ingebed() ? 'rt.approxApp' : 'rt.approx')) + '</p>';
     html += suggestieHtml();
 
     // Openen in een kaart-app; lange routes in delen.
@@ -939,7 +971,7 @@
   }
   function naarRij(r) {
     return { client_id: r.id, naam: (r.naam || '').slice(0, 80), datum: r.datum || null, vertrek: r.vertrek || null, vervoer: r.vervoer || 'auto',
-      start: r.start || null, eind: r.eind || null, stops: r.stops.slice(0, 50), deel_code: r.deelCode || null };
+      start: r.start || null, eind: r.eind || null, stops: r.stops.slice(0, 50), deel_code: heeftGeheim(r) ? null : r.deelCode || null };
   }
   function upsert(r) {
     var rij = naarRij(r);
@@ -992,7 +1024,20 @@
 
   function meld(tekst) { var p = document.getElementById('yg-route-live'); if (p) p.textContent = tekst; }
 
-  window.YGRoute = { knop: knop, heeft: heeft, open: function () { open(true); }, opKaart: opKaart, openOp: openOp };
+  window.YGRoute = { knop: knop, heeft: heeft, open: function () { open(true); }, opKaart: opKaart, openOp: openOp,
+    // Voor de app: stop aan/uit, een nieuwe route met deze stops, slimme volgorde, account opnieuw ophalen.
+    wissel: function (stop) { wissel(stop); return heeft(stop.id); },
+    nieuw: function (lijst, naam) { var r = legeRoute(naam); routes.unshift(r); r.stops = lijst.slice(0, 50); weergave = 'route'; kies(r); },
+    slim: function () { slimOverDeWeg(); },
+    // Voor de app: een stop bijwerken met verse gegevens (bijv. het echte adres zodra het zichtbaar is).
+    werkBij: function (stop) {
+      var i = plek(stop.id), oud = stops[i];
+      if (i < 0 || (oud.lat === stop.lat && oud.lng === stop.lng && !!oud.benadering === !!stop.benadering && !!oud.exact === !!stop.exact)) return;
+      stops[i] = Object.assign({}, oud, { lat: stop.lat, lng: stop.lng, benadering: stop.benadering, exact: stop.exact });
+      bewaar();
+    },
+    stops: function () { return stops.slice(); }, account: function () { haalAccount(); },
+    aantal: function () { return stops.length; } };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bouw); else bouw();
 })();

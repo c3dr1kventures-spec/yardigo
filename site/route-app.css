@@ -1,0 +1,131 @@
+/* Gemaakt door scripts/route-app-css.js uit site/site.css: niet met de hand aanpassen. */
+:root { --yg-forest: #3A6B4A; --yg-forest-dark: #2A5038; --yg-fern: #7BA67B; --yg-terra: #E07B39; --yg-terra-dark: #C5612A; --yg-amber: #F2A830; --yg-amber-text: #7A5A10; --yg-wood: #8A5A2B; --yg-wood-text: #6B4520; --yg-wood-tint: #F1E6D3; --yg-ink: #1E2922; --yg-muted: #55625A; --yg-line: #E1E7DE; --yg-line-strong: #D3DACF; --yg-land: #EEF2EA; --yg-tint: #F3F6F1; --yg-paper: #FFFFFF; --yg-focus: #2F6FDB; --yg-live: #46A03C; --yg-font: "Geologica", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --yg-radius-s: 10px; --yg-radius-m: 14px; --yg-radius-l: 18px; --yg-wrap: 1200px; --yg-shadow-float: 0 6px 20px rgba(30, 41, 34, .16); }
+.yg-btn { touch-action: manipulation; }
+.yg-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.yg-meta { font-size: 14px; color: var(--yg-muted); }
+.yg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 16px; border-radius: var(--yg-radius-s); border: 1.5px solid transparent; font-weight: 600; font-size: 15px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.yg-btn--primary { background: var(--yg-forest); color: #FFFFFF; }
+.yg-btn--primary:hover { background: var(--yg-forest-dark); color: #FFFFFF; }
+.yg-btn--dark { background: var(--yg-ink); color: #FFFFFF; }
+.yg-btn--dark:hover { background: #000000; color: #FFFFFF; }
+.yg-btn--outline { background: var(--yg-paper); color: var(--yg-ink); border-color: var(--yg-ink); }
+.yg-btn--outline:hover { background: var(--yg-tint); color: var(--yg-ink); }
+.yg-btn--light { background: #FFFFFF; color: var(--yg-forest-dark); }
+.yg-btn--ghost { background: transparent; color: var(--yg-forest-dark); padding-left: 4px; padding-right: 4px; }
+.yg-btn--block { display: flex; width: 100%; }
+.yg-btn svg { width: 16px; height: 16px; flex: none; }
+.yg-stop { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--yg-forest); color: #FFFFFF; font-weight: 700; font-size: 14px; border: 3px solid #FFFFFF; box-shadow: 0 3px 10px rgba(30, 41, 34, .3); }
+.yg-stop--oprit { background: var(--yg-amber); color: var(--yg-ink); }
+.yg-stop--route { background: var(--yg-terra); color: var(--yg-ink); }
+.yg-stop--winkel { background: var(--yg-wood); border-radius: 9px; }
+.yg-field { display: grid; gap: 4px; }
+.yg-field label, .yg-field .yg-label { font-size: 14px; font-weight: 600; }
+.yg-seg { display: flex; gap: 6px; }
+.yg-seg button { flex: 1; border: 1px solid var(--yg-line-strong); background: var(--yg-paper); border-radius: 10px; padding: 9px 4px; font-size: 14px; cursor: pointer; }
+.yg-seg button[aria-pressed="true"] { border: 1.5px solid var(--yg-forest); background: var(--yg-land); font-weight: 600; }
+.yg-error { margin: 0; font-size: 14px; color: #9B2C1F; }
+.yg-btn--big { min-height: 52px; font-size: 16px; }
+.yg-btn--big svg { width: 20px; height: 20px; }
+.yg-btn[aria-busy="true"] { opacity: .75; cursor: progress; }
+.yg-btn--onband { background: transparent; color: #FFFFFF; border-color: #CFE0D3; }
+.yg-btn--onband:hover { background: rgba(255, 255, 255, .1); color: #FFFFFF; }
+.yg-routepaneel { position: fixed; z-index: 1100; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 599px) {
+  .yg-routepaneel { top: auto; max-height: 85vh; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(30, 41, 34, .25); }
+}
+.yg-routepaneel__kop { display: flex; align-items: center; justify-content: space-between; }
+.yg-routepaneel__kop h2 { margin: 0; font-size: 22px; }
+.yg-routepaneel__kop h2:focus { outline: none; }
+.yg-routepaneel__dicht { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--yg-tint); font-size: 24px; line-height: 1; cursor: pointer; }
+.yg-routelijst { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.yg-routelijst li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--yg-line); }
+.yg-routelijst .yg-stop { width: 30px; height: 30px; border-width: 2px; font-size: 13px; box-shadow: none; }
+.yg-routelijst__txt { min-width: 0; display: grid; }
+.yg-routelijst__txt strong { font-size: 15px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.yg-routelijst__txt .yg-meta { font-size: 13px; }
+.yg-routelijst__btns { display: flex; gap: 2px; }
+.yg-routelijst__btns button { width: 36px; height: 36px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); font-size: 16px; cursor: pointer; }
+.yg-routelijst__btns button:disabled { opacity: .35; cursor: default; }
+.yg-routepaneel__let { margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFF8E8; border: 1px dashed var(--yg-amber); font-size: 14px; }
+.yg-routepaneel__apps { display: flex; flex-wrap: wrap; gap: 8px; }
+.yg-routepaneel__apps .yg-btn { flex: 1 0 auto; min-width: 52px; }
+.yg-routepaneel__apps .yg-stop { width: 26px; height: 26px; font-size: 12px; border-width: 2px; box-shadow: none; }
+.yg-routepaneel__waze { display: grid; gap: 6px; }
+.yg-routepaneel__waze .yg-label { font-size: 14px; font-weight: 600; }
+.yg-routepaneel .yg-btn--ghost { align-self: flex-start; }
+.yg-routeknop[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
+.yg-stop--markt { background: var(--yg-forest); }
+.yg-stop--start { background: var(--yg-paper); color: var(--yg-ink); border-color: var(--yg-ink); }
+.yg-routepaneel__kop { gap: 8px; }
+.yg-routepaneel__kop h2 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.yg-routepaneel__mijn { min-height: 40px; padding: 6px 10px; font-size: 14px; }
+.yg-rt-dag { border: 1px solid var(--yg-line); border-radius: 12px; background: var(--yg-tint); }
+.yg-rt-dag summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 12px 14px; cursor: pointer; list-style: none; }
+.yg-rt-dag summary::-webkit-details-marker { display: none; }
+.yg-rt-dag summary::after { content: '▾'; margin-left: auto; color: var(--yg-muted); }
+.yg-rt-dag[open] summary::after { content: '▴'; }
+.yg-rt-dag summary .yg-label { font-weight: 600; }
+.yg-rt-dag__velden { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px 12px; }
+.yg-rt-dag__velden label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.yg-rt-dag__velden input, .yg-rt-dag__velden select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; background: var(--yg-paper); font: inherit; font-size: 16px; color: var(--yg-ink); }
+.yg-rt-dag .yg-field { padding: 0 14px 14px; }
+.yg-rt-punt form { display: flex; gap: 6px; margin-top: 6px; }
+.yg-rt-punt form input { flex: 1; min-width: 0; }
+.yg-rt-volgende { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 12px 14px; border-radius: 12px; background: var(--yg-land); }
+.yg-rt-volgende .yg-meta { grid-column: 1; font-size: 13px; }
+.yg-rt-volgende strong { grid-column: 1; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+.yg-rt-volgende .yg-btn { grid-column: 2; grid-row: 1 / span 2; }
+.yg-routelijst li { grid-template-columns: 18px 30px minmax(0, 1fr) auto; }
+.yg-routelijst__btns { display: grid; grid-template-columns: repeat(2, 34px); gap: 4px; }
+.yg-routelijst__btns button { width: 34px; height: 34px; }
+.yg-routelijst li.is-sleep { background: var(--yg-tint); box-shadow: 0 6px 18px rgba(30, 41, 34, .18); border-radius: 10px; }
+.yg-routelijst li.is-geweest .yg-routelijst__txt { opacity: .55; }
+.yg-routelijst li.is-geweest .yg-routelijst__txt strong { text-decoration: line-through; }
+.yg-routelijst__greep { display: grid; place-items: center; height: 44px; color: var(--yg-muted); font-size: 14px; letter-spacing: -3px; cursor: grab; touch-action: none; user-select: none; }
+.yg-routelijst__greep:active { cursor: grabbing; }
+.yg-routelijst__let { margin-top: 2px; font-size: 13px; font-weight: 600; color: #9B2C1F; }
+.yg-routelijst__btns button[aria-pressed="true"] { background: var(--yg-land); border-color: var(--yg-forest); color: var(--yg-forest-dark); }
+.yg-rt-som { margin: -6px 0 0; font-size: 13px; }
+.yg-rt-delen { display: grid; gap: 6px; }
+.yg-rt-delen .yg-label { font-size: 14px; font-weight: 600; }
+.yg-rt-link { width: 100%; padding: 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; font-size: 14px; }
+.yg-mijnroutes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.yg-mijnroutes li { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--yg-line); border-radius: 12px; }
+.yg-mijnroutes li[aria-current="true"] { border-color: var(--yg-forest); background: var(--yg-tint); }
+.yg-mijnroutes__open { display: grid; gap: 2px; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: var(--yg-ink); cursor: pointer; }
+.yg-mijnroutes__open strong { font-size: 16px; }
+.yg-mijnroutes__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.yg-mijnroutes__btns button { min-height: 36px; padding: 4px 10px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); font: inherit; font-size: 14px; cursor: pointer; }
+.yg-mijnroutes__vraag { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; }
+.yg-mijnroutes__naam { display: flex; gap: 6px; }
+.yg-mijnroutes__naam input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid var(--yg-line-strong); border-radius: 10px; font: inherit; font-size: 16px; }
+.yg-rt-pin { background: none; border: 0; }
+.yg-rt-tijd { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; margin-top: 3px; font-size: 13px; color: var(--yg-forest-dark); font-weight: 600; }
+.yg-rt-tijd select { min-height: 32px; padding: 2px 6px; border: 1px solid var(--yg-line-strong); border-radius: 8px; background: var(--yg-paper); color: var(--yg-ink); font: inherit; font-size: 13px; font-weight: 500; }
+.yg-rt-som--echt { display: grid; gap: 2px; margin: -6px 0 0; font-size: 15px; }
+.yg-rt-som--echt .yg-meta { font-size: 13px; font-weight: 400; }
+.yg-sleept { user-select: none; -webkit-user-select: none; }
+.yg-rt-terug { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--yg-tint); font-size: 14px; }
+.yg-rt-terug .yg-btn { min-height: 36px; padding: 4px 12px; font-size: 14px; }
+.yg-routelijst__btns button:not(:disabled):hover, .yg-mijnroutes__btns button:hover { border-color: var(--yg-ink); background: var(--yg-tint); }
+.yg-mijnroutes__open:hover strong { text-decoration: underline; }
+.yg-rt-sugg { display: grid; gap: 8px; padding: 12px 14px; border: 1px dashed var(--yg-line-strong); border-radius: 12px; }
+.yg-rt-sugg h3 { margin: 0; font-size: 16px; }
+.yg-rt-sugg ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.yg-rt-sugg li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.yg-rt-sugg .yg-stop { width: 14px; height: 14px; border-width: 2px; box-shadow: none; }
+.yg-rt-sugg .yg-btn { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+.yg-rt-sugg .yg-btn--ghost { justify-self: start; }
+.yg-routepaneel__greep { display: none; }
+@media (max-width: 599px) {
+  .yg-routepaneel__greep { display: grid; place-items: center; align-self: stretch; height: 28px; margin-bottom: -8px; padding: 0; border: 0; background: none; cursor: pointer; flex: none; }
+  .yg-routepaneel__greep::before { content: ''; width: 44px; height: 5px; border-radius: 3px; background: var(--yg-line-strong); }
+}
+.yg-rt-pin .yg-stop { width: 30px; height: 30px; font-size: 13px; }
+@media (max-width: 599px) {
+  .yg-routepaneel { max-height: 60vh; max-height: 60svh; padding-top: 6px; }
+  .yg-routepaneel.is-vol { max-height: 92vh; max-height: 92svh; }
+  .yg-rt-dag__velden { grid-template-columns: 1fr; }
+  .yg-routelijst__btns { grid-template-columns: repeat(2, 40px); }
+  .yg-routelijst__btns button { width: 40px; height: 40px; }
+}
