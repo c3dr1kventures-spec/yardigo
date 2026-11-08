@@ -22,7 +22,8 @@
 // en controle van verkopen.
 // In de app (app.html): window.YG_ROUTE_HOUDER = element waarin het paneel vast
 // staat (geen zwevende knop, geen sluitknop); window.YG_ROUTE_BASIS = adres voor
-// deellinks (https://yardigo.nl); window.YG_ROUTE_TOON() = naar het paneel gaan.
+// deellinks (https://yardigo.nl); window.YG_ROUTE_TOON() = naar het paneel gaan;
+// window.YG_ROUTE_POORT() = false als toevoegen nu niet mag (de app: eerst inloggen).
 // Stops met exact: true (de app kent soms het echte adres) gaan nooit precies
 // mee in een deellink: dan alleen het gebied.
 // ═══════════════════════════════════════════════════════════════════════
@@ -77,9 +78,12 @@
   function plek(id) { for (var i = 0; i < stops.length; i++) if (stops[i].id === id) return i; return -1; }
   function heeft(id) { return plek(id) > -1; }
 
+  // Mag er iets bij? Weghalen mag altijd.
+  function magToevoegen() { return typeof window.YG_ROUTE_POORT !== 'function' || window.YG_ROUTE_POORT() !== false; }
   function wissel(stop) {
-    terug = null;
     var i = plek(stop.id);
+    if (i < 0 && !magToevoegen()) return;
+    terug = null;
     if (i > -1) stops.splice(i, 1); else stops.push(stop);
     bewaar();
     meld(t(i > -1 ? 'rt.removed' : 'rt.added', { t: stop.titel }));
@@ -432,7 +436,7 @@
   // Toevoegen op de plek waar hij het minst omrijdt: na de stop waar hij het dichtst bij ligt.
   function voegSuggestieToe(id) {
     var s = suggesties().filter(function (x) { return x.stop.id === id; })[0];
-    if (!s) return;
+    if (!s || !magToevoegen()) return;
     var plekInStops = Math.max(0, s.na - (actief.start ? 1 : 0));
     stops.splice(Math.min(plekInStops, stops.length), 0, s.stop);
     bewaar();

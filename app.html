@@ -91,6 +91,12 @@
   window.YG_ROUTE_HOUDER = '#yg-route-houder';
   window.YG_ROUTE_BASIS = 'https://yardigo.nl';
   window.YG_ROUTE_TOON = function () { if (typeof toonRouteTab === 'function') toonRouteTab(); };
+  // Een route plannen kan alleen met een account (verkopen, winkels en suggesties).
+  window.YG_ROUTE_POORT = function () {
+    if (typeof isGuest === 'undefined' || !isGuest) return true;
+    if (typeof guestGate === 'function') guestGate('route');
+    return false;
+  };
 </script>
 <script src="site/site.js" defer></script>
 <script src="site/kaart.js" defer></script>
@@ -11484,7 +11490,9 @@ function saleNaarStop(s) {
 }
 function routeWissel(s) {
   if (!window.YGRoute || !window.YGKaart) { toast(i18n('toast.route_loading', 'Routeplanner laadt nog, probeer het zo opnieuw')); return null; }
-  var aan = YGRoute.wissel(saleNaarStop(s));
+  var stop = saleNaarStop(s), was = YGRoute.heeft(stop.id);
+  var aan = YGRoute.wissel(stop);
+  if (aan === was) return was;   // niets veranderd (bijv. eerst inloggen)
   toast(aan ? i18n('toast.added_to_route', '📍 Toegevoegd aan route!') : i18n('toast.removed_from_route', '🗑️ Verwijderd uit route'));
   return aan;
 }
