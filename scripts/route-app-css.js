@@ -6,8 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const bron = fs.readFileSync(path.join(__dirname, '..', 'site', 'site.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-// Basisklassen plus hun varianten (--primary, __greep); niet yg-btns of yg-stops.
-const KLASSEN = /\.yg-(btn|field|label|seg|error|meta|sr|stop|routepaneel|routelijst|routeknop|rt|mijnroutes|sleept)([_-][a-z0-9_-]*)?(?![a-z0-9])/;
+// Basisklassen plus hun varianten (ook de winkelpin en -badge voor de kaart van de app) (--primary, __greep); niet yg-btns of yg-stops.
+const KLASSEN = /\.yg-(btns?|field|label|seg|error|meta|sr|stop|routepaneel|routelijst|routeknop|rt|mijnroutes|sleept|shop|pin|badge)([_-][a-z0-9_-]*)?(?![a-z0-9])/;
 const NIET = /\.yg-(mappage|header|band|popup|pop|det|item|met-sponsors|hero|keuze)|\.yg-route-actief|\.yg-route-open|\.yg-routebalk/;
 
 // Platte lijst van blokken: { kop, inhoud } of { kop, blokken } voor @media.

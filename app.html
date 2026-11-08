@@ -1284,6 +1284,19 @@ body.dark .ctag.tag-more,body.dark .pop-tag.tag-more{background:#2A2418 !importa
 #view-route .yg-routepaneel--ingebed .yg-routepaneel__kop h2{font-size:19px;font-weight:800;}
 #view-route .yg-btn{font-family:var(--yg-font);}
 @media (max-width:599px){#view-route .yg-routepaneel--ingebed{max-height:none;padding-top:4px;}}
+/* Kringloopwinkels op de kaart */
+.yg-winkelknop{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 12px;border:1.5px solid var(--border);border-radius:999px;background:white;color:var(--text);font:600 12px/1.2 'Poppins',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;}
+.yg-winkelknop[aria-pressed="true"]{border-color:#8A5A2B;background:#F1E6D3;color:#6B4520;}
+.yg-winkelknop__mark{width:11px;height:11px;border-radius:3px;background:#8A5A2B;border:1.5px solid white;box-shadow:0 0 0 1px #8A5A2B;}
+body.dark .yg-winkelknop{background:var(--bg2);}
+.yg-winkelgroep{display:grid;place-items:center;}
+.yg-winkelgroep span{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:#8A5A2B;color:white;font:700 12px/1 'Poppins',sans-serif;border:2px solid white;box-shadow:0 1px 5px rgba(0,0,0,.3);}
+.yg-winkelpopup .leaflet-popup-content{margin:14px 16px !important;width:228px !important;max-width:calc(100vw - 72px) !important;font-family:'Poppins',sans-serif;--yg-font:'Poppins',sans-serif;}
+.yg-winkelpopup h3{margin:8px 0 4px;font-size:15px;font-weight:700;}
+.yg-winkelpopup p{margin:0;font-size:13px;line-height:1.45;}
+.yg-winkelpopup .yg-btns{display:flex;gap:8px;margin-top:10px;}
+.yg-winkelpopup .yg-btn{flex:1;min-height:40px;padding:8px 10px;font-size:13px;}
+.yg-winkelpopup a.yg-btn--outline{color:var(--yg-forest);}
 body.dark #view-route{--yg-paper:var(--bg2);--yg-ink:var(--text);--yg-muted:var(--muted);--yg-line:var(--border);--yg-line-strong:var(--border);--yg-tint:var(--bg);--yg-land:var(--bg);}
 .route-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
 .rstat{background:white;border-radius:10px;padding:12px 8px;text-align:center;border:1.5px solid var(--border);}
@@ -10117,6 +10130,9 @@ function initMap() {
     // Tegelbron staat centraal in YG_TILES (zie YG_CARTO_KEY bovenin).
     ygTileLayer().addTo(map);
     renderMarkers();
+    // Dagplanner: genummerde stops en de route op de kaart; kringloopwinkels aan/uit.
+    if (window.YGRoute) YGRoute.opKaart(map);
+    winkelKnop();
 
 
     // Foto swipe in kaartpopup
@@ -10130,6 +10146,66 @@ function initMap() {
     console.log('Leaflet init failed, using fallback:', e);
     activateFallbackMap();
   }
+}
+
+// ── Kringloopwinkels (OpenStreetMap, via YGKaart.winkels zoals yardigo.nl/kaart) ──
+// Standaard uit; aan = bruine vierkante pins, gegroepeerd tot zoom 13. De popup
+// komt van de website (winkelPopupHtml) met de knop '+ Route' voor de dagplanner.
+var _winkelLaag = null, _winkelsAan = false;
+function winkelKnop() {
+  if (!map || !window.YGKaart || !L.Control) return;
+  var C = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+      var b = L.DomUtil.create('button', 'yg-winkelknop');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', 'false');
+      b.innerHTML = '<span class="yg-winkelknop__mark" aria-hidden="true"></span><span class="yg-winkelknop__tekst"></span>';
+      L.DomEvent.disableClickPropagation(b);
+      L.DomEvent.on(b, 'click', function() { winkelsAan(!_winkelsAan); });
+      return b;
+    }
+  });
+  new C().addTo(map);
+  winkelKnopTekst();
+  var bewaard = false;
+  try { bewaard = localStorage.getItem('yg-app-winkels') === '1'; } catch (e) {}
+  if (bewaard) winkelsAan(true);
+}
+function winkelKnopTekst(n) {
+  var b = document.querySelector('.yg-winkelknop');
+  if (!b) return;
+  b.setAttribute('aria-pressed', String(_winkelsAan));
+  b.querySelector('.yg-winkelknop__tekst').textContent = _winkelsAan
+    ? YG.t('nav.thrift') + (n ? ' (' + n + ')' : '')
+    : YG.t('map.shopsOn');
+}
+function winkelsAan(aan) {
+  _winkelsAan = aan;
+  try { localStorage.setItem('yg-app-winkels', aan ? '1' : '0'); } catch (e) {}
+  if (_winkelLaag) { map.removeLayer(_winkelLaag); _winkelLaag = null; }
+  winkelKnopTekst();
+  if (!aan) return;
+  YGKaart.winkels().then(function(lijst) {
+    if (!_winkelsAan || _winkelLaag) return;
+    _winkelLaag = L.markerClusterGroup ? L.markerClusterGroup({
+      disableClusteringAtZoom: 13, maxClusterRadius: 50, chunkedLoading: true, showCoverageOnHover: false,
+      iconCreateFunction: function(c) {
+        return L.divIcon({ className: 'yg-winkelgroep', html: '<span>' + c.getChildCount() + '</span>', iconSize: [34, 34] });
+      }
+    }) : L.layerGroup();
+    lijst.forEach(function(w) {
+      L.marker([w.lat, w.lng], {
+        icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-shop"></span>', iconSize: [0, 0] }),
+        title: w.naam || '', zIndexOffset: -100
+      }).bindPopup(function() { return YGKaart.winkelPopupHtml(w); }, { className: 'yg-winkelpopup', minWidth: 230, maxWidth: 260, autoPanPaddingTopLeft: [16, 64], autoPanPaddingBottomRight: [16, 16] }).addTo(_winkelLaag);
+    });
+    _winkelLaag.addTo(map);
+    winkelKnopTekst(lijst.length);
+  }).catch(function() {
+    _winkelsAan = false; winkelKnopTekst();
+    toast(i18n('toast.shops_failed', 'Kringloopwinkels laden lukt nu niet'));
+  });
 }
 
 // Pin per soort: kleur = soort (markt groen, rommelroute oranje, oprit amber),

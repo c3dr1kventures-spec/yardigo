@@ -14,10 +14,18 @@
 .yg-btn--ghost { background: transparent; color: var(--yg-forest-dark); padding-left: 4px; padding-right: 4px; }
 .yg-btn--block { display: flex; width: 100%; }
 .yg-btn svg { width: 16px; height: 16px; flex: none; }
+.yg-shop { text-decoration: none; position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 3px; background: var(--yg-wood); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .35); }
+.yg-shop--label { width: auto; height: auto; margin: 0; transform: translate(-50%, calc(-100% - 6px)); padding: 4px 9px; border: 0; border-radius: 6px; color: #FFFFFF; font: 600 13px/1.2 var(--yg-font); white-space: nowrap; }
 .yg-stop { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--yg-forest); color: #FFFFFF; font-weight: 700; font-size: 14px; border: 3px solid #FFFFFF; box-shadow: 0 3px 10px rgba(30, 41, 34, .3); }
 .yg-stop--oprit { background: var(--yg-amber); color: var(--yg-ink); }
 .yg-stop--route { background: var(--yg-terra); color: var(--yg-ink); }
 .yg-stop--winkel { background: var(--yg-wood); border-radius: 9px; }
+.yg-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+.yg-badge--open { background: #E4EFE3; color: var(--yg-forest-dark); }
+.yg-badge--soon { background: var(--yg-wood-tint); color: #5C4420; }
+.yg-badge--shop { background: var(--yg-wood); color: #FFFFFF; }
+.yg-pin { background: none; border: 0; }
+.yg-pin:focus-visible .yg-tag { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 .yg-field { display: grid; gap: 4px; }
 .yg-field label, .yg-field .yg-label { font-size: 14px; font-weight: 600; }
 .yg-seg { display: flex; gap: 6px; }
@@ -29,6 +37,9 @@
 .yg-btn[aria-busy="true"] { opacity: .75; cursor: progress; }
 .yg-btn--onband { background: transparent; color: #FFFFFF; border-color: #CFE0D3; }
 .yg-btn--onband:hover { background: rgba(255, 255, 255, .1); color: #FFFFFF; }
+.yg-badge--oprit { background: var(--yg-amber); color: var(--yg-ink); }
+.yg-badge--route { background: var(--yg-terra); color: var(--yg-ink); }
+.yg-badge--markt { background: var(--yg-forest); color: #FFFFFF; }
 .yg-routepaneel { position: fixed; z-index: 1100; right: 0; top: 0; bottom: 0; width: min(400px, 100%); overflow-y: auto; overscroll-behavior: contain; padding: 18px 18px max(24px, env(safe-area-inset-bottom, 0px)); background: var(--yg-paper); box-shadow: -10px 0 40px rgba(30, 41, 34, .2); display: flex; flex-direction: column; gap: 14px; }
 @media (max-width: 599px) {
   .yg-routepaneel { top: auto; max-height: 85vh; border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(30, 41, 34, .25); }
@@ -129,3 +140,4 @@
   .yg-routelijst__btns { grid-template-columns: repeat(2, 40px); }
   .yg-routelijst__btns button { width: 40px; height: 40px; }
 }
+.yg-shop { cursor: pointer; }
