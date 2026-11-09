@@ -363,7 +363,8 @@ const SKIP_CITIES = new Set(['onbekend','belgie','belgië','vlaanderen','walloni
 
 // Groepeer listings per (landing-path, plaats). Alleen plaatsen die echt
 // bestaan en in NL/BE/DE liggen. Een groep zonder komende verkopen blijft
-// bestaan (geen 404-churn) maar krijgt noindex en gaat niet in de sitemap.
+// bestaan en geïndexeerd (met de verkopen van het afgelopen jaar), zodat de
+// pagina niet steeds uit Google verdwijnt en terugkomt als verkopen aflopen.
 function buildLandingGroupsByCategory(listingsWithCat) {
   const today = dagNL();
   const jaarGeleden = plusDagen(today, -365);
@@ -395,7 +396,7 @@ function buildLandingGroupsByCategory(listingsWithCat) {
     g.recent = g.sales.filter(s => s.date < today && s.date >= jaarGeleden).sort((a, b) => b.date.localeCompare(a.date));
     // Niets komend en niets in het afgelopen jaar: geen pagina.
     if (!g.upcoming.length && !g.recent.length) { groups.delete(key); continue; }
-    g.indexeren = g.upcoming.length > 0;
+    g.indexeren = true;
     // Land van de groep = meest voorkomende land van de verkopen.
     const tel = {};
     for (const s of g.sales) tel[s.land] = (tel[s.land] || 0) + 1;
@@ -483,7 +484,7 @@ function renderLandingHtml(template, group, allGroups) {
     ? `<section><h2>Recent geweest in ${esc(cityHuman)}</h2>${saleCardsHtml(group.recent.slice(0, 10), cityHuman, { verleden: true })}</section>`
     : '';
 
-  // Nabije plaatsen met hetzelfde type; alleen pagina's die geïndexeerd worden.
+  // Nabije plaatsen met hetzelfde type.
   let nearbyHtml = '';
   if (group.center) {
     const nearby = [];
@@ -655,7 +656,8 @@ function renderProvincieHtml(template, t, slug, listings, groups) {
 
   return fillLanding(template, {
     titleTag: `${t.label} ${naam}: komende ${t.labelPlural}`,
-    indexeren: komend.length > 0,
+    // Altijd indexeren, net als de plaatspagina's: de URL blijft, de inhoud wisselt.
+    indexeren: true,
     ogLocale: ogLocaleFor(land),
     breadcrumbHtml: `<a href="/">Home</a> › <a href="/${t.path}/">${esc(t.label)}</a> › ${esc(naam)}`,
     statsHtml: statsHtml([
@@ -1082,13 +1084,11 @@ async function main() {
 
   // Provinciepagina's: alleen provincies die ooit een verkoop van deze soort hadden.
   const provPaginas = [];
-  const vandaag = dagNL();
   for (const t of types) {
     const slugs = new Set(listings.filter(l => hoortBij(t, l) && PROVINCIES[l.provincie]).map(l => l.provincie));
-    const metKomend = new Set(provincieTelling(t, listings, vandaag).map(([slug]) => slug));
     for (const slug of slugs) {
       schrijfPagina(`${t.path}/provincie/${slug}`, renderProvincieHtml(landingTemplate, t, slug, listings, landingGroups));
-      provPaginas.push({ t, slug, indexeren: metKomend.has(slug) });
+      provPaginas.push({ t, slug, indexeren: true });
     }
   }
   console.log(`  rendered ${provPaginas.length} provinciepagina's`);
