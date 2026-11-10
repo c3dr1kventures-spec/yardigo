@@ -16,7 +16,8 @@
     { "source": "/verkoop", "destination": "/app" },
     { "source": "/aanmelden", "destination": "/app" },
     { "source": "/v/:id", "destination": "/api/share/:id" },
-    { "source": "/s/:code", "destination": "/api/s/:code" }
+    { "source": "/s/:code", "destination": "/api/s/:code" },
+    { "source": "/route/:code", "destination": "/route.html" }
   ],
   "headers": [
     {
@@ -38,6 +39,12 @@
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" },
         { "key": "Pragma", "value": "no-cache" },
         { "key": "Expires", "value": "0" }
+      ]
+    },
+    {
+      "source": "/route/:code",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex" }
       ]
     },
     {
