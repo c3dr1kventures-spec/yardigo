@@ -105,15 +105,30 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
   .yg-header__end .yg-btn { padding: 10px 12px; font-size: 14px; }
 }
 /* Smalle desktop: 'Voor organisatoren' staat ook in de band en de voet. */
-@media (max-width: 1199px) {
+@media (max-width: 1359px) {
   .yg-header__end > .yg-nav { display: none; }
   .yg-header__bar > .yg-nav { gap: 16px; font-size: 14.5px; }
   .yg-logo { flex: none; }
 }
+@media (max-width: 1119px) {
+  .yg-header__bar { gap: 16px; }
+  .yg-header__bar > .yg-nav { gap: 12px; font-size: 14px; }
+  .yg-header__end .yg-btn { padding: 10px 14px; }
+}
+.yg-nav a { white-space: nowrap; }
+/* Met de Routeplanner erbij past het hoofdmenu pas vanaf ~1080px: daaronder het menuknopje. */
+@media (min-width: 960px) and (max-width: 1079px) {
+  .yg-header__bar > .yg-nav { display: none; }
+  .yg-menu-btn { display: grid; }
+}
+/* Breed scherm: de kopbalk mag breder dan de inhoud, zodat 'Voor organisatoren' erbij past. */
+@media (min-width: 1360px) {
+  .yg-header > .yg-header__bar { max-width: 1400px; }
+}
 .yg-menu { display: none; border-top: 1px solid var(--yg-line); padding-block: 8px 16px; }
 .yg-menu.is-open { display: block; }
 .yg-menu a { display: block; padding: 12px 0; font-size: 17px; font-weight: 500; color: var(--yg-ink); text-decoration: none; border-bottom: 1px solid var(--yg-line); }
-@media (min-width: 960px) { .yg-menu, .yg-menu.is-open { display: none; } }
+@media (min-width: 1080px) { .yg-menu, .yg-menu.is-open { display: none; } }
 
 /* ── Knoppen ─────────────────────────────────────────────────────────── */
 .yg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 11px 16px; border-radius: var(--yg-radius-s); border: 1.5px solid transparent; font-weight: 600; font-size: 15px; line-height: 1.2; text-decoration: none; cursor: pointer; white-space: nowrap; }

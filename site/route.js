@@ -74,9 +74,11 @@
   }
   actief = routes.filter(function (r) { return r.id === lees(ACTIEF); })[0] || routes[0];
   var stops = actief.stops;
+  geslimd = !!actief.slim;   // de volgorde is door de routedienst bepaald (blijft na herladen)
 
   function bewaar() {
     actief.stops = stops;
+    if (geslimd) actief.slim = true; else delete actief.slim;
     actief.bijgewerkt = Date.now();
     opslaan();
     schrijf(ACTIEF, actief.id);
@@ -86,7 +88,7 @@
     if (pagina() && stops.some(function (s) { return s.soort !== 'winkel' && !beelden[s.id]; })) controleer();
   }
   function meldWijziging() { try { document.dispatchEvent(new CustomEvent('yg-route-wijzig')); } catch (e) { /* oude browser */ } }
-  function kies(r) { actief = r; stops = r.stops; controle = {}; bewaar(); controleer(); }
+  function kies(r) { actief = r; stops = r.stops; geslimd = !!r.slim; controle = {}; bewaar(); controleer(); }
 
   function plek(id) { for (var i = 0; i < stops.length; i++) if (stops[i].id === id) return i; return -1; }
   function heeft(id) { return plek(id) > -1; }
@@ -525,20 +527,35 @@
   // Alleen wat de site toch al toont: titel, soort, plek (bij garagesales het
   // gebied) en plaats. Nooit het startpunt. Geen account nodig, niets op de server.
   function deelLink() {
+    // Vanaf nov 2026 een object met naam, datum en vervoer; per stop ook de dagen,
+    // tijden en (winkel) openingstijden. Oude links (alleen de rij) blijven werken.
     var rij = stops.map(function (s) {
       var n = geheim(s) ? 2 : 5;
-      return [s.id, s.titel, s.soort, +s.lat.toFixed(n), +s.lng.toFixed(n), s.plaats || '', s.sub || '', s.benadering || geheim(s) ? 1 : 0];
+      var x = [s.id, s.titel, s.soort, +s.lat.toFixed(n), +s.lng.toFixed(n), s.plaats || '', s.sub || '', s.benadering || geheim(s) ? 1 : 0,
+        s.van || 0, s.tot || 0, s.begin ? String(s.begin).slice(0, 5) : 0, s.eind ? String(s.eind).slice(0, 5) : 0, s.tijden || 0];
+      while (x.length > 8 && !x[x.length - 1]) x.pop();
+      return x;
     });
-    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(rij)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    var pak = { s: rij };
+    if (actief.naam) pak.n = actief.naam.slice(0, 80);
+    if (actief.datum) pak.d = actief.datum;
+    if (actief.vertrek && actief.vertrek !== '09:00') pak.t = actief.vertrek;
+    if (actief.vervoer && actief.vervoer !== 'auto') pak.v = actief.vervoer;
+    var b64 = btoa(unescape(encodeURIComponent(JSON.stringify(pak)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return BASIS + '/route?stops=' + b64;
   }
   // Een echt adres van een garagesale of rommelroute (alleen in de app bekend).
   function geheim(s) { return !!s.exact && (s.soort === 'oprit' || s.soort === 'route'); }
   function heeftGeheim(r) { return r.stops.some(geheim); }
-  function laadGedeeld(rij, naam) {
+  function laadGedeeld(rij, naam, extra) {
     var r = stops.length ? legeRoute(naam || t('rt.sharedName')) : actief;
     if (r !== actief) routes.unshift(r); else if (naam) r.naam = naam;
     r.stops = rij;
+    if (extra) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(extra.datum || '')) r.datum = extra.datum;
+      if (/^\d{2}:\d{2}$/.test(extra.vertrek || '')) r.vertrek = extra.vertrek;
+      if (['auto', 'fiets', 'lopen'].indexOf(extra.vervoer) > -1) r.vervoer = extra.vervoer;
+    }
     kies(r);
     meld(t('rt.loaded', { n: rij.length }));
     open(true);
@@ -552,24 +569,30 @@
       api('rpc/get_gedeelde_route', { method: 'POST', body: JSON.stringify({ p_code: code }) }, false).then(function (rij) {
         var x = rij && rij[0];
         if (!x || !Array.isArray(x.stops)) { meld(t('rt.shareGone')); return; }
-        laadGedeeld(x.stops.filter(function (s) { return s && SOORTEN.indexOf(s.soort) > -1 && isFinite(s.lat) && isFinite(s.lng); }).slice(0, 50), x.naam);
+        laadGedeeld(x.stops.filter(function (s) { return s && SOORTEN.indexOf(s.soort) > -1 && isFinite(s.lat) && isFinite(s.lng); }).slice(0, 50), x.naam, { datum: x.datum, vervoer: x.vervoer });
       }).catch(function () { meld(t('rt.shareGone')); });
       return;
     }
     var ruw = new URLSearchParams(location.search).get('stops');
     if (!ruw) return;
-    var rij;
-    try { rij = JSON.parse(decodeURIComponent(escape(atob(ruw.replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return; }
-    if (!Array.isArray(rij)) return;
-    var tekst = function (x) { return typeof x === 'string' ? x.slice(0, 120) : ''; };
+    var pak;
+    try { pak = JSON.parse(decodeURIComponent(escape(atob(ruw.replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return; }
+    var rij = Array.isArray(pak) ? pak : pak && Array.isArray(pak.s) ? pak.s : null;
+    if (!rij) return;
+    var tekst = function (x, n) { return typeof x === 'string' ? x.slice(0, n || 120) : ''; };
+    var dag = function (x) { return /^\d{4}-\d{2}-\d{2}$/.test(x || '') ? x : null; };
+    var uur = function (x) { return /^\d{2}:\d{2}$/.test(x || '') ? x : null; };
     var nieuw = rij.slice(0, 25).filter(function (x) {
       return Array.isArray(x) && typeof x[0] === 'string' && SOORTEN.indexOf(x[2]) > -1 && isFinite(x[3]) && isFinite(x[4]) && Math.abs(x[3]) <= 90 && Math.abs(x[4]) <= 180;
     }).map(function (x) {
-      return { id: tekst(x[0]), titel: tekst(x[1]), soort: x[2], lat: +x[3], lng: +x[4], plaats: tekst(x[5]), sub: tekst(x[6]), benadering: !!x[7] };
+      var s = { id: tekst(x[0]), titel: tekst(x[1]), soort: x[2], lat: +x[3], lng: +x[4], plaats: tekst(x[5]), sub: tekst(x[6]), benadering: !!x[7] };
+      if (s.soort === 'winkel') s.tijden = tekst(x[12], 300) || null;
+      else { s.van = dag(x[8]); s.tot = dag(x[9]) || s.van; s.begin = uur(x[10]); s.eind = uur(x[11]); }
+      return s;
     });
     try { var u = new URL(location.href); u.searchParams.delete('stops'); history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) { /* oude browser: link blijft staan */ }
     // Een gedeelde route wordt een eigen route in Mijn routes; je huidige blijft bewaard.
-    if (nieuw.length) laadGedeeld(nieuw);
+    if (nieuw.length) laadGedeeld(nieuw, pak.n ? tekst(pak.n, 80) : '', Array.isArray(pak) ? null : { datum: pak.d, vertrek: pak.t, vervoer: pak.v });
   }
   function deel(b) {
     // Met een echt adres erin: nooit via de server delen (die link toont de stops zoals bewaard).

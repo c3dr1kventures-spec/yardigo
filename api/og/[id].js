@@ -6,10 +6,16 @@
 // Nooit een exact adres of coördinaten — die zitten niet eens in de
 // select-query, ook niet als de listing ze wel heeft.
 //
-// Vercel transpileert `.jsx` in de api/ folder automatisch; geen extra
-// build-stap in package.json nodig.
+// Gewoon .js met h() i.p.v. JSX: Vercel bouwt .jsx in api/ niet mee (tot
+// 10 nov 2026 gaf dit endpoint daardoor een 404 en hadden deelberichten geen plaatje).
 
 import { ImageResponse } from '@vercel/og';
+
+// Satori leest elementen als { type, props }: dit is wat JSX ervan zou maken.
+function h(type, props, ...kids) {
+  const children = kids.flat().filter((k) => k !== null && k !== undefined && k !== false && k !== '');
+  return { type, props: { ...(props || {}), children: children.length === 1 ? children[0] : children } };
+}
 
 export const config = { runtime: 'edge' };
 
@@ -113,101 +119,32 @@ export default async function handler(req) {
   const city   = isFallback ? '' : (ev.city || '');
 
   return new ImageResponse(
-    (
-      <div style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #FEF6EE 0%, #FBE7D3 100%)',
-        padding: '52px 60px',
-        fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-        color: '#2C2416',
-      }}>
-        {/* Header: logo + naam */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 14,
-            background: '#E07B39',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontSize: 34, fontWeight: 900,
-            boxShadow: '0 4px 14px rgba(224,123,57,.30)',
-          }}>Y</div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1 }}>YardiGo</div>
-            <div style={{ fontSize: 18, color: '#7A6E62', marginTop: 4 }}>Find · Sell · Go</div>
-          </div>
-        </div>
-
-        {/* Body */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          {label && (
-            <div style={{
-              padding: '10px 22px',
-              borderRadius: 999,
-              background: '#E07B39',
-              color: 'white',
-              fontSize: 22,
-              fontWeight: 700,
-              alignSelf: 'flex-start',
-              letterSpacing: 0.3,
-            }}>{label}</div>
-          )}
-          <div style={{
-            fontSize: 68,
-            fontWeight: 900,
-            lineHeight: 1.08,
-            maxWidth: 1080,
-            letterSpacing: -0.5,
-          }}>{title}</div>
-          {(date || city) && (
-            <div style={{
-              display: 'flex',
-              gap: 30,
-              alignItems: 'center',
-              fontSize: 32,
-              color: '#4A3E32',
-              marginTop: 6,
-              flexWrap: 'wrap',
-            }}>
-              {date && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>📅</span>
-                  <span>{date}{tijden ? ` · ${tijden}` : ''}</span>
-                </div>
-              )}
-              {city && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>📍</span>
-                  <span>{city}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-end',
-        }}>
-          <div style={{ fontSize: 22, color: '#7A6E62' }}>
-            {isFallback ? 'Bekijk verkopen op yardigo.nl' : 'Bekijk op de kaart via yardigo.nl'}
-          </div>
-          <div style={{
-            fontSize: 18,
-            color: '#7A6E62',
-            fontWeight: 600,
-          }}>yardigo.nl</div>
-        </div>
-      </div>
-    ),
-    {
-      width: 1200,
-      height: 630,
-      headers: CACHE_HEADERS,
-    }
+    h('div', { style: {
+      width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+      background: 'linear-gradient(135deg, #FEF6EE 0%, #FBE7D3 100%)', padding: '52px 60px', color: '#2C2416',
+    } },
+      // Header: logo + naam
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 14 } },
+        h('div', { style: {
+          width: 64, height: 64, borderRadius: 14, background: '#E07B39', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', fontSize: 34, fontWeight: 900, boxShadow: '0 4px 14px rgba(224,123,57,.30)',
+        } }, 'Y'),
+        h('div', { style: { display: 'flex', flexDirection: 'column' } },
+          h('div', { style: { fontSize: 34, fontWeight: 900, lineHeight: 1 } }, 'YardiGo'),
+          h('div', { style: { fontSize: 18, color: '#7A6E62', marginTop: 4 } }, 'Find · Sell · Go'))),
+      // Body
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 22 } },
+        label ? h('div', { style: {
+          padding: '10px 22px', borderRadius: 999, background: '#E07B39', color: 'white', fontSize: 22, fontWeight: 700, alignSelf: 'flex-start', letterSpacing: 0.3,
+        } }, label) : null,
+        h('div', { style: { display: 'flex', fontSize: 68, fontWeight: 900, lineHeight: 1.08, maxWidth: 1080, letterSpacing: -0.5 } }, title),
+        (date || city) ? h('div', { style: { display: 'flex', gap: 30, alignItems: 'center', fontSize: 32, color: '#4A3E32', marginTop: 6, flexWrap: 'wrap' } },
+          date ? h('div', { style: { display: 'flex' } }, date + (tijden ? ` · ${tijden}` : '')) : null,
+          city ? h('div', { style: { display: 'flex' } }, city) : null) : null),
+      // Footer
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' } },
+        h('div', { style: { fontSize: 22, color: '#7A6E62' } }, isFallback ? 'Bekijk verkopen op yardigo.nl' : 'Bekijk op de kaart via yardigo.nl'),
+        h('div', { style: { fontSize: 18, color: '#7A6E62', fontWeight: 600 } }, 'yardigo.nl'))),
+    { width: 1200, height: 630, headers: CACHE_HEADERS }
   );
 }
