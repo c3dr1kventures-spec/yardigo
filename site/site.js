@@ -325,6 +325,60 @@
     'shop.site': 'Website', 'shop.hours': 'Geöffnet', 'shop.osm': 'Aus OpenStreetMap'
   });
 
+  // Routeplanner (/route, site/route.js + site/routepagina.js).
+  Object.assign(T.nl, {
+    'rp.skip': 'Naar je route', 'nav.planner': 'Routeplanner', 'rp.optimize': 'Optimaliseer route', 'rp.dragHint': 'Sleep om de volgorde aan te passen',
+    'rp.emptyTitle': 'Plan je snuffeldag', 'rp.emptyTxt': 'Zet rommelmarkten, garagesales en kringloopwinkels in je route. YardiGo zoekt de slimste volgorde en jij rijdt.', 'rp.toMap': 'Kies stops op de kaart',
+    'rp.first': 'Eerste stop', 'rp.overview': 'Route-overzicht', 'rp.total': 'Totaal', 'rp.travel': 'Reistijd', 'rp.stops': 'Stops',
+    'rp.tipSmartT': 'Slimme route!', 'rp.tipSmart': 'Deze volgorde past in de openingstijden, met zo min mogelijk reistijd.', 'rp.tipSmartDone': 'Past in de openingstijden. Je bent klaar rond {t}.',
+    'rp.tipTryT': 'Tip van Cedrik', 'rp.tipTry': 'Laat YardiGo de slimste volgorde kiezen, met de openingstijden erbij.',
+    'rp.tipDoneT': 'Klaar voor vertrek', 'rp.tipDone': 'Je bent klaar rond {t}.', 'rp.tipAddT': 'Nog een stop erbij?', 'rp.tipAdd': 'Kijk onder "Ook langs je route" of zoek verder op de kaart.',
+    'rp.share': 'Delen', 'rp.options': 'Route-opties', 'rp.start': 'Start navigatie', 'rp.startPart': 'Start navigatie (deel 1)', 'rp.inGoogle': 'in Google Maps', 'rp.openIn': 'Open in een kaart-app',
+    'rp.shareTitle': 'Deel je route', 'rp.shareIntro': 'Wie de link opent, ziet je stops op de kaart en kan de route bewaren of starten.', 'rp.mail': 'E-mail', 'rp.more': 'Meer apps', 'rp.link': 'Link naar je route', 'rp.copy': 'Kopieer',
+    'rp.sharePrivacy': 'Je startadres gaat nooit mee. Garagesales staan als gebied in de link.', 'rp.shareText': 'Mijn snuffelroute op YardiGo: {n} stops op {d}.',
+    'rp.alsoOpen': 'Ook open langs je route', 'rp.stopN': 'Stop {n}', 'rp.along': 'Langs je route', 'rp.viewSale': 'Bekijk de verkoop', 'rp.nowOpen': 'Nu open', 'rp.pick': 'Kies een stop in je route of een plusje op de kaart.',
+    'rp.fit': 'Hele route tonen', 'rp.addrApprox': 'Gebied, het huisnummer zie je in de app', 'rp.loading': 'Laden…', 'rp.backMap': 'Terug naar de kaart', 'rp.bigView': 'Open de routeplanner'
+  });
+  Object.assign(T.en, {
+    'rp.skip': 'Skip to your route', 'nav.planner': 'Route planner', 'rp.optimize': 'Optimise route', 'rp.dragHint': 'Drag to change the order',
+    'rp.emptyTitle': 'Plan your bargain-hunting day', 'rp.emptyTxt': 'Put flea markets, garage sales and thrift stores in your route. YardiGo finds the smartest order, you drive.', 'rp.toMap': 'Pick stops on the map',
+    'rp.first': 'First stop', 'rp.overview': 'Route overview', 'rp.total': 'Total', 'rp.travel': 'Travel time', 'rp.stops': 'Stops',
+    'rp.tipSmartT': 'Smart route!', 'rp.tipSmart': 'This order fits the opening hours with as little travel as possible.', 'rp.tipSmartDone': 'Fits the opening hours. You are done around {t}.',
+    'rp.tipTryT': 'Tip from Cedrik', 'rp.tipTry': 'Let YardiGo pick the smartest order, opening hours included.',
+    'rp.tipDoneT': 'Ready to go', 'rp.tipDone': 'You are done around {t}.', 'rp.tipAddT': 'One more stop?', 'rp.tipAdd': 'Look under "Also along your route" or search the map.',
+    'rp.share': 'Share', 'rp.options': 'Route options', 'rp.start': 'Start navigation', 'rp.startPart': 'Start navigation (part 1)', 'rp.inGoogle': 'in Google Maps', 'rp.openIn': 'Open in a maps app',
+    'rp.shareTitle': 'Share your route', 'rp.shareIntro': 'Whoever opens the link sees your stops on the map and can save or start the route.', 'rp.mail': 'Email', 'rp.more': 'More apps', 'rp.link': 'Link to your route', 'rp.copy': 'Copy',
+    'rp.sharePrivacy': 'Your start address is never included. Garage sales are shown as an area.', 'rp.shareText': 'My bargain-hunting route on YardiGo: {n} stops on {d}.',
+    'rp.alsoOpen': 'Also open along your route', 'rp.stopN': 'Stop {n}', 'rp.along': 'Along your route', 'rp.viewSale': 'View the sale', 'rp.nowOpen': 'Open now', 'rp.pick': 'Pick a stop in your route or a plus on the map.',
+    'rp.fit': 'Show whole route', 'rp.addrApprox': 'Area, the house number is in the app', 'rp.loading': 'Loading…', 'rp.backMap': 'Back to the map', 'rp.bigView': 'Open the route planner'
+  });
+  Object.assign(T.fr, {
+    'rp.skip': 'Aller à l’itinéraire', 'nav.planner': 'Planificateur', 'rp.optimize': 'Optimiser l’itinéraire', 'rp.dragHint': 'Faites glisser pour changer l’ordre',
+    'rp.emptyTitle': 'Planifiez votre journée chine', 'rp.emptyTxt': 'Ajoutez brocantes, ventes de garage et ressourceries à votre itinéraire. YardiGo trouve l’ordre le plus malin, vous conduisez.', 'rp.toMap': 'Choisir des arrêts sur la carte',
+    'rp.first': 'Premier arrêt', 'rp.overview': 'Aperçu de l’itinéraire', 'rp.total': 'Total', 'rp.travel': 'Trajet', 'rp.stops': 'Arrêts',
+    'rp.tipSmartT': 'Itinéraire malin !', 'rp.tipSmart': 'Cet ordre respecte les horaires, avec le moins de trajet possible.', 'rp.tipSmartDone': 'Respecte les horaires. Vous avez fini vers {t}.',
+    'rp.tipTryT': 'Le conseil de Cedrik', 'rp.tipTry': 'Laissez YardiGo choisir l’ordre le plus malin, horaires compris.',
+    'rp.tipDoneT': 'Prêt à partir', 'rp.tipDone': 'Vous avez fini vers {t}.', 'rp.tipAddT': 'Encore un arrêt ?', 'rp.tipAdd': 'Regardez « Aussi sur votre route » ou cherchez sur la carte.',
+    'rp.share': 'Partager', 'rp.options': 'Options', 'rp.start': 'Lancer la navigation', 'rp.startPart': 'Lancer la navigation (partie 1)', 'rp.inGoogle': 'dans Google Maps', 'rp.openIn': 'Ouvrir dans une appli de cartes',
+    'rp.shareTitle': 'Partager votre itinéraire', 'rp.shareIntro': 'Qui ouvre le lien voit vos arrêts sur la carte et peut enregistrer ou lancer l’itinéraire.', 'rp.mail': 'E-mail', 'rp.more': 'Autres applis', 'rp.link': 'Lien vers votre itinéraire', 'rp.copy': 'Copier',
+    'rp.sharePrivacy': 'Votre adresse de départ n’est jamais partagée. Les ventes de garage apparaissent comme zone.', 'rp.shareText': 'Mon itinéraire chine sur YardiGo : {n} arrêts le {d}.',
+    'rp.alsoOpen': 'Aussi ouvert sur votre route', 'rp.stopN': 'Arrêt {n}', 'rp.along': 'Sur votre route', 'rp.viewSale': 'Voir la vente', 'rp.nowOpen': 'Ouvert', 'rp.pick': 'Choisissez un arrêt ou un plus sur la carte.',
+    'rp.fit': 'Voir tout l’itinéraire', 'rp.addrApprox': 'Zone, le numéro est dans l’appli', 'rp.loading': 'Chargement…', 'rp.backMap': 'Retour à la carte', 'rp.bigView': 'Ouvrir le planificateur'
+  });
+  Object.assign(T.de, {
+    'rp.skip': 'Zu deiner Route', 'nav.planner': 'Routenplaner', 'rp.optimize': 'Route optimieren', 'rp.dragHint': 'Zum Ändern der Reihenfolge ziehen',
+    'rp.emptyTitle': 'Plan deinen Stöbertag', 'rp.emptyTxt': 'Pack Flohmärkte, Garagenverkäufe und Gebrauchtwarenläden in deine Route. YardiGo findet die klügste Reihenfolge, du fährst.', 'rp.toMap': 'Stopps auf der Karte wählen',
+    'rp.first': 'Erster Stopp', 'rp.overview': 'Routenübersicht', 'rp.total': 'Gesamt', 'rp.travel': 'Fahrzeit', 'rp.stops': 'Stopps',
+    'rp.tipSmartT': 'Kluge Route!', 'rp.tipSmart': 'Diese Reihenfolge passt zu den Öffnungszeiten, mit möglichst wenig Fahrzeit.', 'rp.tipSmartDone': 'Passt zu den Öffnungszeiten. Du bist gegen {t} fertig.',
+    'rp.tipTryT': 'Tipp von Cedrik', 'rp.tipTry': 'Lass YardiGo die klügste Reihenfolge wählen, mit Öffnungszeiten.',
+    'rp.tipDoneT': 'Bereit zur Abfahrt', 'rp.tipDone': 'Du bist gegen {t} fertig.', 'rp.tipAddT': 'Noch ein Stopp?', 'rp.tipAdd': 'Schau unter „Auch an deiner Route“ oder such auf der Karte.',
+    'rp.share': 'Teilen', 'rp.options': 'Routenoptionen', 'rp.start': 'Navigation starten', 'rp.startPart': 'Navigation starten (Teil 1)', 'rp.inGoogle': 'in Google Maps', 'rp.openIn': 'In einer Karten-App öffnen',
+    'rp.shareTitle': 'Route teilen', 'rp.shareIntro': 'Wer den Link öffnet, sieht deine Stopps auf der Karte und kann die Route speichern oder starten.', 'rp.mail': 'E-Mail', 'rp.more': 'Weitere Apps', 'rp.link': 'Link zu deiner Route', 'rp.copy': 'Kopieren',
+    'rp.sharePrivacy': 'Deine Startadresse wird nie geteilt. Garagenverkäufe stehen als Gebiet im Link.', 'rp.shareText': 'Meine Stöberroute auf YardiGo: {n} Stopps am {d}.',
+    'rp.alsoOpen': 'Auch geöffnet an deiner Route', 'rp.stopN': 'Stopp {n}', 'rp.along': 'An deiner Route', 'rp.viewSale': 'Verkauf ansehen', 'rp.nowOpen': 'Jetzt geöffnet', 'rp.pick': 'Wähl einen Stopp oder ein Plus auf der Karte.',
+    'rp.fit': 'Ganze Route zeigen', 'rp.addrApprox': 'Gebiet, die Hausnummer steht in der App', 'rp.loading': 'Laden…', 'rp.backMap': 'Zurück zur Karte', 'rp.bigView': 'Routenplaner öffnen'
+  });
+
   function opslag(fn) { try { return fn(); } catch (e) { return null; } }
 
   function kiesTaal() {

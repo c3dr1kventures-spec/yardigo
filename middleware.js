@@ -12,12 +12,28 @@
 // deelberichten gebruiken nog /?v=, /?route=, /?uitschrijven= enz. Die sturen
 // we door: een verkoop naar zijn eigen pagina, de rest naar /app.
 
-export const config = { matcher: ['/', '/fr'] };
+//
+// Gedeelde routes (/route/<code>, /route?stops=…): crawlers van WhatsApp,
+// Facebook enz. krijgen api/route-deel (eigen titel en plaatje per route);
+// bezoekers gewoon route.html.
+
+import { CRAWLER_RE } from './api/_route.js';
+
+export const config = { matcher: ['/', '/fr', '/route', '/route/:code*'] };
 
 const APP_PARAMS = ['plaatsen', 'route', 'uitschrijven', 'uitschrijven-promo', 'token', 'reset', 'tab', 'action', 'country', 'code', 'instellingen'];
 
 export default function middleware(req) {
   const url = new URL(req.url);
+  if (url.pathname.startsWith('/route')) {
+    if (!CRAWLER_RE.test(req.headers.get('user-agent') || '')) return;
+    const m = /^\/route\/([A-Za-z0-9]{8,16})\/?$/.exec(url.pathname);
+    const stops = url.searchParams.get('stops');
+    if (!m && !stops) return;
+    const doel = new URL('/api/route-deel', url);
+    if (m) doel.searchParams.set('code', m[1]); else doel.searchParams.set('stops', stops);
+    return new Response(null, { headers: { 'x-middleware-rewrite': doel.toString() } });
+  }
   if (url.pathname === '/fr') {
     return new Response(null, { headers: { 'x-middleware-rewrite': new URL('/locale/be-fr' + url.search, url).toString() } });
   }
