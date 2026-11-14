@@ -363,6 +363,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       <button class="btn-logout" onclick="doLogout()">Uitloggen</button>
     </div>
   </div>
+  <div id="meting-alarm" role="alert" hidden style="background:#FDECEA;border-bottom:2px solid #C0392B;color:#7B1E14;padding:10px 16px;font-size:13px;line-height:1.45"></div>
 
   <div class="nav">
     <div class="nav-tab active" onclick="switchTab('dashboard',this)">📊 Dashboard</div>
@@ -1446,6 +1447,26 @@ function showApp(){
   document.getElementById('app').style.display='block';
   var n=document.getElementById('admin-name'); if(n&&currentAdmin) n.textContent=currentAdmin.email;
   loadSettings().then(function(){loadDashboard();loadListings();loadUsers();});
+  controleerMeting();
+}
+
+// Bezoekersmeting bewaken (analytics-gezondheid.sql): rode balk als de telling
+// wegvalt of hard daalt. Ontstaan nadat de nieuwe site 27 okt - 14 nov 2026
+// ongemerkt niet meetelde.
+async function controleerMeting(){
+  var el=document.getElementById('meting-alarm'); if(!el) return;
+  try{
+    var r=await sb.rpc('analytics_gezondheid');
+    if(r.error) throw r.error;
+    var rij=r.data||[];
+    if(!rij.length){ el.hidden=true; el.innerHTML=''; return; }
+    el.innerHTML='<strong>📉 Bezoekersmeting:</strong> '+rij.map(function(x){return escapeHtml(x.melding);}).join(' · ')+
+      ' <a href="#" onclick="switchTab(\'analytics\',document.querySelector(\'.nav-tab[onclick*=analytics]\'));return false" style="color:#7B1E14;font-weight:700">Bekijk Analytics →</a>';
+    el.hidden=false;
+  }catch(e){
+    el.innerHTML='<strong>📉 Bezoekersmeting:</strong> de controle zelf liep vast ('+escapeHtml(e.message||String(e))+').';
+    el.hidden=false;
+  }
 }
 
 // ══════════════════════════════════════════════════

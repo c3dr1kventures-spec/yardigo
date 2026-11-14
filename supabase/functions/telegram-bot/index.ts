@@ -740,6 +740,22 @@ async function bewaker(sb: any, chat: string): Promise<{ ok: boolean; nieuw24: n
   return { ok, nieuw24, live48 };
 }
 
+// ── Bezoekersmeting (dagelijks met de watchdog): telt alles nog mee? ──
+// Zie analytics-gezondheid.sql. Van 27 okt tot 14 nov 2026 telde de nieuwe site
+// niet mee zonder dat iemand het merkte; dit seint zo'n gat binnen een dag.
+async function bezoekersBewaker(sb: any, chat: string): Promise<{ ok: boolean; meldingen: number }> {
+  const { data, error } = await sb.rpc('analytics_gezondheid');
+  if (error) {
+    await send(chat, `⚠️ <b>Bezoekersmeting</b>\nDe controle zelf liep vast: ${esc(error.message)}`);
+    return { ok: false, meldingen: -1 };
+  }
+  const rij = (data || []) as Array<{ soort: string; melding: string }>;
+  if (rij.length) {
+    await send(chat, `📉 <b>Bezoekersmeting</b>\n${rij.map(r => '• ' + esc(r.melding)).join('\n')}\n\nBekijk /admin → Analytics.`);
+  }
+  return { ok: rij.length === 0, meldingen: rij.length };
+}
+
 // ── Locatiecontrole (elk uur): ligt elke pin in de opgegeven plaats? ──
 // YardiGo-pins die niet kloppen worden zo mogelijk automatisch op het juiste
 // adres gezet; lukt dat niet (of is het een advertentie van een gebruiker),
@@ -1296,7 +1312,7 @@ serve(async (req: Request) => {
         const body = await req.json().catch(() => ({}));
         return json({ ok: await stuurMelding(sb, chat, Number(body?.id)) });
       }
-      if (action === 'watchdog') return json({ ...(await bewaker(sb, chat)), bronnen: await bronVoorstellen(sb, chat) });
+      if (action === 'watchdog') return json({ ...(await bewaker(sb, chat)), bronnen: await bronVoorstellen(sb, chat), bezoekers: await bezoekersBewaker(sb, chat) });
       if (action === 'locaties') return json({ ok: true, ...(await locatieControle(sb, chat, url.searchParams.has('droog'))) });
       return json({ ok: true, verstuurd: await steekproef(sb, chat) });
     }
