@@ -1049,7 +1049,8 @@ textarea.setting-input{min-height:72px;resize:vertical;}
           <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/auth/users" target="_blank" class="quicklink">👥 Supabase Auth gebruikers</a>
           <a href="https://supabase.com/dashboard/project/fwehqudhwzcnkcuypuqw/storage" target="_blank" class="quicklink">📁 Supabase Storage</a>
           <a href="https://vercel.com" target="_blank" class="quicklink">🚀 Vercel Deployments</a>
-          <a href="/" target="_blank" class="quicklink">📍 Open YardiGo App</a>
+          <a href="/" target="_blank" class="quicklink">🌐 Open YardiGo-website</a>
+          <a href="/app" target="_blank" class="quicklink">📍 Open YardiGo-app</a>
         </div>
       </div>
 
@@ -1203,7 +1204,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     </div>
     <div class="drawer-footer">
       <button class="btn btn-terra" onclick="saveListingEdit()" style="flex:1">💾 Opslaan</button>
-      <a id="ld-app-link" href="#" target="_blank" class="btn btn-ghost" style="text-decoration:none">🔗 In app</a>
+      <a id="ld-app-link" href="#" target="_blank" class="btn btn-ghost" style="text-decoration:none">🔗 Bekijk verkoop</a>
       <button class="btn btn-danger" onclick="deleteFromListingDrawer()">🗑️</button>
     </div>
   </div>
@@ -2321,11 +2322,13 @@ function openListingDetail(id){
   var tb=document.getElementById('ld-type-badge');
   tb.textContent=(typeEmoji[tc]||'')+' '+typeLabel[tc]; tb.className='badge badge-'+tc;
   document.getElementById('ld-header-title').textContent=l.title||'Advertentie';
-  document.getElementById('ld-views').textContent=l.view_count||0;
+  // Bezoeken van de verkooppagina /v/<id> (page_views); view_count wordt nergens meer opgehoogd.
+  var vEl=document.getElementById('ld-views'); vEl.textContent='…'; vEl.title='Bezoeken van /v/'+l.id+' (sinds 180 dagen)';
+  sb.from('page_views').select('id',{count:'exact',head:true}).eq('path','/v/'+l.id).then(function(r){ if(document.getElementById('ld-id').textContent===l.id) vEl.textContent=r.error?(l.view_count||0):(r.count||0); });
   document.getElementById('ld-status-val').innerHTML=l.status==='pending'?'<span class="badge badge-pending">⏳ Pending</span>':(isActive?'<span class="badge badge-active">✓ Actief</span>':'<span class="badge badge-expired">Verlopen</span>');
   document.getElementById('ld-created').textContent=fmtDate(l.created_at);
   document.getElementById('ld-id').textContent=l.id;
-  document.getElementById('ld-app-link').href='https://www.yardigo.nl/?listing='+l.id;
+  document.getElementById('ld-app-link').href='https://www.yardigo.nl/v/'+l.id;
   var uel=document.getElementById('ld-user');
   if(l.user_id){var u=allUsers.find(function(x){return x.id===l.user_id;});uel.textContent=u?(u.display_name||u.name||u.email||l.user_id.slice(0,8)):l.user_id.slice(0,8)+'…';uel.onclick=function(){closeListingDrawer();openUserDetail(l.user_id);};}
   else{uel.textContent='—';uel.onclick=null;uel.style.color='var(--text)';}

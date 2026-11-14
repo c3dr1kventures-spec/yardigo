@@ -442,7 +442,32 @@
   window.YG = { t: function (k, w) { return t(k, w, nu()); }, vertaal: function (wortel) { vertaal(nu(), wortel); } };
   Object.defineProperty(window.YG, 'taal', { get: nu, enumerable: true });
 
-  function start() { vertaal(taal); menu(); }
+  // Bezoek tellen voor /admin (Analytics), via dezelfde RPC als /app. Zonder
+  // cookies en zonder blijvend id: het sessie-id staat in sessionStorage (weg
+  // zodra het tabblad dicht gaat) en wordt niet aan een account gekoppeld.
+  // Alleen het pad gaat mee (geen ?stops= of andere query). Hooguit één keer
+  // per 30 min per pad. Sinds 14 nov 2026; daarvoor telde alleen /app mee.
+  function telBezoek() {
+    try {
+      if (navigator.webdriver || /bot|crawl|spider|slurp|preview|lighthouse|headless/i.test(navigator.userAgent || '') || /^(localhost|127\.|.*\.vercel\.app$)/.test(location.hostname)) return;
+      var pad = (location.pathname || '/').replace(/\/index\.html$/, '/').slice(0, 300);
+      var nuMs = Date.now(), sleutel = 'yg-pv:' + pad, opslag = window.sessionStorage;
+      var sid = opslag.getItem('yg-ssid');
+      if (!sid) { sid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : nuMs.toString(36) + Math.random().toString(36).slice(2, 12); opslag.setItem('yg-ssid', sid); }
+      if (nuMs - (+opslag.getItem(sleutel) || 0) < 30 * 60 * 1000) return;
+      opslag.setItem(sleutel, String(nuMs));
+      var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+      // Alleen de site waar je vandaan komt (geen volledige verwijzende URL).
+      var ref = ''; try { ref = document.referrer ? new URL(document.referrer).origin : ''; } catch (e) { /* geen */ }
+      fetch('https://fwehqudhwzcnkcuypuqw.supabase.co/rest/v1/rpc/track_page_view', {
+        method: 'POST', keepalive: true,
+        headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_path: pad, p_session_id: sid, p_referrer: ref, p_lang: nu() })
+      }).catch(function () {});
+    } catch (e) { /* privévenster of geen opslag: niet tellen */ }
+  }
+
+  function start() { vertaal(taal); menu(); telBezoek(); }
   if (app) return;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
