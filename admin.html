@@ -436,6 +436,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="panel" style="grid-column:1/-1">
           <div class="panel-title">Bezoekers per dag <span id="an-daily-range">laatste 30 dagen</span></div>
           <div class="bar-chart" id="an-daily-chart" style="height:140px"><div class="spinner"></div></div>
+          <div id="an-daily-note"></div>
         </div>
         <div class="panel">
           <div class="panel-title">Top bezochte pagina's <span>unieke sessies</span></div>
@@ -1795,7 +1796,7 @@ function renderAnalyticsDaily(rows){
     var short    = day.getDate() + '/' + (day.getMonth()+1);
     var fullDate = day.toLocaleDateString('nl-NL', {weekday:'short', day:'numeric', month:'long'});
     var isToday  = (String(r.day).slice(0,10) === todayStr);
-    var tipLabel = isToday ? 'Vandaag' : fullDate;
+    var tipLabel = (isToday ? 'Vandaag' : fullDate) + (r.is_schatting ? ' (schatting)' : '');
     var lbl = isToday
       ? '<span style="font-weight:700;color:var(--terra)">Vandaag</span>'
       : (i % showEvery === 0 ? short : '');
@@ -1803,10 +1804,15 @@ function renderAnalyticsDaily(rows){
              '<div class="bar-tip">' + escapeHtml(tipLabel) + '<br>' + v + ' bezoekers · ' + u + ' uniek</div>' +
              '<div class="bar-val" style="' + (v===0?'color:var(--muted)':'') + '">' + v + '</div>' +
              '<div class="bar ' + (isToday?'primary':'secondary') + '" style="height:' + h + 'px' +
-               (isToday?';opacity:1;background:var(--terra)':'') + '"></div>' +
+               (isToday?';opacity:1;background:var(--terra)':'') +
+               (r.is_schatting?';background:repeating-linear-gradient(135deg,#9BB89F 0 4px,#C9D9CB 4px 8px)':'') + '"></div>' +
              '<div class="bar-label">' + lbl + '</div>' +
            '</div>';
   }).join('');
+  var noot = document.getElementById('an-daily-note');
+  if (noot) noot.innerHTML = rows.some(function(r){ return r.is_schatting; })
+    ? '<div style="font-size:10.5px;color:var(--muted);margin-top:8px">Gestreept = schatting. Van 27 okt t/m 14 nov 2026 telde de nieuwe site niet mee; die dagen zijn geschat uit de Supabase-logs (unieke bezoekers met verzoeken vanaf yardigo.nl/.be). Aan de lage kant: stads- en provinciepagina\'s zonder verdere klik ontbreken. Zie analytics-schatting.sql.</div>'
+    : '';
 }
 
 function renderAnalyticsTopPaths(rows){
