@@ -447,8 +447,19 @@
   // zodra het tabblad dicht gaat) en wordt niet aan een account gekoppeld.
   // Alleen het pad gaat mee (geen ?stops= of andere query). Hooguit één keer
   // per 30 min per pad. Sinds 14 nov 2026; daarvoor telde alleen /app mee.
+  // Eigen apparaten tellen niet mee: /admin zet 'yg-intern' in localStorage.
+  // Handmatig per apparaat/domein: ?intern=1 aan, ?intern=0 uit.
+  function isIntern() {
+    try {
+      var m = /[?&]intern=([01])\b/.exec(location.search || '');
+      if (m) { if (m[1] === '1') localStorage.setItem('yg-intern', '1'); else localStorage.removeItem('yg-intern'); }
+      return localStorage.getItem('yg-intern') === '1';
+    } catch (e) { return false; }
+  }
+
   function telBezoek() {
     try {
+      if (isIntern()) return;
       if (navigator.webdriver || /bot|crawl|spider|slurp|preview|lighthouse|headless/i.test(navigator.userAgent || '') || /^(localhost|127\.|.*\.vercel\.app$)/.test(location.hostname)) return;
       var pad = (location.pathname || '/').replace(/\/index\.html$/, '/').slice(0, 300);
       var nuMs = Date.now(), sleutel = 'yg-pv:' + pad, opslag = window.sessionStorage;

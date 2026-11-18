@@ -8171,6 +8171,10 @@ var LANG_FLAGS = { nl: '🇳🇱', en: '🇬🇧', de: '🇩🇪', fr: '🇫🇷
 async function trackPageView() {
   try {
     if (!window.sbClient) return;
+    // Eigen apparaten (gemarkeerd via /admin of ?intern=1) tellen niet mee
+    var im = /[?&]intern=([01])\b/.exec(location.search || '');
+    if (im) { if (im[1] === '1') localStorage.setItem('yg-intern', '1'); else localStorage.removeItem('yg-intern'); }
+    if (localStorage.getItem('yg-intern') === '1') return;
     var path = (location.pathname || '/') + (location.hash || '');
     var sid = localStorage.getItem('yg-sid');
     if (!sid) {

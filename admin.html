@@ -424,7 +424,8 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       </div>
 
       <div class="info-box" style="margin-bottom:14px">
-        Bezoekersdata wordt verzameld via een anonieme sessie-UUID (localStorage) en – indien ingelogd – de gekoppelde user-id. Géén raw IP-adressen worden opgeslagen. Data ouder dan 180 dagen wordt automatisch opgeschoond. Zorg dat je <code>analytics-schema.sql</code> hebt uitgevoerd én dat jouw profiel <code>is_admin = true</code> heeft.
+        <strong>Weergaven</strong> = geopende pagina's (één bezoeker die 10 pagina's bekijkt telt 10 keer). <strong>Unieke bezoekers</strong> = aparte sessies. Bots, previews en het plaatsen van advertenties (Telegram-bot, importers) tellen niet mee. Géén raw IP-adressen; data ouder dan 180 dagen wordt opgeschoond.<br>
+        <strong>Eigen bezoeken:</strong> elk apparaat waarop je /admin opent telt vanaf dan niet meer mee (per domein). Voor yardigo.be of een ander apparaat zonder admin: open één keer een pagina met <code>?intern=1</code> (<code>?intern=0</code> zet het terug). Telt vóór 18 nov 2026 nog wel mee.
       </div>
 
       <!-- KPI-grid -->
@@ -1446,6 +1447,8 @@ function showApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   var n=document.getElementById('admin-name'); if(n&&currentAdmin) n.textContent=currentAdmin.email;
+  // Dit apparaat als 'intern' markeren: eigen bezoeken aan site en /app tellen niet mee
+  try{ localStorage.setItem('yg-intern','1'); }catch(e){}
   loadSettings().then(function(){loadDashboard();loadListings();loadUsers();});
   controleerMeting();
 }
@@ -1530,6 +1533,8 @@ async function loadAnalytics(){
     var d = await sb.rpc('analytics_daily', { p_days: days });
     if (d.error) throw d.error;
     renderAnalyticsDaily(d.data || []);
+    var dRows = d.data || [], uEl = document.getElementById('an-uniek-vandaag');
+    if (uEl && dRows.length) uEl.textContent = String(Number(dRows[dRows.length-1].unique_sessions)||0);
   } catch(e){
     document.getElementById('an-daily-chart').innerHTML =
       '<div style="color:var(--muted);font-size:11px;padding:10px">Kon dagtellingen niet laden: ' + escapeHtml(e.message||String(e)) + '</div>';
@@ -1791,10 +1796,10 @@ function renderAnalyticsSummary(r){
   function pct(p){ if(p==null) return 'n.v.t.'; var pre = p>=0 ? '▲ +' : '▼ '; return pre + p + '%'; }
   var cls = (r.growth_wow_pct==null) ? '' : (r.growth_wow_pct >= 0 ? 'green' : 'warn');
   document.getElementById('an-stat-grid').innerHTML =
-    statCard('Bezoeken vandaag',     fmt(r.views_today),       'gisteren: ' + fmt(r.views_yesterday), 'accent') +
-    statCard('Bezoeken 7 dagen',     fmt(r.views_7d),          'groei w/w: ' + pct(r.growth_wow_pct), cls) +
-    statCard('Bezoeken 30 dagen',    fmt(r.views_30d),         'incl. gast + ingelogd', '') +
-    statCard('Unieke sessies 7d',    fmt(r.unique_sessions_7d),'30d: ' + fmt(r.unique_sessions_30d), '') +
+    statCard('Weergaven vandaag',    fmt(r.views_today),       '<span id="an-uniek-vandaag">…</span> unieke bezoekers · gisteren: ' + fmt(r.views_yesterday) + ' weergaven', 'accent') +
+    statCard('Weergaven 7 dagen',    fmt(r.views_7d),          'groei w/w: ' + pct(r.growth_wow_pct), cls) +
+    statCard('Weergaven 30 dagen',   fmt(r.views_30d),         'paginaweergaven, geen personen', '') +
+    statCard('Unieke bezoekers 7d',  fmt(r.unique_sessions_7d),'30d: ' + fmt(r.unique_sessions_30d), '') +
     statCard('Nieuwe gebruikers 7d', fmt(r.new_users_7d),      '30d: ' + fmt(r.new_users_30d), 'green');
 }
 
@@ -1822,7 +1827,7 @@ function renderAnalyticsDaily(rows){
       ? '<span style="font-weight:700;color:var(--terra)">Vandaag</span>'
       : (i % showEvery === 0 ? short : '');
     return '<div class="bar-col">' +
-             '<div class="bar-tip">' + escapeHtml(tipLabel) + '<br>' + v + ' bezoekers · ' + u + ' uniek</div>' +
+             '<div class="bar-tip">' + escapeHtml(tipLabel) + '<br>' + v + ' weergaven · ' + u + ' unieke bezoekers</div>' +
              '<div class="bar-val" style="' + (v===0?'color:var(--muted)':'') + '">' + v + '</div>' +
              '<div class="bar ' + (isToday?'primary':'secondary') + '" style="height:' + h + 'px' +
                (isToday?';opacity:1;background:var(--terra)':'') +
