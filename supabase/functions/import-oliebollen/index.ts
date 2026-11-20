@@ -25,13 +25,28 @@
 //                          als die ontbreekt; een aanvulling ("aanvulling op #8")
 //                          wordt in kraam 8 samengevoegd en daarna verwijderd
 //   { "action": "verbergen", "id": 12 }    (admin) van de kaart halen
+//   { "action": "herplaats" }              plek opnieuw zoeken voor kramen met
+//                          'alleen plaats bekend' (na verbetering van poiPlek)
 // Na elke run: nieuwe aanmeldingen van kraamhouders als Telegram-bericht.
 //
 // Auth: header x-cron-secret = app_config.cron_secret, of admin-JWT.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { zoekPlek } from '../_shared/locatie.ts';
+import { photon, toetsPlek, zoekPlek } from '../_shared/locatie.ts';
+
+// Geen straat, wel een herkenbare plek ("bij de Welkoop", "winkelcentrum
+// Oosterhof"): zoek die als OpenStreetMap-plek in de plaats. Telt alleen als
+// hij echt in die plaats ligt.
+async function poiPlek(sb: any, locatie: string | null, plaats: string): Promise<{ lat: number; lng: number } | null> {
+  const q = String(locatie || '').replace(/\b(bij|nabij|naast|voor|achter|op|aan|de|het|het parkeerterrein|parkeerplaats|zuidingang|ingang|van)\b/gi, ' ')
+    .replace(new RegExp(plaats.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ').replace(/[,;()]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (q.length < 4 || /diverse|verschillende|per ondernemer/i.test(String(locatie))) return null;
+  const p = await photon(`${q} ${plaats}`, 'NL');
+  if (!p) return null;
+  const t = await toetsPlek(sb, p, plaats);
+  return t.status === 'ok' && (t.km ?? 99) < 5 ? p : null;
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -202,9 +217,10 @@ async function beheer(sb: any, actie: string, id: number) {
   }
   const upd: any = { status: 'actief' };
   if (k.latitude == null || k.plek_geschat) {
-    const p = await zoekPlek(sb, k.adres || k.locatie || null, k.plaats, k.land || 'NL', null);
+    const poi = !k.adres && k.locatie ? await poiPlek(sb, k.locatie, k.plaats) : null;
+    const p = poi ? { ...poi, geschat: false } : await zoekPlek(sb, k.adres || k.locatie || null, k.plaats, k.land || 'NL', null);
     if (!p) return { ok: false, fout: 'plek niet gevonden: vul een straat of plein in' };
-    upd.latitude = p.lat; upd.longitude = p.lng; upd.plek_geschat = !!p.geschat || !k.adres;
+    upd.latitude = p.lat; upd.longitude = p.lng; upd.plek_geschat = !!p.geschat || (!k.adres && !poi);
   }
   if (!k.datum_tot) upd.datum_tot = seizoenEinde();
   const u = await sb.from('oliebollen_kramen').update(upd).eq('id', id);
@@ -244,6 +260,16 @@ serve(async (req: Request) => {
   let body: { max?: number; dryRun?: boolean; action?: string; id?: number } = {};
   try { body = await req.json(); } catch (_) {}
   if (body.action === 'goedkeuren' || body.action === 'verbergen') return json(await beheer(sb, body.action, Number(body.id)));
+  if (body.action === 'herplaats') {
+    const r = await sb.from('oliebollen_kramen').select('id, locatie, plaats, opmerking').eq('status', 'controleren').eq('opmerking', 'alleen plaats bekend');
+    const uit: any[] = [];
+    for (const k of r.data || []) {
+      const p = k.locatie ? await poiPlek(sb, k.locatie, k.plaats) : null;
+      if (p) await sb.from('oliebollen_kramen').update({ latitude: p.lat, longitude: p.lng, plek_geschat: false, status: 'actief', opmerking: 'plek via OpenStreetMap' }).eq('id', k.id);
+      uit.push({ id: k.id, locatie: k.locatie, gevonden: !!p });
+    }
+    return json({ ok: true, uit });
+  }
   const dryRun = body.dryRun === true;
   const max = Math.max(1, Math.min(120, body.max ?? 40));
   const s: any = { via: auth.via, dryRun, gevonden: 0, nieuw_te_lezen: 0, gelezen: 0, nieuw: 0, samengevoegd: 0, ingetrokken: 0,
@@ -306,8 +332,9 @@ serve(async (req: Request) => {
       if (!a.relevant) { await log(p, 'niet_relevant', a.reden || null); continue; }
       const plaats = String(a.plaats || p.gemeente || '').trim();
       const gevonden = await zoekPlek(sb, a.adres || a.locatie || null, plaats, 'NL', a.postcode || null);
-      // Zonder straat is het hooguit het plaatscentrum: nooit als echte pin tonen.
-      const plek = gevonden && !a.adres ? { ...gevonden, geschat: true } : gevonden;
+      // Zonder straat is het hooguit het plaatscentrum, tenzij de plek zelf (winkel, winkelcentrum) te vinden is.
+      let plek = gevonden && !a.adres ? { ...gevonden, geschat: true } : gevonden;
+      if (!a.adres && a.locatie) { const poi = await poiPlek(sb, a.locatie, plaats); if (poi) plek = { ...poi, geschat: false }; }
       let van = isDatum(a.datum_van), tot = isDatum(a.datum_tot) || van;
       // Seizoensvergunning zonder datum: tot eind januari.
       if (!van && !tot) tot = seizoenEinde();
