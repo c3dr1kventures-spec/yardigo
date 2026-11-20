@@ -211,6 +211,11 @@
     kaart = K.maakKaart($('heromap'), {
       maxKaartjes: 60, voorrang: true,
       opKlik: openPopup,
+      opKraam: function (k) {
+        sluitPopup();
+        popup = L.popup({ className: 'yg-popup', offset: [0, -8], maxWidth: 300, autoPanPadding: [20, 20] })
+          .setLatLng([k.lat, k.lng]).setContent(K.kraamPopupHtml(k)).openOn(kaart.map);
+      },
       opWinkel: function (w) {
         sluitPopup();
         popup = L.popup({ className: 'yg-popup', offset: [0, -8], maxWidth: 300, autoPanPadding: [20, 20] })
@@ -236,6 +241,23 @@
       K.winkels().then(function (l) { if (b.getAttribute('aria-pressed') === 'true') kaart.winkels(l); })
         .catch(function (e) { console.error(e); b.setAttribute('aria-pressed', 'false'); });
     });
+
+    // Oliebollenkramen (seizoen): knop alleen als er kramen zijn, dan standaard
+    // aan; uitzetten geldt ook voor /kaart (zelfde sessionStorage-sleutel).
+    var kraamLijst = [];
+    function zetKramen(aan) {
+      $('kramen').setAttribute('aria-pressed', String(aan));
+      kaart.kramen(aan ? kraamLijst : []);
+      try { sessionStorage.setItem('yg-kramen-uit', aan ? '' : '1'); } catch (e) {}
+    }
+    K.kramen().then(function (l) {
+      kraamLijst = l || [];
+      if (!kraamLijst.length) return;
+      $('kramen').hidden = false;
+      var uit = false; try { uit = sessionStorage.getItem('yg-kramen-uit') === '1'; } catch (e) {}
+      zetKramen(!uit);
+    }).catch(function (e) { console.error(e); });
+    $('kramen').addEventListener('click', function () { zetKramen($('kramen').getAttribute('aria-pressed') !== 'true'); });
 
     document.querySelectorAll('#lagen button[data-s]').forEach(function (btn) {
       btn.addEventListener('click', function () {

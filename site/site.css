@@ -192,7 +192,7 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-groep--route { background: var(--yg-terra); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(224, 123, 57, .25), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--oprit { background: var(--yg-amber); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(242, 168, 48, .3), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--winkel { background: var(--yg-wood); border-radius: 7px; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 5px rgba(138, 90, 43, .25), 0 2px 6px rgba(30, 41, 34, .28); }
-.yg-groep--oliebol { background: #B8742C; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 5px rgba(184, 116, 44, .28), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep--oliebol { background: radial-gradient(circle at 34% 28%, #FFF3DC 0 10%, #F2D29A 22%, #D39A52 58%, #A8672C 100%); color: #3B2208; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 4px rgba(211, 154, 82, .3), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep:hover { transform: scale(1.08); }
 .leaflet-marker-icon:focus-visible .yg-groep, .leaflet-marker-icon:focus-visible .yg-dot { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 
@@ -610,6 +610,8 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-layers .yg-chip--klein[aria-pressed="false"] { background: rgba(255, 255, 255, .85); }
 .yg-hero .yg-shop { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-width: 1.5px; opacity: .85; }
 .yg-hero .yg-groep--winkel { opacity: .8; }
+.yg-hero .yg-oliebol { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-width: 1.5px; }
+.yg-hero .yg-groep--oliebol { --gloei: 184, 116, 44; }
 
 /* Op de startpagina gloeien garagesales en rommelroutes zachtjes in hun eigen
    kleur: ze vallen net iets meer op dan markten, zonder te knipperen. Met
