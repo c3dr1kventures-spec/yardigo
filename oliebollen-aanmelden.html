@@ -6,6 +6,14 @@
 <title>Oliebollenkraam aanmelden | YardiGo</title>
 <meta name="description" content="Zet je oliebollenkraam gratis op de YardiGo-kaart, of vul de openingstijden van je kraam aan.">
 <link rel="canonical" href="https://www.yardigo.nl/oliebollen/aanmelden">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.yardigo.nl/oliebollen/aanmelden">
+<meta property="og:title" content="Heb je een oliebollenkraam? Zet hem gratis op de kaart">
+<meta property="og:description" content="Duizenden mensen zoeken in december de oliebollenkraam bij hen in de buurt. Meld je kraam gratis aan op YardiGo, met je plek en openingstijden.">
+<meta property="og:image" content="https://www.yardigo.nl/og-image.png">
+<meta property="og:site_name" content="YardiGo">
+<meta property="og:locale" content="nl_NL">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#3A6B4A">
 <link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,6 +39,18 @@
   .ob-melding--fout { background: #FBEEEE; color: #7A2222; }
   .ob-klein { font-size: 13px; color: #525C56; }
   .ob-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .ob-voordelen { list-style: none; padding: 0; margin: 0 0 22px; display: grid; gap: 8px; }
+  .ob-voordelen li { display: flex; gap: 10px; align-items: flex-start; }
+  .ob-voordelen li::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 5px; border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #FFF6E6 0 9%, #F4D9A0 10% 20%, #C98A3A 48%, #8E5520 100%); }
+  .ob-card h2 { font-size: 18px; margin: 0 0 6px; }
+  .ob-zoek { display: flex; gap: 8px; margin: 10px 0 0; }
+  .ob-zoek input { flex: 1; min-width: 0; padding: 11px 12px; border: 1.5px solid #D5DCD2; border-radius: 10px; font: inherit; font-size: 16px; }
+  .ob-zoek input:focus-visible { outline: 3px solid var(--yg-focus, #F2A830); outline-offset: 1px; }
+  .ob-treffers { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+  .ob-treffers li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1.5px solid #E3E8E0; border-radius: 10px; }
+  .ob-treffers strong { display: block; }
+  .ob-treffers button { flex: none; }
 </style>
 </head>
 <body>
@@ -52,6 +72,24 @@
 <main class="ob-wrap">
   <h1 id="kop">Je oliebollenkraam op de kaart</h1>
   <p class="ob-lede" id="lede">Gratis. Bezoekers zien waar je staat, in welke periode en wanneer je open bent, en zetten je kraam meteen in hun route. We kijken je aanmelding na en zetten hem meestal binnen een dag op de kaart.</p>
+
+  <ul class="ob-voordelen" id="voordelen">
+    <li><span><strong>Gratis</strong>, zonder account en zonder reclame.</span></li>
+    <li><span>Je kraam staat op de kaart en op de pagina van je plaats, zoals <a href="/oliebollen/">yardigo.nl/oliebollen</a>.</span></li>
+    <li><span>Bezoekers zien je plek, periode en openingstijden en zetten je kraam in hun route.</span></li>
+    <li><span>Iets veranderd? Vul het hier opnieuw in, dan passen wij het aan.</span></li>
+  </ul>
+
+  <section class="ob-card" id="zoekblok" aria-labelledby="zoekkop">
+    <h2 id="zoekkop">Staat je kraam er al?</h2>
+    <p class="ob-klein" style="margin:0">Veel kramen staan al op de kaart via de vergunning van de gemeente, maar vaak zonder naam en openingstijden. Zoek je plaats en vul je kraam aan.</p>
+    <form class="ob-zoek" id="zoek" role="search">
+      <label class="yg-sr" for="zoekplaats">Plaats</label>
+      <input id="zoekplaats" placeholder="Plaats, bijvoorbeeld Zoetermeer" autocomplete="address-level2">
+      <button class="yg-btn yg-btn--outline" type="submit">Zoek</button>
+    </form>
+    <ul class="ob-treffers" id="treffers" aria-live="polite"></ul>
+  </section>
 
   <div id="bekend" class="ob-card" hidden></div>
   <p id="melding" class="ob-melding" role="status" hidden></p>
@@ -90,9 +128,39 @@
 
   // Aanvulling op een kraam die al op de kaart staat (?k=<id>).
   var kraamId = parseInt(new URLSearchParams(location.search).get('k'), 10) || null;
+  var alle = null;
+  function kramen() {
+    if (alle) return Promise.resolve(alle);
+    return fetch(URL_ + 'get_oliebollen_publiek', { method: 'POST', headers: H, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : []; }).then(function (r) { alle = r || []; return alle; });
+  }
+  function norm(x) { return String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ''); }
+  function periode(k) {
+    if (k.dagen) return k.dagen;
+    var f = function (d) { return new Date(d + 'T12:00:00Z').toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+    return k.datum_van && k.datum_van === k.datum_tot ? 'op ' + f(k.datum_van) : (k.datum_tot ? 't/m ' + f(k.datum_tot) : '');
+  }
+
+  // "Staat je kraam er al?": zoek op plaats of gemeente, kies je kraam.
+  $('zoek').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = norm($('zoekplaats').value);
+    var ul = $('treffers');
+    if (q.length < 2) { ul.innerHTML = ''; return; }
+    ul.innerHTML = '<li>Even zoeken…</li>';
+    kramen().then(function (rij) {
+      var raak = rij.filter(function (k) { return norm(k.plaats).indexOf(q) > -1 || norm(k.gemeente).indexOf(q) > -1; }).slice(0, 25);
+      if (!raak.length) { ul.innerHTML = '<li>Geen kraam gevonden in "' + esc($('zoekplaats').value) + '". Meld je kraam hieronder aan.</li>'; $('plaats').value = $('zoekplaats').value; return; }
+      ul.innerHTML = raak.map(function (k) {
+        return '<li><span><strong>' + esc(k.naam || 'Oliebollenkraam') + '</strong>' + esc([k.locatie || k.adres, k.plaats].filter(Boolean).join(', ')) +
+          (periode(k) ? ' · ' + esc(periode(k)) : '') + (k.tijden ? '<br><span class="ob-klein">Open: ' + esc(k.tijden) + '</span>' : '') + '</span>' +
+          '<a class="yg-btn yg-btn--primary" href="?k=' + k.id + '">Mijn kraam</a></li>';
+      }).join('') + '<li class="ob-klein">Staat je kraam er niet bij? Meld hem hieronder aan.</li>';
+    }).catch(function () { ul.innerHTML = '<li>Zoeken lukte niet. Meld je kraam hieronder aan.</li>'; });
+  });
+
   if (kraamId) {
-    fetch(URL_ + 'get_oliebollen_publiek', { method: 'POST', headers: H, body: '{}' })
-      .then(function (r) { return r.ok ? r.json() : []; })
+    kramen()
       .then(function (rij) {
         var k = (rij || []).filter(function (x) { return x.id === kraamId; })[0];
         if (!k) { kraamId = null; return; }
@@ -100,7 +168,7 @@
         $('lede').textContent = 'Deze kraam staat al op de kaart. Vul aan wat ontbreekt, zoals de naam of je openingstijden. We kijken het na en passen de kaart aan.';
         $('bekend').innerHTML = '<strong>' + esc(k.naam || 'Oliebollenkraam') + '</strong><br>' + esc([k.locatie || k.adres, k.plaats].filter(Boolean).join(', ')) +
           (k.datum_tot ? '<br><span class="ob-klein">Periode volgens de vergunning: ' + esc(k.datum_van || '?') + ' t/m ' + esc(k.datum_tot) + '</span>' : '');
-        $('bekend').hidden = false;
+        $('bekend').hidden = false; $('zoekblok').hidden = true; $('voordelen').hidden = true;
         $('plaats').value = k.plaats || ''; $('adres').value = k.adres || ''; $('locatie').value = k.locatie || '';
         if (k.naam) $('naam').value = k.naam;
         if (k.datum_van) $('van').value = k.datum_van;

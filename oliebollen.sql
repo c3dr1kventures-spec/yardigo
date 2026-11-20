@@ -137,3 +137,10 @@ revoke all on public.oliebollen_kramen, public.oliebollen_bronnen from anon, aut
 --     url := 'https://fwehqudhwzcnkcuypuqw.supabase.co/functions/v1/import-oliebollen',
 --     headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.app_config where key = 'cron_secret')),
 --     body := '{"max": 40}'::jsonb, timeout_milliseconds := 150000); $$);
+
+-- Verrijken (nov 2026): naam/openingstijden/website via Claude + web_search.
+-- Zeker (citaat noemt de plek) = direct ingevuld; anders 'voorstel' voor /admin.
+alter table public.oliebollen_kramen
+  add column if not exists verrijkt_at timestamptz,
+  add column if not exists voorstel jsonb;
+-- Cron: yardigo-verrijk-oliebollen  '40 7,15 * 10-12,1 *'  body {"action":"verrijk","max":9}

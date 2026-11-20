@@ -1124,6 +1124,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
         <div class="section-actions">
           <select class="filter-sel" id="ob-filter" onchange="renderOliebollen()">
             <option value="controleren" selected>Na te kijken</option>
+            <option value="voorstel">Voorstellen (naam/tijden)</option>
             <option value="actief">Op de kaart</option>
             <option value="alle">Alles</option>
           </select>
@@ -1532,18 +1533,19 @@ async function loadOliebollen(){
   if (r.error) { document.getElementById('ob-lijst').innerHTML = '<div class="info-box warn">' + escapeHtml(r.error.message) + '</div>'; return; }
   _ob = r.data || [];
   var n = function(f){ return _ob.filter(f).length; };
-  var na = n(function(k){ return k.status==='controleren'; });
+  var na = n(function(k){ return k.status==='controleren' || !!k.voorstel; });
   var b = document.getElementById('ob-badge'); if (b) { b.textContent = na; b.style.display = na ? '' : 'none'; }
   document.getElementById('ob-stats').innerHTML =
     statCard('Op de kaart', n(function(k){ return k.status==='actief'; }), 'actief dit seizoen', 'green') +
     statCard('Na te kijken', na, 'aanmelding of geen straat', na ? 'warn' : '') +
     statCard('Aanmeldingen', n(function(k){ return k.bron==='aanmelding'; }), 'door kraamhouders', 'accent') +
+    statCard('Voorstellen', n(function(k){ return !!k.voorstel; }), 'naam/tijden van het web', n(function(k){ return !!k.voorstel; }) ? 'warn' : '') +
     statCard('Ingetrokken/verborgen', n(function(k){ return k.status==='ingetrokken'||k.status==='verborgen'; }), '', '');
   renderOliebollen();
 }
 function renderOliebollen(){
   var f = document.getElementById('ob-filter').value;
-  var lijst = _ob.filter(function(k){ return f==='alle' || k.status===f; });
+  var lijst = _ob.filter(function(k){ return f==='alle' || (f==='voorstel' ? !!k.voorstel : k.status===f); });
   if (!lijst.length) { document.getElementById('ob-lijst').innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">Niets in deze lijst.</div>'; return; }
   document.getElementById('ob-lijst').innerHTML = '<table class="data-table" style="width:100%"><thead><tr><th>Kraam</th><th>Waar</th><th>Periode</th><th>Bron</th><th></th></tr></thead><tbody>' +
     lijst.map(function(k){
@@ -1551,11 +1553,26 @@ function renderOliebollen(){
       var bron = k.bron==='gemeenteblad' && k.bron_url ? '<a href="'+escapeHtml(k.bron_url)+'" target="_blank">Gemeenteblad</a> ('+escapeHtml(k.vergunning||'')+')' : escapeHtml(k.bron) + (k.contact_email ? '<br><small>'+escapeHtml(k.contact_email)+'</small>' : '');
       var knoppen = (k.status!=='actief' ? '<button class="btn btn-sm" onclick="obActie(\'goedkeuren\','+k.id+')">✅ Goedkeuren</button> ' : '') +
         (k.status!=='verborgen' ? '<button class="btn btn-ghost btn-sm" onclick="obActie(\'verbergen\','+k.id+')">Verbergen</button>' : '');
-      return '<tr><td><strong>'+escapeHtml(k.naam||(k.soort==='actie'?'Oliebollenactie':'Oliebollenkraam'))+'</strong>'+(k.opmerking?'<br><small style="color:var(--muted)">'+escapeHtml(k.opmerking)+'</small>':'')+'</td>'+
+      var v = k.voorstel;
+      var vHtml = v ? '<div style="margin-top:6px;padding:6px 8px;background:#FFF7E6;border-radius:6px;font-size:12px">💡 <strong>Voorstel</strong> ('+escapeHtml(v.zekerheid||'')+'): '+
+        escapeHtml([v.naam, v.tijden].filter(Boolean).join(' · '))+(v.website?' · <a href="'+escapeHtml(v.website)+'" target="_blank" rel="noopener">site</a>':'')+
+        (v.bron_url?' · <a href="'+escapeHtml(v.bron_url)+'" target="_blank" rel="noopener">bron</a>':'')+(v.reden?'<br><span style="color:var(--muted)">'+escapeHtml(v.reden)+'</span>':'')+
+        '<br><button class="btn btn-sm" onclick="obVoorstel('+k.id+',true)">Overnemen</button> <button class="btn btn-ghost btn-sm" onclick="obVoorstel('+k.id+',false)">Klopt niet</button></div>' : '';
+      return '<tr><td><strong>'+escapeHtml(k.naam||(k.soort==='actie'?'Oliebollenactie':'Oliebollenkraam'))+'</strong>'+(k.opmerking?'<br><small style="color:var(--muted)">'+escapeHtml(k.opmerking)+'</small>':'')+vHtml+'</td>'+
         '<td>'+escapeHtml([k.locatie,k.adres,k.plaats].filter(Boolean).join(' · '))+kaart+(k.plek_geschat?'<br><small style="color:#B45309">alleen plaats bekend</small>':'')+'</td>'+
         '<td>'+escapeHtml(k.dagen || [k.datum_van, k.datum_tot].filter(Boolean).join(' – ') || '—')+(k.tijden?'<br><small>'+escapeHtml(k.tijden)+'</small>':'')+'</td>'+
         '<td>'+bron+'</td><td style="white-space:nowrap">'+knoppen+'</td></tr>';
     }).join('') + '</tbody></table>';
+}
+async function obVoorstel(id, overnemen){
+  var s = (await sb.auth.getSession()).data.session;
+  if (!s) return toast('Niet ingelogd');
+  var r = await fetch(SUPABASE_URL + '/functions/v1/import-oliebollen', { method:'POST',
+    headers:{ 'Authorization':'Bearer '+s.access_token, 'Content-Type':'application/json', 'apikey':SUPABASE_ANON },
+    body: JSON.stringify({ action: 'voorstel', id: id, overnemen: overnemen }) });
+  var j = await r.json().catch(function(){ return {}; });
+  toast(j.ok ? (overnemen ? '✅ Overgenomen' : 'Voorstel weggegooid') : '❌ ' + (j.fout || j.error || 'mislukt'));
+  loadOliebollen();
 }
 async function obActie(actie, id){
   var adres = null, k = _ob.filter(function(x){ return x.id===id; })[0];

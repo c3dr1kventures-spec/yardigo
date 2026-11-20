@@ -25,6 +25,10 @@
 //                          als die ontbreekt; een aanvulling ("aanvulling op #8")
 //                          wordt in kraam 8 samengevoegd en daarna verwijderd
 //   { "action": "verbergen", "id": 12 }    (admin) van de kaart halen
+//   { "action": "verrijk", "max": 9 }     naam/openingstijden/website zoeken op
+//                          het web (Claude + web_search). Zeker = direct invullen (alleen
+//                          lege velden); twijfel = 'voorstel' voor /admin.
+//   { "action": "voorstel", "id": 12, "overnemen": true|false } (admin)
 //   { "action": "herplaats" }              plek opnieuw zoeken voor kramen met
 //                          'alleen plaats bekend' (na verbetering van poiPlek)
 // Na elke run: nieuwe aanmeldingen van kraamhouders als Telegram-bericht.
@@ -188,6 +192,111 @@ async function isAuthorized(req: Request, sb: any): Promise<{ ok: boolean; via?:
   return { ok: true, via: 'admin' };
 }
 
+// ── Verrijken: naam, openingstijden en website zoeken op het web ─────
+// Het Gemeenteblad noemt zelden de exploitant of tijden. Per kraam zoekt
+// Claude zelf op het web (server-tool web_search, max 3 zoekopdrachten) en
+// beoordeelt of een bron over DEZE kraam gaat (zelfde plaats én zelfde
+// plek/winkel/straat). Alleen feiten overnemen. (Brave gaf 402 in nov 2026.)
+const VERRIJK_MODEL = 'claude-opus-5-5';
+const WEG_DOMEINEN = ['officielebekendmakingen.nl', 'overheid.nl', 'oliebollenkaart.nl', 'kermis.nl', 'yardigo.nl', 'yardigo.be'];
+
+async function zoekKraam(key: string, k: any): Promise<any> {
+  const system = [
+    'Je zoekt informatie over één oliebollenkraam uit een gemeentelijke standplaatsvergunning. Zoek op het web (gebruik de zoektool, hooguit 3 keer) naar de naam, openingstijden en website/Facebook-pagina van DEZE kraam.',
+    'Een bron telt alleen als hij dezelfde plaats EN dezelfde plek noemt (zelfde winkel, winkelcentrum, plein of straat). Een andere oliebollenkraam in dezelfde plaats telt NIET. Verzin niets.',
+    'Eindig met alleen JSON, zonder tekst eromheen: {"zekerheid":"zeker"|"waarschijnlijk"|"geen","naam":null|string,"tijden":null|string,"website":null|string,"bron_url":null|string,"citaat":null|string,"reden":"max 80 tekens","huidige_naam_is_plek":true|false}',
+    '- citaat: letterlijke zin uit de bron (max 200 tekens) waarin de plek van de kraam (straat, plein, winkel of winkelcentrum) staat. null als de bron de plek niet noemt; dan is zekerheid hooguit "waarschijnlijk".',
+    '- zeker: de bron noemt letterlijk deze plek in deze plaats en het gaat om oliebollen dit seizoen of een vaste jaarlijkse standplaats.',
+    '- naam: naam van de kraam/het bedrijf, nooit de winkel waar hij staat, nooit een privépersoon.',
+    '- tijden: kort, bv. "ma-za 9:00-18:00, zo 11:00-17:00; 31 dec 8:00-16:00". Alleen als een bron ze noemt.',
+    '- website: eigen website of Facebook-pagina van de kraam (https://...). bron_url: waar je het las.',
+    '- huidige_naam_is_plek: true als de huidige naam eigenlijk de winkel/plek is (bv. "Mediamarkt") en geen kraamnaam.',
+  ].join('\n');
+  const vraag = JSON.stringify({ naam: k.naam, plaats: k.plaats, gemeente: k.gemeente, locatie: k.locatie, adres: k.adres, periode: [k.datum_van, k.datum_tot] });
+  const messages: any[] = [{ role: 'user', content: vraag }];
+  for (let ronde = 0; ronde < 3; ronde++) {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: AbortSignal.timeout(90000),
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-beta': 'server-side-fallback-2026-07-01', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: VERRIJK_MODEL, max_tokens: 4000, system, messages,
+        output_config: { effort: 'low' },
+        fallbacks: 'default',
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 3, blocked_domains: WEG_DOMEINEN,
+          user_location: { type: 'approximate', country: 'NL', city: String(k.plaats || '').slice(0, 60) } }],
+      }),
+    });
+    if (!r.ok) throw new Error('anthropic ' + r.status + ': ' + (await r.text()).slice(0, 160));
+    const j = await r.json();
+    if (j.stop_reason === 'refusal') return null;
+    // Lange zoekbeurt gepauzeerd: antwoord meesturen en laten afmaken.
+    if (j.stop_reason === 'pause_turn') { messages.push({ role: 'assistant', content: j.content }); continue; }
+    const tekst = (j.content || []).filter((b: any) => b?.type === 'text').map((b: any) => b.text).join('');
+    return safeParseJson(tekst);
+  }
+  return null;
+}
+
+async function verrijk(sb: any, key: string, max: number, t0: number) {
+  const s: any = { bekeken: 0, ingevuld: 0, voorstel: 0, niets: 0, errors: [] as string[], items: [] as any[] };
+  const r = await sb.from('oliebollen_kramen').select('*').in('status', ['actief', 'controleren']).is('verrijkt_at', null)
+    .neq('bron', 'aanmelding').order('datum_van', { ascending: true, nullsFirst: true }).limit(max);
+  const lijst: any[] = r.data || [];
+  // Drie tegelijk: een zoekbeurt duurt 10-40 s.
+  for (let i = 0; i < lijst.length; i += 3) {
+    if (Date.now() - t0 > 95000) break;
+    await Promise.all(lijst.slice(i, i + 3).map(async (k) => {
+      s.bekeken++;
+      let a: any = null;
+      try { a = await zoekKraam(key, k); } catch (e) { s.errors.push(k.id + ': ' + (e as Error).message); return; }
+      const upd: any = { verrijkt_at: new Date().toISOString() };
+      if (a?.huidige_naam_is_plek && k.naam) {
+        upd.naam = null;
+        if (!k.locatie || !k.locatie.toLowerCase().includes(String(k.naam).toLowerCase())) upd.locatie = (`bij ${k.naam}` + (k.locatie ? `, ${k.locatie}` : '')).slice(0, 120);
+      }
+      const goed = (v: unknown) => typeof v === 'string' && v.trim().length > 1 && v.length < 200;
+      const web = goed(a?.website) && /^https?:\/\//.test(a.website) ? a.website.trim() : null;
+      const iets = a && a.zekerheid !== 'geen' && (goed(a.naam) || goed(a.tijden) || web);
+      // "Zeker" alleen als het citaat echt de plek noemt (straat/plein/winkel), anders voorstel.
+      const plekWoorden = `${k.locatie || ''} ${k.adres || ''} ${upd.locatie || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .split(/[^a-z]+/).filter(w => w.length >= 4 && !['winkelcentrum', 'parkeerplaats', 'parkeerterrein', 'standplaats', 'ingang', 'naast', 'nabij', 'tegenover', String(k.plaats || '').toLowerCase()].includes(w));
+      const citaat = String(a?.citaat || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (a && a.zekerheid === 'zeker' && !plekWoorden.some(w => citaat.includes(w))) a.zekerheid = 'waarschijnlijk';
+      if (iets && a.zekerheid === 'zeker') {
+        if (goed(a.naam) && (!k.naam || upd.naam === null)) upd.naam = a.naam.trim().slice(0, 80);
+        if (goed(a.tijden) && !k.tijden) upd.tijden = a.tijden.trim().slice(0, 160);
+        if (web && !k.website) upd.website = web.slice(0, 200);
+        upd.opmerking = ((k.opmerking ? k.opmerking + ' · ' : '') + 'verrijkt via ' + String(a.bron_url || '').slice(0, 120)).slice(0, 500);
+        s.ingevuld++;
+      } else if (iets) {
+        upd.voorstel = { naam: goed(a.naam) ? a.naam.trim().slice(0, 80) : null, tijden: goed(a.tijden) ? a.tijden.trim().slice(0, 160) : null,
+          website: web, bron_url: a.bron_url || null, reden: a.reden || null, zekerheid: a.zekerheid, citaat: a.citaat ? String(a.citaat).slice(0, 200) : null };
+        s.voorstel++;
+      } else s.niets++;
+      await sb.from('oliebollen_kramen').update(upd).eq('id', k.id);
+      s.items.push({ id: k.id, plaats: k.plaats, zekerheid: a?.zekerheid ?? null, naam: upd.naam ?? upd.voorstel?.naam ?? null, tijden: upd.tijden ?? upd.voorstel?.tijden ?? null, bron: a?.bron_url ?? null });
+    }));
+  }
+  const rest = await sb.from('oliebollen_kramen').select('id', { count: 'exact', head: true }).in('status', ['actief', 'controleren']).is('verrijkt_at', null).neq('bron', 'aanmelding');
+  s.resterend = rest.count ?? null;
+  return s;
+}
+
+async function voorstelBeslis(sb: any, id: number, overnemen: boolean) {
+  const k = (await sb.from('oliebollen_kramen').select('*').eq('id', id).maybeSingle()).data;
+  if (!k?.voorstel) return { ok: false, fout: 'geen voorstel' };
+  const upd: any = { voorstel: null };
+  if (overnemen) {
+    const v = k.voorstel;
+    if (v.naam) upd.naam = v.naam;
+    if (v.tijden) upd.tijden = v.tijden;
+    if (v.website && !k.website) upd.website = v.website;
+    upd.opmerking = ((k.opmerking ? k.opmerking + ' · ' : '') + 'voorstel overgenomen (' + String(v.bron_url || '').slice(0, 120) + ')').slice(0, 500);
+  }
+  const u = await sb.from('oliebollen_kramen').update(upd).eq('id', id);
+  return u.error ? { ok: false, fout: u.error.message } : { ok: true };
+}
+
 // ── Beheer vanuit /admin ───────────────────────────────────────────
 const VELDEN = ['naam', 'locatie', 'adres', 'datum_van', 'datum_tot', 'dagen', 'tijden', 'website'];
 async function beheer(sb: any, actie: string, id: number, adres?: string) {
@@ -259,8 +368,10 @@ serve(async (req: Request) => {
   const auth = await isAuthorized(req, sb);
   if (!auth.ok) return json({ error: auth.error }, auth.status ?? 401);
 
-  let body: { max?: number; dryRun?: boolean; action?: string; id?: number; adres?: string } = {};
+  let body: { max?: number; dryRun?: boolean; action?: string; id?: number; adres?: string; overnemen?: boolean } = {};
   try { body = await req.json(); } catch (_) {}
+  if (body.action === 'voorstel') return json(await voorstelBeslis(sb, Number(body.id), body.overnemen === true));
+  if (body.action === 'verrijk') return json(await verrijk(sb, key, Math.max(1, Math.min(12, body.max ?? 9)), t0));
   if (body.action === 'goedkeuren' || body.action === 'verbergen') return json(await beheer(sb, body.action, Number(body.id), body.adres));
   if (body.action === 'herplaats') {
     const r = await sb.from('oliebollen_kramen').select('id, locatie, plaats, opmerking').eq('status', 'controleren').eq('opmerking', 'alleen plaats bekend');
