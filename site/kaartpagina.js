@@ -120,6 +120,11 @@
       opKlik: function (v) { open(v, false); },
       opWijs: function (id, aan) { var a = document.querySelector('.yg-row[data-id="' + id + '"]'); if (a) a.classList.toggle('is-hot', aan || state.gekozen === id); },
       naTekenen: lijst,
+      opKraam: function (k) {
+        sluitPopup();
+        popup = L.popup({ className: 'yg-popup', offset: [0, -8], autoPanPaddingTopLeft: [20, 70], autoPanPaddingBottomRight: [20, 20], maxWidth: 300 })
+          .setLatLng([k.lat, k.lng]).setContent(K.kraamPopupHtml(k)).openOn(kaart.map);
+      },
       opWinkel: function (w) {
         sluitPopup();
         popup = L.popup({ className: 'yg-popup', offset: [0, -8], autoPanPaddingTopLeft: [20, 70], autoPanPaddingBottomRight: [20, 20], maxWidth: 300 })
@@ -143,6 +148,24 @@
         kaart.winkels(l);
       }).catch(function (e) { console.error(e); b.removeAttribute('aria-busy'); b.setAttribute('aria-pressed', 'false'); });
     });
+    // Oliebollenkramen (seizoen): knop verschijnt alleen als er kramen zijn,
+    // en staat dan standaard aan (uit te zetten; keuze blijft per tabblad).
+    var kraamLijst = [];
+    function zetKramen(aan) {
+      $('kramen').setAttribute('aria-pressed', String(aan));
+      kaart.kramen(aan ? kraamLijst : []);
+      try { sessionStorage.setItem('yg-kramen-uit', aan ? '' : '1'); } catch (e) {}
+    }
+    K.kramen().then(function (l) {
+      kraamLijst = l || [];
+      if (!kraamLijst.length) return;
+      $('kramen').hidden = false; $('kramen-legenda').hidden = false;
+      $('kramen-n').textContent = kraamLijst.length;
+      var uit = false; try { uit = sessionStorage.getItem('yg-kramen-uit') === '1'; } catch (e) {}
+      zetKramen(!uit || new URLSearchParams(location.search).get('laag') === 'oliebollen');
+    }).catch(function (e) { console.error(e); });
+    $('kramen').addEventListener('click', function () { zetKramen($('kramen').getAttribute('aria-pressed') !== 'true'); });
+
     kaart.map.on('popupclose', function () { state.gekozen = null; kaart.kies(null); });
 
     if (plek && typeof plek.lat === 'number') { state.plek = plek; $('plaats').value = plek.naam === YG.t('loc.mine') ? '' : plek.naam; kaart.map.setView([plek.lat, plek.lng], 10); }

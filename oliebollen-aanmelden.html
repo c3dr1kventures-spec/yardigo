@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Oliebollenkraam aanmelden | YardiGo</title>
+<meta name="description" content="Zet je oliebollenkraam gratis op de YardiGo-kaart, of vul de openingstijden van je kraam aan.">
+<link rel="canonical" href="https://www.yardigo.nl/oliebollen/aanmelden">
+<meta name="theme-color" content="#3A6B4A">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@300..800&display=swap">
+<link rel="stylesheet" href="/site/site.css">
+<!-- site.js telt het bezoek mee (telBezoek) en vertaalt de kop. -->
+<script src="/site/site.js" defer></script>
+<style>
+  .ob-wrap { max-width: 620px; margin: 0 auto; padding: 28px 16px 64px; }
+  .ob-wrap h1 { font-size: clamp(26px, 5vw, 34px); margin: 0 0 8px; }
+  .ob-lede { color: var(--yg-ink-soft, #55625A); margin: 0 0 22px; }
+  .ob-card { background: #FFFFFF; border: 1.5px solid #E3E8E0; border-radius: 14px; padding: 18px; margin: 0 0 18px; }
+  .ob-veld { display: block; margin: 0 0 14px; }
+  .ob-veld span { display: block; font-size: 14px; font-weight: 600; margin: 0 0 5px; }
+  .ob-veld small { font-weight: 400; color: #525C56; }
+  .ob-veld input, .ob-veld textarea { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid #D5DCD2; border-radius: 10px; font: inherit; font-size: 16px; background: #FFFFFF; color: inherit; }
+  .ob-veld input:focus-visible, .ob-veld textarea:focus-visible { outline: 3px solid var(--yg-focus, #F2A830); outline-offset: 1px; }
+  .ob-rij { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .ob-rij { grid-template-columns: 1fr; } }
+  .ob-melding { padding: 12px 14px; border-radius: 10px; font-weight: 600; margin: 0 0 18px; }
+  .ob-melding--ok { background: #EAF5EE; color: #1F4A2D; }
+  .ob-melding--fout { background: #FBEEEE; color: #7A2222; }
+  .ob-klein { font-size: 13px; color: #525C56; }
+  .ob-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+</style>
+</head>
+<body>
+<header class="yg-header">
+  <div class="yg-wrap yg-header__bar">
+    <a class="yg-logo" href="/" aria-label="YardiGo, naar de startpagina">
+      <img src="/site/logo.svg" alt="" width="22" height="28">
+      <span>Yard<span class="yg-i">i</span><span class="yg-go">Go</span></span>
+    </a>
+    <div class="yg-header__end">
+      <nav class="yg-nav" aria-label="Hoofdmenu">
+        <a href="/oliebollen/">Oliebollenkramen</a>
+        <a href="/kaart?laag=oliebollen">Kaart</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="ob-wrap">
+  <h1 id="kop">Je oliebollenkraam op de kaart</h1>
+  <p class="ob-lede" id="lede">Gratis. Bezoekers zien waar je staat, in welke periode en wanneer je open bent, en zetten je kraam meteen in hun route. We kijken je aanmelding na en zetten hem meestal binnen een dag op de kaart.</p>
+
+  <div id="bekend" class="ob-card" hidden></div>
+  <p id="melding" class="ob-melding" role="status" hidden></p>
+
+  <form id="form" class="ob-card" novalidate>
+    <label class="ob-veld"><span>Naam van je kraam <small>(bijvoorbeeld "Rauwerda's Oliebollen")</small></span><input id="naam" maxlength="80" autocomplete="organization"></label>
+    <div class="ob-rij">
+      <label class="ob-veld"><span>Plaats *</span><input id="plaats" maxlength="60" required autocomplete="address-level2"></label>
+      <label class="ob-veld"><span>Straat of plein</span><input id="adres" maxlength="120" placeholder="Marktplein 1" autocomplete="street-address"></label>
+    </div>
+    <label class="ob-veld"><span>Waar precies? <small>(zodat bezoekers je vinden)</small></span><input id="locatie" maxlength="120" placeholder="bij de Jumbo, naast de ingang"></label>
+    <div class="ob-rij">
+      <label class="ob-veld"><span>Eerste dag</span><input id="van" type="date"></label>
+      <label class="ob-veld"><span>Laatste dag</span><input id="tot" type="date"></label>
+    </div>
+    <label class="ob-veld"><span>Openingstijden</span><input id="tijden" maxlength="160" placeholder="ma-za 9:00-18:00, 31 dec 8:00-16:00"></label>
+    <label class="ob-veld"><span>Alleen op bepaalde dagen? <small>(anders leeg laten)</small></span><input id="dagen" maxlength="120" placeholder="alleen vrijdag en zaterdag"></label>
+    <label class="ob-veld"><span>Website of Facebook-pagina</span><input id="website" type="url" maxlength="200" placeholder="https://"></label>
+    <label class="ob-veld"><span>Je e-mailadres * <small>(alleen voor vragen over je aanmelding, komt niet op de site)</small></span><input id="email" type="email" maxlength="120" required autocomplete="email"></label>
+    <label class="ob-veld"><span>Nog iets wat we moeten weten?</span><textarea id="opmerking" rows="3" maxlength="500"></textarea></label>
+    <label class="ob-hp" aria-hidden="true">Laat leeg <input id="hp" tabindex="-1" autocomplete="off"></label>
+    <button class="yg-btn yg-btn--primary" type="submit" id="verstuur" style="width:100%">Aanmelden</button>
+    <p class="ob-klein" style="margin:12px 0 0">Je gegevens gebruiken we alleen voor de kaart en om contact op te nemen over je aanmelding. Je e-mailadres en eventuele opmerking komen niet op de site.</p>
+  </form>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var URL_ = 'https://fwehqudhwzcnkcuypuqw.supabase.co/rest/v1/rpc/';
+  var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3ZWhxdWRod3pjbmtjdXlwdXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTQwNzgsImV4cCI6MjA4OTk3MDA3OH0.A5mPApoGySr97niz6QLZGFSDhsfCqOwi-k8v58mHjMI';
+  var H = { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' };
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function melding(t, ok) { var m = $('melding'); m.textContent = t; m.className = 'ob-melding ob-melding--' + (ok ? 'ok' : 'fout'); m.hidden = false; m.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+
+  // Aanvulling op een kraam die al op de kaart staat (?k=<id>).
+  var kraamId = parseInt(new URLSearchParams(location.search).get('k'), 10) || null;
+  if (kraamId) {
+    fetch(URL_ + 'get_oliebollen_publiek', { method: 'POST', headers: H, body: '{}' })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rij) {
+        var k = (rij || []).filter(function (x) { return x.id === kraamId; })[0];
+        if (!k) { kraamId = null; return; }
+        $('kop').textContent = 'Vul je kraam aan';
+        $('lede').textContent = 'Deze kraam staat al op de kaart. Vul aan wat ontbreekt, zoals de naam of je openingstijden. We kijken het na en passen de kaart aan.';
+        $('bekend').innerHTML = '<strong>' + esc(k.naam || 'Oliebollenkraam') + '</strong><br>' + esc([k.locatie || k.adres, k.plaats].filter(Boolean).join(', ')) +
+          (k.datum_tot ? '<br><span class="ob-klein">Periode volgens de vergunning: ' + esc(k.datum_van || '?') + ' t/m ' + esc(k.datum_tot) + '</span>' : '');
+        $('bekend').hidden = false;
+        $('plaats').value = k.plaats || ''; $('adres').value = k.adres || ''; $('locatie').value = k.locatie || '';
+        if (k.naam) $('naam').value = k.naam;
+        if (k.datum_van) $('van').value = k.datum_van;
+        if (k.datum_tot) $('tot').value = k.datum_tot;
+        if (k.tijden) $('tijden').value = k.tijden;
+        $('verstuur').textContent = 'Aanvulling versturen';
+      }).catch(function () { kraamId = null; });
+  }
+
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if ($('hp').value) return;   // bot
+    if (!$('plaats').value.trim()) { $('plaats').focus(); return melding('Vul de plaats in.', false); }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test($('email').value.trim())) { $('email').focus(); return melding('Vul een geldig e-mailadres in.', false); }
+    var knop = $('verstuur'); knop.disabled = true;
+    fetch(URL_ + 'oliebollen_aanmelden', { method: 'POST', headers: H, body: JSON.stringify({
+      p_naam: $('naam').value, p_plaats: $('plaats').value, p_locatie: $('locatie').value, p_adres: $('adres').value,
+      p_datum_van: $('van').value || null, p_datum_tot: $('tot').value || null, p_dagen: $('dagen').value, p_tijden: $('tijden').value,
+      p_website: $('website').value, p_email: $('email').value, p_opmerking: $('opmerking').value, p_kraam_id: kraamId
+    }) }).then(function (r) { return r.json(); }).then(function (j) {
+      knop.disabled = false;
+      if (!j || !j.ok) return melding('Dat lukte niet: ' + ((j && (j.fout || j.message)) || 'onbekende fout') + '.', false);
+      $('form').hidden = true;
+      melding('Dank je! We kijken je aanmelding na en zetten hem meestal binnen een dag op de kaart.', true);
+    }).catch(function () { knop.disabled = false; melding('Geen verbinding. Probeer het nog eens.', false); });
+  });
+})();
+</script>
+</body>
+</html>

@@ -904,9 +904,155 @@ function renderKringloopIndexHtml(template, groepen, totaal) {
   });
 }
 
+// ─── Oliebollenkramen per plaats (seizoen) ─────────────────────────────
+// Bron: tabel oliebollen_kramen via get_oliebollen_publiek (alleen actieve
+// kramen van dit seizoen). Gevuld uit standplaatsvergunningen in het
+// Gemeenteblad (edge function import-oliebollen) en aanmeldingen van
+// kraamhouders. Buiten het seizoen is de lijst leeg en komen er geen pagina's.
+const KRAAM_KM = 15;
+const MAAND_KORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+async function fetchKramen() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_oliebollen_publiek`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    return (await res.json()).map(k => ({ ...k, lat: k.latitude, lng: k.longitude }));
+  } catch (e) {
+    console.warn('  oliebollenkramen ophalen mislukt, pagina\'s overgeslagen:', e.message);
+    return null;
+  }
+}
+
+function kraamDatumNL(iso) { const [, m, d] = iso.split('-').map(Number); return `${d} ${MAAND_KORT[m - 1]}`; }
+function kraamPeriodeNL(k) {
+  if (k.dagen) return k.dagen;
+  const nu = dagNL();
+  if (k.datum_van && k.datum_tot && k.datum_van === k.datum_tot) return `op ${kraamDatumNL(k.datum_van)}`;
+  if (k.datum_van && k.datum_van > nu) return `vanaf ${kraamDatumNL(k.datum_van)}${k.datum_tot ? ` t/m ${kraamDatumNL(k.datum_tot)}` : ''}`;
+  return k.datum_tot ? `t/m ${kraamDatumNL(k.datum_tot)}` : 'dit seizoen';
+}
+const kraamNaam = k => k.naam || (k.soort === 'actie' ? 'Oliebollenactie' : 'Oliebollenkraam');
+
+function buildKraamGroepen(kramen) {
+  const groepen = new Map();
+  for (const k of kramen) {
+    const slug = slugify(k.plaats);
+    if (!slug || slug.length < 2 || SKIP_CITIES.has(slug)) continue;
+    if (!groepen.has(slug)) groepen.set(slug, { slug, plaats: k.plaats, gemeente: k.gemeente, eigen: [] });
+    groepen.get(slug).eigen.push(k);
+  }
+  for (const [, g] of groepen) {
+    g.center = { lat: g.eigen.reduce((t, k) => t + k.lat, 0) / g.eigen.length, lng: g.eigen.reduce((t, k) => t + k.lng, 0) / g.eigen.length };
+    const ids = new Set(g.eigen.map(k => k.id));
+    g.omgeving = kramen.filter(k => !ids.has(k.id) && distKm(g.center, k) <= KRAAM_KM)
+      .map(k => ({ ...k, km: distKm(g.center, k) })).sort((a, b) => a.km - b.km).slice(0, 12);
+    g.eigen.sort((a, b) => (a.datum_van || '').localeCompare(b.datum_van || '') || kraamNaam(a).localeCompare(kraamNaam(b)));
+  }
+  return groepen;
+}
+
+function kraamKaartjesHtml(lijst, metKm) {
+  let html = '<div class="sales-list">';
+  for (const k of lijst) {
+    const plek = k.locatie || k.adres || '';
+    const waar = plek.toLowerCase().includes(String(k.plaats).toLowerCase()) ? plek : [plek, k.plaats].filter(Boolean).join(', ');
+    const kaart = `/kaart?laag=oliebollen&lat=${k.lat.toFixed(5)}&lng=${k.lng.toFixed(5)}&p=${encodeURIComponent(k.plaats)}`;
+    html += `<div class="sale-card" data-soort="oliebol">
+        <span class="sc-date">🍩 ${esc(kraamPeriodeNL(k))}${metKm ? `, ${k.km.toFixed(0)} km` : ''}</span>
+        <span class="sc-title">${esc(kraamNaam(k))}</span>
+        <span class="sc-loc">${esc(waar)}</span>
+        ${k.tijden ? `<span class="sc-loc">Open: ${esc(k.tijden)}</span>` : ''}
+        <span class="sc-loc"><a href="${esc(kaart)}">Op de kaart</a>${k.website && /^https?:\/\//.test(k.website) ? ` · <a href="${esc(k.website)}" rel="nofollow noopener" target="_blank">Website</a>` : ''}</span>
+      </div>`;
+  }
+  return html + '</div>';
+}
+
+const KRAAM_UITLEG = '<section><h2>Waar komen deze kramen vandaan?</h2><p>Een oliebollenkraam heeft een standplaatsvergunning van de gemeente nodig. Gemeenten publiceren die in het Gemeenteblad; YardiGo zet ze voor je op de kaart, met de periode die in de vergunning staat. Openingstijden vullen kraamhouders zelf aan. Heb je een oliebollenkraam? <a href="/oliebollen/aanmelden">Meld je kraam gratis aan</a> of vul je openingstijden aan.</p></section>';
+
+function renderKraamHtml(template, g, groepen) {
+  const canonical = `${BASE_URL}/oliebollen/${g.slug}`;
+  const buren = [...groepen.values()].filter(o => o.slug !== g.slug && distKm(g.center, o.center) < 40)
+    .map(o => ({ o, d: distKm(g.center, o.center) })).sort((a, b) => a.d - b.d).slice(0, 12);
+  let extra = '';
+  if (g.omgeving.length) extra += `<section><h2>Ook binnen ${KRAAM_KM} km van ${esc(g.plaats)}</h2>${kraamKaartjesHtml(g.omgeving, true)}</section>`;
+  extra += KRAAM_UITLEG;
+  const nearbyHtml = buren.length
+    ? '<section><h2>Oliebollen in andere plaatsen in de buurt</h2><div class="nearby-grid">'
+      + buren.map(({ o, d }) => `<a class="nearby-link" href="/oliebollen/${o.slug}">${esc(o.plaats)} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${d.toFixed(0)} km)</span></a>`).join('')
+      + '</div></section>'
+    : '';
+  const n = g.eigen.length;
+  const jaar = Number(dagNL().slice(0, 4)) + (Number(dagNL().slice(5, 7)) === 1 ? -1 : 0);
+  return fillLanding(template, {
+    titleTag: `Oliebollenkraam in ${g.plaats} ${jaar}: waar en wanneer`,
+    indexeren: true, ogLocale: 'nl_NL',
+    breadcrumbHtml: `<a href="/">Home</a> › <a href="/oliebollen/">Oliebollenkramen</a> › ${esc(g.plaats)}`,
+    statsHtml: statsHtml([
+      `<strong>${n}</strong> ${n === 1 ? 'kraam' : 'kramen'} in ${esc(g.plaats)}`,
+      `<strong>${g.omgeving.length}</strong> binnen ${KRAAM_KM} km`,
+      'Uit het Gemeenteblad',
+    ]),
+    listTitle: `Oliebollen kopen in ${g.plaats}`,
+    listHtml: kraamKaartjesHtml(g.eigen, false),
+    extraHtml: extra, nearbyHtml, labelSingular: 'garagesale',
+    h1: `Oliebollenkraam in ${g.plaats}`,
+    intro: `Hier staan dit seizoen ${n === 1 ? 'een oliebollenkraam' : n + ' oliebollenkramen'} in ${g.plaats}, met locatie en periode${g.omgeving.length ? `, plus ${g.omgeving.length} in de buurt` : ''}. Zet ze op de kaart en plan meteen je route.`,
+    metaDesc: `Oliebollenkraam in ${g.plaats}: ${n} ${n === 1 ? 'kraam' : 'kramen'} met locatie en periode, uit de standplaatsvergunningen van de gemeente. Bekijk ze op de kaart.`,
+    canonical,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'BreadcrumbList', itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL + '/' },
+          { '@type': 'ListItem', position: 2, name: 'Oliebollenkramen', item: `${BASE_URL}/oliebollen/` },
+          { '@type': 'ListItem', position: 3, name: g.plaats, item: canonical },
+        ] },
+        { '@type': 'ItemList', name: `Oliebollenkramen in ${g.plaats}`, itemListElement: g.eigen.slice(0, 20).map((k, i) => ({
+          '@type': 'ListItem', position: i + 1,
+          item: {
+            '@type': 'FoodEstablishment', name: kraamNaam(k), servesCuisine: 'Oliebollen',
+            address: { '@type': 'PostalAddress', streetAddress: k.adres || undefined, addressLocality: k.plaats, addressCountry: 'NL' },
+            geo: { '@type': 'GeoCoordinates', latitude: k.lat, longitude: k.lng },
+            ...(k.website && /^https?:\/\//.test(k.website) ? { url: k.website } : {}),
+          },
+        })) },
+      ],
+    },
+  });
+}
+
+function renderKraamIndexHtml(template, groepen, totaal) {
+  const lijst = [...groepen.values()].sort((a, b) => b.eigen.length - a.eigen.length || a.plaats.localeCompare(b.plaats));
+  const links = '<div class="nearby-grid">' + lijst.map(g => `<a class="nearby-link" href="/oliebollen/${g.slug}">${esc(g.plaats)} <span style="color:#9A8E82;font-weight:500;font-size:11px">(${g.eigen.length})</span></a>`).join('') + '</div>';
+  const jaar = Number(dagNL().slice(0, 4)) + (Number(dagNL().slice(5, 7)) === 1 ? -1 : 0);
+  return fillLanding(template, {
+    titleTag: `Oliebollenkramen bij jou in de buurt ${jaar}: kaart per plaats`,
+    indexeren: true, ogLocale: 'nl_NL',
+    breadcrumbHtml: '<a href="/">Home</a> › Oliebollenkramen',
+    statsHtml: statsHtml([`<strong>${totaal}</strong> kramen`, `<strong>${lijst.length}</strong> plaatsen`, 'Gratis te bekijken']),
+    listTitle: 'Kies je plaats', listHtml: totaal
+      ? `<p><a class="nearby-link" href="/kaart?laag=oliebollen">Bekijk alle kramen op de kaart</a></p>` + links
+      : '<div class="empty-box">Het oliebollenseizoen is voorbij. Vanaf oktober staan hier weer de kramen bij jou in de buurt.</div>',
+    extraHtml: KRAAM_UITLEG, nearbyHtml: '', labelSingular: 'garagesale',
+    h1: 'Oliebollenkramen bij jou in de buurt',
+    intro: `Waar staat de oliebollenkraam? ${totaal} kramen in ${lijst.length} plaatsen, met locatie en periode, uit de standplaatsvergunningen die gemeenten publiceren. Kies je plaats of open de kaart.`,
+    metaDesc: `${totaal} oliebollenkramen in ${lijst.length} plaatsen op de kaart, met locatie en periode. Vind de oliebollenkraam bij jou in de buurt.`,
+    canonical: `${BASE_URL}/oliebollen/`,
+    jsonLd: { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Oliebollenkramen', item: `${BASE_URL}/oliebollen/` },
+    ] },
+  });
+}
+
 // Eén sitemap per domein. Omdat dezelfde bestanden op elk domein staan, is
 // https://www.yardigo.be/sitemap-be.xml gewoon bereikbaar.
-function buildSitemaps(listings, landingGroups, types, provPaginas = [], kringloop = null) {
+function buildSitemaps(listings, landingGroups, types, provPaginas = [], kringloop = null, oliebollen = null) {
   const today = dagNL();
   const per = { [BASE_URL]: [], [BASE_URL_BE]: [] };
   per[BASE_URL].push({ loc: BASE_URL + '/', lastmod: today, changefreq: 'daily', priority: '1.0' });
@@ -933,6 +1079,10 @@ function buildSitemaps(listings, landingGroups, types, provPaginas = [], kringlo
   if (kringloop) {
     per[BASE_URL].push({ loc: `${BASE_URL}/kringloop/`, lastmod: today, changefreq: 'weekly', priority: '0.7' });
     for (const [, g] of kringloop) per[g.base].push({ loc: `${g.base}/kringloop/${g.slug}`, lastmod: today, changefreq: 'weekly', priority: '0.6' });
+  }
+  if (oliebollen && oliebollen.size) {
+    per[BASE_URL].push({ loc: `${BASE_URL}/oliebollen/`, lastmod: today, changefreq: 'daily', priority: '0.8' });
+    for (const [, g] of oliebollen) per[BASE_URL].push({ loc: `${BASE_URL}/oliebollen/${g.slug}`, lastmod: today, changefreq: 'daily', priority: '0.7' });
   }
   const xml = urls => {
     let x = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -1103,7 +1253,18 @@ async function main() {
     console.log(`  rendered ${kringloop.size} kringlooppagina's (${winkels.length} winkels)`);
   }
 
-  const sm = buildSitemaps(listings, landingGroups, types, provPaginas, kringloop);
+  // Oliebollenkramen per plaats (alleen in het seizoen).
+  const kramen = await fetchKramen();
+  let oliebollen = null;
+  if (kramen) {
+    // Overzicht altijd (footerlink); buiten het seizoen zonder plaatsen.
+    oliebollen = buildKraamGroepen(kramen);
+    for (const [, g] of oliebollen) schrijfPagina(`oliebollen/${g.slug}`, renderKraamHtml(landingTemplate, g, oliebollen));
+    schrijfPagina('oliebollen', renderKraamIndexHtml(landingTemplate, oliebollen, kramen.length));
+    console.log(`  rendered ${oliebollen.size} oliebollenpagina's (${kramen.length} kramen)`);
+  }
+
+  const sm = buildSitemaps(listings, landingGroups, types, provPaginas, kringloop, oliebollen);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap.xml'), sm.nl);
   writeFileSync(resolve(PROJECT_ROOT, 'sitemap-be.xml'), sm.be);
   writeFileSync(resolve(PROJECT_ROOT, 'robots.txt'), buildRobotsTxt());

@@ -15,6 +15,7 @@
   "rewrites": [
     { "source": "/verkoop", "destination": "/app" },
     { "source": "/aanmelden", "destination": "/app" },
+    { "source": "/oliebollen/aanmelden", "destination": "/oliebollen-aanmelden" },
     { "source": "/v/:id", "destination": "/api/share/:id" },
     { "source": "/s/:code", "destination": "/api/s/:code" },
     { "source": "/route/:code", "destination": "/route.html" }

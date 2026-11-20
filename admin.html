@@ -382,6 +382,7 @@ textarea.setting-input{min-height:72px;resize:vertical;}
     <div class="nav-tab" onclick="switchTab('buurt',this)">🏘️ Buurtverkopen</div>
     <div class="nav-tab" onclick="switchTab('reminders',this)">📅 Herinneringen</div>
     <div class="nav-tab" onclick="switchTab('settings',this)">⚙️ Instellingen</div>
+    <div class="nav-tab" onclick="switchTab('oliebollen',this)">🍩 Oliebollen <span class="tab-badge" id="ob-badge" style="display:none">0</span></div>
   </div>
 
   <div class="content">
@@ -1116,6 +1117,28 @@ textarea.setting-input{min-height:72px;resize:vertical;}
       <div id="buurt-grid"><div class="loading"><div class="spinner"></div>Laden…</div></div>
     </div>
 
+    <!-- ════ OLIEBOLLEN (seizoenslaag, oliebollen.sql + import-oliebollen) ════ -->
+    <div class="tab-pane" id="tab-oliebollen">
+      <div class="section-header">
+        <span class="section-title">🍩 Oliebollenkramen</span>
+        <div class="section-actions">
+          <select class="filter-sel" id="ob-filter" onchange="renderOliebollen()">
+            <option value="controleren" selected>Na te kijken</option>
+            <option value="actief">Op de kaart</option>
+            <option value="alle">Alles</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="loadOliebollen()">🔄 Vernieuw</button>
+        </div>
+      </div>
+      <div class="info-box" style="margin-bottom:14px">
+        Kramen komen automatisch uit standplaatsvergunningen in het Gemeenteblad (2× per dag, okt–jan) en via <a href="/oliebollen/aanmelden" target="_blank">/oliebollen/aanmelden</a>.
+        <strong>Na te kijken</strong> = aanmeldingen van kraamhouders, kramen zonder straat (alleen plaats bekend) en datums die niet kloppen. Goedkeuren zoekt zelf de plek op; een aanvulling wordt in de bestaande kraam samengevoegd.
+        Op de kaart: <a href="/kaart?laag=oliebollen" target="_blank">/kaart</a> · pagina's: <a href="/oliebollen/" target="_blank">/oliebollen/</a> (na de nachtelijke build).
+      </div>
+      <div class="stat-grid" id="ob-stats"></div>
+      <div class="panel"><div id="ob-lijst"><div class="spinner"></div></div></div>
+    </div>
+
     <!-- ════ HERINNERINGEN ════ -->
     <div class="tab-pane" id="tab-reminders">
       <div class="section-header">
@@ -1485,6 +1508,7 @@ function switchTab(name,el){
   if(name==='moderation') renderModerationTable();
   if(name==='errors') loadErrors();
   if(name==='analytics') loadAnalytics();
+  if(name==='oliebollen') loadOliebollen();
   if(name==='dekking') loadDekking();
   if(name==='broadcast') { bcRefreshCount(); annLoadList(); }
   if(name==='reviews') loadReviews();
@@ -1496,6 +1520,53 @@ function switchTab(name,el){
   }
   if(name==='buurt') loadBuurt();
   if(name==='reminders') loadReminders();
+}
+
+// ══════════════════════════════════════════════════
+// OLIEBOLLEN
+// ══════════════════════════════════════════════════
+var _ob = [];
+async function loadOliebollen(){
+  document.getElementById('ob-lijst').innerHTML = '<div class="spinner"></div>';
+  var r = await sb.rpc('admin_oliebollen');
+  if (r.error) { document.getElementById('ob-lijst').innerHTML = '<div class="info-box warn">' + escapeHtml(r.error.message) + '</div>'; return; }
+  _ob = r.data || [];
+  var n = function(f){ return _ob.filter(f).length; };
+  var na = n(function(k){ return k.status==='controleren'; });
+  var b = document.getElementById('ob-badge'); if (b) { b.textContent = na; b.style.display = na ? '' : 'none'; }
+  document.getElementById('ob-stats').innerHTML =
+    statCard('Op de kaart', n(function(k){ return k.status==='actief'; }), 'actief dit seizoen', 'green') +
+    statCard('Na te kijken', na, 'aanmelding of geen straat', na ? 'warn' : '') +
+    statCard('Aanmeldingen', n(function(k){ return k.bron==='aanmelding'; }), 'door kraamhouders', 'accent') +
+    statCard('Ingetrokken/verborgen', n(function(k){ return k.status==='ingetrokken'||k.status==='verborgen'; }), '', '');
+  renderOliebollen();
+}
+function renderOliebollen(){
+  var f = document.getElementById('ob-filter').value;
+  var lijst = _ob.filter(function(k){ return f==='alle' || k.status===f; });
+  if (!lijst.length) { document.getElementById('ob-lijst').innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">Niets in deze lijst.</div>'; return; }
+  document.getElementById('ob-lijst').innerHTML = '<table class="data-table" style="width:100%"><thead><tr><th>Kraam</th><th>Waar</th><th>Periode</th><th>Bron</th><th></th></tr></thead><tbody>' +
+    lijst.map(function(k){
+      var kaart = k.latitude!=null ? ' <a href="https://www.openstreetmap.org/?mlat='+k.latitude+'&mlon='+k.longitude+'#map=17/'+k.latitude+'/'+k.longitude+'" target="_blank" title="Bekijk de pin">📍</a>' : '';
+      var bron = k.bron==='gemeenteblad' && k.bron_url ? '<a href="'+escapeHtml(k.bron_url)+'" target="_blank">Gemeenteblad</a> ('+escapeHtml(k.vergunning||'')+')' : escapeHtml(k.bron) + (k.contact_email ? '<br><small>'+escapeHtml(k.contact_email)+'</small>' : '');
+      var knoppen = (k.status!=='actief' ? '<button class="btn btn-sm" onclick="obActie(\'goedkeuren\','+k.id+')">✅ Goedkeuren</button> ' : '') +
+        (k.status!=='verborgen' ? '<button class="btn btn-ghost btn-sm" onclick="obActie(\'verbergen\','+k.id+')">Verbergen</button>' : '');
+      return '<tr><td><strong>'+escapeHtml(k.naam||(k.soort==='actie'?'Oliebollenactie':'Oliebollenkraam'))+'</strong>'+(k.opmerking?'<br><small style="color:var(--muted)">'+escapeHtml(k.opmerking)+'</small>':'')+'</td>'+
+        '<td>'+escapeHtml([k.locatie,k.adres,k.plaats].filter(Boolean).join(' · '))+kaart+(k.plek_geschat?'<br><small style="color:#B45309">alleen plaats bekend</small>':'')+'</td>'+
+        '<td>'+escapeHtml(k.dagen || [k.datum_van, k.datum_tot].filter(Boolean).join(' – ') || '—')+(k.tijden?'<br><small>'+escapeHtml(k.tijden)+'</small>':'')+'</td>'+
+        '<td>'+bron+'</td><td style="white-space:nowrap">'+knoppen+'</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+async function obActie(actie, id){
+  var s = (await sb.auth.getSession()).data.session;
+  if (!s) return toast('Niet ingelogd');
+  var r = await fetch(SUPABASE_URL + '/functions/v1/import-oliebollen', { method:'POST',
+    headers:{ 'Authorization':'Bearer '+s.access_token, 'Content-Type':'application/json', 'apikey':SUPABASE_ANON },
+    body: JSON.stringify({ action: actie, id: id }) });
+  var j = await r.json().catch(function(){ return {}; });
+  if (!j.ok) { toast('❌ ' + (j.fout || j.error || 'mislukt')); return; }
+  toast(actie==='goedkeuren' ? (j.samengevoegd_in ? '✅ Samengevoegd in kraam #'+j.samengevoegd_in : '✅ Op de kaart'+(j.geschat?' (alleen plaats, pin in het centrum)':'')) : 'Verborgen');
+  loadOliebollen();
 }
 
 // ══════════════════════════════════════════════════

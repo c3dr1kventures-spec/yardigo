@@ -122,6 +122,57 @@
     }).replace(/\bPH\b/g, YG.t('shop.holidays')).replace(/\boff\b/g, YG.t('state.closed').toLowerCase()).replace(/\s*;\s*/g, ', ');
   }
 
+  // Oliebollenkramen (seizoen, uit het Gemeenteblad) via get_oliebollen_publiek.
+  var KRAAM_CACHE = 'yg-site-oliebollen-1';
+  function kramen() {
+    var c = opslag(function () { return JSON.parse(sessionStorage.getItem(KRAAM_CACHE)); });
+    if (c && c.t > Date.now() - 30 * 60 * 1000 && Array.isArray(c.d)) return Promise.resolve(c.d);
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/get_oliebollen_publiek', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: '{}'
+    }).then(function (r) { if (!r.ok) throw new Error('oliebollen ' + r.status); return r.json(); })
+      .then(function (rij) {
+        var lijst = rij.map(function (k) {
+          return { id: 'o' + k.id, naam: k.naam || '', soort: k.soort, lat: k.latitude, lng: k.longitude, plaats: k.plaats || '',
+            locatie: k.locatie || k.adres || '', van: k.datum_van, tot: k.datum_tot, dagen: k.dagen || '', tijden: k.tijden || '',
+            bron: k.bron, bronUrl: k.bron_url || '', website: k.website || '' };
+        });
+        opslag(function () { sessionStorage.setItem(KRAAM_CACHE, JSON.stringify({ t: Date.now(), d: lijst })); });
+        return lijst;
+      });
+  }
+  function kraamDatum(iso) {
+    return new Date(iso + 'T12:00:00Z').toLocaleDateString(taal() === 'nl' ? 'nl-NL' : taal(), { day: 'numeric', month: 'short', timeZone: 'UTC' }).replace('.', '');
+  }
+  // "t/m 31 dec", "vanaf 27 dec", "op 31 dec"; dagen ("alleen zaterdagen") gaat voor.
+  function kraamPeriode(k) {
+    var nu = vandaagISO();
+    if (k.dagen) return k.dagen;
+    if (k.van && k.tot && k.van === k.tot) return YG.t('ob.on', { d: kraamDatum(k.van) });
+    if (k.van && k.van > nu) return YG.t('ob.from', { d: kraamDatum(k.van) }) + (k.tot ? ' ' + YG.t('ob.until', { d: kraamDatum(k.tot) }) : '');
+    return k.tot ? YG.t('ob.until', { d: kraamDatum(k.tot) }) : '';
+  }
+  function kraamNu(k) { var nu = vandaagISO(); return !k.dagen && (!k.van || k.van <= nu) && (!k.tot || k.tot >= nu); }
+  function kraamTitel(k) { return k.naam || YG.t(k.soort === 'actie' ? 'ob.action' : 'ob.stall'); }
+  function stopKraam(k) {
+    return { id: k.id, titel: kraamTitel(k), soort: 'winkel', lat: k.lat, lng: k.lng, plaats: k.plaats, sub: YG.t('ob.stall'), benadering: false, tijden: null };
+  }
+  function kraamPopupHtml(k) {
+    var route = 'https://www.google.com/maps/dir/?api=1&destination=' + k.lat.toFixed(5) + ',' + k.lng.toFixed(5);
+    return '<span class="yg-badge yg-badge--oliebol">' + esc(YG.t(k.soort === 'actie' ? 'ob.action' : 'ob.stall')) + '</span>' +
+      '<h3>' + esc(kraamTitel(k)) + '</h3>' +
+      '<p>' + esc(k.locatie && k.locatie.toLowerCase().indexOf(String(k.plaats).toLowerCase()) > -1 ? k.locatie : [k.locatie, k.plaats].filter(Boolean).join(', ')) +
+      '<br><strong>' + esc(kraamPeriode(k)) + '</strong>' + (kraamNu(k) ? ' · ' + esc(YG.t('ob.now')) : '') +
+      (k.tijden ? '<br>' + esc(YG.t('ob.hours')) + ': ' + esc(k.tijden) : '') +
+      (k.website && /^https?:\/\//.test(k.website) ? '<br><a href="' + esc(k.website) + '" target="_blank" rel="noopener nofollow">' + esc(YG.t('shop.site')) + '</a>' : '') + '</p>' +
+      '<div class="yg-btns">' + routeKnop(stopKraam(k)) +
+      '<a class="yg-btn yg-btn--outline" href="' + route + '" target="_blank" rel="noopener">' + esc(YG.t('act.route')) + '</a></div>' +
+      '<p class="yg-meta" style="margin:8px 0 0;font-size:12px">' +
+      (k.bron === 'gemeenteblad' && /^https:\/\/zoek\.officielebekendmakingen\.nl\//.test(k.bronUrl) ? '<a href="' + esc(k.bronUrl) + '" target="_blank" rel="noopener nofollow">' + esc(YG.t('ob.src')) + '</a>' : '') +
+      '<br><a href="/oliebollen/aanmelden?k=' + encodeURIComponent(k.id.slice(1)) + '">' + esc(YG.t('ob.own')) + '</a></p>';
+  }
+
   // Eén verkoop met alle foto's en de beschrijving; zelfde privacyregels als de lijst.
   function detail(id) {
     return fetch(SUPABASE_URL + '/rest/v1/rpc/get_listing_detail', {
@@ -331,7 +382,7 @@
 
     var laag = L.layerGroup().addTo(map);
     var markers = {};
-    var state = { lijst: [], winkels: [], midden: null, gekozen: null, metDatum: false };
+    var state = { lijst: [], winkels: [], kramen: [], midden: null, gekozen: null, metDatum: false };
     var groepen = null, groepenVan = null, versie = 0;
 
     // Ver uitgezoomd (zoals de app): verkopen dicht bij elkaar worden één
@@ -342,7 +393,7 @@
     function groepIcoon(soort) {
       return function (cluster) {
         // Winkels kleiner: verkopen blijven het opvallendst.
-        var n = cluster.getChildCount(), d = soort === 'winkel' ? (n < 10 ? 24 : n < 50 ? 28 : 32) : n < 10 ? 34 : n < 50 ? 40 : 48;
+        var n = cluster.getChildCount(), d = (soort === 'winkel' || soort === 'oliebol') ? (n < 10 ? 24 : n < 50 ? 28 : 32) : n < 10 ? 34 : n < 50 ? 40 : 48;
         return L.divIcon({ className: 'yg-pin', iconSize: [0, 0],
           html: '<span class="yg-groep yg-groep--' + soort + '" style="width:' + d + 'px;height:' + d + 'px;margin:-' + d / 2 + 'px 0 0 -' + d / 2 + 'px">' + n + '</span>' });
       };
@@ -357,7 +408,7 @@
     function tekenGroepen() {
       if (groepen && groepenVan === versie) return;
       weg();
-      groepen = { winkel: nieuweGroep('winkel'), markt: nieuweGroep('markt'), route: nieuweGroep('route'), oprit: nieuweGroep('oprit') };
+      groepen = { winkel: nieuweGroep('winkel'), oliebol: nieuweGroep('oliebol'), markt: nieuweGroep('markt'), route: nieuweGroep('route'), oprit: nieuweGroep('oprit') };
       state.lijst.forEach(function (v) {
         var m = L.marker([v.lat, v.lng], {
           icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-dot yg-dot--' + v.soort + '"' + grootAttr(v) + '></span>', iconSize: [0, 0] }),
@@ -367,8 +418,9 @@
         groepen[v.soort].addLayer(m);
       });
       state.winkels.forEach(function (w) { groepen.winkel.addLayer(winkelPin(w)); });
+      state.kramen.forEach(function (k) { groepen.oliebol.addLayer(kraamPin(k)); });
       // Volgorde = welke bovenop ligt: garagesales boven, winkels onder.
-      ['winkel', 'markt', 'route', 'oprit'].forEach(function (k) { map.addLayer(groepen[k]); });
+      ['winkel', 'oliebol', 'markt', 'route', 'oprit'].forEach(function (k) { map.addLayer(groepen[k]); });
       groepenVan = versie;
     }
     function weg() { if (groepen) { Object.keys(groepen).forEach(function (k) { map.removeLayer(groepen[k]); }); groepen = null; groepenVan = null; } }
@@ -380,6 +432,16 @@
         title: w.naam || '', keyboard: true, zIndexOffset: -100
       });
       m.on('click', function () { if (opties.opWinkel) opties.opWinkel(w); });
+      return m;
+    }
+
+    // Oliebollenkraam: ronde goudbruine bol met poedersuiker.
+    function kraamPin(k) {
+      var m = L.marker([k.lat, k.lng], {
+        icon: L.divIcon({ className: 'yg-pin', html: '<span class="yg-oliebol"></span>', iconSize: [0, 0] }),
+        title: kraamTitel(k), keyboard: true, zIndexOffset: -50
+      });
+      m.on('click', function () { if (opties.opKraam) opties.opKraam(k); });
       return m;
     }
 
@@ -399,6 +461,7 @@
       var bezet = [];
       var zichtbaar = groeperen ? [] : state.lijst.filter(function (v) { return grens.contains([v.lat, v.lng]); }).sort(prioriteit);
       if (!groeperen) state.winkels.forEach(function (w) { if (grens.contains([w.lat, w.lng])) winkelPin(w).addTo(laag); });
+      if (!groeperen) state.kramen.forEach(function (k) { if (grens.contains([k.lat, k.lng])) kraamPin(k).addTo(laag); });
       var maxKaartjes = opties.maxKaartjes || 40;
       zichtbaar.forEach(function (v, i) {
         var p = map.latLngToContainerPoint([v.lat, v.lng]);
@@ -443,7 +506,7 @@
       }).addTo(laag);
     }
 
-    map.on('moveend', function () { if (state.lijst.length || state.winkels.length) teken(); });
+    map.on('moveend', function () { if (state.lijst.length || state.winkels.length || state.kramen.length) teken(); });
 
     return {
       map: map,
@@ -453,6 +516,7 @@
       },
       kies: function (id) { state.gekozen = id; teken(); },
       winkels: function (lijst) { state.winkels = lijst || []; versie++; if (map._loaded) teken(); },
+      kramen: function (lijst) { state.kramen = lijst || []; versie++; if (map._loaded) teken(); },
       licht: function (id, aan) {
         var m = markers[id]; if (!m) return;
         if (m.getElement) { var e = m.getElement(); if (e && e.firstChild) e.firstChild.classList.toggle('is-selected', aan || state.gekozen === id); }
@@ -519,7 +583,7 @@
   window.YGKaart = {
     laad: laad, periode: periode, inPeriode: inPeriode, voegSamen: voegSamen, afstand: afstand,
     label: label, tijden: tijden, dagKort: dagKort, dagLang: dagLang, vandaagISO: vandaagISO, nuMinuten: nuMinuten,
-    detail: detail, winkels: winkels, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, vergeetPlek: vergeetPlek, onthoudPlek: onthoudPlek, maakKaart: maakKaart, esc: esc,
+    detail: detail, winkels: winkels, kramen: kramen, kraamPopupHtml: kraamPopupHtml, kraamPeriode: kraamPeriode, kraamTitel: kraamTitel, kraamNu: kraamNu, stopVan: stopVan, stopWinkel: stopWinkel, routeKnop: routeKnop, winkelPopupHtml: winkelPopupHtml, openingstijden: openingstijden, inDuitsland: inDuitsland, kaartje: kaartje, beeldHtml: beeldHtml, dagTekst: dagTekst, soortTekst: soortTekst, link: link, plus: plus, beeld: beeld, VOLGORDE: VOLGORDE, zoekPlaats: zoekPlaats, bewaarPlek: bewaarPlek, bewaardePlek: bewaardePlek, vergeetPlek: vergeetPlek, onthoudPlek: onthoudPlek, maakKaart: maakKaart, esc: esc,
     NL_MIDDEN: NL_MIDDEN, SUPABASE_URL: SUPABASE_URL, SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
   };
 })();

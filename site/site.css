@@ -156,6 +156,7 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-mark--route { width: 18px; height: 0; border-top: 3px dashed var(--yg-terra); }
 .yg-mark--oprit { width: 13px; height: 13px; background: var(--yg-amber); clip-path: polygon(50% 0, 100% 42%, 100% 100%, 0 100%, 0 42%); }
 .yg-mark--winkel { width: 12px; height: 12px; border-radius: 3px; background: var(--yg-wood); }
+.yg-mark--oliebol { width: 13px; height: 13px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F4D9A0 0 18%, #C98A3A 45%, #8E5520 100%); box-shadow: inset 0 0 0 1px rgba(90, 50, 15, .35); }
 
 /* ── Kaartpins ───────────────────────────────────────────────────────── */
 /* Prijskaartje: verkoop met dag en tijd. Plaats met left/top op het punt;
@@ -191,12 +192,20 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-groep--route { background: var(--yg-terra); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(224, 123, 57, .25), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--oprit { background: var(--yg-amber); color: var(--yg-ink); box-shadow: 0 0 0 5px rgba(242, 168, 48, .3), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep--winkel { background: var(--yg-wood); border-radius: 7px; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 5px rgba(138, 90, 43, .25), 0 2px 6px rgba(30, 41, 34, .28); }
+.yg-groep--oliebol { background: #B8742C; border-width: 2px; font-size: 11px; box-shadow: 0 0 0 5px rgba(184, 116, 44, .28), 0 2px 6px rgba(30, 41, 34, .28); }
 .yg-groep:hover { transform: scale(1.08); }
 .leaflet-marker-icon:focus-visible .yg-groep, .leaflet-marker-icon:focus-visible .yg-dot { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 
 /* Winkel: vierkante pin. */
 .yg-shop { text-decoration: none; position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 3px; background: var(--yg-wood); border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .35); }
 .yg-shop--label { width: auto; height: auto; margin: 0; transform: translate(-50%, calc(-100% - 6px)); padding: 4px 9px; border: 0; border-radius: 6px; color: #FFFFFF; font: 600 13px/1.2 var(--yg-font); white-space: nowrap; }
+
+/* Oliebollenkraam (seizoen): ronde bol met poedersuiker. */
+.yg-oliebol { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; cursor: pointer;
+  background: radial-gradient(circle at 34% 30%, #FFF6E6 0 9%, #F4D9A0 10% 20%, #C98A3A 48%, #8E5520 100%);
+  border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(30, 41, 34, .4); }
+.yg-oliebol:hover { transform: scale(1.12); }
+.leaflet-marker-icon:focus-visible .yg-oliebol { outline: 3px solid var(--yg-focus); outline-offset: 2px; }
 
 /* Genummerde stop in Mijn rondje (de volgorde is echt een volgorde). */
 .yg-stop { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--yg-forest); color: #FFFFFF; font-weight: 700; font-size: 14px; border: 3px solid #FFFFFF; box-shadow: 0 3px 10px rgba(30, 41, 34, .3); }
@@ -209,6 +218,7 @@ button, .yg-btn, .yg-chip { touch-action: manipulation; }
 .yg-badge--open { background: #E4EFE3; color: var(--yg-forest-dark); }
 .yg-badge--soon { background: var(--yg-wood-tint); color: #5C4420; }
 .yg-badge--shop { background: var(--yg-wood); color: #FFFFFF; }
+.yg-badge--oliebol { background: #F6E3C4; color: #6B3F12; }
 .yg-trust { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--yg-forest-dark); }
 .yg-trust svg { width: 13px; height: 13px; }
 .yg-live { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--yg-live); box-shadow: 0 0 0 4px rgba(70, 160, 60, .22); }
