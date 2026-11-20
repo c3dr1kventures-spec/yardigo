@@ -190,9 +190,11 @@ async function isAuthorized(req: Request, sb: any): Promise<{ ok: boolean; via?:
 
 // ── Beheer vanuit /admin ───────────────────────────────────────────
 const VELDEN = ['naam', 'locatie', 'adres', 'datum_van', 'datum_tot', 'dagen', 'tijden', 'website'];
-async function beheer(sb: any, actie: string, id: number) {
+async function beheer(sb: any, actie: string, id: number, adres?: string) {
   const r = await sb.from('oliebollen_kramen').select('*').eq('id', id).maybeSingle();
   const k = r.data;
+  // Admin vulde een straat in: die gebruiken en de plek opnieuw zoeken.
+  if (k && adres && adres.trim()) { k.adres = adres.trim().slice(0, 120); k.plek_geschat = true; await sb.from('oliebollen_kramen').update({ adres: k.adres }).eq('id', id); }
   if (!k) return { ok: false, fout: 'kraam niet gevonden' };
   if (actie === 'verbergen') {
     await sb.from('oliebollen_kramen').update({ status: 'verborgen' }).eq('id', id);
@@ -257,9 +259,9 @@ serve(async (req: Request) => {
   const auth = await isAuthorized(req, sb);
   if (!auth.ok) return json({ error: auth.error }, auth.status ?? 401);
 
-  let body: { max?: number; dryRun?: boolean; action?: string; id?: number } = {};
+  let body: { max?: number; dryRun?: boolean; action?: string; id?: number; adres?: string } = {};
   try { body = await req.json(); } catch (_) {}
-  if (body.action === 'goedkeuren' || body.action === 'verbergen') return json(await beheer(sb, body.action, Number(body.id)));
+  if (body.action === 'goedkeuren' || body.action === 'verbergen') return json(await beheer(sb, body.action, Number(body.id), body.adres));
   if (body.action === 'herplaats') {
     const r = await sb.from('oliebollen_kramen').select('id, locatie, plaats, opmerking').eq('status', 'controleren').eq('opmerking', 'alleen plaats bekend');
     const uit: any[] = [];

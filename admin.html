@@ -1558,11 +1558,16 @@ function renderOliebollen(){
     }).join('') + '</tbody></table>';
 }
 async function obActie(actie, id){
+  var adres = null, k = _ob.filter(function(x){ return x.id===id; })[0];
+  if (actie==='goedkeuren' && k && (k.latitude==null || k.plek_geschat)) {
+    adres = prompt('Geen exacte plek bekend voor deze kraam. Straat of plein (in ' + (k.plaats||'') + ')? Leeg = toch op de plaats zelf zetten.', k.adres || '');
+    if (adres === null) return;
+  }
   var s = (await sb.auth.getSession()).data.session;
   if (!s) return toast('Niet ingelogd');
   var r = await fetch(SUPABASE_URL + '/functions/v1/import-oliebollen', { method:'POST',
     headers:{ 'Authorization':'Bearer '+s.access_token, 'Content-Type':'application/json', 'apikey':SUPABASE_ANON },
-    body: JSON.stringify({ action: actie, id: id }) });
+    body: JSON.stringify({ action: actie, id: id, adres: adres || undefined }) });
   var j = await r.json().catch(function(){ return {}; });
   if (!j.ok) { toast('❌ ' + (j.fout || j.error || 'mislukt')); return; }
   toast(actie==='goedkeuren' ? (j.samengevoegd_in ? '✅ Samengevoegd in kraam #'+j.samengevoegd_in : '✅ Op de kaart'+(j.geschat?' (alleen plaats, pin in het centrum)':'')) : 'Verborgen');
